@@ -15,20 +15,7 @@ template <class ExecSpace>
 using team_member_t = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
 
 template <class ExecSpace>
-using float_tensor4_t = Kokkos::View<float****, ExecSpace>;
-
-template <class ExecSpace>
-using float_tensor4_row_t = decltype(Kokkos::subview(
-    std::declval<float_tensor4_t<ExecSpace>&>(), std::declval<int>(),
-    std::declval<int>(), std::declval<int>(), Kokkos::ALL()));
-
-template <class ExecSpace>
-struct Tensor4 {
-  static constexpr int leagues  = 4;
-  static constexpr int threads  = 4;
-  static constexpr int vectors  = 4;
-  static constexpr int elements = 16;  // row
-};
+using float_tensor4_t = Kokkos::View<float[4][4][4][16], ExecSpace>;
 
 template <class Handle, class X>
 KOKKOS_INLINE_FUNCTION std::enable_if_t<X::rank == 2> sum_views(
@@ -99,17 +86,9 @@ void verify(const float_tensor4_t<ExecSpace>& M, const float expected,
 }
 
 template <class ExecSpace>
-void allocate(float_tensor4_t<ExecSpace>& M) {
-  using D = Tensor4<ExecSpace>;
-  M       = float_tensor4_t<ExecSpace>("M", D::leagues, D::threads, D::vectors,
-                                 D::elements);
-}
-
-template <class ExecSpace>
 struct CheckRangePolicyWithExecSpace {
   void operator()() const {
-    float_tensor4_t<ExecSpace> M;
-    allocate<ExecSpace>(M);
+    float_tensor4_t<ExecSpace> M("M");
     Kokkos::deep_copy(M, 0.f);
 
     const ExecSpace exec;
@@ -124,8 +103,7 @@ struct CheckRangePolicyWithExecSpace {
 template <class ExecSpace>
 struct CheckRangePolicyWithTeamHandle {
   void operator()() const {
-    float_tensor4_t<ExecSpace> M;
-    allocate<ExecSpace>(M);
+    float_tensor4_t<ExecSpace> M("M");
     Kokkos::deep_copy(M, 0.f);
 
     using team_t          = team_member_t<ExecSpace>;
@@ -151,8 +129,7 @@ struct CheckRangePolicyWithTeamHandle {
 template <class ExecSpace>
 struct CheckRangePolicyWithThreadHandle {
   void operator()() const {
-    float_tensor4_t<ExecSpace> M;
-    allocate<ExecSpace>(M);
+    float_tensor4_t<ExecSpace> M("M");
     Kokkos::deep_copy(M, 0.f);
 
     using team_t          = team_member_t<ExecSpace>;
@@ -184,8 +161,7 @@ struct CheckRangePolicyWithThreadHandle {
 template <class ExecSpace>
 struct CheckRangePolicyWithConstructedThreadHandle {
   void operator()() const {
-    float_tensor4_t<ExecSpace> M;
-    allocate<ExecSpace>(M);
+    float_tensor4_t<ExecSpace> M("M");
     Kokkos::deep_copy(M, 0.f);
 
     using team_t          = team_member_t<ExecSpace>;
@@ -212,8 +188,7 @@ struct CheckRangePolicyWithConstructedThreadHandle {
 template <class ExecSpace>
 struct CheckRangePolicyWithConstructedThreadHandleInSingle {
   void operator()() const {
-    float_tensor4_t<ExecSpace> M;
-    allocate<ExecSpace>(M);
+    float_tensor4_t<ExecSpace> M("M");
     Kokkos::deep_copy(M, 0.f);
 
     using team_t          = team_member_t<ExecSpace>;
