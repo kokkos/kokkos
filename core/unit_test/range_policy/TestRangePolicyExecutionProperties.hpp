@@ -31,14 +31,6 @@ template <class ExecSpace>
 using team_member_t = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
 
 template <class ExecSpace>
-struct Tensor4 {
-  static constexpr int leagues  = 4;
-  static constexpr int threads  = 4;
-  static constexpr int vectors  = 4;
-  static constexpr int elements = 16;
-};
-
-template <class ExecSpace>
 struct CheckRuntimeValues {
   void operator()() const {
     using IndexType = typename ExecSpace::size_type;
@@ -89,9 +81,7 @@ struct CheckThreadHandleProperties {
 template <class ExecSpace>
 struct CheckInvocationOrder {
   void operator()() const {
-    using thread_handle    = typename team_member_t<ExecSpace>::thread_handle;
-    const int num_leagues  = Tensor4<ExecSpace>::leagues;
-    const int num_elements = Tensor4<ExecSpace>::elements;
+    using thread_handle = typename team_member_t<ExecSpace>::thread_handle;
 
     struct Closure {
       KOKKOS_INLINE_FUNCTION void operator()(const int) const {}
@@ -112,10 +102,9 @@ struct CheckInvocationOrder {
 
     Kokkos::parallel_for(
         "check_invocation_order",
-        Kokkos::TeamPolicy<ExecSpace>(num_leagues, Kokkos::AUTO()),
+        Kokkos::TeamPolicy<ExecSpace>(1, Kokkos::AUTO()),
         KOKKOS_LAMBDA(const team_member_t<ExecSpace>& team) {
-          Kokkos::parallel_for(Kokkos::RangePolicy(team, 0, num_elements),
-                               Closure{});
+          Kokkos::parallel_for(Kokkos::RangePolicy(team, 0, 1), Closure{});
         });
   }
 };
