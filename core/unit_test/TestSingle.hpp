@@ -428,10 +428,28 @@ void test_multiple_outputs() {
 }
 #endif
 
+struct ValueThing {
+  int value;
+};
+
+void test_non_reduction_type() {
+  ValueThing value;
+
+  Kokkos::single(
+      Kokkos::SinglePolicy<>(),
+      KOKKOS_LAMBDA(ValueThing & val) { val.value = 3; }, value);
+
+  ASSERT_EQ(value.value, 3);
+}
+
 namespace Test {
 TEST(TEST_CATEGORY, single) { test(); }
 
 TEST(TEST_CATEGORY, single_with_output) { test_one_ouput(); }
+
+TEST(TEST_CATEGORY, single_with_non_reduction_type) {
+  test_non_reduction_type();
+}
 
 #if 0
 TEST(TEST_CATEGORY, single_with_multiple_outputs) { test_multiple_outputs(); }
