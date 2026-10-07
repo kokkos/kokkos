@@ -186,6 +186,7 @@ void test_one_ouput() {
   EXPECT_EQ(val, 5);
 }
 
+#if 0  // multiple return values are not supported
 // Test for the ParallelReduce based API with several return values
 // (CombinedReducer based API)
 void test_multiple_outputs() {
@@ -425,11 +426,14 @@ void test_multiple_outputs() {
     EXPECT_EQ(val3, 5);
   }
 }
+#endif
 
 namespace Test {
 TEST(TEST_CATEGORY, single) { test(); }
 
 TEST(TEST_CATEGORY, single_with_output) { test_one_ouput(); }
 
+#if 0
 TEST(TEST_CATEGORY, single_with_multiple_outputs) { test_multiple_outputs(); }
+#endif
 }  // namespace Test

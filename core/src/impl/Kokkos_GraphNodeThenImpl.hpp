@@ -21,11 +21,13 @@ struct GraphNodeThenImpl
           Kokkos::RangePolicy<ExecutionSpace, IsGraphKernelTag,
                               Kokkos::LaunchBounds<1>,
                               typename ThenPolicyType::work_tag>,
-          IndexlessFunctorWrapper<Functor>, ParallelForTag> {
+          IndexlessFunctorWrapper<Functor, typename ThenPolicyType::work_tag>,
+          ParallelForTag> {
   using inner_policy_t = Kokkos::RangePolicy<ExecutionSpace, IsGraphKernelTag,
                                              Kokkos::LaunchBounds<1>,
                                              typename ThenPolicyType::work_tag>;
-  using wrapper_t      = IndexlessFunctorWrapper<Functor>;
+  using wrapper_t =
+      IndexlessFunctorWrapper<Functor, typename ThenPolicyType::work_tag>;
   using base_t = GraphNodeKernelImpl<ExecutionSpace, inner_policy_t, wrapper_t,
                                      ParallelForTag>;
 

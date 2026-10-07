@@ -10,45 +10,42 @@ namespace Kokkos::Impl {
 
 // Helper to allow passing an indexless functor to the parallel_for backend
 // through special interface such as Kokkos::GraphNodeThen and Kokkos::Single.
-template <typename Functor>
+template <class Functor, class WorkTag>
 struct IndexlessFunctorWrapper {
   Functor m_functor;
 
-  // One of WorkTagOrIndex or MaybeIndex contains the index, the other can be
-  // the worktag. We try to determine which is which and discard the index.
-  template <typename WorkTagOrIndex, typename... MaybeIndex>
-  KOKKOS_FUNCTION void operator()(WorkTagOrIndex&& wtOrIdx,
-                                  MaybeIndex...) const {
-    static_assert(sizeof...(MaybeIndex) <= 1);
-    if constexpr (sizeof...(MaybeIndex) == 0) {
-      m_functor();
-    } else {
-      static_assert(std::is_empty_v<std::remove_cvref_t<WorkTagOrIndex>>);
-      m_functor(wtOrIdx);
-    }
+  template <std::integral IdxT>
+    requires(std::is_same_v<WorkTag, void>)
+  KOKKOS_FUNCTION void operator()(const IdxT&) const {
+    m_functor();
+  }
+
+  template <class AWorkTag, std::integral IdxT>
+    requires(!std::is_same_v<WorkTag, void> &&
+             std::is_same_v<AWorkTag, WorkTag>)
+  KOKKOS_FUNCTION void operator()(const AWorkTag& tag, const IdxT&) const {
+    m_functor(tag);
   }
 };
 
-// Helper to allow passing an indexless functor to the parallel_reduce backend
-// through special interface such as Kokkos::GraphNodeThen and Kokkos::Single.
-template <class FunctorType, class WorkTag>
-struct IndexlessReductionFunctorWrapper {
+// Helper to allow passing an indexless functor to the parallel_for backend
+// but with a value being produced by the Functor such as in Kokkos::single
+template <class FunctorType, class ValueView, class WorkTag>
+struct IndexlessValueFunctorWrapper {
   FunctorType m_functor;
+  ValueView m_value;
 
-  // One of WorkTagOrIndex or IndexOrFirstRet contains the index, the other can
-  // be the worktag or the first return type. We try to determine which is
-  // which and discard the index.
-  template <class WorkTagOrIndex, class IndexOrFirstRet, class... ReturnTypes>
-  KOKKOS_INLINE_FUNCTION void operator()(WorkTagOrIndex&& wtOrIdx,
-                                         IndexOrFirstRet&& idxOrFirstRet,
-                                         ReturnTypes&&... rets) const {
-    if constexpr (std::is_void_v<WorkTag>) {
-      m_functor(std::forward<IndexOrFirstRet>(idxOrFirstRet),
-                std::forward<ReturnTypes>(rets)...);
-    } else {
-      static_assert(std::is_empty_v<std::remove_cvref_t<WorkTagOrIndex>>);
-      m_functor(wtOrIdx, std::forward<ReturnTypes>(rets)...);
-    }
+  template <std::integral IdxT>
+    requires(std::is_same_v<WorkTag, void>)
+  KOKKOS_FUNCTION void operator()(const IdxT&) const {
+    m_functor(m_value());
+  }
+
+  template <class AWorkTag, std::integral IdxT>
+    requires(!std::is_same_v<WorkTag, void> &&
+             std::is_same_v<AWorkTag, WorkTag>)
+  KOKKOS_FUNCTION void operator()(const AWorkTag& tag, const IdxT&) const {
+    m_functor(tag, m_value());
   }
 };
 

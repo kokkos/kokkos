@@ -71,15 +71,30 @@ template <class FunctorType, class ReturnType, class... PolicyProperties>
   requires(!Kokkos::is_view<ReturnType>::value &&
            !Kokkos::is_reducer<ReturnType>::value &&
            !std::is_pointer_v<ReturnType>)
-inline void single(const std::string& label,
+inline void single(const std::string& str,
                    const SinglePolicy<PolicyProperties...>& single_policy,
                    const FunctorType& functor, ReturnType& return_value) {
-  ::Kokkos::Impl::IndexlessReductionFunctorWrapper<
-      FunctorType, typename SinglePolicy<PolicyProperties...>::work_tag>
-      functor_wrapper{functor};
+  uint64_t kpID = 0;
 
-  ::Kokkos::parallel_reduce(label, single_policy, functor_wrapper,
-                            return_value);
+  Kokkos::Tools::Impl::begin_single<SinglePolicy<PolicyProperties...>,
+                                    FunctorType>(single_policy, str, kpID);
+
+  using execution_space = typename Impl::FunctorPolicyExecutionSpace<
+      FunctorType, typename std::remove_cvref_t<
+                       decltype(single_policy)>::range_policy>::execution_space;
+
+  // Dispatch execution to either the default implementation or an
+  // execution_space specific implementation if one is available
+  Kokkos::Impl::Single<execution_space>::template execute<>(
+      functor, single_policy,
+      Kokkos::View<ReturnType, Kokkos::HostSpace>(&return_value));
+
+  // fence if necessary: same rules as parallel_reduce apply
+  Impl::ParallelReduceFence<execution_space, ReturnType>::fence(
+      single_policy.space(),
+      "Kokkos::parallel_reduce: fence due to result being value, not view",
+      return_value);
+  Kokkos::Tools::Impl::end_single<FunctorType>(kpID);
 }
 
 template <class FunctorType, class ReturnType, class... PolicyProperties>
