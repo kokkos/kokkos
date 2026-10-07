@@ -386,9 +386,9 @@ __device__ bool hip_single_inter_block_reduce_scan_impl(
 
   // NOLINTBEGIN(bugprone-sizeof-expression)
   const integral_nonzero_constant<
-      size_type, std::is_pointer_v<typename FunctorType::reference_type>
-                     ? 0
-                     : sizeof(value_type) / sizeof(size_type)>
+      HIP::size_type, std::is_pointer_v<typename FunctorType::reference_type>
+                          ? 0
+                          : sizeof(value_type) / sizeof(size_type)>
       word_count((sizeof(value_type) * functor.length()) / sizeof(size_type));
   // NOLINTEND(bugprone-sizeof-expression)
 
@@ -415,19 +415,22 @@ __device__ bool hip_single_inter_block_reduce_scan_impl(
           ? 0
           : (1 + atomicInc(global_flags, block_count - 1) < block_count));
   if (is_last_block) {
-    size_type const b = (static_cast<long long int>(block_count) *
-                         static_cast<long long int>(threadIdx.y)) >>
-                        BlockSizeShift;
-    size_type const e = (static_cast<long long int>(block_count) *
-                         static_cast<long long int>(threadIdx.y + 1)) >>
-                        BlockSizeShift;
+    // NOTE b and e are block indices, not offsets into the shared/global
+    // buffers, so they are computed in HIP::size_type rather than the
+    // (possibly narrower) word type SizeType.
+    HIP::size_type const b = (static_cast<long long int>(block_count) *
+                              static_cast<long long int>(threadIdx.y)) >>
+                             BlockSizeShift;
+    HIP::size_type const e = (static_cast<long long int>(block_count) *
+                              static_cast<long long int>(threadIdx.y + 1)) >>
+                             BlockSizeShift;
 
     {
       pointer_type const shared_data_thread = reinterpret_cast<pointer_type>(
           shared_data + word_count.value * threadIdx.y);
       /* reference_type shared_value = */ functor.init(shared_data_thread);
 
-      for (size_type i = b; i < e; ++i) {
+      for (HIP::size_type i = b; i < e; ++i) {
         functor.join(
             shared_data_thread,
             reinterpret_cast<pointer_type>(global_data + word_count.value * i));
@@ -446,7 +449,7 @@ __device__ bool hip_single_inter_block_reduce_scan_impl(
       }
 
       // Join previous inclusive scan value to each member
-      for (size_type i = b; i < e; ++i) {
+      for (HIP::size_type i = b; i < e; ++i) {
         pointer_type const global_value =
             reinterpret_cast<pointer_type>(global_data + word_count.value * i);
         functor.join(shared_value, global_value);

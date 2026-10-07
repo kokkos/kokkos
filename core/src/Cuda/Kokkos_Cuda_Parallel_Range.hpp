@@ -136,8 +136,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
   using value_type     = typename ReducerType::value_type;
   using reference_type = typename ReducerType::reference_type;
   using functor_type   = FunctorType;
-  // Conditionally set word_size_type to int16_t or int8_t if value_type is
-  // smaller than int32_t (Kokkos::Cuda::size_type)
+  // Conditionally set word_size_type to uint16_t or uint8_t if value_type is
+  // smaller than 32 bits (width of Kokkos::Cuda::size_type)
   // word_size_type is used to determine the word count, shared memory buffer
   // size, and global memory buffer size before the reduction is performed.
   // Within the reduction, the word count is recomputed based on word_size_type
@@ -150,7 +150,7 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
   // bytes.
   using word_size_type = std::conditional_t<
       sizeof(value_type) < sizeof(Kokkos::Cuda::size_type),
-      std::conditional_t<sizeof(value_type) == 2, int16_t, int8_t>,
+      std::conditional_t<sizeof(value_type) == 2, uint16_t, uint8_t>,
       Kokkos::Cuda::size_type>;
   using index_type   = typename Policy::index_type;
   using reducer_type = ReducerType;
@@ -191,7 +191,7 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
   }
 
   __device__ inline void operator()() const {
-    const integral_nonzero_constant<word_size_type,
+    const integral_nonzero_constant<Kokkos::Cuda::size_type,
                                     ReducerType::static_value_size() /
                                         sizeof(word_size_type)>
         word_count(m_functor_reducer.get_reducer().value_size() /
@@ -411,8 +411,8 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
   using value_type     = typename Analysis::value_type;
   using functor_type   = FunctorType;
   using size_type      = Cuda::size_type;
-  // Conditionally set word_size_type to int16_t or int8_t if value_type is
-  // smaller than int32_t (Kokkos::Cuda::size_type)
+  // Conditionally set word_size_type to uint16_t or uint8_t if value_type is
+  // smaller than 32 bits (width of Kokkos::Cuda::size_type)
   // word_size_type is used to determine the word count, shared memory buffer
   // size, and global memory buffer size before the scan is performed.
   // Within the scan, the word count is recomputed based on word_size_type
@@ -425,7 +425,8 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
   // bytes.
   using word_size_type = std::conditional_t<
       sizeof(value_type) < sizeof(size_type),
-      std::conditional_t<sizeof(value_type) == 2, int16_t, int8_t>, size_type>;
+      std::conditional_t<sizeof(value_type) == 2, uint16_t, uint8_t>,
+      size_type>;
 
  private:
   // Algorithmic constraints:
@@ -462,8 +463,8 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
     const typename Analysis::Reducer& final_reducer =
         m_functor_reducer.get_reducer();
 
-    const integral_nonzero_constant<word_size_type, Analysis::StaticValueSize /
-                                                        sizeof(word_size_type)>
+    const integral_nonzero_constant<size_type, Analysis::StaticValueSize /
+                                                   sizeof(word_size_type)>
         word_count(Analysis::value_size(m_functor_reducer.get_functor()) /
                    sizeof(word_size_type));
 
@@ -504,8 +505,8 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
     const typename Analysis::Reducer& final_reducer =
         m_functor_reducer.get_reducer();
 
-    const integral_nonzero_constant<word_size_type, Analysis::StaticValueSize /
-                                                        sizeof(word_size_type)>
+    const integral_nonzero_constant<size_type, Analysis::StaticValueSize /
+                                                   sizeof(word_size_type)>
         word_count(Analysis::value_size(m_functor_reducer.get_functor()) /
                    sizeof(word_size_type));
 
@@ -741,8 +742,8 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   using reference_type = typename Analysis::reference_type;
   using functor_type   = FunctorType;
   using size_type      = Cuda::size_type;
-  // Conditionally set word_size_type to int16_t or int8_t if value_type is
-  // smaller than int32_t (Kokkos::Cuda::size_type)
+  // Conditionally set word_size_type to uint16_t or uint8_t if value_type is
+  // smaller than 32 bits (width of Kokkos::Cuda::size_type)
   // word_size_type is used to determine the word count, shared memory buffer
   // size, and global memory buffer size before the scan is performed.
   // Within the scan, the word count is recomputed based on word_size_type
@@ -755,7 +756,8 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   // bytes.
   using word_size_type = std::conditional_t<
       sizeof(value_type) < sizeof(size_type),
-      std::conditional_t<sizeof(value_type) == 2, int16_t, int8_t>, size_type>;
+      std::conditional_t<sizeof(value_type) == 2, uint16_t, uint8_t>,
+      size_type>;
 
  private:
   // Algorithmic constraints:
@@ -795,8 +797,8 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
     const typename Analysis::Reducer& final_reducer =
         m_functor_reducer.get_reducer();
 
-    const integral_nonzero_constant<word_size_type, Analysis::StaticValueSize /
-                                                        sizeof(word_size_type)>
+    const integral_nonzero_constant<size_type, Analysis::StaticValueSize /
+                                                   sizeof(word_size_type)>
         word_count(Analysis::value_size(m_functor_reducer.get_functor()) /
                    sizeof(word_size_type));
 
@@ -837,8 +839,8 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
     const typename Analysis::Reducer& final_reducer =
         m_functor_reducer.get_reducer();
 
-    const integral_nonzero_constant<word_size_type, Analysis::StaticValueSize /
-                                                        sizeof(word_size_type)>
+    const integral_nonzero_constant<size_type, Analysis::StaticValueSize /
+                                                   sizeof(word_size_type)>
         word_count(final_reducer.value_size() / sizeof(word_size_type));
 
     // Use shared memory as an exclusive scan: { 0 , value[0] , value[1] ,

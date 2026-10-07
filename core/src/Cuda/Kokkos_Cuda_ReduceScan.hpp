@@ -587,9 +587,9 @@ __device__ bool cuda_single_inter_block_reduce_scan2(
 
   // NOLINTBEGIN(bugprone-sizeof-expression)
   const integral_nonzero_constant<
-      size_type, std::is_pointer_v<typename FunctorType::reference_type>
-                     ? 0
-                     : sizeof(value_type) / sizeof(size_type)>
+      Cuda::size_type, std::is_pointer_v<typename FunctorType::reference_type>
+                           ? 0
+                           : sizeof(value_type) / sizeof(size_type)>
       word_count((sizeof(value_type) * functor.length()) / sizeof(size_type));
   // NOLINTEND(bugprone-sizeof-expression)
 
@@ -617,9 +617,12 @@ __device__ bool cuda_single_inter_block_reduce_scan2(
           : (1 + atomicInc(global_flags, block_count - 1) < block_count));
 
   if (is_last_block) {
-    const size_type b =
+    // NOTE b and e are block indices, not offsets into the shared/global
+    // buffers, so they are computed in Cuda::size_type rather than the
+    // (possibly narrower) word type SizeType.
+    const Cuda::size_type b =
         (long(block_count) * long(threadIdx.y)) >> BlockSizeShift;
-    const size_type e =
+    const Cuda::size_type e =
         (long(block_count) * long(threadIdx.y + 1)) >> BlockSizeShift;
 
     {
@@ -627,7 +630,7 @@ __device__ bool cuda_single_inter_block_reduce_scan2(
       /* reference_type shared_value = */ functor.init(
           static_cast<pointer_type>(shared_ptr));
 
-      for (size_type i = b; i < e; ++i) {
+      for (Cuda::size_type i = b; i < e; ++i) {
         functor.join(
             static_cast<pointer_type>(shared_ptr),
             reinterpret_cast<pointer_type>(global_data + word_count.value * i));
@@ -646,7 +649,7 @@ __device__ bool cuda_single_inter_block_reduce_scan2(
       }
 
       // Join previous inclusive scan value to each member
-      for (size_type i = b; i < e; ++i) {
+      for (Cuda::size_type i = b; i < e; ++i) {
         size_type* const global_value = global_data + word_count.value * i;
         functor.join(shared_value,
                      reinterpret_cast<pointer_type>(global_value));
