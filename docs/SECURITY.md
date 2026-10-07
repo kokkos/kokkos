@@ -1,12 +1,17 @@
-# Reporting Security Issues
+# Reporting Security Vulnerabilities
 
-To report a security issue, please email
-[lebrungrandt@ornl.gov](mailto:lebrungrandt@ornl.gov)
-and [crtrott@sandia.gov](mailto:crtrott@sandia.gov)
-with a description of the issue, the steps you took to create the issue,
-affected versions, and, if known, mitigations for the issue.
+Please report security vulnerabilities privately through
+[GitHub's private vulnerability reporting mechanism](https://github.com/kokkos/kokkos/security/advisories/new).
+For guidance on submitting a report, see GitHub's
+[Report privately documentation](https://docs.github.com/en/code-security/how-tos/report-and-fix-vulnerabilities/report-privately).
+Do not report security vulnerabilities through public issues, discussions, or
+pull requests.
 
-Our vulnerability management team will respond within 5 working days of your
-email. If the issue is confirmed as a vulnerability, we will open a
-Security Advisory and acknowledge your contributions as part of it. This project
-follows a 90 day disclosure timeline.
+Include a description of the issue, steps to reproduce it, affected versions,
+and any known mitigations or workarounds.
+
+We aim to acknowledge receipt of your report within five business days and work
+with you through the private report to validate and resolve the issue. If the
+issue is confirmed as a vulnerability, we will publish a GitHub Security
+Advisory and acknowledge your contribution. This project follows a 90-day
+disclosure timeline.
