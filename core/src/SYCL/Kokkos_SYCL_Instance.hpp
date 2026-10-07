@@ -61,6 +61,8 @@ class SYCLInternal {
   mutable int64_t m_team_scratch_current_size[m_n_team_scratch]       = {};
   mutable sycl::global_ptr<void> m_team_scratch_ptr[m_n_team_scratch] = {};
   mutable std::atomic_int m_team_scratch_pool[10]                     = {};
+  sycl::global_ptr<int32_t> m_scratch_locks                           = nullptr;
+  size_t m_num_scratch_locks                                          = 0;
 
   uint32_t m_instance_id =
       Kokkos::Tools::Experimental::Impl::idForInstance<Kokkos::SYCL>(
