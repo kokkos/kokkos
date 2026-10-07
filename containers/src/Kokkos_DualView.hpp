@@ -1121,10 +1121,10 @@ class DualView : public ViewTraits<DataOrElementType, Properties...> {
   }
 
   KOKKOS_INLINE_FUNCTION
-  auto extent(const size_t& r) const { return d_view.extent(r); }
+  auto extent(size_t r) const { return d_view.extent(r); }
 
   KOKKOS_INLINE_FUNCTION
-  int extent_int(const size_t& r) const { return d_view.extent_int(r); }
+  int extent_int(size_t r) const { return d_view.extent_int(r); }
 
   //@}
 };
