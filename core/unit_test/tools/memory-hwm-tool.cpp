@@ -71,6 +71,10 @@ extern "C" void kokkosp_allocate_data(const SpaceHandle handle,
   (void)name;
 }
 
+// FIXME_TOOLS: Kokkos can emit kokkosp_deallocate_data for allocations where
+// the corresponding kokkosp_allocate_data was never seen, e.g. OpenMP scratch
+// pool is allocated in Kokkos::initialize() before the tool is loaded. We need
+// to track by end in this case to avoid underflow
 extern "C" void kokkosp_deallocate_data(SpaceHandle handle, const char* name,
                                         const void* ptr, uint64_t size) {
   (void)name;
