@@ -94,6 +94,52 @@ TEST(TEST_CATEGORY, team_double_array_reduce) {
   }
 }
 
+// The maximum work sizes below are chosen such that the sum
+// nwork*(nwork+1)/2 still fits into the unsigned integer type.
+
+TEST(TEST_CATEGORY, team_uint8_array_reduce) {
+  {
+    TestReduceTeam<uint8_t, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >{}
+        .run_array_test(0);
+    TestReduceTeam<uint8_t, TEST_EXECSPACE,
+                   Kokkos::Schedule<Kokkos::Dynamic> >{}
+        .run_array_test(0);
+    TestReduceTeam<uint8_t, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >{}
+        .run_array_test(3);
+    TestReduceTeam<uint8_t, TEST_EXECSPACE,
+                   Kokkos::Schedule<Kokkos::Dynamic> >{}
+        .run_array_test(3);
+    TestReduceTeam<uint8_t, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >{}
+        .run_array_test(22);
+    TestReduceTeam<uint8_t, TEST_EXECSPACE,
+                   Kokkos::Schedule<Kokkos::Dynamic> >{}
+        .run_array_test(22);
+  }
+}
+
+TEST(TEST_CATEGORY, team_uint16_array_reduce) {
+  {
+    TestReduceTeam<uint16_t, TEST_EXECSPACE,
+                   Kokkos::Schedule<Kokkos::Static> >{}
+        .run_array_test(0);
+    TestReduceTeam<uint16_t, TEST_EXECSPACE,
+                   Kokkos::Schedule<Kokkos::Dynamic> >{}
+        .run_array_test(0);
+    TestReduceTeam<uint16_t, TEST_EXECSPACE,
+                   Kokkos::Schedule<Kokkos::Static> >{}
+        .run_array_test(3);
+    TestReduceTeam<uint16_t, TEST_EXECSPACE,
+                   Kokkos::Schedule<Kokkos::Dynamic> >{}
+        .run_array_test(3);
+    TestReduceTeam<uint16_t, TEST_EXECSPACE,
+                   Kokkos::Schedule<Kokkos::Static> >{}
+        .run_array_test(361);
+    TestReduceTeam<uint16_t, TEST_EXECSPACE,
+                   Kokkos::Schedule<Kokkos::Dynamic> >{}
+        .run_array_test(361);
+  }
+}
+
 template <typename ExecutionSpace>
 struct DummyTeamReductionFunctor {
   using TeamPolicy     = Kokkos::TeamPolicy<ExecutionSpace>;
