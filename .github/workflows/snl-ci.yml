@@ -43,24 +43,23 @@ jobs:
         with:
           repository: kokkos/kokkos
           path: kokkos
+        run: |
+          echo "KOKKOS_MDSPAN_HASH=$(cat kokkos/tpls/mdspan-hash.txt)" >> $GITHUB_ENV
+          echo "Test with external mdspan using KOKKOS_MDSPAN_HASH=${{ env.KOKKOS_MDSPAN_HASH }}"
 
       - name: checkout_mdspan
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: kokkos/mdspan
           path: mdspan
-          fetch-depth: 0
+          ref: ${{ env.KOKKOS_MDSPAN_HASH }}
 
       - name: configure_mdspan
-        run: |
-          cd mdspan
-          git reset --hard $(cat ../kokkos/tpls/mdspan-hash.txt)
-          cmake -B build -DCMAKE_CXX_STANDARD=20 -DCMAKE_INSTALL_PREFIX=/tmp/mdspan-install -S .
+        run: cmake -B mdspan/build -DCMAKE_CXX_STANDARD=20 -DCMAKE_INSTALL_PREFIX=/tmp/mdspan-install -S mdspan
 
       - name: build_and_install_mdspan
         working-directory: mdspan
-        run: |
-          cmake --build build --target install
+        run: cmake --build build --target install
 
       - name: configure_kokkos
         run: |
