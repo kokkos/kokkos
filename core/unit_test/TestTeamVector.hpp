@@ -1138,8 +1138,7 @@ void check_scan_return_value() {
     }
   }
 
-  auto h_totals =
-      Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, totals);
+  auto h_totals = Kokkos::create_mirror_view_and_copy(totals);
   for (int i = 0; i < league * n_thread; ++i) {
     ASSERT_EQ(h_totals(i), expected) << "differ at chunk " << i;
   }
