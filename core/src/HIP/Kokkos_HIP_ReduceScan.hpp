@@ -401,7 +401,8 @@ __device__ bool hip_single_inter_block_reduce_scan_impl(
     size_type* const shared = shared_data + word_count.value * BlockSizeMask;
     size_type* const global = global_data + word_count.value * block_id;
 
-    for (HIP::size_type i = threadIdx.y; i < word_count.value; i += blockDim.y) {
+    for (HIP::size_type i = threadIdx.y; i < word_count.value;
+         i += blockDim.y) {
       global[i] = shared[i];
     }
     __threadfence();

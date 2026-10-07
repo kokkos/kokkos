@@ -275,7 +275,7 @@ class LargeArrayReduceTeamFunctor {
   using policy_type     = Kokkos::TeamPolicy<ScheduleType, execution_space>;
   using size_type       = typename execution_space::size_type;
 
-  using value_type      = ScalarType[];
+  using value_type = ScalarType[];
   size_type value_count;
 
   size_type nwork;
@@ -429,8 +429,8 @@ class TestReduceTeam {
 
       for (unsigned i = 0; i < Repeat; ++i) {
         result_type tmp(&result[i][0], value_count);
-        Kokkos::parallel_reduce(team_exec,
-                                functor_type(nwork, value_count), tmp);
+        Kokkos::parallel_reduce(team_exec, functor_type(nwork, value_count),
+                                tmp);
       }
 
       execution_space().fence();

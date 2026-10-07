@@ -116,7 +116,8 @@ TEST(TEST_CATEGORY, team_uint8_array_reduce) {
         .run_array_test(22);
     // Now test reductions on uint8_t[] with a value_count large enough to
     // overflow uint8_t. This ensures that we are never using the array element
-    // type to index or iterate over the arrays (issue for Cuda/HIP prior to #9633).
+    // type to index or iterate over the arrays (issue for Cuda/HIP prior to
+    // #9633).
     TestReduceTeam<uint8_t, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >{}
         .run_large_array_test(600, 300);
     TestReduceTeam<uint8_t, TEST_EXECSPACE,
