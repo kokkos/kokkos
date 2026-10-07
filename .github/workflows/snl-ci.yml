@@ -49,6 +49,7 @@ jobs:
         with:
           repository: kokkos/mdspan
           path: mdspan
+          fetch-depth: 0
 
       - name: configure_mdspan
         run: |
