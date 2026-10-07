@@ -601,8 +601,7 @@ __device__ bool cuda_single_inter_block_reduce_scan2(
     size_type* const shared = shared_data + word_count.value * BlockSizeMask;
     size_type* const global = global_data + word_count.value * block_id;
 
-    for (int i = int(threadIdx.y); i < int(word_count.value);
-         i += int(blockDim.y)) {
+    for (unsigned i = threadIdx.y; i < word_count.value; i += blockDim.y) {
       global[i] = shared[i];
     }
   }
