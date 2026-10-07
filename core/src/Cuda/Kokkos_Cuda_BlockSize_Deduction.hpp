@@ -151,7 +151,9 @@ inline int cuda_deduce_block_size(bool early_termination,
       }
     }
 
-    if (early_termination && opt_block_size != 0) break;
+    // Avoid searching block sizes smaller than 32 if we have already found a
+    // valid one (or if we are only interested in the first valid one).
+    if ((early_termination || block_size < 64) && opt_block_size != 0) break;
   }
 
   return opt_block_size;
