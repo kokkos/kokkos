@@ -65,27 +65,26 @@ KOKKOS_INLINE_FUNCTION void sum_views(const Handle& handle, const X& x,
 template <class ExecSpace>
 void verify(const float_tensor4_t<ExecSpace>& M, const float expected,
             const char* label) {
-  const int L      = M.extent_int(0);
-  const int T      = M.extent_int(1);
-  const int V      = M.extent_int(2);
-  const int N      = M.extent_int(3);
-  const auto count = static_cast<size_t>(L) * T * V * N;
+  const auto L     = M.extent_int(0);
+  const auto T     = M.extent_int(1);
+  const auto V     = M.extent_int(2);
+  const auto N     = M.extent_int(3);
+  const auto count = L * T * V * N;
 
-  double sum = 0;
+  float sum = 0;
   // Flatten indices to avoid use of nesting and associated data structures
   Kokkos::parallel_reduce(
       label, Kokkos::RangePolicy<ExecSpace>(0, count),
-      KOKKOS_LAMBDA(const size_t i, double& s) {
-        const int n = static_cast<int>(i % static_cast<size_t>(N));
-        const int v = static_cast<int>((i / N) % V);
-        const int t = static_cast<int>((i / (static_cast<size_t>(N) * V)) % T);
-        const int l = static_cast<int>(i / (static_cast<size_t>(N) * V * T));
+      KOKKOS_LAMBDA(const size_t i, float& s) {
+        const auto n = i % N;
+        const auto v = (i / N) % V;
+        const auto t = (i / (N * V)) % T;
+        const auto l = i / (N * V * T);
         s += M(l, t, v, n);
       },
       sum);
 
-  ASSERT_FLOAT_EQ(static_cast<float>(sum),
-                  static_cast<float>(count) * expected);
+  ASSERT_FLOAT_EQ(sum, count * expected);
 }
 
 template <class ExecSpace>
