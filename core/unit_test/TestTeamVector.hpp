@@ -1118,10 +1118,9 @@ void check_scan_return_value() {
               const Reducer reducer(local);
               Kokkos::parallel_scan(
                   Kokkos::ThreadVectorRange(team, n_vector),
-                  [&](const int j, value_type &upd, const bool final) {
+                  [&](const int j, value_type &upd, const bool /*final*/) {
                     const value_type contrib = static_cast<value_type>(j + 1);
                     reducer.join(upd, contrib);
-                    (void) final;
                   },
                   reducer);
               totals(chunk) = local;
