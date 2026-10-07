@@ -35,8 +35,8 @@ class ParallelScanHIPBase {
   using functor_type   = FunctorType;
   using size_type      = HIP::size_type;
   using index_type     = typename Policy::index_type;
-  // Conditionally set word_size_type to int16_t or int8_t if value_type is
-  // smaller than int32_t (Kokkos::HIP::size_type)
+  // Conditionally set word_size_type to uint16_t or uint8_t if value_type is
+  // smaller than 32 bits (width of Kokkos::HIP::size_type)
   // word_size_type is used to determine the word count, shared memory buffer
   // size, and global memory buffer size before the scan is performed.
   // Within the scan, the word count is recomputed based on word_size_type
@@ -49,7 +49,8 @@ class ParallelScanHIPBase {
   // bytes.
   using word_size_type = std::conditional_t<
       sizeof(value_type) < sizeof(size_type),
-      std::conditional_t<sizeof(value_type) == 2, int16_t, int8_t>, size_type>;
+      std::conditional_t<sizeof(value_type) == 2, uint16_t, uint8_t>,
+      size_type>;
 
  protected:
   // Algorithmic constraints:
@@ -87,8 +88,8 @@ class ParallelScanHIPBase {
     const typename Analysis::Reducer& final_reducer =
         m_functor_reducer.get_reducer();
 
-    const integral_nonzero_constant<word_size_type, Analysis::StaticValueSize /
-                                                        sizeof(word_size_type)>
+    const integral_nonzero_constant<size_type, Analysis::StaticValueSize /
+                                                   sizeof(word_size_type)>
         word_count(final_reducer.value_size() / sizeof(word_size_type));
 
     pointer_type const shared_value = reinterpret_cast<pointer_type>(
@@ -126,8 +127,8 @@ class ParallelScanHIPBase {
     const typename Analysis::Reducer& final_reducer =
         m_functor_reducer.get_reducer();
 
-    const integral_nonzero_constant<word_size_type, Analysis::StaticValueSize /
-                                                        sizeof(word_size_type)>
+    const integral_nonzero_constant<size_type, Analysis::StaticValueSize /
+                                                   sizeof(word_size_type)>
         word_count(final_reducer.value_size() / sizeof(word_size_type));
 
     // Use shared memory as an exclusive scan: { 0 , value[0] , value[1] ,
