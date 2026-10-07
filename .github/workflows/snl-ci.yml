@@ -54,7 +54,7 @@ jobs:
         run: |
           cd mdspan
           git reset --hard $(cat ../kokkos/tpls/mdspan-hash.txt)
-          cmake -B build -DCMAKE_INSTALL_PREFIX=/tmp/mdspan-install -S .
+          cmake -B build -DCMAKE_CXX_STANDARD=20 -DCMAKE_INSTALL_PREFIX=/tmp/mdspan-install -S .
 
       - name: build_and_install_mdspan
         working-directory: mdspan
