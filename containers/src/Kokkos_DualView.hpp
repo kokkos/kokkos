@@ -84,7 +84,7 @@ inline cudaStream_t get_cuda_stream(const NonCudaExecSpace&) {
 
 }  // namespace Impl
 
-template <class DataType, class... Properties>
+template <class DataOrElementType, class... Properties>
 class DualView;
 
 template <class>
@@ -99,21 +99,21 @@ struct is_dual_view<const DualView<DT, DP...>> : public std::true_type {};
 template <class T>
 inline constexpr bool is_dual_view_v = is_dual_view<T>::value;
 
-template <class DataType, class... Properties>
-class DualView : public ViewTraits<DataType, Properties...> {
+template <class DataOrElementType, class... Properties>
+class DualView : public ViewTraits<DataOrElementType, Properties...> {
   template <class, class...>
   friend class DualView;
 
  public:
   //! \name Typedefs for device types and various Kokkos::View specializations.
   //@{
-  using traits = ViewTraits<DataType, Properties...>;
+  using traits = ViewTraits<DataOrElementType, Properties...>;
 
   //! The Kokkos Host Device type;
   using host_mirror_space = typename traits::host_mirror_space;
 
   //! The type of a Kokkos::View on the device.
-  using t_dev = View<typename traits::data_type, Properties...>;
+  using t_dev = View<DataOrElementType, Properties...>;
 
   /// \typedef t_host
   /// \brief The type of a Kokkos::View host mirror of \c t_dev.
@@ -121,12 +121,13 @@ class DualView : public ViewTraits<DataType, Properties...> {
 
   //! The type of a const View on the device.
   //! The type of a Kokkos::View on the device.
-  using t_dev_const = View<typename traits::const_data_type, Properties...>;
+  using t_dev_const = typename t_dev::const_type;
 
   /// \typedef t_host_const
   /// \brief The type of a const View host mirror of \c t_dev_const.
   using t_host_const = typename t_dev_const::host_mirror_type;
 
+  // TODO: deprecate the following types, View doesn't have the equivalent
   //! The type of a const, random-access View on the device.
   using t_dev_const_randomread =
       View<typename traits::const_data_type, typename traits::array_layout,
@@ -1119,19 +1120,11 @@ class DualView : public ViewTraits<DataType, Properties...> {
     d_view.stride(stride_);
   }
 
-  template <typename iType>
-  KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<std::is_integral_v<iType>,
-                                                    size_t>
-  extent(const iType& r) const {
-    return d_view.extent(r);
-  }
+  KOKKOS_INLINE_FUNCTION
+  auto extent(const size_t& r) const { return d_view.extent(r); }
 
-  template <typename iType>
-  KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<std::is_integral_v<iType>,
-                                                    int>
-  extent_int(const iType& r) const {
-    return static_cast<int>(d_view.extent(r));
-  }
+  KOKKOS_INLINE_FUNCTION
+  int extent_int(const size_t& r) const { return d_view.extent_int(r); }
 
   //@}
 };
