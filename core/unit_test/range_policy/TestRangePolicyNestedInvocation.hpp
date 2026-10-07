@@ -18,8 +18,9 @@ template <class ExecSpace>
 using float_tensor4_t = Kokkos::View<float[4][4][4][16], ExecSpace>;
 
 template <class Handle, class X>
-KOKKOS_INLINE_FUNCTION std::enable_if_t<X::rank == 2> sum_views(
-    const Handle& handle, const X& x, const float c) {
+  requires(X::rank == 2)
+KOKKOS_INLINE_FUNCTION void sum_views(const Handle& handle, const X& x,
+                                      const float c) {
   Kokkos::parallel_for(
       Kokkos::RangePolicy(handle, 0, x.extent_int(0)),
       KOKKOS_LAMBDA(const int i) {
@@ -30,8 +31,9 @@ KOKKOS_INLINE_FUNCTION std::enable_if_t<X::rank == 2> sum_views(
 }
 
 template <class Handle, class X>
-KOKKOS_INLINE_FUNCTION std::enable_if_t<X::rank == 3> sum_views(
-    const Handle& handle, const X& x, const float c) {
+  requires(X::rank == 3)
+KOKKOS_INLINE_FUNCTION void sum_views(const Handle& handle, const X& x,
+                                      const float c) {
   Kokkos::parallel_for(
       Kokkos::RangePolicy(handle, 0, x.extent_int(0)),
       KOKKOS_LAMBDA(const int i) {
@@ -44,8 +46,9 @@ KOKKOS_INLINE_FUNCTION std::enable_if_t<X::rank == 3> sum_views(
 }
 
 template <class Handle, class X>
-KOKKOS_INLINE_FUNCTION std::enable_if_t<X::rank == 4> sum_views(
-    const Handle& handle, const X& x, const float c) {
+  requires(X::rank == 4)
+KOKKOS_INLINE_FUNCTION void sum_views(const Handle& handle, const X& x,
+                                      const float c) {
   Kokkos::parallel_for(
       Kokkos::RangePolicy(handle, 0, x.extent_int(0)),
       KOKKOS_LAMBDA(const int i) {
