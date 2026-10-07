@@ -286,16 +286,6 @@ class LargeArrayReduceTeamFunctor {
       : value_count(value_count_), nwork(nwork_) {}
 
   KOKKOS_INLINE_FUNCTION
-  void init(value_type dst) const {
-    for (size_type i = 0; i < value_count; ++i) dst[i] = 0;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  void join(value_type dst, const value_type src) const {
-    for (size_type i = 0; i < value_count; ++i) dst[i] += src[i];
-  }
-
-  KOKKOS_INLINE_FUNCTION
   void operator()(const typename policy_type::member_type &team,
                   value_type dst) const {
     const int thread_rank =
