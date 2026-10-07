@@ -111,6 +111,10 @@ SYCLInternal::SYCLInternal(const sycl::queue& q) : m_queue(q) {
   for (auto& usm_mem : m_indirectKernelMem) {
     usm_mem.reset(m_queue, m_instance_id);
   }
+
+  m_num_scratch_locks = m_maxConcurrency;
+  m_scratch_locks = sycl::malloc_device<int32_t>(m_num_scratch_locks, m_queue);
+  m_queue.memset(m_scratch_locks, 0, sizeof(int32_t) * m_num_scratch_locks);
 }
 
 int SYCLInternal::acquire_team_scratch_space() {
@@ -177,6 +181,8 @@ SYCLInternal::~SYCLInternal() {
                                   m_team_scratch_current_size[i]);
     }
   }
+
+  sycl::free(m_scratch_locks, m_queue);
 
   for (auto& usm_mem : m_indirectKernelMem) usm_mem.reset();
   // guard erasing from all_queues

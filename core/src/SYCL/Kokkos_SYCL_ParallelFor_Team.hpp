@@ -39,18 +39,28 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
       const auto& functor_wrapper,
       const sycl::local_accessor<char, 1>& team_scratch_memory_L0,
       const size_t (&scratch_size)[2], const int shmem_begin,
-      const sycl::global_ptr<char> global_scratch_ptr) {
+      const sycl::global_ptr<char> global_scratch_ptr,
+      const sycl::global_ptr<int32_t> scratch_locks,
+      const size_t num_scratch_locks) {
     return [=](sycl::nd_item<2> item) {
+      size_t threadid = 0;
+      if (scratch_size[1] > 0)
+        threadid = sycl_get_scratch_index(
+            item, scratch_locks, num_scratch_locks,
+            item.get_group_range(0) * item.get_group_range(1));
+
       const member_type team_member(
           team_scratch_memory_L0.get_multi_ptr<sycl::access::decorated::yes>(),
           shmem_begin, scratch_size[0],
-          global_scratch_ptr + item.get_group(1) * scratch_size[1],
-          scratch_size[1], item, item.get_group_linear_id(),
-          item.get_group_range(1));
+          global_scratch_ptr + threadid * scratch_size[1], scratch_size[1],
+          item, item.get_group_linear_id(), item.get_group_range(1));
       if constexpr (std::is_void_v<work_tag>)
         functor_wrapper.get_functor()(team_member);
       else
         functor_wrapper.get_functor()(work_tag(), team_member);
+
+      if (scratch_size[1] > 0)
+        sycl_release_scratch_index(item, scratch_locks, threadid);
     };
   }
 
@@ -78,9 +88,11 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
       const auto shmem_begin       = m_shmem_begin;
       const size_t scratch_size[2] = {m_scratch_size[0], m_scratch_size[1]};
 
-      auto lambda =
-          create_team_for_lambda(functor_wrapper, team_scratch_memory_L0,
-                                 scratch_size, shmem_begin, global_scratch_ptr);
+      auto lambda = create_team_for_lambda(
+          functor_wrapper, team_scratch_memory_L0, scratch_size, shmem_begin,
+          global_scratch_ptr,
+          space.impl_internal_space_instance()->m_scratch_locks,
+          space.impl_internal_space_instance()->m_num_scratch_locks);
 
       static sycl::kernel kernel = [&] {
         sycl::kernel_id functor_kernel_id =
@@ -140,7 +152,10 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     const sycl::global_ptr<char> global_scratch_ptr =
         static_cast<sycl::global_ptr<char>>(instance.resize_team_scratch_space(
             scratch_pool_id,
-            static_cast<ptrdiff_t>(m_scratch_size[1]) * m_league_size));
+            m_scratch_size[1] *
+                std::min<ptrdiff_t>(instance.m_num_scratch_locks /
+                                        (m_team_size * m_vector_size),
+                                    m_league_size)));
 
     Kokkos::Impl::SYCLInternal::IndirectKernelMem& indirectKernelMem =
         instance.get_indirect_kernel_mem();
