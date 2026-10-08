@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
-#ifndef KOKKOS_IMPL_FUNCTOR_WRAPPER_UTIL_HPP
-#define KOKKOS_IMPL_FUNCTOR_WRAPPER_UTIL_HPP
+#ifndef KOKKOS_IMPL_UNBIND_INDEX_ARGUMENT
+#define KOKKOS_IMPL_UNBIND_INDEX_ARGUMENT
 
 #include <type_traits>
 
@@ -11,7 +11,7 @@ namespace Kokkos::Impl {
 // Helper to allow passing an indexless functor to the parallel_for backend
 // through special interface such as Kokkos::GraphNodeThen and Kokkos::Single.
 template <typename Functor>
-struct IndexlessFunctorWrapper {
+struct UnbindIndexArgument {
   Functor m_functor;
 
   // One of WorkTagOrIndex or MaybeIndex contains the index, the other can be
@@ -32,7 +32,7 @@ struct IndexlessFunctorWrapper {
 // Helper to allow passing an indexless functor to the parallel_reduce backend
 // through special interface such as Kokkos::GraphNodeThen and Kokkos::Single.
 template <class FunctorType, class WorkTag>
-struct IndexlessReductionFunctorWrapper {
+struct UnbindReductionIndexArgument {
   FunctorType m_functor;
 
   // One of WorkTagOrIndex or IndexOrFirstRet contains the index, the other can
@@ -54,4 +54,4 @@ struct IndexlessReductionFunctorWrapper {
 
 }  //  namespace Kokkos::Impl
 
-#endif  // KOKKOS_IMPL_FUNCTOR_WRAPPER_UTIL_HPP
+#endif  // KOKKOS_IMPL_UNBIND_INDEX_ARGUMENT

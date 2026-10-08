@@ -16,7 +16,7 @@ static_assert(false,
 #include <Kokkos_ExecPolicy.hpp>
 #include <Kokkos_View.hpp>
 
-#include <impl/Kokkos_FunctorWrapperUtil.hpp>
+#include <impl/Kokkos_UnbindIndexArgument.hpp>
 #include <impl/Kokkos_Single_Default_Impl.hpp>
 #include <impl/Kokkos_Tools_Generic.hpp>
 
@@ -74,7 +74,7 @@ template <class FunctorType, class ReturnType, class... PolicyProperties>
 inline void single(const std::string& label,
                    const SinglePolicy<PolicyProperties...>& single_policy,
                    const FunctorType& functor, ReturnType& return_value) {
-  ::Kokkos::Impl::IndexlessReductionFunctorWrapper<
+  ::Kokkos::Impl::UnbindReductionIndexArgument<
       FunctorType, typename SinglePolicy<PolicyProperties...>::work_tag>
       functor_wrapper{functor};
 

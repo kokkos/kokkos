@@ -13,7 +13,7 @@ static_assert(false,
 
 #ifndef KOKKOS_SINGLE_DEFAULT_IMPL_HPP
 #define KOKKOS_SINGLE_DEFAULT_IMPL_HPP
-#include <impl/Kokkos_FunctorWrapperUtil.hpp>
+#include <impl/Kokkos_UnbindIndexArgument.hpp>
 
 namespace Kokkos::Impl {
 // Default implementation for execution spaces that don't provide a definition
@@ -25,8 +25,7 @@ struct Single {
     // We will use the standard function for parallel_for, so we need to modify
     // the functor in order to make it callable by the standard function by
     // giving it an index parameter
-    ::Kokkos::Impl::IndexlessFunctorWrapper<FunctorType> functor_wrapper{
-        functor};
+    ::Kokkos::Impl::UnbindIndexArgument<FunctorType> functor_wrapper{functor};
 
     using WrapperType = decltype(functor_wrapper);
 
