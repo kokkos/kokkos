@@ -785,6 +785,47 @@ TEST(TEST_CATEGORY, dualview_resize_single_device) {
   ASSERT_EQ(!is_same_device, dv.need_sync_device());
 }
 
+TEST(TEST_CATEGORY, dualview_mdspan_style_args) {
+  using dv_t = Kokkos::DualView<
+      double, Kokkos::extents<int, Kokkos::dynamic_extent, 4>,
+      Kokkos::layout_left,
+      Kokkos::Experimental::Accessor<double, Kokkos::DefaultMemorySpace,
+                                     Kokkos::MemoryTraits<>>>;
+
+  using expected_dev_t = Kokkos::View<
+      double, Kokkos::extents<int, Kokkos::dynamic_extent, 4>,
+      Kokkos::layout_left,
+      Kokkos::Experimental::Accessor<double, Kokkos::DefaultMemorySpace,
+                                     Kokkos::MemoryTraits<>>>;
+
+  using expected_host_mem_t = std::conditional_t<
+      Kokkos::SpaceAccessibility<Kokkos::DefaultHostExecutionSpace,
+                                 Kokkos::DefaultMemorySpace>::accessible,
+      Kokkos::DefaultMemorySpace, Kokkos::HostSpace>;
+  using expected_host_t =
+      Kokkos::View<double, Kokkos::extents<int, Kokkos::dynamic_extent, 4>,
+                   Kokkos::layout_left,
+                   Kokkos::Experimental::Accessor<double, expected_host_mem_t,
+                                                  Kokkos::MemoryTraits<>>>;
+
+  static_assert(std::is_same_v<typename dv_t::t_dev, expected_dev_t>);
+  static_assert(std::is_same_v<typename dv_t::t_host, expected_host_t>);
+
+  dv_t dv("A", 10, 4);
+  ASSERT_EQ(dv.extent(0), 10);
+  ASSERT_EQ(dv.extent(1), 4);
+  static_assert(std::is_same_v<decltype(dv.extent(0)), int>);
+  static_assert(
+      std::is_same_v<decltype(dv.view_device()), const expected_dev_t&>);
+  static_assert(
+      std::is_same_v<decltype(dv.view_host()), const expected_host_t&>);
+  // FIXME: maybe we should fix that these two return differently than the above
+  static_assert(std::is_same_v<decltype(dv.view<Kokkos::DefaultMemorySpace>()),
+                               expected_dev_t>);
+  static_assert(std::is_same_v<decltype(dv.view<expected_host_mem_t>()),
+                               expected_host_t>);
+}
+
 }  // anonymous namespace
 }  // namespace Test
 
