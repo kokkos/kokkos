@@ -798,10 +798,14 @@ TEST(TEST_CATEGORY, dualview_mdspan_style_args) {
       Kokkos::Experimental::Accessor<double, Kokkos::DefaultMemorySpace,
                                      Kokkos::MemoryTraits<>>>;
 
+  using expected_host_mem_t = std::conditional_t<
+      Kokkos::SpaceAccessibility<Kokkos::DefaultHostExecutionSpace,
+                                 Kokkos::DefaultMemorySpace>::accessible,
+      Kokkos::DefaultMemorySpace, Kokkos::HostSpace>;
   using expected_host_t =
       Kokkos::View<double, Kokkos::extents<int, Kokkos::dynamic_extent, 4>,
                    Kokkos::layout_left,
-                   Kokkos::Experimental::Accessor<double, Kokkos::HostSpace,
+                   Kokkos::Experimental::Accessor<double, expected_host_mem_t,
                                                   Kokkos::MemoryTraits<>>>;
 
   static_assert(std::is_same_v<typename dv_t::t_dev, expected_dev_t>);
@@ -818,8 +822,8 @@ TEST(TEST_CATEGORY, dualview_mdspan_style_args) {
   // FIXME: maybe we should fix that these two return differently than the above
   static_assert(std::is_same_v<decltype(dv.view<Kokkos::DefaultMemorySpace>()),
                                expected_dev_t>);
-  static_assert(
-      std::is_same_v<decltype(dv.view<Kokkos::HostSpace>()), expected_host_t>);
+  static_assert(std::is_same_v<decltype(dv.view<expected_host_mem_t>()),
+                               expected_host_t>);
 }
 
 }  // anonymous namespace
