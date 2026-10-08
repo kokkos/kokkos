@@ -183,7 +183,8 @@ TEST(kokkosp, kernel_name_internal) {
     Kokkos::Impl::ParallelConstructName<ThisType, void> pcn(label);
     ASSERT_EQ(pcn.get(), label);
     std::string const empty_label("");
-    Kokkos::Impl::ParallelConstructName<ThisType, void> empty_pcn(empty_label);
+    Kokkos::Impl::ParallelConstructName<ThisType, void, false> empty_pcn(
+        empty_label);
     ASSERT_EQ(empty_pcn.get(), typeid_name(ThisType{}));
   }
   {
@@ -191,7 +192,7 @@ TEST(kokkosp, kernel_name_internal) {
     Kokkos::Impl::ParallelConstructName<ThisType, WorkTag> pcn(label);
     ASSERT_EQ(pcn.get(), label);
     std::string const empty_label("");
-    Kokkos::Impl::ParallelConstructName<ThisType, WorkTag> empty_pcn(
+    Kokkos::Impl::ParallelConstructName<ThisType, WorkTag, false> empty_pcn(
         empty_label);
     ASSERT_EQ(empty_pcn.get(),
               typeid_name(ThisType{}) + "/" + typeid_name(WorkTag{}));
