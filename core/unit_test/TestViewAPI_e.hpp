@@ -230,7 +230,7 @@ void test_view_extent_precondition_violation(V v) {
 #endif
   }
 
-  for (size_t r = 0; r < V::rank_dynamic(); ++r) {
+  for (size_t r = 0; r != V::rank_dynamic(); ++r) {
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
     ASSERT_EQ(v.static_extent(r), 0);
 #else
