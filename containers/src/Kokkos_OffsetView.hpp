@@ -21,6 +21,7 @@ import kokkos.core_impl;
 #include <array>
 #include <span>
 #include <type_traits>
+#include <utility>
 
 namespace Kokkos {
 
@@ -43,9 +44,22 @@ struct is_offset_view<const OffsetView<D, P...>> : public std::true_type {};
 template <class T>
 inline constexpr bool is_offset_view_v = is_offset_view<T>::value;
 
-#define KOKKOS_INVALID_OFFSET int64_t(0x7FFFFFFFFFFFFFFFLL)
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
+namespace Impl {
+// Macros can't be marked deprecated, so they expand to a deprecated variable
+// instead, which emits the warning wherever they are used.
+KOKKOS_DEPRECATED_WITH_COMMENT(
+    "KOKKOS_INVALID_OFFSET and KOKKOS_INVALID_INDEX_RANGE are deprecated. Use "
+    "OffsetView::invalid_index() and OffsetView::invalid_range() instead.")
+inline constexpr int64_t deprecated_invalid_offset =
+    Kokkos::finite_max_v<int64_t>;
+}  // namespace Impl
+
+#define KOKKOS_INVALID_OFFSET \
+  ::Kokkos::Experimental::Impl::deprecated_invalid_offset
 #define KOKKOS_INVALID_INDEX_RANGE \
   { KOKKOS_INVALID_OFFSET, KOKKOS_INVALID_OFFSET }
+#endif
 
 template <typename iType,
           std::enable_if_t<std::is_integral_v<iType> && std::is_signed_v<iType>,
@@ -192,12 +206,20 @@ class OffsetView : public View<DataType, Properties...> {
 
   using begins_type = Kokkos::Array<int64_t, base_t::rank()>;
 
+  KOKKOS_FUNCTION static constexpr int64_t invalid_index() {
+    return Kokkos::finite_max_v<int64_t>;
+  }
+
+  static constexpr std::pair<int64_t, int64_t> invalid_range() {
+    return {invalid_index(), invalid_index()};
+  }
+
   template <typename iType,
             std::enable_if_t<std::is_integral_v<iType>, iType> = 0>
   KOKKOS_FUNCTION int64_t begin(const iType local_dimension) const {
     return static_cast<size_t>(local_dimension) < base_t::rank()
                ? m_begins[local_dimension]
-               : KOKKOS_INVALID_OFFSET;
+               : invalid_index();
   }
 
   KOKKOS_FUNCTION
@@ -278,8 +300,7 @@ class OffsetView : public View<DataType, Properties...> {
 
   KOKKOS_FUNCTION
   OffsetView() : base_t() {
-    for (size_t i = 0; i < base_t::rank(); ++i)
-      m_begins[i] = KOKKOS_INVALID_OFFSET;
+    for (size_t i = 0; i < base_t::rank(); ++i) m_begins[i] = invalid_index();
   }
 
   // interoperability with View
@@ -359,7 +380,7 @@ class OffsetView : public View<DataType, Properties...> {
   KOKKOS_FUNCTION static int64_t at(const Range& a, size_t pos) {
     // For Kokkos::Array the size is a compile-time constant, so this check is
     // free; it also keeps callers that query every possible rank in bounds.
-    if (pos >= a.size()) return KOKKOS_INVALID_OFFSET;
+    if (pos >= a.size()) return invalid_index();
     return *(a.begin() + pos);
   }
 
@@ -383,12 +404,12 @@ class OffsetView : public View<DataType, Properties...> {
         << ")\n";
   }
 
-  // Number of entries of an index range that are not KOKKOS_INVALID_OFFSET
+  // Number of entries of an index range that are not invalid_index()
   template <typename Range>
   KOKKOS_FUNCTION static size_t count_valid_offsets(const Range& r) {
     size_t num_offsets = 0;
     for (size_t i = 0; i < r.size(); ++i)
-      if (at(r, i) != KOKKOS_INVALID_OFFSET) ++num_offsets;
+      if (at(r, i) != invalid_index()) ++num_offsets;
     return num_offsets;
   }
 
@@ -421,7 +442,7 @@ class OffsetView : public View<DataType, Properties...> {
 
   // Check that begins and ends have one entry per rank and that begins <= ends
   // for all elements. B, E can be any integral index range. ends is only
-  // checked for its size: KOKKOS_INVALID_OFFSET is a valid exclusive end.
+  // checked for its size: invalid_index() is a valid exclusive end.
   // label names the view in the error message; the base View does not exist
   // yet, so it has to be provided by the caller.
   template <typename B, typename E>
@@ -621,37 +642,37 @@ class OffsetView : public View<DataType, Properties...> {
       "ends are arrays of first and exclusive-end indices per dimension.")
   explicit OffsetView(
       const Label& arg_label, const std::pair<int64_t, int64_t> range0,
-      const std::pair<int64_t, int64_t> range1 = KOKKOS_INVALID_INDEX_RANGE,
-      const std::pair<int64_t, int64_t> range2 = KOKKOS_INVALID_INDEX_RANGE,
-      const std::pair<int64_t, int64_t> range3 = KOKKOS_INVALID_INDEX_RANGE,
-      const std::pair<int64_t, int64_t> range4 = KOKKOS_INVALID_INDEX_RANGE,
-      const std::pair<int64_t, int64_t> range5 = KOKKOS_INVALID_INDEX_RANGE,
-      const std::pair<int64_t, int64_t> range6 = KOKKOS_INVALID_INDEX_RANGE,
-      const std::pair<int64_t, int64_t> range7 = KOKKOS_INVALID_INDEX_RANGE)
+      const std::pair<int64_t, int64_t> range1 = invalid_range(),
+      const std::pair<int64_t, int64_t> range2 = invalid_range(),
+      const std::pair<int64_t, int64_t> range3 = invalid_range(),
+      const std::pair<int64_t, int64_t> range4 = invalid_range(),
+      const std::pair<int64_t, int64_t> range5 = invalid_range(),
+      const std::pair<int64_t, int64_t> range6 = invalid_range(),
+      const std::pair<int64_t, int64_t> range7 = invalid_range())
       : OffsetView(Kokkos::Impl::ViewCtorProp<std::string>(arg_label),
                    typename traits::array_layout(
-                       range0.first == KOKKOS_INVALID_OFFSET
+                       range0.first == invalid_index()
                            ? KOKKOS_IMPL_CTOR_DEFAULT_ARG - 1
                            : range0.second - range0.first + 1,
-                       range1.first == KOKKOS_INVALID_OFFSET
+                       range1.first == invalid_index()
                            ? KOKKOS_IMPL_CTOR_DEFAULT_ARG
                            : range1.second - range1.first + 1,
-                       range2.first == KOKKOS_INVALID_OFFSET
+                       range2.first == invalid_index()
                            ? KOKKOS_IMPL_CTOR_DEFAULT_ARG
                            : range2.second - range2.first + 1,
-                       range3.first == KOKKOS_INVALID_OFFSET
+                       range3.first == invalid_index()
                            ? KOKKOS_IMPL_CTOR_DEFAULT_ARG
                            : range3.second - range3.first + 1,
-                       range4.first == KOKKOS_INVALID_OFFSET
+                       range4.first == invalid_index()
                            ? KOKKOS_IMPL_CTOR_DEFAULT_ARG
                            : range4.second - range4.first + 1,
-                       range5.first == KOKKOS_INVALID_OFFSET
+                       range5.first == invalid_index()
                            ? KOKKOS_IMPL_CTOR_DEFAULT_ARG
                            : range5.second - range5.first + 1,
-                       range6.first == KOKKOS_INVALID_OFFSET
+                       range6.first == invalid_index()
                            ? KOKKOS_IMPL_CTOR_DEFAULT_ARG
                            : range6.second - range6.first + 1,
-                       range7.first == KOKKOS_INVALID_OFFSET
+                       range7.first == invalid_index()
                            ? KOKKOS_IMPL_CTOR_DEFAULT_ARG
                            : range7.second - range7.first + 1),
                    {range0.first, range1.first, range2.first, range3.first,
@@ -670,38 +691,38 @@ class OffsetView : public View<DataType, Properties...> {
       "ends are arrays of first and exclusive-end indices per dimension.")
   explicit OffsetView(
       const Kokkos::Impl::ViewCtorProp<P...>& arg_prop,
-      const std::pair<int64_t, int64_t> range0 = KOKKOS_INVALID_INDEX_RANGE,
-      const std::pair<int64_t, int64_t> range1 = KOKKOS_INVALID_INDEX_RANGE,
-      const std::pair<int64_t, int64_t> range2 = KOKKOS_INVALID_INDEX_RANGE,
-      const std::pair<int64_t, int64_t> range3 = KOKKOS_INVALID_INDEX_RANGE,
-      const std::pair<int64_t, int64_t> range4 = KOKKOS_INVALID_INDEX_RANGE,
-      const std::pair<int64_t, int64_t> range5 = KOKKOS_INVALID_INDEX_RANGE,
-      const std::pair<int64_t, int64_t> range6 = KOKKOS_INVALID_INDEX_RANGE,
-      const std::pair<int64_t, int64_t> range7 = KOKKOS_INVALID_INDEX_RANGE)
+      const std::pair<int64_t, int64_t> range0 = invalid_range(),
+      const std::pair<int64_t, int64_t> range1 = invalid_range(),
+      const std::pair<int64_t, int64_t> range2 = invalid_range(),
+      const std::pair<int64_t, int64_t> range3 = invalid_range(),
+      const std::pair<int64_t, int64_t> range4 = invalid_range(),
+      const std::pair<int64_t, int64_t> range5 = invalid_range(),
+      const std::pair<int64_t, int64_t> range6 = invalid_range(),
+      const std::pair<int64_t, int64_t> range7 = invalid_range())
       : OffsetView(arg_prop,
                    typename traits::array_layout(
-                       range0.first == KOKKOS_INVALID_OFFSET
+                       range0.first == invalid_index()
                            ? KOKKOS_IMPL_CTOR_DEFAULT_ARG
                            : range0.second - range0.first + 1,
-                       range1.first == KOKKOS_INVALID_OFFSET
+                       range1.first == invalid_index()
                            ? KOKKOS_IMPL_CTOR_DEFAULT_ARG
                            : range1.second - range1.first + 1,
-                       range2.first == KOKKOS_INVALID_OFFSET
+                       range2.first == invalid_index()
                            ? KOKKOS_IMPL_CTOR_DEFAULT_ARG
                            : range2.second - range2.first + 1,
-                       range3.first == KOKKOS_INVALID_OFFSET
+                       range3.first == invalid_index()
                            ? KOKKOS_IMPL_CTOR_DEFAULT_ARG
                            : range3.second - range3.first + 1,
-                       range4.first == KOKKOS_INVALID_OFFSET
+                       range4.first == invalid_index()
                            ? KOKKOS_IMPL_CTOR_DEFAULT_ARG
                            : range4.second - range4.first + 1,
-                       range5.first == KOKKOS_INVALID_OFFSET
+                       range5.first == invalid_index()
                            ? KOKKOS_IMPL_CTOR_DEFAULT_ARG
                            : range5.second - range5.first + 1,
-                       range6.first == KOKKOS_INVALID_OFFSET
+                       range6.first == invalid_index()
                            ? KOKKOS_IMPL_CTOR_DEFAULT_ARG
                            : range6.second - range6.first + 1,
-                       range7.first == KOKKOS_INVALID_OFFSET
+                       range7.first == invalid_index()
                            ? KOKKOS_IMPL_CTOR_DEFAULT_ARG
                            : range7.second - range7.first + 1),
                    {range0.first, range1.first, range2.first, range3.first,

@@ -490,7 +490,7 @@ void test_offsetview_unmanaged_construction_death() {
 
 // Checks of the begins/ends given to the OffsetView constructors: lists that
 // are too small or too large for the rank and begins holding
-// KOKKOS_INVALID_OFFSET.
+// OffsetView::invalid_index().
 template <typename Scalar, typename Device>
 void test_offsetview_range_checks_death() {
   using offset_view_type = Kokkos::Experimental::OffsetView<Scalar**, Device>;
@@ -513,7 +513,8 @@ void test_offsetview_range_checks_death() {
 
   const index_array_type begins         = {{0, 0}};
   const index_array_type ends           = {{1, 1}};
-  const index_array_type invalid_begins = {{0, KOKKOS_INVALID_OFFSET}};
+  const index_array_type invalid_begins = {
+      {0, offset_view_type::invalid_index()}};
 
   {
     // Managed OffsetView: the label is taken from the constructor properties
@@ -528,12 +529,13 @@ void test_offsetview_range_checks_death() {
                      OFFSETVIEW_ERROR("o") ".*"
                                            "ends\\.size\\(\\) \\(3\\) != Rank "
                                            "\\(2\\)"));
-    ASSERT_DEATH(offset_view_type("o", {0, KOKKOS_INVALID_OFFSET}, {1, 1}),
-                 SKIP_REGEX_ON_WINDOWS(OFFSETVIEW_ERROR(
-                     "o") ".*"
-                          "The number of offsets provided in begins "
-                          "\\( 1 \\) must equal the dynamic rank \\( 2 "
-                          "\\)"));
+    ASSERT_DEATH(
+        offset_view_type("o", {0, offset_view_type::invalid_index()}, {1, 1}),
+        SKIP_REGEX_ON_WINDOWS(
+            OFFSETVIEW_ERROR("o") ".*"
+                                  "The number of offsets provided in begins "
+                                  "\\( 1 \\) must equal the dynamic rank \\( 2 "
+                                  "\\)"));
     ASSERT_DEATH(offset_view_type("o", invalid_begins, ends),
                  SKIP_REGEX_ON_WINDOWS(OFFSETVIEW_ERROR(
                      "o") ".*"
@@ -563,12 +565,13 @@ void test_offsetview_range_checks_death() {
                      "UNMANAGED") ".*"
                                   "begins\\.size\\(\\) \\(3\\) != Rank "
                                   "\\(2\\)"));
-    ASSERT_DEATH(offset_view_type(ptr, {KOKKOS_INVALID_OFFSET, 0}, {1, 1}),
-                 SKIP_REGEX_ON_WINDOWS(OFFSETVIEW_ERROR(
-                     "UNMANAGED") ".*"
-                                  "The number of offsets provided in begins "
-                                  "\\( 1 \\) must equal the dynamic rank \\( 2 "
-                                  "\\)"));
+    ASSERT_DEATH(
+        offset_view_type(ptr, {offset_view_type::invalid_index(), 0}, {1, 1}),
+        SKIP_REGEX_ON_WINDOWS(OFFSETVIEW_ERROR(
+            "UNMANAGED") ".*"
+                         "The number of offsets provided in begins "
+                         "\\( 1 \\) must equal the dynamic rank \\( 2 "
+                         "\\)"));
     ASSERT_DEATH(offset_view_type(ptr, invalid_begins, ends),
                  SKIP_REGEX_ON_WINDOWS(OFFSETVIEW_ERROR(
                      "UNMANAGED") ".*"
