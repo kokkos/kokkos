@@ -114,15 +114,24 @@ TEST(TEST_CATEGORY, team_uint8_array_reduce) {
     TestReduceTeam<uint8_t, TEST_EXECSPACE,
                    Kokkos::Schedule<Kokkos::Dynamic> >{}
         .run_array_test(22);
-    // Now test reductions on uint8_t[] with a value_count large enough to
-    // overflow uint8_t. This ensures that we are never using the array element
-    // type to index or iterate over the arrays (issue for Cuda/HIP prior to
-    // #9633).
-    TestReduceTeam<uint8_t, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >{}
-        .run_large_array_test(600, 300);
-    TestReduceTeam<uint8_t, TEST_EXECSPACE,
-                   Kokkos::Schedule<Kokkos::Dynamic> >{}
-        .run_large_array_test(600, 300);
+// Now test reductions on uint8_t[] with a value_count large enough to
+// overflow uint8_t. This ensures that we are never using the array element
+// type to index or iterate over the arrays (issue for Cuda/HIP prior to
+// #9633).
+#ifdef KOKKOS_ENABLE_SYCL
+    constexpr bool enable_large_tests =
+        !std::is_same_v<Kokkos::SYCL, TEST_EXECSPACE>;
+#else
+    constexpr bool enable_large_tests = true;
+#endif
+    if constexpr (enable_large_tests) {
+      TestReduceTeam<uint8_t, TEST_EXECSPACE,
+                     Kokkos::Schedule<Kokkos::Static> >{}
+          .run_large_array_test(600, 300);
+      TestReduceTeam<uint8_t, TEST_EXECSPACE,
+                     Kokkos::Schedule<Kokkos::Dynamic> >{}
+          .run_large_array_test(600, 300);
+    }
   }
 }
 
