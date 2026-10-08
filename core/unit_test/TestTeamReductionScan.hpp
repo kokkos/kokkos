@@ -119,7 +119,7 @@ TEST(TEST_CATEGORY, team_uint8_array_reduce) {
 // type to index or iterate over the arrays (issue for Cuda/HIP prior to
 // #9633).
 #ifdef KOKKOS_ENABLE_SYCL  // FIXME_SYCL
-    if (!std::is_same_v<Kokkos::SYCL, TEST_EXECSPACE>) {
+    if (std::is_same_v<Kokkos::SYCL, TEST_EXECSPACE>) {
       GTEST_SKIP()
           << "Skipping large TeamPolicy array reduce tests on SYCL due to "
              "PI_ERROR_OUT_OF_RESOURCES exception (see issue #9644)";
