@@ -914,16 +914,15 @@ set(DEFAULT_DEVICE_SOURCES
     TestSharedHostPinnedSpace.cpp
     TestCompilerMacros.cpp
     default/TestDefaultDeviceType.cpp
-    # FIXME_NEXTSILICON: requires TeamPolicy
-    # default/TestDefaultDeviceType_a1.cpp
-    # default/TestDefaultDeviceType_b1.cpp
-    # default/TestDefaultDeviceType_c1.cpp
-    # default/TestDefaultDeviceType_a2.cpp
-    # default/TestDefaultDeviceType_b2.cpp
-    # default/TestDefaultDeviceType_c2.cpp
-    # default/TestDefaultDeviceType_a3.cpp
-    # default/TestDefaultDeviceType_b3.cpp
-    # default/TestDefaultDeviceType_c3.cpp
+    default/TestDefaultDeviceType_a1.cpp
+    default/TestDefaultDeviceType_b1.cpp
+    default/TestDefaultDeviceType_c1.cpp
+    default/TestDefaultDeviceType_a2.cpp
+    default/TestDefaultDeviceType_b2.cpp
+    default/TestDefaultDeviceType_c2.cpp
+    default/TestDefaultDeviceType_a3.cpp
+    default/TestDefaultDeviceType_b3.cpp
+    default/TestDefaultDeviceType_c3.cpp
     default/TestDefaultDeviceTypeResize.cpp
     default/TestDefaultDeviceTypeViewAPI.cpp
 )
@@ -937,6 +936,23 @@ endif()
 # FIXME_NEXTSILICON: does not provide a HostPinnedMemorySpace
 if(KOKKOS_ENABLE_OPENACC OR KOKKOS_ENABLE_NEXTSILICON)
   list(REMOVE_ITEM DEFAULT_DEVICE_SOURCES TestSharedHostPinnedSpace.cpp)
+endif()
+
+# FIXME_NEXTSILICON: no support for TeamPolicy yet
+if(KOKKOS_ENABLE_NEXTSILICON)
+  list(
+    REMOVE_ITEM
+    DEFAULT_DEVICE_SOURCES
+    default/TestDefaultDeviceType_a1.cpp
+    default/TestDefaultDeviceType_b1.cpp
+    default/TestDefaultDeviceType_c1.cpp
+    default/TestDefaultDeviceType_a2.cpp
+    default/TestDefaultDeviceType_b2.cpp
+    default/TestDefaultDeviceType_c2.cpp
+    default/TestDefaultDeviceType_a3.cpp
+    default/TestDefaultDeviceType_b3.cpp
+    default/TestDefaultDeviceType_c3.cpp
+  )
 endif()
 
 # FIXME_OPENACC - Comment non-passing tests with the NVIDIA HPC compiler nvc++
