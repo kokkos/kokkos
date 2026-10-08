@@ -11,6 +11,8 @@
 #include <Kokkos_ExecPolicy.hpp>
 #include <Kokkos_AnonymousSpace.hpp>
 
+#include <impl/Kokkos_UnbindIndexArgument.hpp>
+
 #include <utility>
 
 namespace Kokkos {
@@ -579,8 +581,8 @@ auto single(std::string const& label, PolicyType const& policy,
                             PolicyType, Kokkos::Impl::ThreadSingleStruct> &&
                         !Kokkos::Impl::is_specialization_of_v<
                             PolicyType, Kokkos::Impl::VectorSingleStruct>> {
-  ::Kokkos::Impl::IndexlessReductionFunctorWrapper<
-      Functor, typename PolicyType::work_tag>
+  ::Kokkos::Impl::UnbindReductionIndexArgument<Functor,
+                                               typename PolicyType::work_tag>
       functor_wrapper{functor};
 
   Kokkos::parallel_reduce(label, policy, functor_wrapper,

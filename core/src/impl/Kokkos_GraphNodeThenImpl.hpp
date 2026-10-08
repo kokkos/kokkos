@@ -5,7 +5,7 @@
 #define KOKKOS_IMPL_KOKKOS_GRAPHNODETHENIMPL_HPP
 
 #include <Kokkos_ExecPolicy.hpp>
-#include <impl/Kokkos_FunctorWrapperUtil.hpp>
+#include <impl/Kokkos_UnbindIndexArgument.hpp>
 #include <impl/Kokkos_GraphImpl_fwd.hpp>
 #include <impl/Kokkos_GraphNodeThenPolicy.hpp>
 
@@ -21,11 +21,11 @@ struct GraphNodeThenImpl
           Kokkos::RangePolicy<ExecutionSpace, IsGraphKernelTag,
                               Kokkos::LaunchBounds<1>,
                               typename ThenPolicyType::work_tag>,
-          IndexlessFunctorWrapper<Functor>, ParallelForTag> {
+          UnbindIndexArgument<Functor>, ParallelForTag> {
   using inner_policy_t = Kokkos::RangePolicy<ExecutionSpace, IsGraphKernelTag,
                                              Kokkos::LaunchBounds<1>,
                                              typename ThenPolicyType::work_tag>;
-  using wrapper_t      = IndexlessFunctorWrapper<Functor>;
+  using wrapper_t      = UnbindIndexArgument<Functor>;
   using base_t = GraphNodeKernelImpl<ExecutionSpace, inner_policy_t, wrapper_t,
                                      ParallelForTag>;
 
