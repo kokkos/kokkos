@@ -38,18 +38,7 @@ struct HIPJoinFunctor {
  *  HIP thread blocks for team closures are dimensioned as:
  *    blockDim.x == number of "vector lanes" per "thread"
  *    blockDim.y == number of "threads" per team
- *    blockDim.z == number of teams in a block
- *  where
- *    A set of teams exactly fill a warp OR a team is the whole block
- *      ( 0 == WarpSize % ( blockDim.x * blockDim.y ) )
- *      OR
- *      ( 1 == blockDim.z )
-
- *  Thus when 1 < blockDim.z the team is warp-synchronous
- *  and __syncthreads should not be called in team collectives.
- *
- *  When multiple teams are mapped onto a single block then the
- *  total available shared memory must be partitioned among teams.
+ *    blockDim.z == 1
  */
 class HIPTeamMember {
  public:
@@ -102,10 +91,7 @@ class HIPTeamMember {
 
   KOKKOS_INLINE_FUNCTION void team_barrier() const {
 #ifdef __HIP_DEVICE_COMPILE__
-    if (1 == blockDim.z)
-      __syncthreads();  // team == block
-    else
-      __threadfence_block();  // team <= warp
+    __syncthreads();  // team == block
 #endif
   }
 
@@ -115,19 +101,13 @@ class HIPTeamMember {
   KOKKOS_INLINE_FUNCTION void team_broadcast(ValueType& val,
                                              const int& thread_id) const {
 #ifdef __HIP_DEVICE_COMPILE__
-    if (blockDim.z == 1) {  // team == block
-      __syncthreads();
-      // Wait for shared data write until all threads arrive here
-      if (threadIdx.x == 0u &&
-          threadIdx.y == static_cast<uint32_t>(thread_id)) {
-        *(reinterpret_cast<ValueType*>(m_team_reduce)) = val;
-      }
-      __syncthreads();  // Wait for shared data read until root thread writes
-      val = *(reinterpret_cast<ValueType*>(m_team_reduce));
-    } else {               // team <= warp
-      ValueType tmp(val);  // input might not be a register variable
-      in_place_shfl(val, tmp, blockDim.x * thread_id, blockDim.x * blockDim.y);
+    __syncthreads();
+    // Wait for shared data write until all threads arrive here
+    if (threadIdx.x == 0u && threadIdx.y == static_cast<uint32_t>(thread_id)) {
+      *(reinterpret_cast<ValueType*>(m_team_reduce)) = val;
     }
+    __syncthreads();  // Wait for shared data read until root thread writes
+    val = *(reinterpret_cast<ValueType*>(m_team_reduce));
 #else
     (void)val;
     (void)thread_id;
@@ -147,14 +127,11 @@ class HIPTeamMember {
    *  Mapping of teams onto blocks:
    *    blockDim.x  is "vector lanes"
    *    blockDim.y  is team "threads"
-   *    blockDim.z  is number of teams per block
+   *    blockDim.z  is 1
    *
    *  Requires:
    *    blockDim.x is power two
    *    blockDim.x <= HIPTraits::WarpSize
-   *    ( 0 == HIPTraits::WarpSize % ( blockDim.x * blockDim.y )
-   *      OR
-   *    ( 1 == blockDim.z )
    */
   template <typename ReducerType>
   KOKKOS_INLINE_FUNCTION std::enable_if_t<is_reducer<ReducerType>::value>
