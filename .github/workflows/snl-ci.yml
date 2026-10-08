@@ -47,7 +47,6 @@ jobs:
       - name: store_kokkos_mdspan_hash_to_env
         run: |
           echo "KOKKOS_MDSPAN_HASH=$(cat kokkos/tpls/mdspan-hash.txt)" >> $GITHUB_ENV
-          echo "Test with external mdspan using KOKKOS_MDSPAN_HASH=${{ env.KOKKOS_MDSPAN_HASH }}"
 
       - name: checkout_mdspan
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
