@@ -634,6 +634,7 @@ class OffsetView : public View<DataType, Properties...> {
       : OffsetView(Kokkos::Impl::ViewCtorProp<std::string>(arg_label), begins_,
                    ends_) {}
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
   // Deprecated: use begin/end range constructors instead.
   template <Kokkos::Impl::ViewLabel Label>
   KOKKOS_DEPRECATED_WITH_COMMENT(
@@ -733,6 +734,7 @@ class OffsetView : public View<DataType, Properties...> {
         "{a,b},{c,d} could mean two 1D ranges or one 2D begins+ends array. "
         "Use begins/ends range constructors instead.");
   }
+#endif
 
   template <class... P>
     requires(Kokkos::Impl::ViewCtorProp<P...>::has_pointer)

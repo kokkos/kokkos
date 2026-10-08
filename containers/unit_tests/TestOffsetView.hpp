@@ -27,6 +27,7 @@ import kokkos.offset_view;
 
 namespace Test {
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
 KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
 template <typename Scalar, typename Device>
 void test_offsetview_construction_deprecated() {
@@ -62,6 +63,7 @@ void test_offsetview_construction_deprecated() {
   }
 }
 KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
+#endif
 
 template <typename Scalar, typename Device>
 void test_offsetview_construction() {
@@ -858,9 +860,11 @@ void test_offsetview_offsets_rank3() {
   ASSERT_EQ(0, errors);
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
 TEST(TEST_CATEGORY, offsetview_construction_deprecated) {
   test_offsetview_construction_deprecated<int, TEST_EXECSPACE>();
 }
+#endif
 
 TEST(TEST_CATEGORY, offsetview_construction) {
   test_offsetview_construction<int, TEST_EXECSPACE>();
