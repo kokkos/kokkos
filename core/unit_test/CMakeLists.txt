@@ -110,6 +110,22 @@ set(SMOKE_TEST_NAMES
     WorkGraph
 )
 
+# Compile and link a CUDA test target with relocatable device code, independently of
+# Kokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE. CUDA_SEPARABLE_COMPILATION only applies to sources compiled as
+# the CUDA language, so when Kokkos compiles CUDA as CXX (e.g. nvcc_wrapper) the flags have to be passed
+# explicitly, and to the link as well so that the device link step runs.
+function(kokkos_impl_enable_cuda_rdc TARGET)
+  if(KOKKOS_COMPILE_LANGUAGE STREQUAL CUDA)
+    set_property(TARGET ${TARGET} PROPERTY CUDA_SEPARABLE_COMPILATION ON)
+  elseif(KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA)
+    target_compile_options(${TARGET} PRIVATE --relocatable-device-code=true)
+    target_link_options(${TARGET} PRIVATE --relocatable-device-code=true)
+  elseif(KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
+    target_compile_options(${TARGET} PRIVATE -fgpu-rdc --offload-new-driver)
+    target_link_options(${TARGET} PRIVATE -fgpu-rdc --offload-new-driver)
+  endif()
+endfunction()
+
 foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;NextSilicon)
   string(TOUPPER ${Tag} DEVICE)
   string(TOLOWER ${Tag} dir)
@@ -437,6 +453,19 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;NextSilicon)
       list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_Reductions.cpp)
     endif()
     kokkos_add_executable_and_test(CoreUnitTest_${Tag}_SmokeTest SOURCES UnitTestMainInit.cpp ${${Tag}_SOURCES_SMOKE})
+
+    if(Tag STREQUAL "HIP" OR Tag STREQUAL "Cuda" OR Tag STREQUAL "SYCL")
+      kokkos_add_executable_and_test(CoreUnitTest_AtomicsRDC SOURCES UnitTestMainInit.cpp ${dir}/Test${Tag}_Atomics.cpp)
+
+      if(Kokkos_ENABLE_CUDA)
+        kokkos_impl_enable_cuda_rdc(Kokkos_CoreUnitTest_AtomicsRDC)
+      elseif(Kokkos_ENABLE_HIP)
+        target_compile_options(Kokkos_CoreUnitTest_AtomicsRDC PRIVATE -fgpu-rdc)
+        target_link_options(Kokkos_CoreUnitTest_AtomicsRDC PRIVATE --hip-link)
+      elseif(Kokkos_ENABLE_SYCL)
+        target_compile_options(Kokkos_CoreUnitTest_AtomicsRDC PRIVATE -fsycl-rdc)
+      endif()
+    endif()
   endif()
 endforeach()
 
@@ -617,6 +646,21 @@ if(Kokkos_ENABLE_CUDA)
   )
   configure_file(${CMAKE_CURRENT_BINARY_DIR}/cuda/dummy.cpp ${file})
   kokkos_add_executable_and_test(CoreUnitTest_CudaGraphAtomicLocks SOURCES UnitTestMainInit.cpp ${file})
+
+  # Lock-based atomics in an RDC executable whose device code spans two translation units, mirroring
+  # CoreUnitTest_AtomicsRDC. Without Kokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE, each translation unit has its
+  # own copy of desul's device lock-array pointer, and Kokkos only fills it in translation units that launch.
+  # The cross-TU device function call does not link without RDC, so only add the test where
+  # kokkos_impl_enable_cuda_rdc knows how to enable it.
+  if(KOKKOS_COMPILE_LANGUAGE STREQUAL CUDA OR KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA
+     OR KOKKOS_CXX_COMPILER_ID STREQUAL Clang
+  )
+    kokkos_add_executable_and_test(
+      CoreUnitTest_CudaRDCLockArrays SOURCES UnitTestMainInit.cpp cuda/TestCuda_RDCLockArrays_DeviceFunction.cpp
+      cuda/TestCuda_RDCLockArrays_Launch.cpp
+    )
+    kokkos_impl_enable_cuda_rdc(Kokkos_CoreUnitTest_CudaRDCLockArrays)
+  endif()
 
   kokkos_add_executable_and_test(
     CoreUnitTest_CudaGraphScratch SOURCES UnitTestMainInit.cpp cuda/TestCuda_GraphScratch.cpp
