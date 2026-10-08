@@ -55,6 +55,7 @@ declare_and_check_host_arch(ARMV8_THUNDERX "ARMv8 Cavium ThunderX CPU")
 declare_and_check_host_arch(ARMV8_THUNDERX2 "ARMv8 Cavium ThunderX2 CPU")
 declare_and_check_host_arch(A64FX "ARMv8.2 with SVE Support")
 declare_and_check_host_arch(ARMV9_GRACE "ARMv9 NVIDIA Grace CPU")
+declare_and_check_host_arch(ARMV9_VERA "ARMv9 NVIDIA Vera CPU")
 declare_and_check_host_arch(SNB "Intel Sandy/Ivy Bridge CPUs")
 declare_and_check_host_arch(HSW "Intel Haswell CPUs")
 declare_and_check_host_arch(BDW "Intel Broadwell Xeon E-class CPUs")
@@ -527,6 +528,33 @@ if(KOKKOS_ARCH_ARMV9_GRACE)
     )
   else()
     message(SEND_ERROR "Your compiler does not appear to support the ARMv9 Grace architecture.
+Please ensure you are using a compatible compiler and toolchain.
+Alternatively, try configuring with -DKokkos_ARCH_NATIVE=ON to use the native architecture of your system."
+    )
+  endif()
+endif()
+
+if(KOKKOS_ARCH_ARMV9_VERA)
+  set(KOKKOS_ARCH_ARM_NEON ON)
+  if(KOKKOS_CXX_HOST_COMPILER_ID STREQUAL NVHPC)
+    check_cxx_compiler_flag("-tp=vera" COMPILER_SUPPORTS_VERA_AS_TARGET_PROCESSOR)
+  else()
+    check_cxx_compiler_flag("-mcpu=olympus" COMPILER_SUPPORTS_OLYMPUS)
+    check_cxx_compiler_flag("-msve-vector-bits=128" COMPILER_SUPPORTS_SVE_VECTOR_BITS)
+  endif()
+  if(COMPILER_SUPPORTS_OLYMPUS AND COMPILER_SUPPORTS_SVE_VECTOR_BITS OR COMPILER_SUPPORTS_VERA_AS_TARGET_PROCESSOR)
+    set(KOKKOS_ARCH_ARM_SVE ON)
+    compiler_specific_flags(
+      COMPILER_ID
+      KOKKOS_CXX_HOST_COMPILER_ID
+      NVHPC
+      -tp=vera
+      DEFAULT
+      -mcpu=olympus
+      -msve-vector-bits=128
+    )
+  else()
+    message(SEND_ERROR "Your compiler does not appear to support the ARMv9 Vera architecture.
 Please ensure you are using a compatible compiler and toolchain.
 Alternatively, try configuring with -DKokkos_ARCH_NATIVE=ON to use the native architecture of your system."
     )
