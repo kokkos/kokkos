@@ -241,38 +241,38 @@ int HPX::impl_thread_pool_size(int depth) {
 }
 
 template void HPX::impl_bulk_plain_erased<int>(
-    bool, bool, std::function<void(int)> &&, int const,
+    bool, std::function<void(int)> &&, int const,
     hpx::threads::thread_stacksize stacksize) const;
 
 template void HPX::impl_bulk_plain_erased<unsigned int>(
-    bool, bool, std::function<void(unsigned int)> &&, unsigned int const,
+    bool, std::function<void(unsigned int)> &&, unsigned int const,
     hpx::threads::thread_stacksize stacksize) const;
 
 template void HPX::impl_bulk_plain_erased<long>(
-    bool, bool, std::function<void(long)> &&, long const,
+    bool, std::function<void(long)> &&, long const,
     hpx::threads::thread_stacksize stacksize) const;
 
 template void HPX::impl_bulk_plain_erased<std::size_t>(
-    bool, bool, std::function<void(std::size_t)> &&, std::size_t const,
+    bool, std::function<void(std::size_t)> &&, std::size_t const,
     hpx::threads::thread_stacksize stacksize) const;
 
 template void HPX::impl_bulk_setup_finalize_erased<int>(
-    bool, bool, std::function<void(int)> &&, std::function<void()> &&,
+    bool, std::function<void(int)> &&, std::function<void()> &&,
     std::function<void()> &&, int const,
     hpx::threads::thread_stacksize stacksize) const;
 
 template void HPX::impl_bulk_setup_finalize_erased<unsigned int>(
-    bool, bool, std::function<void(unsigned int)> &&, std::function<void()> &&,
+    bool, std::function<void(unsigned int)> &&, std::function<void()> &&,
     std::function<void()> &&, unsigned int const,
     hpx::threads::thread_stacksize stacksize) const;
 
 template void HPX::impl_bulk_setup_finalize_erased<long>(
-    bool, bool, std::function<void(long)> &&, std::function<void()> &&,
+    bool, std::function<void(long)> &&, std::function<void()> &&,
     std::function<void()> &&, long const,
     hpx::threads::thread_stacksize stacksize) const;
 
 template void HPX::impl_bulk_setup_finalize_erased<std::size_t>(
-    bool, bool, std::function<void(std::size_t)> &&, std::function<void()> &&,
+    bool, std::function<void(std::size_t)> &&, std::function<void()> &&,
     std::function<void()> &&, std::size_t const,
     hpx::threads::thread_stacksize stacksize) const;
 }  // namespace Experimental
