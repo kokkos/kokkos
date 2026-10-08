@@ -70,20 +70,20 @@ struct FixedSizeIndexRange : std::false_type {};
 
 template <typename T, std::size_t N>
 struct FixedSizeIndexRange<Kokkos::Array<T, N>> {
-  using value_type                  = Kokkos::Array<T, N>::value_type;
+  using value_type                  = typename Kokkos::Array<T, N>::value_type;
   static constexpr std::size_t size = N;
 };
 
 template <typename T, std::size_t N>
 struct FixedSizeIndexRange<std::array<T, N>> {
-  using value_type                  = std::array<T, N>::value_type;
+  using value_type                  = typename std::array<T, N>::value_type;
   static constexpr std::size_t size = N;
 };
 
 template <typename T, std::size_t N>
 struct FixedSizeIndexRange<std::span<T, N>>
     : std::bool_constant<N != std::dynamic_extent> {
-  using value_type                  = std::span<T, N>::value_type;
+  using value_type                  = typename std::span<T, N>::value_type;
   static constexpr std::size_t size = N;
 };
 
