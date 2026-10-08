@@ -24,6 +24,63 @@ static_assert(false,
 #include <string>
 
 namespace Kokkos {
+namespace Impl {
+
+template <bool HasLabel, class Label, Kokkos::ExecutionPolicy ExecPolicy,
+          class FunctorType>
+  requires(std::is_constructible_v<std::string, const Label&>)
+inline void parallel_for_impl([[maybe_unused]] const Label& label,
+                              const ExecPolicy& policy,
+                              const FunctorType& functor) {
+  // Work around unsuppressable warning of calling host (constexpr) function
+  // from host device function.
+  // This occurs when trying to instantiate this parallel for from inside
+  // a host-device function which is called on the host.
+  // The problem is the ctor from c-string for std::string
+  std::string str;
+  KOKKOS_IF_ON_HOST(str = std::string(label);)
+
+  /** Enforce correct use **/
+  if constexpr (HasLabel) {
+    CheckUsage<UsageRequires::insideExecEnv>::check("parallel_for", policy,
+                                                    str.c_str());
+  } else {
+    CheckUsage<UsageRequires::insideExecEnv>::check("parallel_for", policy);
+  }
+
+  uint64_t kpID = 0;
+  /** Request a tuned policy from the tools subsystem */
+  const auto& response = Kokkos::Tools::Impl::begin_parallel_for<HasLabel>(
+      policy, functor, str, kpID);
+  const auto& inner_policy = response.policy;
+
+  auto closure = construct_with_shared_allocation_tracking_disabled<
+      ParallelFor<FunctorType, ExecPolicy>>(functor, inner_policy);
+
+  closure.execute();
+  Kokkos::Tools::Impl::end_parallel_for<HasLabel>(inner_policy, functor, str,
+                                                  kpID);
+}
+
+template <bool HasLabel, class FunctorType>
+inline void parallel_for_impl(const std::string& str, const size_t work_count,
+                              const FunctorType& functor) {
+  /** Enforce correct use **/
+  if constexpr (HasLabel) {
+    CheckUsage<UsageRequires::insideExecEnv>::check("parallel_for", work_count,
+                                                    str.c_str());
+  } else {
+    CheckUsage<UsageRequires::insideExecEnv>::check("parallel_for", work_count);
+  }
+
+  using execution_space =
+      typename FunctorPolicyExecutionSpace<FunctorType, void>::execution_space;
+  using policy = RangePolicy<execution_space>;
+
+  policy execution_policy = policy(0, work_count);
+  ::Kokkos::Impl::parallel_for_impl<HasLabel>(str, execution_policy, functor);
+}
+}  // namespace Impl
 
 /** \brief Execute \c functor in parallel according to the execution \c policy.
  *
@@ -50,30 +107,7 @@ template <class Label, Kokkos::ExecutionPolicy ExecPolicy, class FunctorType>
   requires(std::is_constructible_v<std::string, const Label&>)
 inline void parallel_for([[maybe_unused]] const Label& label,
                          const ExecPolicy& policy, const FunctorType& functor) {
-  // Work around unsuppressable warning of calling host (constexpr) function
-  // from host device function.
-  // This occurs when trying to instantiate this parallel for from inside
-  // a host-device function which is called on the host.
-  // The problem is the ctor from c-string for std::string
-  std::string str;
-  KOKKOS_IF_ON_HOST(str = std::string(label);)
-
-  /** Enforce correct use **/
-  Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check(
-      "parallel_for", policy, str.c_str());
-
-  uint64_t kpID = 0;
-  /** Request a tuned policy from the tools subsystem */
-  const auto& response =
-      Kokkos::Tools::Impl::begin_parallel_for(policy, functor, str, kpID);
-  const auto& inner_policy = response.policy;
-
-  auto closure =
-      Kokkos::Impl::construct_with_shared_allocation_tracking_disabled<
-          Impl::ParallelFor<FunctorType, ExecPolicy>>(functor, inner_policy);
-
-  closure.execute();
-  Kokkos::Tools::Impl::end_parallel_for(inner_policy, functor, str, kpID);
+  Impl::parallel_for_impl<true>(label, policy, functor);
 }
 
 template <Kokkos::ExecutionPolicy ExecPolicy, class FunctorType>
@@ -87,36 +121,19 @@ KOKKOS_INLINE_FUNCTION void parallel_for(const ExecPolicy& policy,
   // __device__ function. Assert above that we are not actually calling on
   // device.
   KOKKOS_IMPL_DISABLE_CALLING_HOST_FROM_DEVICE_WARNINGS_PUSH()
-  /** Enforce correct use **/
-  Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check("parallel_for",
-                                                              policy);
-  Kokkos::parallel_for("", policy, functor);
+  Impl::parallel_for_impl<false>("", policy, functor);
   KOKKOS_IMPL_DISABLE_CALLING_HOST_FROM_DEVICE_WARNINGS_POP()
 }
 
 template <class FunctorType>
 inline void parallel_for(const std::string& str, const size_t work_count,
                          const FunctorType& functor) {
-  /** Enforce correct use **/
-  Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check(
-      "parallel_for", work_count, str.c_str());
-
-  using execution_space =
-      typename Impl::FunctorPolicyExecutionSpace<FunctorType,
-                                                 void>::execution_space;
-  using policy = RangePolicy<execution_space>;
-
-  policy execution_policy = policy(0, work_count);
-  ::Kokkos::parallel_for(str, execution_policy, functor);
+  Impl::parallel_for_impl<true>(str, work_count, functor);
 }
 
 template <class FunctorType>
 inline void parallel_for(const size_t work_count, const FunctorType& functor) {
-  /** Enforce correct use **/
-  Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check("parallel_for",
-                                                              work_count);
-
-  ::Kokkos::parallel_for("", work_count, functor);
+  Impl::parallel_for_impl<false>("", work_count, functor);
 }
 }  // namespace Kokkos
 #endif
