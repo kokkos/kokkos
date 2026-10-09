@@ -42,6 +42,8 @@ TEST(ExcessMemoryAllocation, AllocationBelowThresholdAllowed) {
 }
 
 int main(int argc, char **argv) {
+  if (!std::getenv("GTEST_DEATH_TEST_STYLE"))
+    GTEST_FLAG_SET(death_test_style, "threadsafe");
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
