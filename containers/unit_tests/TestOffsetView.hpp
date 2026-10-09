@@ -8,6 +8,10 @@
 #define CONTAINERS_UNIT_TESTS_TESTOFFSETVIEW_HPP_
 
 #include <gtest/gtest.h>
+#include <array>
+#include <span>
+#include <type_traits>
+#include <utility>
 #include <iostream>
 #include <cstdlib>
 #include <cstdio>
@@ -23,28 +27,67 @@ import kokkos.offset_view;
 
 namespace Test {
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
 template <typename Scalar, typename Device>
-void test_offsetview_construction() {
-  using offset_view_type = Kokkos::Experimental::OffsetView<Scalar**, Device>;
-  using view_type        = Kokkos::View<Scalar**, Device>;
+void test_offsetview_construction_deprecated() {
+  using offset_view_type = Kokkos::Experimental::OffsetView<Scalar***, Device>;
 
-  std::pair<int64_t, int64_t> range0 = {-1, 3};
-  std::pair<int64_t, int64_t> range1 = {-2, 2};
-
+  // begins and ends (exclusive) for the 2D test view
+  std::array<int64_t, 3> begins3D = {{-1, -2, -4}};
+  std::array<int64_t, 3> ends3D   = {{4, 3, 5}};
   {
     offset_view_type o1;
     ASSERT_FALSE(o1.is_allocated());
 
-    o1 = offset_view_type("o1", {-1, 3}, {-2, 2});
+    o1 = offset_view_type("o1", {-1, 4}, {-2, 3}, {-4, 5});
     offset_view_type o2(o1);
-    offset_view_type o3("o3", range0, range1);
+    offset_view_type o3("o3", {-1, 4}, {-2, 3}, {-4, 5});
 
     ASSERT_TRUE(o1.is_allocated());
     ASSERT_TRUE(o2.is_allocated());
     ASSERT_TRUE(o3.is_allocated());
   }
 
-  offset_view_type ov("firstOV", range0, range1);
+  offset_view_type ov("firstOV", begins3D, ends3D);
+  offset_view_type deprecated("deprecated", {begins3D[0], ends3D[0] - 1},
+                              {begins3D[1], ends3D[1] - 1},
+                              {begins3D[2], ends3D[2] - 1});
+
+  ASSERT_EQ("deprecated", deprecated.label());
+
+  for (unsigned int i = 0; i < ov.rank(); i++) {
+    ASSERT_EQ(ov.begin(i), deprecated.begin(i));
+    ASSERT_EQ(ov.end(i), deprecated.end(i));
+    ASSERT_EQ(ov.extent(i), deprecated.extent(i));
+  }
+}
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
+#endif
+
+template <typename Scalar, typename Device>
+void test_offsetview_construction() {
+  using offset_view_type = Kokkos::Experimental::OffsetView<Scalar**, Device>;
+  using view_type        = Kokkos::View<Scalar**, Device>;
+
+  // begins and ends (exclusive) for the 2D test view
+  Kokkos::Array<int64_t, 2> begins2D = {{-1, -2}};
+  Kokkos::Array<int64_t, 2> ends2D   = {{4, 3}};
+
+  {
+    offset_view_type o1;
+    ASSERT_FALSE(o1.is_allocated());
+
+    o1 = offset_view_type("o1", begins2D, ends2D);
+    offset_view_type o2(o1);
+    offset_view_type o3("o3", begins2D, ends2D);
+
+    ASSERT_TRUE(o1.is_allocated());
+    ASSERT_TRUE(o2.is_allocated());
+    ASSERT_TRUE(o3.is_allocated());
+  }
+
+  offset_view_type ov("firstOV", begins2D, ends2D);
 
   ASSERT_EQ("firstOV", ov.label());
 
@@ -61,7 +104,7 @@ void test_offsetview_construction() {
 
   {
     Kokkos::Experimental::OffsetView<Scalar*, Device> offsetV1("OneDOffsetView",
-                                                               range0);
+                                                               {-1}, {4});
 
     Kokkos::RangePolicy<Device, int> rangePolicy1(offsetV1.begin(0),
                                                   offsetV1.end(0));
@@ -300,15 +343,19 @@ void test_offsetview_unmanaged_construction() {
   }
 
   {
-    // Test all four public constructor overloads (begins_type x
-    // index_list_type)
-    Kokkos::Array<int64_t, 1> begins{{-3}};
-    Kokkos::Array<int64_t, 1> ends{{2}};
-
-    Kokkos::Experimental::OffsetView<Scalar*, Device> bb(ptr, begins, ends);
-    Kokkos::Experimental::OffsetView<Scalar*, Device> bi(ptr, begins, {2});
-    Kokkos::Experimental::OffsetView<Scalar*, Device> ib(ptr, {-3}, ends);
-    Kokkos::Experimental::OffsetView<Scalar*, Device> ii(ptr, {-3}, {2});
+    // Test all four public constructor overloads (fixed-size range x
+    // index_list_type), exercising both std::array and std::span ranges.
+    std::array<int64_t, 2> arr_begins{{-3, 5}};
+    std::array<int, 2> arr_ends{{2, 10}};
+    std::span<int, 2> span_ends{arr_ends};
+    Kokkos::Experimental::OffsetView<Scalar**, Device> bb(ptr, arr_begins,
+                                                          span_ends);
+    Kokkos::Experimental::OffsetView<Scalar**, Device> bi(ptr, arr_begins,
+                                                          {2, 10});
+    Kokkos::Experimental::OffsetView<Scalar**, Device> ib(ptr, {-3, 5},
+                                                          span_ends);
+    Kokkos::Experimental::OffsetView<Scalar**, Device> ii(ptr, {-3, 5},
+                                                          {2, 10});
 
     ASSERT_EQ(bb, bi);
     ASSERT_EQ(bb, ib);
@@ -339,7 +386,7 @@ void test_offsetview_unmanaged_construction_death() {
     ASSERT_DEATH(
         offset_view_type(ptr, {0}, {-1}),
         SKIP_REGEX_ON_WINDOWS(
-            "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView"
+            "Kokkos::Experimental::OffsetView ERROR: label=\\(\"UNMANAGED\"\\)"
             ".*"
             "\\(ends\\[0\\] \\(-1\\) - begins\\[0\\] \\(0\\)\\) must be "
             "non-negative"));
@@ -353,7 +400,7 @@ void test_offsetview_unmanaged_construction_death() {
     ASSERT_DEATH(
         offset_view_type(ptr, {-1}, {0x7fffffffffffffffl}),
         SKIP_REGEX_ON_WINDOWS(
-            "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView"
+            "Kokkos::Experimental::OffsetView ERROR: label=\\(\"UNMANAGED\"\\)"
             ".*"
             "\\(ends\\[0\\] \\(9223372036854775807\\) - begins\\[0\\] "
             "\\(-1\\)\\) "
@@ -362,7 +409,7 @@ void test_offsetview_unmanaged_construction_death() {
         offset_view_type(ptr, {-0x7fffffffffffffffl - 1},
                          {0x7fffffffffffffffl}),
         SKIP_REGEX_ON_WINDOWS(
-            "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView"
+            "Kokkos::Experimental::OffsetView ERROR: label=\\(\"UNMANAGED\"\\)"
             ".*"
             "\\(ends\\[0\\] \\(9223372036854775807\\) - begins\\[0\\] "
             "\\(-9223372036854775808\\)\\) "
@@ -370,7 +417,7 @@ void test_offsetview_unmanaged_construction_death() {
     ASSERT_DEATH(
         offset_view_type(ptr, {-0x7fffffffffffffffl - 1}, {0}),
         SKIP_REGEX_ON_WINDOWS(
-            "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView"
+            "Kokkos::Experimental::OffsetView ERROR: label=\\(\"UNMANAGED\"\\)"
             ".*"
             "\\(ends\\[0\\] \\(0\\) - begins\\[0\\] "
             "\\(-9223372036854775808\\)\\) "
@@ -385,7 +432,7 @@ void test_offsetview_unmanaged_construction_death() {
     ASSERT_DEATH(
         offset_view_type(ptr, {0}, {1}),
         SKIP_REGEX_ON_WINDOWS(
-            "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView"
+            "Kokkos::Experimental::OffsetView ERROR: label=\\(\"UNMANAGED\"\\)"
             ".*"
             "begins\\.size\\(\\) \\(1\\) != Rank \\(2\\)"
             ".*"
@@ -393,13 +440,13 @@ void test_offsetview_unmanaged_construction_death() {
     ASSERT_DEATH(
         offset_view_type(ptr, {0}, {1, 1}),
         SKIP_REGEX_ON_WINDOWS(
-            "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView"
+            "Kokkos::Experimental::OffsetView ERROR: label=\\(\"UNMANAGED\"\\)"
             ".*"
             "begins\\.size\\(\\) \\(1\\) != Rank \\(2\\)"));
     ASSERT_DEATH(
         offset_view_type(ptr, {0}, {1, 1, 1}),
         SKIP_REGEX_ON_WINDOWS(
-            "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView"
+            "Kokkos::Experimental::OffsetView ERROR: label=\\(\"UNMANAGED\"\\)"
             ".*"
             "begins\\.size\\(\\) \\(1\\) != Rank \\(2\\)"
             ".*"
@@ -407,20 +454,20 @@ void test_offsetview_unmanaged_construction_death() {
     ASSERT_DEATH(
         offset_view_type(ptr, {0, 0}, {1}),
         SKIP_REGEX_ON_WINDOWS(
-            "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView"
+            "Kokkos::Experimental::OffsetView ERROR: label=\\(\"UNMANAGED\"\\)"
             ".*"
             "ends\\.size\\(\\) \\(1\\) != Rank \\(2\\)"));
     (void)offset_view_type(ptr, {0, 0}, {1, 1});
     ASSERT_DEATH(
         offset_view_type(ptr, {0, 0}, {1, 1, 1}),
         SKIP_REGEX_ON_WINDOWS(
-            "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView"
+            "Kokkos::Experimental::OffsetView ERROR: label=\\(\"UNMANAGED\"\\)"
             ".*"
             "ends\\.size\\(\\) \\(3\\) != Rank \\(2\\)"));
     ASSERT_DEATH(
         offset_view_type(ptr, {0, 0, 0}, {1}),
         SKIP_REGEX_ON_WINDOWS(
-            "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView"
+            "Kokkos::Experimental::OffsetView ERROR: label=\\(\"UNMANAGED\"\\)"
             ".*"
             "begins\\.size\\(\\) \\(3\\) != Rank \\(2\\)"
             ".*"
@@ -428,13 +475,13 @@ void test_offsetview_unmanaged_construction_death() {
     ASSERT_DEATH(
         offset_view_type(ptr, {0, 0, 0}, {1, 1}),
         SKIP_REGEX_ON_WINDOWS(
-            "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView"
+            "Kokkos::Experimental::OffsetView ERROR: label=\\(\"UNMANAGED\"\\)"
             ".*"
             "begins\\.size\\(\\) \\(3\\) != Rank \\(2\\)"));
     ASSERT_DEATH(
         offset_view_type(ptr, {0, 0, 0}, {1, 1, 1}),
         SKIP_REGEX_ON_WINDOWS(
-            "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView"
+            "Kokkos::Experimental::OffsetView ERROR: label=\\(\"UNMANAGED\"\\)"
             ".*"
             "begins\\.size\\(\\) \\(3\\) != Rank \\(2\\)"
             ".*"
@@ -443,11 +490,107 @@ void test_offsetview_unmanaged_construction_death() {
 #undef SKIP_REGEX_ON_WINDOWS
 }
 
+// Checks of the begins/ends given to the OffsetView constructors: lists that
+// are too small or too large for the rank and begins holding
+// OffsetView::invalid_index().
+template <typename Scalar, typename Device>
+void test_offsetview_range_checks_death() {
+  using offset_view_type = Kokkos::Experimental::OffsetView<Scalar**, Device>;
+  using index_array_type = Kokkos::Array<int64_t, 2>;
+
+  // Preallocated memory
+  Kokkos::View<Scalar**, Device> v("v", 2, 3);
+  Scalar* ptr = v.data();  // obtain a pointer into the right address space
+
+  // Regular expression syntax on Windows is a pain. `.` does not match `\n`.
+  // Feel free to make it work if you have time to spare.
+#ifdef _WIN32
+#define SKIP_REGEX_ON_WINDOWS(REGEX) ""
+#else
+#define SKIP_REGEX_ON_WINDOWS(REGEX) REGEX
+#endif
+
+#define OFFSETVIEW_ERROR(LABEL) \
+  "Kokkos::Experimental::OffsetView ERROR: label=\\(\"" LABEL "\"\\)"
+
+  const index_array_type begins         = {{0, 0}};
+  const index_array_type ends           = {{1, 1}};
+  const index_array_type invalid_begins = {
+      {0, offset_view_type::invalid_index()}};
+
+  {
+    // Managed OffsetView: the label is taken from the constructor properties
+    (void)offset_view_type("o", {0, 0}, {1, 1});
+    ASSERT_DEATH(offset_view_type("o", {0}, {1, 1}),
+                 SKIP_REGEX_ON_WINDOWS(OFFSETVIEW_ERROR(
+                     "o") ".*"
+                          "begins\\.size\\(\\) \\(1\\) != Rank "
+                          "\\(2\\)"));
+    ASSERT_DEATH(offset_view_type("o", {0, 0}, {1, 1, 1}),
+                 SKIP_REGEX_ON_WINDOWS(
+                     OFFSETVIEW_ERROR("o") ".*"
+                                           "ends\\.size\\(\\) \\(3\\) != Rank "
+                                           "\\(2\\)"));
+    ASSERT_DEATH(
+        offset_view_type("o", {0, offset_view_type::invalid_index()}, {1, 1}),
+        SKIP_REGEX_ON_WINDOWS(
+            OFFSETVIEW_ERROR("o") ".*"
+                                  "The number of offsets provided in begins "
+                                  "\\( 1 \\) must equal the dynamic rank \\( 2 "
+                                  "\\)"));
+    ASSERT_DEATH(offset_view_type("o", invalid_begins, ends),
+                 SKIP_REGEX_ON_WINDOWS(OFFSETVIEW_ERROR(
+                     "o") ".*"
+                          "The number of offsets provided in begins "
+                          "\\( 1 \\) must equal the dynamic rank \\( 2 "
+                          "\\)"));
+    // Constructor properties without a label
+    ASSERT_DEATH(
+        offset_view_type(Kokkos::view_alloc(Kokkos::WithoutInitializing), {0},
+                         {1, 1}),
+        SKIP_REGEX_ON_WINDOWS(OFFSETVIEW_ERROR(
+            "") ".*"
+                "begins\\.size\\(\\) \\(1\\) != Rank \\(2\\)"));
+  }
+
+  {
+    // Unmanaged OffsetView mixing fixed-size ranges and lists
+    (void)offset_view_type(ptr, begins, {1, 1});
+    (void)offset_view_type(ptr, {0, 0}, ends);
+    ASSERT_DEATH(offset_view_type(ptr, begins, {1}),
+                 SKIP_REGEX_ON_WINDOWS(OFFSETVIEW_ERROR(
+                     "UNMANAGED") ".*"
+                                  "ends\\.size\\(\\) \\(1\\) != Rank "
+                                  "\\(2\\)"));
+    ASSERT_DEATH(offset_view_type(ptr, {0, 0, 0}, ends),
+                 SKIP_REGEX_ON_WINDOWS(OFFSETVIEW_ERROR(
+                     "UNMANAGED") ".*"
+                                  "begins\\.size\\(\\) \\(3\\) != Rank "
+                                  "\\(2\\)"));
+    ASSERT_DEATH(
+        offset_view_type(ptr, {offset_view_type::invalid_index(), 0}, {1, 1}),
+        SKIP_REGEX_ON_WINDOWS(OFFSETVIEW_ERROR(
+            "UNMANAGED") ".*"
+                         "The number of offsets provided in begins "
+                         "\\( 1 \\) must equal the dynamic rank \\( 2 "
+                         "\\)"));
+    ASSERT_DEATH(offset_view_type(ptr, invalid_begins, ends),
+                 SKIP_REGEX_ON_WINDOWS(OFFSETVIEW_ERROR(
+                     "UNMANAGED") ".*"
+                                  "The number of offsets provided in begins "
+                                  "\\( 1 \\) must equal the dynamic rank \\( 2 "
+                                  "\\)"));
+  }
+
+#undef OFFSETVIEW_ERROR
+#undef SKIP_REGEX_ON_WINDOWS
+}
+
 template <typename Scalar, typename Device>
 void test_offsetview_subview() {
   {  // test subview 1
     Kokkos::Experimental::OffsetView<Scalar*, Device> sliceMe("offsetToSlice",
-                                                              {-10, 20});
+                                                              {-10}, {21});
     {
       auto offsetSubview = Kokkos::subview(sliceMe, 0);
       ASSERT_EQ(offsetSubview.rank(), 0u) << "subview of offset is broken.";
@@ -455,7 +598,7 @@ void test_offsetview_subview() {
   }
   {  // test subview 2
     Kokkos::Experimental::OffsetView<Scalar**, Device> sliceMe(
-        "offsetToSlice", {-10, 20}, {-20, 30});
+        "offsetToSlice", {-10, -20}, {21, 31});
     {
       auto offsetSubview = Kokkos::subview(sliceMe, Kokkos::ALL(), -2);
       ASSERT_EQ(offsetSubview.rank(), 1u) << "subview of offset is broken.";
@@ -470,7 +613,7 @@ void test_offsetview_subview() {
   {  // test subview rank 3
 
     Kokkos::Experimental::OffsetView<Scalar***, Device> sliceMe(
-        "offsetToSlice", {-10, 20}, {-20, 30}, {-30, 40});
+        "offsetToSlice", {-10, -20, -30}, {21, 31, 41});
 
     // slice 1
     {
@@ -545,7 +688,7 @@ void test_offsetview_subview() {
   {  // test subview rank 4
 
     Kokkos::Experimental::OffsetView<Scalar****, Device> sliceMe(
-        "offsetToSlice", {-10, 20}, {-20, 30}, {-30, 40}, {-40, 50});
+        "offsetToSlice", {-10, -20, -30, -40}, {21, 31, 41, 51});
 
     // slice 1
     {
@@ -717,6 +860,12 @@ void test_offsetview_offsets_rank3() {
   ASSERT_EQ(0, errors);
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
+TEST(TEST_CATEGORY, offsetview_construction_deprecated) {
+  test_offsetview_construction_deprecated<int, TEST_EXECSPACE>();
+}
+#endif
+
 TEST(TEST_CATEGORY, offsetview_construction) {
   test_offsetview_construction<int, TEST_EXECSPACE>();
 }
@@ -727,6 +876,10 @@ TEST(TEST_CATEGORY, offsetview_unmanaged_construction) {
 
 TEST(TEST_CATEGORY_DEATH, offsetview_unmanaged_construction) {
   test_offsetview_unmanaged_construction_death<int, TEST_EXECSPACE>();
+}
+
+TEST(TEST_CATEGORY_DEATH, offsetview_range_checks) {
+  test_offsetview_range_checks_death<int, TEST_EXECSPACE>();
 }
 
 TEST(TEST_CATEGORY, offsetview_subview) {
