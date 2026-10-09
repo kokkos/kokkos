@@ -44,6 +44,24 @@ jobs:
           repository: kokkos/kokkos
           path: kokkos
 
+      - name: store_kokkos_mdspan_hash_to_env
+        run: |
+          echo "KOKKOS_MDSPAN_HASH=$(cat kokkos/tpls/mdspan-hash.txt)" >> $GITHUB_ENV
+
+      - name: checkout_mdspan
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: kokkos/mdspan
+          path: mdspan
+          ref: ${{ env.KOKKOS_MDSPAN_HASH }}
+
+      - name: configure_mdspan
+        run: cmake -B mdspan/build -DCMAKE_CXX_STANDARD=20 -DCMAKE_INSTALL_PREFIX=/tmp/mdspan-install -S mdspan
+
+      - name: build_and_install_mdspan
+        working-directory: mdspan
+        run: cmake --build build --target install
+
       - name: configure_kokkos
         run: |
           nvidia-smi
@@ -63,6 +81,8 @@ jobs:
             -DKokkos_ENABLE_LARGE_MEM_TESTS=ON \
             -DKokkos_ENABLE_BENCHMARKS=ON \
             -DKokkos_ENABLE_BENCHMARKS_HEAVY=ON \
+            -DKokkos_ENABLE_MDSPAN_EXTERNAL=ON \
+            -Dmdspan_ROOT=/tmp/mdspan-install \
             ./
 
       - name: build_and_install_kokkos
