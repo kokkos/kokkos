@@ -5,7 +5,10 @@
 #define KOKKOS_IMPL_KOKKOS_GRAPHNODECTORPROPS_HPP
 
 #include "impl/Kokkos_DeviceHandle.hpp"
+#include "impl/Kokkos_Utilities.hpp"
 #include "View/Kokkos_ViewCtor.hpp"
+
+#include <tuple>
 
 namespace Kokkos::Impl {
 
@@ -76,60 +79,37 @@ constexpr bool is_node_props_v = is_node_props<T>::value;
 template <typename T>
 concept NodeProperties = is_node_props_v<T>;
 
-template <typename Prop, NodeProperties Props>
-  requires Props::template
-has<Prop> [[nodiscard]] constexpr decltype(auto) get_property(
-    const Props& props) {
-  return static_cast<const NodeCtorProp<Prop>&>(props).m_value;
+template <ValidNodeProperty Prop, typename PropsContainer>
+  requires NodeProperties<std::remove_cvref_t<PropsContainer>>
+[[nodiscard]] constexpr decltype(auto) get_property(PropsContainer&& props) {
+  static_assert(std::remove_cvref_t<PropsContainer>::template has<Prop>);
+  using base_t = std::conditional_t<
+      std::is_const_v<std::remove_reference_t<PropsContainer>>,
+      const NodeCtorProp<Prop>, NodeCtorProp<Prop>>;
+  return Kokkos::Impl::forward_like<PropsContainer>(
+      static_cast<base_t&>(props).m_value);
 }
 
-template <typename Prop, NodeProperties Props>
-  requires Props::template
-has<Prop> [[nodiscard]] constexpr decltype(auto) extract_property(
-    Props& props) {
-  return std::move(static_cast<NodeCtorProp<Prop>&>(props).m_value);
-}
-
-struct WithProperty {
-  template <typename... Props, typename Property>
-    requires(sizeof...(Props) > 0)
-  [[nodiscard]] static constexpr decltype(auto) set(
-      NodeCtorProps<Props...> props, Property&& property) {
-    using NewNodeCtorProps =
-        typename NodeCtorProps<Props...,
-                               std::remove_cvref_t<Property>>::uniform_type;
-    return NewNodeCtorProps{extract_property<Props>(props)...,
-                            std::forward<Property>(property)};
-  }
-
-  template <typename Property>
-  [[nodiscard]] static constexpr decltype(auto) set(NodeCtorProps<>,
-                                                    Property&& prop) {
-    return typename NodeCtorProps<std::remove_cvref_t<Property>>::uniform_type{
-        std::forward<Property>(prop)};
-  }
-};
-
-template <NodeProperties Props>
-[[nodiscard]] constexpr decltype(auto) with_properties_if_unset(
-    Props node_props) noexcept {
-  return node_props;
-}
-
-template <NodeProperties Props, typename Property, typename... Properties>
-[[nodiscard]] constexpr decltype(auto) with_properties_if_unset(
-    Props node_props, [[maybe_unused]] Property&& property,
-    Properties&&... properties) {
-  if constexpr (!Props::template has<typename Kokkos::Impl::NodeCtorProp<
-                    std::remove_cvref_t<Property>>::value_type>) {
-    return with_properties_if_unset(
-        WithProperty::set(std::move(node_props),
-                          std::forward<Property>(property)),
-        std::forward<Properties>(properties)...);
+template <ValidNodeProperty Prop, typename PropsContainer,
+          typename DefaultValueType>
+  requires NodeProperties<std::remove_cvref_t<PropsContainer>>
+[[nodiscard]] constexpr decltype(auto) get_property_or(
+    PropsContainer&& props, DefaultValueType&& default_value) {
+  if constexpr (std::remove_cvref_t<PropsContainer>::template has<Prop>) {
+    return get_property<Prop>(std::forward<PropsContainer>(props));
   } else {
-    return with_properties_if_unset(std::move(node_props),
-                                    std::forward<Properties>(properties)...);
+    return std::forward<DefaultValueType>(default_value);
   }
+}
+
+template <ValidNodeProperty... Props, typename PropsContainer,
+          typename... Defaults>
+  requires(NodeProperties<std::remove_cvref_t<PropsContainer>> &&
+           (std::convertible_to<Defaults, Props> && ...))
+[[nodiscard]] constexpr auto get_properties_or(PropsContainer&& props,
+                                               Defaults&&... defaults)
+    -> std::tuple<Props...> {
+  return {get_property_or<Props>(props, defaults)...};
 }
 
 }  // namespace Kokkos::Impl
