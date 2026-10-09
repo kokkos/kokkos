@@ -109,6 +109,9 @@ kokkos_enable_option(
 )
 mark_as_advanced(Kokkos_ENABLE_IMPL_REF_COUNT_BRANCH_UNLIKELY)
 
+kokkos_enable_option(
+  EXPERIMENTAL_SIMD_AMX OFF "Whether to enable the experimental AMX backend for SIMD tensor-core operations"
+)
 kokkos_enable_option(EXPERIMENTAL_CXX20_MODULES OFF "Whether to export C++20 modules for Kokkos")
 if(Kokkos_ENABLE_EXPERIMENTAL_CXX20_MODULES)
   if(CMAKE_VERSION VERSION_LESS 3.28.2)
