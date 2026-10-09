@@ -52,7 +52,9 @@ export {
 #endif
   }  // namespace Experimental
   namespace Experimental {
+  using ::Kokkos::Experimental::Event;
   using ::Kokkos::Experimental::partition_space;
+  using ::Kokkos::Experimental::space_depends_on;
   }  // namespace Experimental
   using ::Kokkos::AnonymousSpace;
   using ::Kokkos::DefaultExecutionSpace;

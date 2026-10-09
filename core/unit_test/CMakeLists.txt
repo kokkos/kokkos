@@ -146,6 +146,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;NextSilicon)
       DeepCopy_Narrowing
       DeepCopy_SameArgument
       DeepCopyAlignment
+      Event
       ExecSpacePartitioning
       ExecSpaceThreadSafety
       FunctionAnnotationMacros
@@ -488,6 +489,7 @@ if(Kokkos_ENABLE_OPENACC)
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_AtomicOperations_complexdouble.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_AtomicOperations_complexfloat.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_Crs.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_Event.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_JoinBackwardCompatibility.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_LocalDeepCopy.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_Other.cpp
