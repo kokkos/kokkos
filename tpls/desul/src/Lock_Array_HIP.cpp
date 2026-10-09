@@ -10,6 +10,7 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #include <desul/atomics/Lock_Array.hpp>
 #include <sstream>
 #include <string>
+#include <vector>
 
 #ifdef DESUL_ATOMICS_ENABLE_HIP_SEPARABLE_COMPILATION
 namespace desul {
@@ -24,11 +25,11 @@ namespace desul {
 
 namespace {
 
-__global__ void init_lock_arrays_hip_kernel() {
+__global__ void init_lock_arrays_hip_kernel(int32_t* device_locks, int32_t* node_locks) {
   unsigned i = blockIdx.x * blockDim.x + threadIdx.x;
   if (i < HIP_SPACE_ATOMIC_MASK + 1) {
-    Impl::HIP_SPACE_ATOMIC_LOCKS_DEVICE[i] = 0;
-    Impl::HIP_SPACE_ATOMIC_LOCKS_NODE[i] = 0;
+    device_locks[i] = 0;
+    node_locks[i] = 0;
   }
 }
 
@@ -54,6 +55,31 @@ void check_error_and_throw_hip(hipError_t e, const std::string msg) {
 
 }  // namespace
 
+#ifndef DESUL_ATOMICS_ENABLE_HIP_SEPARABLE_COMPILATION
+namespace {
+// Function-local statics so that registration from other translation units'
+// static initializers works regardless of static initialization order.
+std::vector<void (*)()>& hip_lock_arrays_copiers() {
+  static std::vector<void (*)()> copiers;
+  return copiers;
+}
+}  // namespace
+
+void register_hip_lock_arrays_copier(void (*copier)()) {
+  hip_lock_arrays_copiers().push_back(copier);
+}
+#endif
+
+namespace {
+void copy_all_hip_lock_arrays_to_device() {
+#ifdef DESUL_ATOMICS_ENABLE_HIP_SEPARABLE_COMPILATION
+  copy_hip_lock_arrays_to_device();
+#else
+  for (auto copier : hip_lock_arrays_copiers()) copier();
+#endif
+}
+}  // namespace
+
 template <typename T>
 void init_lock_arrays_hip() {
   if (HIP_SPACE_ATOMIC_LOCKS_DEVICE_h != nullptr) return;
@@ -68,14 +94,13 @@ void init_lock_arrays_hip() {
   check_error_and_throw_hip(error_malloc2,
                             "init_lock_arrays_hip: hipMallocHost host locks");
 
-  auto error_sync1 = hipDeviceSynchronize();
-  copy_hip_lock_arrays_to_device();
-  check_error_and_throw_hip(error_sync1, "init_lock_arrays_hip: post malloc");
+  copy_all_hip_lock_arrays_to_device();
 
-  init_lock_arrays_hip_kernel<<<(HIP_SPACE_ATOMIC_MASK + 1 + 255) / 256, 256>>>();
+  init_lock_arrays_hip_kernel<<<(HIP_SPACE_ATOMIC_MASK + 1 + 255) / 256, 256>>>(
+      HIP_SPACE_ATOMIC_LOCKS_DEVICE_h, HIP_SPACE_ATOMIC_LOCKS_NODE_h);
 
-  auto error_sync2 = hipDeviceSynchronize();
-  check_error_and_throw_hip(error_sync2, "init_lock_arrays_hip: post init");
+  auto error_sync = hipDeviceSynchronize();
+  check_error_and_throw_hip(error_sync, "init_lock_arrays_hip: post init");
 }
 
 template <typename T>
@@ -87,9 +112,6 @@ void finalize_lock_arrays_hip() {
   check_error_and_throw_hip(error_free2, "finalize_lock_arrays_hip: free host locks");
   HIP_SPACE_ATOMIC_LOCKS_DEVICE_h = nullptr;
   HIP_SPACE_ATOMIC_LOCKS_NODE_h = nullptr;
-#ifdef DESUL_ATOMICS_ENABLE_HIP_SEPARABLE_COMPILATION
-  copy_hip_lock_arrays_to_device();
-#endif
 }
 
 template void init_lock_arrays_hip<int>();
