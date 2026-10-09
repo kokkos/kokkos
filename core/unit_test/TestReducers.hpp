@@ -559,6 +559,25 @@ struct TestReducers {
       Kokkos::deep_copy(sum_view_scalar, sum_view);
       ASSERT_EQ(sum_view_scalar, reference_sum) << "N: " << N;
     }
+
+#ifdef KOKKOS_HAS_SHARED_SPACE
+    {
+      Kokkos::View<Scalar, Kokkos::SharedSpace> sum_view("View");
+      sum_view() = Scalar(1);
+      Kokkos::Sum<Scalar, Kokkos::SharedSpace> reducer_view(sum_view);
+      Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecSpace>(0, 0), f,
+                              reducer_view);
+      Kokkos::fence();
+      Scalar sum_view_scalar = sum_view();
+      ASSERT_EQ(sum_view_scalar, init) << "N: " << N;
+
+      Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecSpace>(0, N), f,
+                              reducer_view);
+      Kokkos::fence();
+      sum_view_scalar = sum_view();
+      ASSERT_EQ(sum_view_scalar, reference_sum) << "N: " << N;
+    }
+#endif
   }
 
   static void test_prod(int N) {
