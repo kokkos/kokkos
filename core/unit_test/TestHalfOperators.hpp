@@ -948,7 +948,7 @@ struct Functor_TestHalfOperators {
     // expected_lhs(PASS_BY_REF).
     expected_lhs(PASS_BY_REF) = accept_ref_expected(h_lhs);
 
-    half_tmp = static_cast<float>(h_lhs);
+    half_tmp = static_cast<half_impl_type>(h_lhs);
     tmp_ptr  = &(tmp_lhs = half_tmp);
     if (tmp_ptr != &tmp_lhs)
       Kokkos::abort("Error in half_type address-of operator");
