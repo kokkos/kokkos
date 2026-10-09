@@ -153,9 +153,10 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
         static_cast<sycl::global_ptr<char>>(instance.resize_team_scratch_space(
             scratch_pool_id,
             m_scratch_size[1] *
-                std::min<ptrdiff_t>(instance.m_num_scratch_locks /
-                                        (m_team_size * m_vector_size),
-                                    m_league_size)));
+                std::min<ptrdiff_t>(
+                    instance.m_num_scratch_locks /
+                        static_cast<size_t>(m_team_size * m_vector_size),
+                    m_league_size)));
 
     Kokkos::Impl::SYCLInternal::IndirectKernelMem& indirectKernelMem =
         instance.get_indirect_kernel_mem();
