@@ -674,6 +674,16 @@ struct functor_reduce {
 
 template <typename Scalar, class ExecutionSpace>
 bool test_scalar(int nteams, int team_size, int test) {
+// FIXME_NEXTSILICON ecore panic on 1.4.0-136 in
+// functor_vec_single<Test::array_reduce<double, 3>>
+#ifdef KOKKOS_ENABLE_NEXTSILICON
+  if (std::is_same_v<ExecutionSpace, Kokkos::Experimental::NextSilicon> &&
+      std::is_same_v<Scalar, Test::array_reduce<double, 3>> &&
+      (test == 4 || test == 11)) {
+    std::cerr << "ecore panic on 1.4.0-136\n";
+    return true;
+  }
+#endif
   Kokkos::View<int, Kokkos::LayoutLeft, ExecutionSpace> d_flag("flag");
   typename Kokkos::View<int, Kokkos::LayoutLeft,
                         ExecutionSpace>::host_mirror_type h_flag("h_flag");

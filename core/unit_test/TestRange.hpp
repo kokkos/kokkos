@@ -513,6 +513,13 @@ TEST(TEST_CATEGORY, check_batch_size) {
 }
 
 TEST(TEST_CATEGORY, range_static_batch_size) {
+// FIXME_NEXTSILICON
+#ifdef KOKKOS_ENABLE_NEXTSILICON
+  if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::NextSilicon>) {
+    GTEST_SKIP() << "requires device printf";
+  }
+#endif
+
   {
     TestStaticBatchSize<TEST_EXECSPACE,
                         Kokkos::Experimental::StaticBatchSize<1>>

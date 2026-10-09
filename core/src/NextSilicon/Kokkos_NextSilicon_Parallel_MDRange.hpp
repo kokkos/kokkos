@@ -194,6 +194,12 @@ class ParallelFor<Functor, Kokkos::MDRangePolicy<Traits...>,
         m_policy.space(), 0, total_range);
     Kokkos::parallel_for(flat_policy, wrapped_functor);
   }
+
+  template <typename PolicyType, typename FunctorType>
+  static int max_tile_size_product(const PolicyType&, const FunctorType&) {
+    // FIXME_NEXTSILICON: chosen arbitrarily like Serial backend
+    return 1024;
+  }
 };
 
 template <class CombinedFunctorReducerType, class... Traits>
@@ -249,6 +255,12 @@ class ParallelReduce<CombinedFunctorReducerType, MDRangePolicy<Traits...>,
         CombinedWrappedFunctorReducerType(wrapped_functor, reducer), policy,
         m_result_ptr);
     impl.execute();
+  }
+
+  template <typename PolicyType, typename FunctorType>
+  static int max_tile_size_product(const PolicyType&, const FunctorType&) {
+    // FIXME_NEXTSILICON: chosen arbitrarily like Serial backend
+    return 1024;
   }
 };
 

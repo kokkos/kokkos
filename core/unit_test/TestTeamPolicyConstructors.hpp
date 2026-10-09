@@ -154,6 +154,23 @@ TEST(TEST_CATEGORY, team_policy_runtime_parameters) {
   // clang-format on
 }
 
+// Converting to a TeamPolicy with different properties preserves the vector
+// length.
+TEST(TEST_CATEGORY, team_policy_converting_constructor_vector_length) {
+  using FromPolicy = Kokkos::TeamPolicy<TEST_EXECSPACE>;
+  using ToPolicy =
+      Kokkos::TeamPolicy<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>,
+                         Kokkos::IndexType<long>, SomeTag>;
+
+  for (int vector_length : {1, 2, FromPolicy::vector_length_max()}) {
+    if (vector_length > FromPolicy::vector_length_max()) continue;
+    FromPolicy from(1, 1, vector_length);
+    ToPolicy to(from);
+    ASSERT_EQ(to.impl_vector_length(), from.impl_vector_length())
+        << "requested vector_length " << vector_length;
+  }
+}
+
 // The execution space is defaulted if not given to the constructor.
 TEST(TEST_CATEGORY, team_policy_default_space) {
   using policy_t = Kokkos::TeamPolicy<TEST_EXECSPACE>;
