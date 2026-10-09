@@ -346,6 +346,7 @@ class View
   // typedefs originally from ViewTraits
   using traits = typename basic_view_from_traits::view_traits;
 
+  using value_type           = typename traits::value_type;
   using const_value_type     = typename traits::const_value_type;
   using non_const_value_type = typename traits::non_const_value_type;
   using data_type            = typename basic_view_from_traits::data_type;
@@ -358,16 +359,7 @@ class View
   using memory_space         = typename traits::memory_space;
   using memory_traits        = typename traits::memory_traits;
   using host_mirror_space    = typename traits::host_mirror_space;
-  using typename base_t::index_type;
 
-  // aliases from BasicView
-
-  // FIXME: Should be unsigned
-  // FIXME: these are overriden so that their types are identical when using
-  // BasicView or Legacy we will need to obtain these from base_t in the future
-  // and deprecate old behavior
-  using size_type  = typename memory_space::size_type;
-  using value_type = typename traits::value_type;
   // pointer_type can be different from element_type*
   using pointer_type = decltype(Impl::ptr_from_data_handle(
       std::declval<typename base_t::data_handle_type>()));
@@ -391,6 +383,8 @@ class View
   using typename base_t::mdspan_type;
   using reference_type = typename base_t::reference;
   using typename base_t::data_handle_type;
+  using typename base_t::index_type;
+  using typename base_t::size_type;
 
  private:
   using view_types =

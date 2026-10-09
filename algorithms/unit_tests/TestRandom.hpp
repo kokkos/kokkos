@@ -171,16 +171,16 @@ struct test_histogram1d_functor {
   // implementations might violate this upper bound, due to rounding
   // error.  Just in case, we leave an extra space at the end of each
   // dimension, in the View type below.
-  using type_1d = Kokkos::View<int[HIST_DIM1D + 1], memory_space>;
+  using type_1d   = Kokkos::View<int[HIST_DIM1D + 1], memory_space>;
+  using size_type = typename type_1d::size_type;
   type_1d density_1d;
   double mean;
 
   test_histogram1d_functor(type_1d d1d, int num_draws)
       : density_1d(d1d), mean(1.0 * num_draws / HIST_DIM1D * 3) {}
 
-  KOKKOS_INLINE_FUNCTION void operator()(
-      const typename memory_space::size_type i, RandomProperties& prop) const {
-    using size_type    = typename memory_space::size_type;
+  KOKKOS_INLINE_FUNCTION void operator()(const size_type i,
+                                         RandomProperties& prop) const {
     const double count = density_1d(i);
     prop.mean += count;
     prop.variance += 1.0 * (count - mean) * (count - mean);
@@ -208,15 +208,15 @@ struct test_histogram3d_functor {
   using type_3d =
       Kokkos::View<int[HIST_DIM3D + 1][HIST_DIM3D + 1][HIST_DIM3D + 1],
                    memory_space>;
+  using size_type = typename type_3d::size_type;
   type_3d density_3d;
   double mean;
 
   test_histogram3d_functor(type_3d d3d, int num_draws)
       : density_3d(d3d), mean(1.0 * num_draws / HIST_DIM1D) {}
 
-  KOKKOS_INLINE_FUNCTION void operator()(
-      const typename memory_space::size_type i, RandomProperties& prop) const {
-    using size_type    = typename memory_space::size_type;
+  KOKKOS_INLINE_FUNCTION void operator()(const size_type i,
+                                         RandomProperties& prop) const {
     const double count = density_3d(
         i / (HIST_DIM3D * HIST_DIM3D),
         (i % (HIST_DIM3D * HIST_DIM3D)) / HIST_DIM3D, i % HIST_DIM3D);
