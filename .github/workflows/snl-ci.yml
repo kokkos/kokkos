@@ -579,7 +579,7 @@ jobs:
         # so on the SNL CI runner, we'd expect around 2.5 hours.
         run: |
           ulimit -c 0
-          ctest -V -E 'NextSilicon1A' --timeout 1800
+          ctest -V -E 'NextSilicon1A' --timeout 3600
 
   SNL_Required_Checks:
     if: always()

@@ -38,14 +38,31 @@ void MDRangeReduceTester([[maybe_unused]] int bound, int k) {
 }
 
 TEST(TEST_CATEGORY, mdrange_parallel_reduce_primitive_types) {
+  auto doit = [](int bound, int k) {
+    MDRangeReduceTester<bool>(bound, k);
+    MDRangeReduceTester<signed char>(bound, k);
+    MDRangeReduceTester<int8_t>(bound, k);
+    MDRangeReduceTester<int16_t>(bound, k);
+    MDRangeReduceTester<int32_t>(bound, k);
+    MDRangeReduceTester<int64_t>(bound, k);
+  };
+
+// FIXME_NEXTSILICON: full sequence very slow in handoff 1.3.0-120
+#ifdef KOKKOS_ENABLE_NEXTSILICON
+  if constexpr (std::is_same_v<TEST_EXECSPACE,
+                               Kokkos::Experimental::NextSilicon>) {
+    for (int bound : {0, 7000}) {
+      for (int k : {0, 3500, 6999}) {
+        if (k < bound) doit(bound, k);
+      }
+    }
+    SUCCEED() << "ran shorter NextSilicon test";
+    return;
+  }
+#endif
   for (int bound : {0, 1, 7, 32, 65, 7000}) {
     for (int k = 0; k < bound; ++k) {
-      MDRangeReduceTester<bool>(bound, k);
-      MDRangeReduceTester<signed char>(bound, k);
-      MDRangeReduceTester<int8_t>(bound, k);
-      MDRangeReduceTester<int16_t>(bound, k);
-      MDRangeReduceTester<int32_t>(bound, k);
-      MDRangeReduceTester<int64_t>(bound, k);
+      doit(bound, k);
     }
   }
 }
