@@ -239,7 +239,7 @@ layout_left::mapping<Extents>::submdspan_mapping_impl(
     auto inv_map = detail::inv_map_rank(std::integral_constant<size_t, 0>(),
                                         std::index_sequence<>(), slices...);
     return submdspan_mapping_result<dst_mapping_t> {
-      dst_mapping_t(mdspan_non_standard, dst_ext,
+      dst_mapping_t(mdspan_non_standard_tag(), dst_ext,
                     detail::construct_sub_strides(
                         *this, inv_map,
 // HIP needs deduction guides to have markups so we need to be explicit
@@ -320,7 +320,7 @@ layout_left_padded<PaddingValue>::mapping<Extents>::submdspan_mapping_impl(
                                         std::index_sequence<>(), slices...);
       using dst_mapping_t = typename layout_stride::template mapping<dst_ext_t>;
     return submdspan_mapping_result<dst_mapping_t> {
-      dst_mapping_t(mdspan_non_standard, dst_ext,
+      dst_mapping_t(mdspan_non_standard_tag(), dst_ext,
                     MDSPAN_IMPL_STANDARD_NAMESPACE::detail::construct_sub_strides(
                         *this, inv_map,
 // HIP needs deduction guides to have markups so we need to be explicit
@@ -475,7 +475,7 @@ layout_right::mapping<Extents>::submdspan_mapping_impl(
     auto inv_map = detail::inv_map_rank(std::integral_constant<size_t, 0>(),
                                         std::index_sequence<>(), slices...);
     return submdspan_mapping_result<dst_mapping_t> {
-      dst_mapping_t(mdspan_non_standard, dst_ext,
+      dst_mapping_t(mdspan_non_standard_tag(), dst_ext,
                     detail::construct_sub_strides(
                         *this, inv_map,
 // HIP needs deduction guides to have markups so we need to be explicit
@@ -548,7 +548,7 @@ layout_right_padded<PaddingValue>::mapping<Extents>::submdspan_mapping_impl(
                                         std::index_sequence<>(), slices...);
       using dst_mapping_t = typename layout_stride::template mapping<dst_ext_t>;
     return submdspan_mapping_result<dst_mapping_t> {
-      dst_mapping_t(mdspan_non_standard, dst_ext,
+      dst_mapping_t(mdspan_non_standard_tag(), dst_ext,
                     MDSPAN_IMPL_STANDARD_NAMESPACE::detail::construct_sub_strides(
                         *this, inv_map,
 // HIP needs deduction guides to have markups so we need to be explicit
@@ -600,7 +600,7 @@ layout_stride::mapping<Extents>::submdspan_mapping_impl(
                     : this->operator()(detail::first_of(slices)...));
 
   return submdspan_mapping_result<dst_mapping_t> {
-    dst_mapping_t(mdspan_non_standard, dst_ext,
+    dst_mapping_t(mdspan_non_standard_tag(), dst_ext,
                   detail::construct_sub_strides(
                       *this, inv_map,
 // HIP needs deduction guides to have markups so we need to be explicit
