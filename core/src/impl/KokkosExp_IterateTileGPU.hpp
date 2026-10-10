@@ -169,10 +169,10 @@ auto compute_device_launch_params(
 
 #ifndef KOKKOS_ENABLE_SYCL
 // Check if the grid covers the full iteration space (no grid stride needed)
-template <size_t Rank, typename array_type>
-bool need_grid_stride_loop(const Kokkos::Array<array_type, 3>& max_grid_size,
-                           const dim3& block,
-                           const Kokkos::Array<array_type, Rank>& m_extent) {
+template <size_t Rank, typename array_index_type, typename index_type>
+bool need_grid_stride_loop(
+    const Kokkos::Array<array_index_type, 3>& max_grid_size, const dim3& block,
+    const Kokkos::Array<index_type, Rank>& m_extent) {
   bool need_grid_stride = true;
   if constexpr (Rank == 1) {
     if ((max_grid_size[0] * block.x) >= m_extent[0]) {
@@ -228,7 +228,7 @@ template <int Rank, typename array_index_type, typename index_type,
           Kokkos::Iterate IterateDir, bool grid_stride, typename Functor,
           typename Tag>
 struct DeviceIterate {
-  using array_type = Kokkos::Array<array_index_type, Rank>;
+  using array_type = Kokkos::Array<index_type, Rank>;
 
  private:
   const array_type m_lower;
