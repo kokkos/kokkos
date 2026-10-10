@@ -16,9 +16,14 @@ static_assert(false,
 #include <Kokkos_Array.hpp>
 #include <impl/KokkosExp_Host_IterateTile.hpp>
 #include <Kokkos_ExecPolicy.hpp>
+#include <Kokkos_TypeInfo.hpp>
+#ifndef KOKKOS_ENABLE_IMPL_TYPEINFO
+#include <typeinfo>
+#endif
 #include <type_traits>
 #include <array>
 #include <cmath>
+#include <limits>
 
 namespace Kokkos {
 
@@ -147,7 +152,8 @@ auto TileSizeRecommended<ExecutionSpace>::get(Policy const& policy) {
   constexpr auto InnerDirection = Policy::inner_direction;
   constexpr int Rank            = Policy::rank;
 
-  using tile_type = Kokkos::Array<std::int64_t, Rank>;
+  using index_type = Policy::index_type;
+  using tile_type  = Kokkos::Array<index_type, Rank>;
 
   tile_type recommended_tile_sizes{};
   int default_tile_size   = 2;
@@ -220,8 +226,8 @@ struct MDRangePolicy<P, Properties...>
 
   using index_type       = typename traits::index_type;
   using array_index_type = std::int64_t;
-  using point_type = Kokkos::Array<array_index_type, rank>;  // was index_type
-  using tile_type  = Kokkos::Array<array_index_type, rank>;
+  using point_type       = Kokkos::Array<index_type, rank>;
+  using tile_type        = Kokkos::Array<index_type, rank>;
   // If point_type or tile_type is not templated on a signed integral type (if
   // it is unsigned), then if user passes in intializer_list of
   // runtime-determined values of signed integral type that are not const will
@@ -229,9 +235,12 @@ struct MDRangePolicy<P, Properties...>
   // "conversion from integer or unscoped enumeration type to integer type that
   // cannot represent all values of the original, except where source is a
   // constant expression whose value can be stored exactly in the target type"
-  // This would require the user to either pass a matching index_type parameter
+  // Until Kokkos 5.2, index_type was an unsigned integer by default. Thus,
+  // using index_type as the value_type for point_type and tile_type would
+  // have required the user to either pass a matching index_type parameter
   // as template parameter to the MDRangePolicy or static_cast the individual
-  // values
+  // values. Instead, array_index_type was used as the value_type of
+  // point_type and tile_type.
 
   execution_space m_space;
 
@@ -265,7 +274,7 @@ struct MDRangePolicy<P, Properties...>
   MDRangePolicy() = default;
 
   template <typename LT, std::size_t LN, typename UT, std::size_t UN,
-            typename TT = array_index_type, std::size_t TN = rank,
+            typename TT = index_type, std::size_t TN = rank,
             typename = std::enable_if_t<std::is_integral_v<LT> &&
                                         std::is_integral_v<UT> &&
                                         std::is_integral_v<TT>>>
@@ -284,7 +293,7 @@ struct MDRangePolicy<P, Properties...>
   }
 
   template <typename LT, std::size_t LN, typename UT, std::size_t UN,
-            typename TT = array_index_type, std::size_t TN = rank,
+            typename TT = index_type, std::size_t TN = rank,
             typename = std::enable_if_t<std::is_integral_v<LT> &&
                                         std::is_integral_v<UT> &&
                                         std::is_integral_v<TT>>>
@@ -409,6 +418,11 @@ struct MDRangePolicy<P, Properties...>
     int outer_bound = (inner_direction == Iterate::Right) ? -1 : rank;
     int iter_step   = (inner_direction == Iterate::Right) ? -1 : 1;
 
+    // widest possible unsigned integer type
+    using FlatExtentType = std::size_t;
+
+    FlatExtentType total_flat_extent = 1;
+
     // Validate bounds before invoking backend-specific tile recommendations.
     for (int i = inner_rank; i != outer_bound; i += iter_step) {
       if (this->m_upper[i] < this->m_lower[i]) {
@@ -418,6 +432,38 @@ struct MDRangePolicy<P, Properties...>
             ") is greater than its upper bound (" +
             std::to_string(this->m_upper[i]) + ") in dimension " +
             std::to_string(i) + ".\n";
+        Kokkos::abort(msg.c_str());
+      }
+
+      FlatExtentType inc_flat_extent = total_flat_extent;
+      FlatExtentType cur_range       = this->m_upper[i] - this->m_lower[i];
+      total_flat_extent *= cur_range;
+
+      // check if total flat extent exceeds numeric_limits<index_type>::max()
+      // and check for wrap-around if index_type is FlatExtentType
+      if ((total_flat_extent > static_cast<FlatExtentType>(
+                                   std::numeric_limits<index_type>::max())) ||
+          ((i != inner_rank) && (cur_range != 0) &&
+           (total_flat_extent < inc_flat_extent))) {
+        std::string msg =
+            "Kokkos::MDRangePolicy bounds error: The product of the ranges ";
+
+        int j = inner_rank;
+        for (; j != outer_bound - iter_step; j += iter_step) {
+          msg += "(" + std::to_string(this->m_lower[j]) + ", " +
+                 std::to_string(this->m_upper[j]) + "), ";
+        }
+        msg += "(" + std::to_string(this->m_lower[j]) + ", " +
+               std::to_string(this->m_upper[j]) + ")";
+
+        msg += " exceeds the largest value representable by ";
+#ifdef KOKKOS_ENABLE_IMPL_TYPEINFO
+        msg += Impl::TypeInfo<std::remove_const_t<index_type>>::name();
+#else
+        msg += typeid(index_type).name();
+#endif
+        msg += ".\n";
+
         Kokkos::abort(msg.c_str());
       }
     }
