@@ -13,6 +13,8 @@ import kokkos.core;
 #endif
 #include <Kokkos_TypeInfo.hpp>
 
+#include <tools/include/ToolTestingUtilities.hpp>
+
 #include <cmath>
 #include <random>
 
@@ -884,6 +886,119 @@ TEST(TEST_CATEGORY, reduction_identity_bitwise_and_or_integral_types) {
   TestReductionIdentityBitwiseAndOr<unsigned long>();
   TestReductionIdentityBitwiseAndOr<long long>();
   TestReductionIdentityBitwiseAndOr<unsigned long long>();
+}
+
+using namespace Kokkos::Test::Tools;
+
+class TEST_CATEGORY_FIXTURE(ReduceCountFencesTest) : public testing::Test {
+ protected:
+  template <int ExptValue, typename ViewType>
+  void check_value(const ViewType& view) const {
+    static_assert(ViewType::rank() == 0);
+    if constexpr (Kokkos::Impl::MemorySpaceAccess<
+                      Kokkos::HostSpace,
+                      typename ViewType::memory_space>::accessible) {
+      ASSERT_EQ(view(), ExptValue);
+    } else {
+      int value;
+      Kokkos::deep_copy(exec, value, view);
+      ASSERT_EQ(value, ExptValue);
+    }
+  }
+
+ public:
+  struct SumIndices {
+    KOKKOS_FUNCTION
+    void operator()(const typename TEST_EXECSPACE::index_type index,
+                    int& current) const noexcept {
+      current += index;
+    }
+  };
+
+ public:
+  void SetUp() override final {
+    listen_tool_events(Config::DisableAll(), Config::EnableFences());
+  }
+
+  void TearDown() override { listen_tool_events(Config::DisableAll()); }
+
+ protected:
+  TEST_EXECSPACE exec{};
+};
+
+// Reducing to a scalar automatically introduce one fence.
+TEST_F(TEST_CATEGORY_FIXTURE(ReduceCountFencesTest), reduce_to_scalar) {
+  int value = 0;
+
+  const auto fences = get_event_set([&] {
+    Kokkos::parallel_reduce(Kokkos::RangePolicy(exec, 42, 43), SumIndices{},
+                            value);
+  });
+
+  ASSERT_EQ(value, 42);
+
+  static constexpr size_t expt_num_fences =
+#if defined(KOKKOS_ENABLE_CUDA)
+      std::same_as<TEST_EXECSPACE, Kokkos::Cuda> ? 4 :
+#endif
+                                                 2;
+
+  ASSERT_EQ(fences.size(), expt_num_fences);
+
+  unsigned short int index = 0;
+
+#if defined(KOKKOS_ENABLE_CUDA)
+  // https://github.com/kokkos/kokkos/blob/75eddc7a380827cbc4e8e51a45c889c312c37628/core/src/Cuda/Kokkos_Cuda_Parallel_Range.hpp#L350
+  if constexpr (std::same_as<TEST_EXECSPACE, Kokkos::Cuda>) {
+    ASSERT_EQ(
+        std::static_pointer_cast<BeginFenceEvent>(fences.at(index++))->name,
+        "Kokkos::Impl::ParallelReduce<Cuda, RangePolicy>::execute: Result Not "
+        "Device Accessible");
+    ASSERT_TRUE(Kokkos::Test::Tools::is_a<EndFenceEvent>(fences.at(index++)));
+  }
+#endif
+
+  ASSERT_EQ(
+      std::static_pointer_cast<BeginFenceEvent>(fences.at(index++))->name,
+      "Kokkos::parallel_reduce: fence due to result being value, not view");
+  ASSERT_TRUE(Kokkos::Test::Tools::is_a<EndFenceEvent>(fences.at(index++)));
+}
+
+// Reducing to a managed view does not introduce any fence. Proper
+// synchronization falls to the user.
+TEST_F(TEST_CATEGORY_FIXTURE(ReduceCountFencesTest), reduce_to_managed_view) {
+  Kokkos::View<int, TEST_EXECSPACE> view(Kokkos::view_alloc(exec));
+
+  const auto fences = get_event_set([&] {
+    Kokkos::parallel_reduce(Kokkos::RangePolicy(exec, 42, 43), SumIndices{},
+                            view);
+  });
+
+  exec.fence("user fence");
+
+  ASSERT_EQ(fences.size(), 0);
+
+  check_value<42>(view);
+}
+
+// Reducing to an unmanaged view does not introduce any fence. Proper
+// synchronization falls to the user.
+TEST_F(TEST_CATEGORY_FIXTURE(ReduceCountFencesTest), reduce_to_unmanaged_view) {
+  Kokkos::View<int, TEST_EXECSPACE> view(Kokkos::view_alloc(exec));
+
+  Kokkos::View<int, TEST_EXECSPACE, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+      view_um(view);
+
+  const auto fences = get_event_set([&] {
+    Kokkos::parallel_reduce(Kokkos::RangePolicy(exec, 42, 43), SumIndices{},
+                            view_um);
+  });
+
+  exec.fence("user fence");
+
+  ASSERT_EQ(fences.size(), 0);
+
+  check_value<42>(view);
 }
 
 }  // namespace Test
