@@ -585,7 +585,8 @@ struct HPXTeamMember {
   using execution_space = Kokkos::Experimental::HPX;
   using scratch_memory_space =
       Kokkos::ScratchMemorySpace<Kokkos::Experimental::HPX>;
-  using team_handle = HPXTeamMember;
+  using team_handle   = HPXTeamMember;
+  using thread_handle = ThreadHandleType<team_handle>;
 
  private:
   scratch_memory_space m_team_shared;
@@ -621,6 +622,10 @@ struct HPXTeamMember {
 
   KOKKOS_INLINE_FUNCTION int team_rank() const noexcept { return m_team_rank; }
   KOKKOS_INLINE_FUNCTION int team_size() const noexcept { return m_team_size; }
+
+  KOKKOS_INLINE_FUNCTION static constexpr int vector_length() noexcept {
+    return 1;
+  }
 
   template <class... Properties>
   constexpr KOKKOS_INLINE_FUNCTION HPXTeamMember(
@@ -1793,9 +1798,16 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
     const Impl::TeamThreadRangeBoundariesStruct<iType, Impl::HPXTeamMember>
         &loop_boundaries,
     const Lambda &lambda) {
-  for (iType i = loop_boundaries.start; i < loop_boundaries.end;
-       i += loop_boundaries.increment)
-    lambda(i);
+  // FIXME: Implement ThreadHandle for HPX parallel_for(TeamThreadRange)
+  using thread_handle_t = Impl::ThreadHandleType<Impl::HPXTeamMember>;
+  if constexpr (std::is_invocable_v<Lambda, thread_handle_t const &, iType>) {
+    static_assert(Kokkos::Impl::always_false<Lambda>::value,
+                  "ThreadHandle not yet supported for HPX backend");
+  } else {
+    for (iType i = loop_boundaries.start; i < loop_boundaries.end;
+         i += loop_boundaries.increment)
+      lambda(i);
+  }
 }
 
 /** \brief  Inter-thread vector parallel_reduce. Executes lambda(iType i,

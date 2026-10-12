@@ -37,6 +37,7 @@ class ThreadsExecTeamMember {
   using execution_space      = Kokkos::Threads;
   using scratch_memory_space = execution_space::scratch_memory_space;
   using team_handle          = ThreadsExecTeamMember;
+  using thread_handle        = ThreadHandleType<team_handle>;
 
  private:
   using space = execution_space::scratch_memory_space;
@@ -126,6 +127,8 @@ class ThreadsExecTeamMember {
   KOKKOS_INLINE_FUNCTION int league_size() const { return m_league_size; }
   KOKKOS_INLINE_FUNCTION int team_rank() const { return m_team_rank; }
   KOKKOS_INLINE_FUNCTION int team_size() const { return m_team_size; }
+
+  KOKKOS_INLINE_FUNCTION static constexpr int vector_length() { return 1; }
 
   KOKKOS_INLINE_FUNCTION void team_barrier() const {
     team_fan_in();
@@ -899,9 +902,16 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
     const Impl::TeamThreadRangeBoundariesStruct<
         iType, Impl::ThreadsExecTeamMember>& loop_boundaries,
     const Lambda& lambda) {
-  for (iType i = loop_boundaries.start; i < loop_boundaries.end;
-       i += loop_boundaries.increment)
-    lambda(i);
+  // FIXME: Implement ThreadHandle for Threads parallel_for(TeamThreadRange)
+  using thread_handle_t = Impl::ThreadHandleType<Impl::ThreadsExecTeamMember>;
+  if constexpr (std::is_invocable_v<Lambda, thread_handle_t const&, iType>) {
+    static_assert(Kokkos::Impl::always_false<Lambda>::value,
+                  "ThreadHandle not yet supported for Threads backend");
+  } else {
+    for (iType i = loop_boundaries.start; i < loop_boundaries.end;
+         i += loop_boundaries.increment)
+      lambda(i);
+  }
 }
 
 /** \brief  Inter-thread vector parallel_reduce. Executes lambda(iType i,

@@ -485,9 +485,10 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
           closure(thread_handle, i);
         }
       } else {
-        static_assert(Kokkos::Impl::always_false<Closure>::value,
-                      "Kokkos::parallel_for(TeamThreadRange): closure must be "
-                      "invocable with (iType) or (ThreadHandleType, iType)");
+        static_assert(
+            Kokkos::Impl::always_false<Closure>::value,
+            "Kokkos::parallel_for(TeamThreadRange) closure must be invocable "
+            "with (iType) or (ThreadHandleType, iType) on Cuda backend");
       }))
 }
 
