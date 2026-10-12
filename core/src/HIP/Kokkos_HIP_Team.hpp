@@ -56,6 +56,7 @@ class HIPTeamMember {
   using execution_space      = HIP;
   using scratch_memory_space = execution_space::scratch_memory_space;
   using team_handle          = HIPTeamMember;
+  using thread_handle        = ThreadHandleType<team_handle>;
 
  private:
   mutable void* m_team_reduce;
@@ -107,6 +108,12 @@ class HIPTeamMember {
     else
       __threadfence_block();  // team <= warp
 #endif
+  }
+
+  // FIXME: implement vector_length for HIP, used by ThreadHandleType
+  int vector_length() const {
+    Kokkos::abort("vector_length not implemented for HIPTeamMember");
+    return int();
   }
 
   //--------------------------------------------------------------------------
@@ -474,9 +481,16 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
         loop_boundaries,
     const Closure& closure) {
 #ifdef __HIP_DEVICE_COMPILE__
-  for (iType i = loop_boundaries.start + threadIdx.y; i < loop_boundaries.end;
-       i += blockDim.y)
-    closure(i);
+  // FIXME: Implement ThreadHandle for HIP parallel_for(TeamThreadRange)
+  using thread_handle_t = Impl::ThreadHandleType<Impl::HIPTeamMember>;
+  if constexpr (std::is_invocable_v<Closure, thread_handle_t const&, iType>) {
+    static_assert(Kokkos::Impl::always_false<Closure>::value,
+                  "ThreadHandle not yet supported for HIP backend");
+  } else {
+    for (iType i = loop_boundaries.start + threadIdx.y; i < loop_boundaries.end;
+         i += blockDim.y)
+      closure(i);
+  }
 #else
   (void)loop_boundaries;
   (void)closure;
