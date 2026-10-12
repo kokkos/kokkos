@@ -22,7 +22,7 @@
         "  Expected precondition `" #predicate "` evaluated false.\n"          \
         "Error at " KOKKOS_IMPL_TOSTRING(__FILE__) ":" KOKKOS_IMPL_TOSTRING(   \
           __LINE__) " \n"                                                      \
-        __VA_OPT__("Error message: " __VA_ARGS__));                            \
+        __VA_OPT__(__VA_ARGS__));                                              \
       ::Kokkos::abort("");                                                     \
     }                                                                          \
   }
@@ -34,7 +34,7 @@
         "  Ensured postcondition `" #predicate "` evaluated false.\n"          \
         "Error at " KOKKOS_IMPL_TOSTRING(__FILE__) ":" KOKKOS_IMPL_TOSTRING(   \
           __LINE__) " \n"                                                      \
-        __VA_OPT__("Error message: " __VA_ARGS__));                            \
+        __VA_OPT__(__VA_ARGS__));                                              \
       ::Kokkos::abort("");                                                     \
     }                                                                          \
   }
@@ -46,7 +46,7 @@
         "  Asserted condition `" #predicate "` evaluated false.\n"             \
         "Error at " KOKKOS_IMPL_TOSTRING(__FILE__) ":" KOKKOS_IMPL_TOSTRING(   \
           __LINE__) " \n"                                                      \
-        __VA_OPT__("Error message: " __VA_ARGS__));                            \
+        __VA_OPT__(__VA_ARGS__));                                              \
       ::Kokkos::abort("");                                                     \
     }                                                                          \
   }
