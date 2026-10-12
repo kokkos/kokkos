@@ -17,7 +17,11 @@ namespace Impl {
 DESUL_IMPL_ACC_ROUTINE_DIRECTIVE
 template <class MemoryOrder, class MemoryScope>
 void host_atomic_thread_fence(MemoryOrder, MemoryScope) {
-  DESUL_IMPL_IF_HOST_BUILTIN
+#if defined(DESUL_HAVE_OPENACC_ATOMICS) && defined(__NVCOMPILER)
+  // FIXME_OPENACC NVHPC cannot lower __atomic_thread_fence in device code.  Test at run
+  // time so that the device compiler folds the call away.
+  if (acc_on_device(acc_device_host))
+#endif
     __atomic_thread_fence(GCCMemoryOrder<MemoryOrder>::value);
 }
 
