@@ -27,7 +27,7 @@ bool error_range_policy_config() {
   return sycl::ext::oneapi::this_work_item::get_nd_item<2>().get_local_range(
              1) != 1;
 #else
-  return sycl::ext::oneapi::experimental::this_nd_item<3>().get_local_range(
+  return sycl::ext::oneapi::experimental::this_nd_item<2>().get_local_range(
              1) != 1;
 #endif
 #endif
