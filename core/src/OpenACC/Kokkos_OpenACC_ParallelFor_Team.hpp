@@ -58,20 +58,26 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
     const Impl::TeamThreadRangeBoundariesStruct<iType, Impl::OpenACCTeamMember>&
         loop_boundaries,
     const Lambda& lambda) {
-  // FIXME: Implement ThreadHandle for OpenACC parallel_for(TeamThreadRange)
   using thread_handle_t = Impl::ThreadHandleType<Impl::OpenACCTeamMember>;
-  if constexpr (std::is_invocable_v<Lambda, thread_handle_t const&, iType>) {
-    static_assert(Kokkos::Impl::always_false<Lambda>::value,
-                  "ThreadHandle not yet supported for OpenACC backend");
-  } else {
-    iType j_start = loop_boundaries.member.team_rank() /
-                    loop_boundaries.member.vector_length();
-    iType j_end  = loop_boundaries.end;
-    iType j_step = loop_boundaries.member.team_size();
-    if (j_start >= loop_boundaries.start) {
+  [[maybe_unused]] auto const thread_handle =
+      thread_handle_t(loop_boundaries.member);
+
+  iType j_start = loop_boundaries.member.team_rank() /
+                  loop_boundaries.member.vector_length();
+  iType j_end  = loop_boundaries.end;
+  iType j_step = loop_boundaries.member.team_size();
+  if (j_start >= loop_boundaries.start) {
 #pragma acc loop seq
-      for (iType j = j_start; j < j_end; j += j_step) {
+    for (iType j = j_start; j < j_end; j += j_step) {
+      if constexpr (std::is_invocable_v<Lambda, iType>) {
         lambda(j);
+      } else if constexpr (std::is_invocable_v<Lambda, thread_handle_t const&,
+                                               iType>) {
+        lambda(thread_handle, j);
+      } else {
+        static_assert(Kokkos::Impl::always_false<Lambda>::value,
+                      "Kokkos::parallel_for(TeamThreadRange) closure must be "
+                      "invocable with (iType) or (ThreadHandleType, iType)");
       }
     }
   }

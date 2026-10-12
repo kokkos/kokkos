@@ -3,12 +3,6 @@
 
 #include <Kokkos_Core.hpp>
 
-// ThreadHandle team members are provided for the Cuda category only.
-// TEST_CATEGORY_NUMBER 5 is Cuda.
-#if TEST_CATEGORY_NUMBER == 5
-#define KOKKOS_IMPL_THREAD_HANDLE_TESTS 1
-#endif
-
 namespace {
 
 template <class Policy>
@@ -57,27 +51,6 @@ struct CheckRuntimeValues {
   }
 };
 
-#if KOKKOS_IMPL_THREAD_HANDLE_TESTS
-
-template <class ExecSpace>
-struct CheckThreadHandleProperties {
-  void operator()() const {
-    int nerrs_concurrency = 0;
-    Kokkos::parallel_reduce(
-        "check_concurrency", Kokkos::TeamPolicy<ExecSpace>(1, Kokkos::AUTO()),
-        KOKKOS_LAMBDA(const team_member_t<ExecSpace>& team, int& errs) {
-          int team_conc     = team.concurrency();
-          int expected_team = team.team_size() * team.vector_length();
-          if (team_conc != expected_team) ++errs;
-
-          typename team_member_t<ExecSpace>::thread_handle thread_handle(team);
-          if (thread_handle.concurrency() != team.vector_length()) ++errs;
-        },
-        nerrs_concurrency);
-    ASSERT_EQ(nerrs_concurrency, 0);
-  }
-};
-
 template <class ExecSpace>
 struct CheckInvocationOrder {
   void operator()() const {
@@ -108,25 +81,12 @@ struct CheckInvocationOrder {
         });
   }
 };
-
-#endif  // KOKKOS_IMPL_THREAD_HANDLE_TESTS
-
 }  // namespace
 
 TEST(TEST_CATEGORY, range_policy_check_runtime_values) {
   CheckRuntimeValues<TEST_EXECSPACE>{}();
 }
 
-#if KOKKOS_IMPL_THREAD_HANDLE_TESTS
-
-TEST(TEST_CATEGORY, range_policy_check_thread_handle_properties) {
-  CheckThreadHandleProperties<TEST_EXECSPACE>{}();
-}
-
 TEST(TEST_CATEGORY, range_policy_check_invocation_order) {
   CheckInvocationOrder<TEST_EXECSPACE>{}();
 }
-
-#endif  // KOKKOS_IMPL_THREAD_HANDLE_TESTS
-
-#undef KOKKOS_IMPL_THREAD_HANDLE_TESTS

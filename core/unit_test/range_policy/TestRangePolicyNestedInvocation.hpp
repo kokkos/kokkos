@@ -3,12 +3,6 @@
 
 #include <Kokkos_Core.hpp>
 
-// ThreadHandle team members are provided for the Cuda category only.
-// TEST_CATEGORY_NUMBER 5 is Cuda.
-#if TEST_CATEGORY_NUMBER == 5
-#define KOKKOS_IMPL_THREAD_HANDLE_TESTS 1
-#endif
-
 namespace {
 
 template <class ExecSpace>
@@ -126,8 +120,6 @@ struct CheckRangePolicyWithTeamHandle {
   }
 };
 
-#if KOKKOS_IMPL_THREAD_HANDLE_TESTS
-
 template <class ExecSpace>
 struct CheckRangePolicyWithThreadHandle {
   void operator()() const {
@@ -213,9 +205,6 @@ struct CheckRangePolicyWithConstructedThreadHandleInSingle {
         M, 5.f, "check_range_policy_with_constructed_thread_handle_in_single");
   }
 };
-
-#endif  // KOKKOS_IMPL_THREAD_HANDLE_TESTS
-
 }  // namespace
 
 TEST(TEST_CATEGORY, self_similar_range_policy_with_execution_space) {
@@ -225,8 +214,6 @@ TEST(TEST_CATEGORY, self_similar_range_policy_with_execution_space) {
 TEST(TEST_CATEGORY, self_similar_range_policy_with_team_handle) {
   CheckRangePolicyWithTeamHandle<TEST_EXECSPACE>{}();
 }
-
-#if KOKKOS_IMPL_THREAD_HANDLE_TESTS
 
 TEST(TEST_CATEGORY, self_similar_range_policy_with_thread_handle) {
   CheckRangePolicyWithThreadHandle<TEST_EXECSPACE>{}();
@@ -240,7 +227,3 @@ TEST(TEST_CATEGORY,
      self_similar_range_policy_with_constructed_thread_handle_in_single) {
   CheckRangePolicyWithConstructedThreadHandleInSingle<TEST_EXECSPACE>{}();
 }
-
-#endif  // KOKKOS_IMPL_THREAD_HANDLE_TESTS
-
-#undef KOKKOS_IMPL_THREAD_HANDLE_TESTS

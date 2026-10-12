@@ -96,12 +96,6 @@ class HIPTeamMember {
 #endif
   }
 
-  // FIXME: implement vector_length for HIP, used by ThreadHandleType
-  int vector_length() const {
-    Kokkos::abort("vector_length not implemented for HIPTeamMember");
-    return int();
-  }
-
   //--------------------------------------------------------------------------
 
   template <class ValueType>
@@ -458,15 +452,22 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
         loop_boundaries,
     const Closure& closure) {
 #ifdef __HIP_DEVICE_COMPILE__
-  // FIXME: Implement ThreadHandle for HIP parallel_for(TeamThreadRange)
   using thread_handle_t = Impl::ThreadHandleType<Impl::HIPTeamMember>;
-  if constexpr (std::is_invocable_v<Closure, thread_handle_t const&, iType>) {
-    static_assert(Kokkos::Impl::always_false<Closure>::value,
-                  "ThreadHandle not yet supported for HIP backend");
-  } else {
-    for (iType i = loop_boundaries.start + threadIdx.y; i < loop_boundaries.end;
-         i += blockDim.y)
+  [[maybe_unused]] auto const thread_handle =
+      thread_handle_t(loop_boundaries.member);
+
+  for (iType i = loop_boundaries.start + threadIdx.y; i < loop_boundaries.end;
+       i += blockDim.y) {
+    if constexpr (std::is_invocable_v<Closure, iType>) {
       closure(i);
+    } else if constexpr (std::is_invocable_v<Closure, thread_handle_t const&,
+                                             iType>) {
+      closure(thread_handle, i);
+    } else {
+      static_assert(Kokkos::Impl::always_false<Closure>::value,
+                    "Kokkos::parallel_for(TeamThreadRange) closure must be "
+                    "invocable with (iType) or (ThreadHandleType, iType)");
+    }
   }
 #else
   (void)loop_boundaries;

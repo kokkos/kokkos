@@ -417,10 +417,6 @@ class HostThreadTeamMember {
   KOKKOS_INLINE_FUNCTION
   int league_size() const noexcept { return m_league_size; }
 
-  KOKKOS_INLINE_FUNCTION static constexpr int vector_length() noexcept {
-    return 1;
-  }
-
   //----------------------------------------
 
   KOKKOS_INLINE_FUNCTION
@@ -737,15 +733,21 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
     Closure const& closure,
     std::enable_if_t<Impl::is_host_thread_team_member<Member>::value> const** =
         nullptr) {
-  // FIXME: Implement ThreadHandle for Host parallel_for(TeamThreadRange)
   using thread_handle_t = Impl::ThreadHandleType<Member>;
-  if constexpr (std::is_invocable_v<Closure, thread_handle_t const&, iType>) {
-    static_assert(Kokkos::Impl::always_false<Closure>::value,
-                  "ThreadHandle not yet supported for Host backend");
-  } else {
-    for (iType i = loop_boundaries.start; i < loop_boundaries.end;
-         i += loop_boundaries.increment) {
+  [[maybe_unused]] auto const thread_handle =
+      thread_handle_t(loop_boundaries.member);
+
+  for (iType i = loop_boundaries.start; i < loop_boundaries.end;
+       i += loop_boundaries.increment) {
+    if constexpr (std::is_invocable_v<Closure, iType>) {
       closure(i);
+    } else if constexpr (std::is_invocable_v<Closure, thread_handle_t const&,
+                                             iType>) {
+      closure(thread_handle, i);
+    } else {
+      static_assert(Kokkos::Impl::always_false<Closure>::value,
+                    "Kokkos::parallel_for(TeamThreadRange) closure must be "
+                    "invocable with (iType) or (ThreadHandleType, iType)");
     }
   }
 }
@@ -828,10 +830,8 @@ KOKKOS_INLINE_FUNCTION
 KOKKOS_INLINE_FUNCTION
 void parallel_reduce
   (
-Impl::TeamThreadRangeBoundariesStruct<iType,Impl::HostThreadTeamMember<Space> >
-             const & loop_boundaries
-  , Closure  const & closure
-  , Joiner   const & joiner
+Impl::TeamThreadRangeBoundariesStruct<iType,Impl::HostThreadTeamMember<Space>
+> const & loop_boundaries , Closure  const & closure , Joiner   const & joiner
   , ValueType      & result
   )
 {

@@ -55,12 +55,6 @@ class SYCLTeamMember {
   int team_size() const { return m_item.get_local_range(0); }
   void team_barrier() const { sycl::group_barrier(m_item.get_group()); }
 
-  // FIXME: implement vector_length for SYCL, used by ThreadHandleType
-  int vector_length() const {
-    Kokkos::abort("vector_length not implemented for SYCLTeamMember");
-    return int();
-  }
-
   const sycl::nd_item<2>& item() const { return m_item; }
 
   //--------------------------------------------------------------------------
@@ -502,17 +496,24 @@ template <typename iType, class Closure>
 void parallel_for(const Impl::TeamThreadRangeBoundariesStruct<
                       iType, Impl::SYCLTeamMember>& loop_boundaries,
                   const Closure& closure) {
-  // FIXME: Implement ThreadHandle for SYCL parallel_for(TeamThreadRange)
   using thread_handle_t = Impl::ThreadHandleType<Impl::SYCLTeamMember>;
-  if constexpr (std::is_invocable_v<Closure, thread_handle_t const&, iType>) {
-    static_assert(Kokkos::Impl::always_false<Closure>::value,
-                  "ThreadHandle not yet supported for SYCL backend");
-  } else {
-    for (iType i = loop_boundaries.start +
-                   loop_boundaries.member.item().get_local_id(0);
-         i < loop_boundaries.end;
-         i += loop_boundaries.member.item().get_local_range(0))
+  [[maybe_unused]] auto const thread_handle =
+      thread_handle_t(loop_boundaries.member);
+
+  for (iType i = loop_boundaries.start +
+                 loop_boundaries.member.item().get_local_id(0);
+       i < loop_boundaries.end;
+       i += loop_boundaries.member.item().get_local_range(0)) {
+    if constexpr (std::is_invocable_v<Closure, iType>) {
       closure(i);
+    } else if constexpr (std::is_invocable_v<Closure, thread_handle_t const&,
+                                             iType>) {
+      closure(thread_handle, i);
+    } else {
+      static_assert(Kokkos::Impl::always_false<Closure>::value,
+                    "Kokkos::parallel_for(TeamThreadRange) closure must be "
+                    "invocable with (iType) or (ThreadHandleType, iType)");
+    }
   }
 }
 

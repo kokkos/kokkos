@@ -623,10 +623,6 @@ struct HPXTeamMember {
   KOKKOS_INLINE_FUNCTION int team_rank() const noexcept { return m_team_rank; }
   KOKKOS_INLINE_FUNCTION int team_size() const noexcept { return m_team_size; }
 
-  KOKKOS_INLINE_FUNCTION static constexpr int vector_length() noexcept {
-    return 1;
-  }
-
   template <class... Properties>
   constexpr KOKKOS_INLINE_FUNCTION HPXTeamMember(
       const TeamPolicyInternal<Kokkos::Experimental::HPX, Properties...>
@@ -1798,15 +1794,22 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
     const Impl::TeamThreadRangeBoundariesStruct<iType, Impl::HPXTeamMember>
         &loop_boundaries,
     const Lambda &lambda) {
-  // FIXME: Implement ThreadHandle for HPX parallel_for(TeamThreadRange)
   using thread_handle_t = Impl::ThreadHandleType<Impl::HPXTeamMember>;
-  if constexpr (std::is_invocable_v<Lambda, thread_handle_t const &, iType>) {
-    static_assert(Kokkos::Impl::always_false<Lambda>::value,
-                  "ThreadHandle not yet supported for HPX backend");
-  } else {
-    for (iType i = loop_boundaries.start; i < loop_boundaries.end;
-         i += loop_boundaries.increment)
+  [[maybe_unused]] auto const thread_handle =
+      thread_handle_t(loop_boundaries.member);
+
+  for (iType i = loop_boundaries.start; i < loop_boundaries.end;
+       i += loop_boundaries.increment) {
+    if constexpr (std::is_invocable_v<Lambda, iType>) {
       lambda(i);
+    } else if constexpr (std::is_invocable_v<Lambda, thread_handle_t const &,
+                                             iType>) {
+      lambda(thread_handle, i);
+    } else {
+      static_assert(Kokkos::Impl::always_false<Lambda>::value,
+                    "Kokkos::parallel_for(TeamThreadRange) closure must be "
+                    "invocable with (iType) or (ThreadHandleType, iType)");
+    }
   }
 }
 
