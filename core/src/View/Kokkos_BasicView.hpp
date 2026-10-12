@@ -146,7 +146,20 @@ class BasicView {
 #ifndef KOKKOS_ENABLE_DEPRECATED_CODE_5
     // Need to cast in order to avoid warning for rank zero about pointless
     // comparison to zero
-    KOKKOS_ASSERT(static_cast<int>(r) < static_cast<int>(rank()));
+    if constexpr(std::is_pointer_v<data_handle_type>) {
+      KOKKOS_ASSERT(static_cast<int>(r) < static_cast<int>(rank()), 
+        "Failure to access static_extent(%d) of View (rank: %lu)\n", 
+        r, rank());
+    } else if constexpr(Kokkos::SpaceAccessibility<execution_space, 
+                        Kokkos::HostSpace>::accessible){
+        KOKKOS_ASSERT(static_cast<int>(r) < static_cast<int>(rank()), 
+          "Failure to access static_extent(%d) of View \"%s\" (rank: %lu)", 
+          r, rank());
+    } else {
+        KOKKOS_ASSERT(static_cast<int>(r) < static_cast<int>(rank()), 
+          "Failure to access static_extent(%d) of View (rank: %lu)\n", 
+          r, rank());
+    }
 #endif
     return extents_type::static_extent(r);
   }
@@ -154,7 +167,20 @@ class BasicView {
 #ifndef KOKKOS_ENABLE_DEPRECATED_CODE_5
     // Need to cast in order to avoid warning for rank zero about pointless
     // comparison to zero
-    KOKKOS_ASSERT(static_cast<int>(r) < static_cast<int>(rank()));
+    if constexpr(std::is_pointer_v<data_handle_type>) {
+      KOKKOS_ASSERT(static_cast<int>(r) < static_cast<int>(rank()), 
+        "Failure to access extent(%d) of View (ptr: %p, rank: %lu)\n", 
+        r, m_ptr, rank());
+    } else if constexpr(Kokkos::SpaceAccessibility<execution_space, 
+                        Kokkos::HostSpace>::accessible){
+        KOKKOS_ASSERT(static_cast<int>(r) < static_cast<int>(rank()), 
+          "Failure to access extent(%d) of View \"%s\" (ptr: %p, rank: %lu)", 
+          r, m_ptr.get_label().c_str(), m_ptr.get(), rank());
+    } else {
+        KOKKOS_ASSERT(static_cast<int>(r) < static_cast<int>(rank()), 
+          "Failure to access extent(%d) of View (ptr: %p, rank: %lu)\n", 
+          r, m_ptr.get(), rank());
+    }
 #endif
     return m_map.extents().extent(r);
   }
@@ -788,7 +814,20 @@ class BasicView {
   KOKKOS_FUNCTION constexpr index_type stride(rank_type r) const {
     // Need to cast in order to avoid warning for rank zero about pointless
     // comparison to zero
-    KOKKOS_ASSERT(static_cast<int>(r) < static_cast<int>(rank()));
+    if constexpr(std::is_pointer_v<data_handle_type>) {
+      KOKKOS_ASSERT(static_cast<int>(r) < static_cast<int>(rank()), 
+        "Failure to access stride(%d) of View (ptr: %p, rank: %lu)\n", 
+        r, m_ptr, rank());
+    } else if constexpr(Kokkos::SpaceAccessibility<execution_space, 
+                        Kokkos::HostSpace>::accessible){
+        KOKKOS_ASSERT(static_cast<int>(r) < static_cast<int>(rank()), 
+          "Failure to access stride(%d) of View \"%s\" (ptr: %p, rank: %lu)", 
+          r, m_ptr.get_label().c_str(), m_ptr.get(), rank());
+    } else {
+        KOKKOS_ASSERT(static_cast<int>(r) < static_cast<int>(rank()), 
+          "Failure to access stride(%d) of View (ptr: %p, rank: %lu)\n", 
+          r, m_ptr.get(), rank());
+    }
     return m_map.stride(r);
   }
 

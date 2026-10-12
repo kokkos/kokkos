@@ -14,39 +14,43 @@
 
 #if !defined(NDEBUG) || defined(KOKKOS_ENFORCE_CONTRACTS) || \
     defined(KOKKOS_ENABLE_DEBUG)
-#define KOKKOS_EXPECTS(...)                                                    \
+#define KOKKOS_EXPECTS(predicate, ...)                                         \
   {                                                                            \
-    if (!bool(__VA_ARGS__)) {                                                  \
-      ::Kokkos::abort(                                                         \
-          "Kokkos contract violation:\n  "                                     \
-          "  Expected precondition `" #__VA_ARGS__                             \
-          "` evaluated false.\n"                                               \
-          "Error at " KOKKOS_IMPL_TOSTRING(__FILE__) ":" KOKKOS_IMPL_TOSTRING( \
-              __LINE__) " \n");                                                \
+    if (!bool(predicate)) {                                                    \
+      Kokkos::printf(                                                          \
+        "Kokkos contract violation:\n"                                         \
+        "  Expected precondition `" #predicate "` evaluated false.\n"          \
+        "Error at " KOKKOS_IMPL_TOSTRING(__FILE__) ":" KOKKOS_IMPL_TOSTRING(   \
+          __LINE__) " \n"                                                      \
+        __VA_OPT__("Error message: " __VA_ARGS__));                            \
+      ::Kokkos::abort("");                                                     \
     }                                                                          \
   }
-#define KOKKOS_ENSURES(...)                                                    \
+#define KOKKOS_ENSURES(predicate, ...)                                         \
   {                                                                            \
-    if (!bool(__VA_ARGS__)) {                                                  \
-      ::Kokkos::abort(                                                         \
-          "Kokkos contract violation:\n  "                                     \
-          "  Ensured postcondition `" #__VA_ARGS__                             \
-          "` evaluated false.\n"                                               \
-          "Error at " KOKKOS_IMPL_TOSTRING(__FILE__) ":" KOKKOS_IMPL_TOSTRING( \
-              __LINE__) " \n");                                                \
+    if (!bool(predicate)) {                                                    \
+      Kokkos::printf(                                                          \
+        "Kokkos contract violation:\n"                                         \
+        "  Ensured postcondition `" #predicate "` evaluated false.\n"          \
+        "Error at " KOKKOS_IMPL_TOSTRING(__FILE__) ":" KOKKOS_IMPL_TOSTRING(   \
+          __LINE__) " \n"                                                      \
+        __VA_OPT__("Error message: " __VA_ARGS__));                            \
+      ::Kokkos::abort("");                                                     \
     }                                                                          \
   }
-#define KOKKOS_ASSERT(...)                                                     \
+#define KOKKOS_ASSERT(predicate, ...)                                          \
   {                                                                            \
-    if (!bool(__VA_ARGS__)) {                                                  \
-      ::Kokkos::abort(                                                         \
-          "Kokkos contract violation:\n  "                                     \
-          "  Asserted condition `" #__VA_ARGS__                                \
-          "` evaluated false.\n"                                               \
-          "Error at " KOKKOS_IMPL_TOSTRING(__FILE__) ":" KOKKOS_IMPL_TOSTRING( \
-              __LINE__) " \n");                                                \
+    if (!bool(predicate)) {                                                    \
+      Kokkos::printf(                                                          \
+        "Kokkos contract violation:\n"                                         \
+        "  Asserted condition `" #predicate "` evaluated false.\n"             \
+        "Error at " KOKKOS_IMPL_TOSTRING(__FILE__) ":" KOKKOS_IMPL_TOSTRING(   \
+          __LINE__) " \n"                                                      \
+        __VA_OPT__("Error message: " __VA_ARGS__));                            \
+      ::Kokkos::abort("");                                                     \
     }                                                                          \
   }
+
 #else  // not debug mode
 #define KOKKOS_EXPECTS(...)
 #define KOKKOS_ENSURES(...)
