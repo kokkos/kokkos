@@ -48,6 +48,38 @@ struct ReductionFunctor {
   }
 };
 
+void test_single_policy() {
+  using OtherExecSpace = std::conditional_t<
+      std::is_same_v<TEST_EXECSPACE, Kokkos::DefaultExecutionSpace>,
+      Kokkos::DefaultHostExecutionSpace, Kokkos::DefaultExecutionSpace>;
+
+  static_assert(std::is_same_v<Kokkos::SinglePolicy<>::execution_policy,
+                               Kokkos::SinglePolicy<>>);
+  static_assert(
+      std::is_same_v<
+          Kokkos::SinglePolicy<>::execution_space,
+          typename Kokkos::SinglePolicy<>::range_policy::execution_space>);
+  static_assert(
+      std::is_same_v<Kokkos::SinglePolicy<OtherExecSpace>::execution_space,
+                     typename Kokkos::SinglePolicy<
+                         OtherExecSpace>::range_policy::execution_space>);
+
+  auto check_inner_policy = [](const auto& policy) {
+    EXPECT_EQ(policy.impl_get_range_policy().begin(), 0);
+    EXPECT_EQ(policy.impl_get_range_policy().end(), 1);
+  };
+
+  TEST_EXECSPACE exec_space;
+  OtherExecSpace other_exec_space;
+  Kokkos::SinglePolicy default_single_policy;
+  Kokkos::SinglePolicy exec_space_single_policy(exec_space);
+  Kokkos::SinglePolicy other_exec_space_single_policy(other_exec_space);
+
+  check_inner_policy(default_single_policy);
+  check_inner_policy(exec_space_single_policy);
+  check_inner_policy(other_exec_space_single_policy);
+}
+
 // Test for the ParallelFor based API
 void test() {
   TEST_EXECSPACE exec_space;
@@ -117,7 +149,7 @@ void test() {
 }
 
 // Test for the ParallelReduce based API with a single return value
-void test_one_ouput() {
+void test_one_output() {
   int val;
   ReductionFunctor f;
 
@@ -427,9 +459,12 @@ void test_multiple_outputs() {
 }
 
 namespace Test {
+
+TEST(TEST_CATEGORY, single_policy) { test_single_policy(); }
+
 TEST(TEST_CATEGORY, single) { test(); }
 
-TEST(TEST_CATEGORY, single_with_output) { test_one_ouput(); }
+TEST(TEST_CATEGORY, single_with_output) { test_one_output(); }
 
 TEST(TEST_CATEGORY, single_with_multiple_outputs) { test_multiple_outputs(); }
 }  // namespace Test
