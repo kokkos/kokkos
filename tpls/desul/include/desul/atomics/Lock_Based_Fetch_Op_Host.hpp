@@ -27,6 +27,7 @@ SPDX-License-Identifier: (BSD-3-Clause)
 namespace desul {
 namespace Impl {
 
+DESUL_IMPL_ACC_ROUTINE_DIRECTIVE
 template <class Oper,
           class T,
           class MemoryOrder,
