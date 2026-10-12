@@ -160,17 +160,8 @@ static constexpr bool desul_impl_omp_on_host() { return false; }
 #define DESUL_IF_ON_HOST_INTEGRAL(T, CODE)
 #endif
 #define DESUL_IMPL_ACC_ROUTINE_DIRECTIVE _Pragma("acc routine seq")
-#ifdef __NVCOMPILER
-// FIXME_OPENACC NVHPC cannot lower some GCC atomic builtins (fences, generic
-// exchange/compare-exchange on floating-point types) in device code.  Test at run time
-// so that the device compiler folds the host-only call away.
-#define DESUL_IMPL_IF_HOST_BUILTIN if (acc_on_device(acc_device_host))
-#endif
 #else
 #define DESUL_IMPL_ACC_ROUTINE_DIRECTIVE
-#endif
-#ifndef DESUL_IMPL_IF_HOST_BUILTIN
-#define DESUL_IMPL_IF_HOST_BUILTIN
 #endif
 
 #if !defined(DESUL_IF_ON_HOST) && !defined(DESUL_IF_ON_DEVICE)
