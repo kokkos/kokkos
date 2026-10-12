@@ -16,15 +16,7 @@ import kokkos.core;
 
 namespace {
 
-#ifdef KOKKOS_ENABLE_OPENACC  // FIXME_OPENACC
-#define KOKKOS_TEST_SKIP_IF_OPENACC()                                       \
-  GTEST_SKIP()                                                              \
-      << "skipping OpenACC test since unsupported host-side atomics cause " \
-         "race conditions during shared allocation reference counting";     \
-  KOKKOS_IMPL_UNREACHABLE();
-#else
 #define KOKKOS_TEST_SKIP_IF_OPENACC()
-#endif
 
 #ifdef KOKKOS_ENABLE_IMPL_SYCL_OUT_OF_ORDER_QUEUES  // FIXME_SYCL
 #define KOKKOS_TEST_SKIP_IF_SYCL_OUT_OF_ORDER_QUEUES() \

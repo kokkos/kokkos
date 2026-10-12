@@ -28,21 +28,25 @@ namespace Impl {
 #pragma GCC diagnostic ignored "-Watomic-alignment"
 #endif
 
+DESUL_IMPL_ACC_ROUTINE_DIRECTIVE
 template <class T, class MemoryOrder, class MemoryScope>
 std::enable_if_t<host_atomic_always_lock_free<T>, T> host_atomic_exchange(T* dest,
                                                                           T value,
                                                                           MemoryOrder,
                                                                           MemoryScope) {
-  T return_val;
+  T return_val{};
+  DESUL_IMPL_IF_HOST_BUILTIN
   __atomic_exchange(dest, &value, &return_val, GCCMemoryOrder<MemoryOrder>::value);
   return return_val;
 }
 
 // Failure mode for host_atomic_compare_exchange_n cannot be RELEASE nor ACQ_REL so
 // Those two get handled separately.
+DESUL_IMPL_ACC_ROUTINE_DIRECTIVE
 template <class T, class MemoryOrder, class MemoryScope>
 std::enable_if_t<host_atomic_always_lock_free<T>, T> host_atomic_compare_exchange(
     T* dest, T compare, T value, MemoryOrder, MemoryScope) {
+  DESUL_IMPL_IF_HOST_BUILTIN
   (void)__atomic_compare_exchange(dest,
                                   &compare,
                                   &value,
@@ -52,22 +56,27 @@ std::enable_if_t<host_atomic_always_lock_free<T>, T> host_atomic_compare_exchang
   return compare;
 }
 
+DESUL_IMPL_ACC_ROUTINE_DIRECTIVE
 template <class T, class MemoryScope>
 std::enable_if_t<host_atomic_always_lock_free<T>, T> host_atomic_compare_exchange(
     T* dest, T compare, T value, MemoryOrderRelease, MemoryScope) {
+  DESUL_IMPL_IF_HOST_BUILTIN
   (void)__atomic_compare_exchange(
       dest, &compare, &value, false, __ATOMIC_RELEASE, __ATOMIC_RELAXED);
   return compare;
 }
 
+DESUL_IMPL_ACC_ROUTINE_DIRECTIVE
 template <class T, class MemoryScope>
 std::enable_if_t<host_atomic_always_lock_free<T>, T> host_atomic_compare_exchange(
     T* dest, T compare, T value, MemoryOrderAcqRel, MemoryScope) {
+  DESUL_IMPL_IF_HOST_BUILTIN
   (void)__atomic_compare_exchange(
       dest, &compare, &value, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE);
   return compare;
 }
 
+DESUL_IMPL_ACC_ROUTINE_DIRECTIVE
 template <class T, class MemoryOrder, class MemoryScope>
 std::enable_if_t<!host_atomic_always_lock_free<T>, T> host_atomic_exchange(
     T* const dest,
@@ -87,6 +96,7 @@ std::enable_if_t<!host_atomic_always_lock_free<T>, T> host_atomic_exchange(
   return return_val;
 }
 
+DESUL_IMPL_ACC_ROUTINE_DIRECTIVE
 template <class T, class MemoryOrder, class MemoryScope>
 std::enable_if_t<!host_atomic_always_lock_free<T>, T> host_atomic_compare_exchange(
     T* const dest,

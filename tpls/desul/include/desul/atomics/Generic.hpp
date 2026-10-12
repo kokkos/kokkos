@@ -30,6 +30,7 @@ DESUL_IMPL_ACC_ROUTINE_DIRECTIVE
 template <class T, class MemoryOrder, class MemoryScope>
 DESUL_INLINE_FUNCTION T
 atomic_exchange(T* dest, T val, MemoryOrder order, MemoryScope scope) {
+  DESUL_IF_ON_HOST_INTEGRAL(T, return Impl::host_atomic_exchange(dest, val, order, scope);)
   DESUL_IF_ON_DEVICE(return Impl::device_atomic_exchange(dest, val, order, scope);)
   DESUL_IF_ON_HOST(return Impl::host_atomic_exchange(dest, val, order, scope);)
 }
@@ -38,6 +39,8 @@ DESUL_IMPL_ACC_ROUTINE_DIRECTIVE
 template <class T, class MemoryOrder, class MemoryScope>
 DESUL_INLINE_FUNCTION T
 atomic_compare_exchange(T* dest, T cmp, T val, MemoryOrder order, MemoryScope scope) {
+  DESUL_IF_ON_HOST_INTEGRAL(
+      T, return Impl::host_atomic_compare_exchange(dest, cmp, val, order, scope);)
   DESUL_IF_ON_DEVICE(
       return Impl::device_atomic_compare_exchange(dest, cmp, val, order, scope);)
   DESUL_IF_ON_HOST(
@@ -50,6 +53,8 @@ atomic_compare_exchange(T* dest, T cmp, T val, MemoryOrder order, MemoryScope sc
   template <class T, class MemoryOrder, class MemoryScope>                            \
   DESUL_INLINE_FUNCTION T atomic_fetch##_OP(                                          \
       T* const dest, const T val, MemoryOrder order, MemoryScope scope) {             \
+    DESUL_IF_ON_HOST_INTEGRAL(                                                        \
+        T, return Impl::host_atomic_fetch##_OP(dest, val, order, scope);)             \
     DESUL_IF_ON_DEVICE(                                                               \
         return Impl::device_atomic_fetch##_OP(dest, val, order, scope);)              \
     DESUL_IF_ON_HOST(return Impl::host_atomic_fetch##_OP(dest, val, order, scope);)   \
@@ -59,6 +64,8 @@ atomic_compare_exchange(T* dest, T cmp, T val, MemoryOrder order, MemoryScope sc
   template <class T, class MemoryOrder, class MemoryScope>                            \
   DESUL_INLINE_FUNCTION T atomic##_OP##_fetch(                                        \
       T* const dest, const T val, MemoryOrder order, MemoryScope scope) {             \
+    DESUL_IF_ON_HOST_INTEGRAL(                                                        \
+        T, return Impl::host_atomic##_OP##_fetch(dest, val, order, scope);)           \
     DESUL_IF_ON_DEVICE(                                                               \
         return Impl::device_atomic##_OP##_fetch(dest, val, order, scope);)            \
     DESUL_IF_ON_HOST(return Impl::host_atomic##_OP##_fetch(dest, val, order, scope);) \
@@ -68,6 +75,8 @@ atomic_compare_exchange(T* dest, T cmp, T val, MemoryOrder order, MemoryScope sc
   template <class T, class MemoryOrder, class MemoryScope>                            \
   DESUL_INLINE_FUNCTION void atomic##_OP(                                             \
       T* const dest, const T val, MemoryOrder order, MemoryScope scope) {             \
+    DESUL_IF_ON_HOST_INTEGRAL(                                                        \
+        T, return Impl::host_atomic##_OP(dest, val, order, scope);)                   \
     DESUL_IF_ON_DEVICE(Impl::device_atomic##_OP(dest, val, order, scope);)            \
     DESUL_IF_ON_HOST(Impl::host_atomic##_OP(dest, val, order, scope);)                \
   }
@@ -155,6 +164,7 @@ template <class T, class MemoryOrder, class MemoryScope>
 DESUL_INLINE_FUNCTION T atomic_load(const T* const dest,
                                     MemoryOrder order,
                                     MemoryScope scope) {
+  DESUL_IF_ON_HOST_INTEGRAL(T, return Impl::host_atomic_load(dest, order, scope);)
   DESUL_IF_ON_DEVICE(return Impl::device_atomic_load(dest, order, scope);)
   DESUL_IF_ON_HOST(return Impl::host_atomic_load(dest, order, scope);)
 }
@@ -165,6 +175,7 @@ DESUL_INLINE_FUNCTION void atomic_store(T* const dest,
                                         const T val,
                                         MemoryOrder order,
                                         MemoryScope scope) {
+  DESUL_IF_ON_HOST_INTEGRAL(T, return Impl::host_atomic_store(dest, val, order, scope);)
   DESUL_IF_ON_DEVICE(return Impl::device_atomic_store(dest, val, order, scope);)
   DESUL_IF_ON_HOST(return Impl::host_atomic_store(dest, val, order, scope);)
 }
