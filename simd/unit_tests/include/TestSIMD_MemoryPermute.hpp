@@ -131,6 +131,49 @@ inline void host_test_gather_from(
   }
 }
 
+template <typename Abi, typename DataType, typename Flag>
+inline void host_test_masked_off_scatter_to(Flag flag) {
+  using simd_type = Kokkos::Experimental::basic_simd<DataType, Abi>;
+  using index_type =
+      Kokkos::Experimental::basic_simd<simd_index_type<DataType>, Abi>;
+  using mask_type = typename index_type::mask_type;
+  using size_type = Kokkos::Experimental::Impl::simd_size_t;
+
+  constexpr size_type size     = simd_type::size();
+  constexpr DataType untouched = 7;
+
+  simd_type init(KOKKOS_LAMBDA(std::size_t i) { return (i + 1) * 11; });
+  index_type reverse(KOKKOS_LAMBDA(std::size_t i) { return (size - 1) - i; });
+  index_type past_end(static_cast<simd_index_type<DataType>>(size));
+  mask_type none(false);
+
+  // arr[size] is targeted only by past_end
+  alignas(size * sizeof(DataType)) DataType arr[size + 1];
+
+  auto check_untouched = [&]() {
+    gtest_checker checker;
+    for (size_type i = 0; i < size + 1; ++i) {
+      checker.equality(untouched, arr[i]);
+    }
+  };
+
+  {
+    std::fill(std::begin(arr), std::end(arr), untouched);
+    Kokkos::Experimental::unchecked_scatter_to(init, arr, none, reverse, flag);
+    check_untouched();
+  }
+  {
+    std::fill(std::begin(arr), std::end(arr), untouched);
+    Kokkos::Experimental::partial_scatter_to(init, arr, none, reverse, flag);
+    check_untouched();
+  }
+  {
+    std::fill(std::begin(arr), std::end(arr), untouched);
+    Kokkos::Experimental::partial_scatter_to(init, arr, none, past_end, flag);
+    check_untouched();
+  }
+}
+
 template <class Abi, typename DataType>
 inline void host_check_gather_scatter() {
   if constexpr (is_simd_avail_v<DataType, Abi>) {
@@ -153,6 +196,11 @@ inline void host_check_gather_scatter() {
                           Kokkos::Experimental::simd_flag_default);
     host_test_gather_from(init, mask, reverse,
                           Kokkos::Experimental::simd_flag_aligned);
+
+    host_test_masked_off_scatter_to<Abi, DataType>(
+        Kokkos::Experimental::simd_flag_default);
+    host_test_masked_off_scatter_to<Abi, DataType>(
+        Kokkos::Experimental::simd_flag_aligned);
   }
 }
 
@@ -297,6 +345,43 @@ KOKKOS_INLINE_FUNCTION void device_test_gather_from(
   }
 }
 
+template <typename Abi, typename DataType, typename Flag>
+KOKKOS_INLINE_FUNCTION void device_test_masked_off_scatter_to(Flag flag) {
+  using simd_type = Kokkos::Experimental::basic_simd<DataType, Abi>;
+  using index_type =
+      Kokkos::Experimental::basic_simd<simd_index_type<DataType>, Abi>;
+  using mask_type = typename index_type::mask_type;
+  using size_type = Kokkos::Experimental::Impl::simd_size_t;
+
+  constexpr size_type size     = simd_type::size();
+  constexpr DataType untouched = 7;
+
+  simd_type init(KOKKOS_LAMBDA(std::size_t i) { return (i + 1) * 11; });
+  index_type reverse(KOKKOS_LAMBDA(std::size_t i) { return (size - 1) - i; });
+  mask_type none(false);
+
+  alignas(size * sizeof(DataType)) DataType arr[size];
+
+  auto reset_array = KOKKOS_LAMBDA(DataType * a) {
+    for (size_type i = 0; i < size; ++i) a[i] = untouched;
+  };
+  auto check_untouched = KOKKOS_LAMBDA(DataType * a) {
+    kokkos_checker checker;
+    for (size_type i = 0; i < size; ++i) checker.equality(untouched, a[i]);
+  };
+
+  {
+    reset_array(arr);
+    Kokkos::Experimental::unchecked_scatter_to(init, arr, none, reverse, flag);
+    check_untouched(arr);
+  }
+  {
+    reset_array(arr);
+    Kokkos::Experimental::partial_scatter_to(init, arr, none, reverse, flag);
+    check_untouched(arr);
+  }
+}
+
 template <class Abi, typename DataType>
 KOKKOS_INLINE_FUNCTION void device_check_memory_permute() {
   if constexpr (is_simd_avail_v<DataType, Abi>) {
@@ -318,6 +403,10 @@ KOKKOS_INLINE_FUNCTION void device_check_memory_permute() {
                             Kokkos::Experimental::simd_flag_default);
     device_test_gather_from(init, mask, reverse,
                             Kokkos::Experimental::simd_flag_aligned);
+    device_test_masked_off_scatter_to<Abi, DataType>(
+        Kokkos::Experimental::simd_flag_default);
+    device_test_masked_off_scatter_to<Abi, DataType>(
+        Kokkos::Experimental::simd_flag_aligned);
   }
 }
 
