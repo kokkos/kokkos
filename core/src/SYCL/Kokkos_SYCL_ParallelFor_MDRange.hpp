@@ -180,7 +180,8 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
       }
     } else if constexpr (Policy::rank == 4) {
       if ((m_max_grid_size[0] * local_range[0]) >=
-              static_cast<std::size_t>(m_extent[0] * m_extent[1]) &&
+              (static_cast<std::size_t>(m_extent[0]) *
+               static_cast<std::size_t>(m_extent[1])) &&
           (m_max_grid_size[1] * local_range[1]) >=
               static_cast<std::size_t>(m_extent[2]) &&
           (m_max_grid_size[2] * local_range[2]) >=
@@ -189,20 +190,25 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
       }
     } else if constexpr (Policy::rank == 5) {
       if ((m_max_grid_size[0] * local_range[0]) >=
-              static_cast<std::size_t>(m_extent[0] * m_extent[1]) &&
+              (static_cast<std::size_t>(m_extent[0]) *
+               static_cast<std::size_t>(m_extent[1])) &&
           (m_max_grid_size[1] * local_range[1]) >=
-              static_cast<std::size_t>(m_extent[2] * m_extent[3]) &&
+              (static_cast<std::size_t>(m_extent[2]) *
+               static_cast<std::size_t>(m_extent[3])) &&
           (m_max_grid_size[2] * local_range[2]) >=
               static_cast<std::size_t>(m_extent[4])) {
         need_grid_stride = false;
       }
     } else if constexpr (Policy::rank == 6) {
       if ((m_max_grid_size[0] * local_range[0]) >=
-              static_cast<std::size_t>(m_extent[0] * m_extent[1]) &&
+              (static_cast<std::size_t>(m_extent[0]) *
+               static_cast<std::size_t>(m_extent[1])) &&
           (m_max_grid_size[1] * local_range[1]) >=
-              static_cast<std::size_t>(m_extent[2] * m_extent[3]) &&
+              (static_cast<std::size_t>(m_extent[2]) *
+               static_cast<std::size_t>(m_extent[3])) &&
           (m_max_grid_size[2] * local_range[2]) >=
-              static_cast<std::size_t>(m_extent[4] * m_extent[5])) {
+              (static_cast<std::size_t>(m_extent[4]) *
+               static_cast<std::size_t>(m_extent[5]))) {
         need_grid_stride = false;
       }
     }
