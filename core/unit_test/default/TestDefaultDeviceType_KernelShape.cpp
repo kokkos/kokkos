@@ -24,12 +24,11 @@ bool error_range_policy_config() {
 #if defined(__SYCL_DEVICE_ONLY__)
 #if defined(KOKKOS_COMPILER_INTEL_LLVM) && \
     KOKKOS_COMPILER_INTEL_LLVM >= 20250000
-  return sycl::ext::oneapi::this_work_item::get_nd_item<2>().get_local_range(
-             1) != 1;
+  auto nd_item = sycl::ext::oneapi::this_work_item::get_nd_item<2>();
 #else
-  return sycl::ext::oneapi::experimental::this_nd_item<2>().get_local_range(
-             1) != 1;
+  auto nd_item = sycl::ext::oneapi::experimental::this_nd_item<2>();
 #endif
+  return nd_item.get_local_range(1) != 1;
 #endif
   return false;
 }
@@ -93,16 +92,12 @@ bool error_team_policy_config() {
 #if defined(__SYCL_DEVICE_ONLY__)
 #if defined(KOKKOS_COMPILER_INTEL_LLVM) && \
     KOKKOS_COMPILER_INTEL_LLVM >= 20250000
-  return sycl::ext::oneapi::this_work_item::get_nd_item<2>().get_local_range(
-             0) != team_size ||
-         sycl::ext::oneapi::this_work_item::get_nd_item<2>().get_local_range(
-             1) != vector_length;
+  auto nd_item = sycl::ext::oneapi::this_work_item::get_nd_item<2>();
 #else
-  return sycl::ext::oneapi::experimental::this_nd_item<2>().get_local_range(
-             0) != team_size ||
-         sycl::ext::oneapi::experimental::this_nd_item<2>().get_local_range(
-             0) != vector_length;
+  auto nd_item = sycl::ext::oneapi::experimental::this_nd_item<2>();
 #endif
+  return nd_item.get_local_range(0) != team_size ||
+         nd_item.get_local_range(1) != vector_length;
 #endif
   return false;
 }
