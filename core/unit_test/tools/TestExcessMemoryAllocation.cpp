@@ -41,6 +41,7 @@ TEST(ExcessMemoryAllocation, AllocationBelowThresholdAllowed) {
   ASSERT_EXIT(allocate_views(CHUNK, 7), ::testing::ExitedWithCode(0), "");
 }
 
+// NOLINTNEXTLINE(bugprone-exception-escape)
 int main(int argc, char **argv) {
   if (!std::getenv("GTEST_DEATH_TEST_STYLE"))
     GTEST_FLAG_SET(death_test_style, "threadsafe");
