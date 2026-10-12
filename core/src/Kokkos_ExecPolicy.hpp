@@ -62,10 +62,6 @@ struct ThreadHandleType {
 
   KOKKOS_INLINE_FUNCTION
   int team_size() const { return team_member.team_size(); }
-
-  /** \brief Maximum concurrency within this team thread (vector_length). */
-  KOKKOS_INLINE_FUNCTION
-  int concurrency() const { return team_member.vector_length(); }
 };
 
 // Private tag that can be used to make a copy of another execution policy

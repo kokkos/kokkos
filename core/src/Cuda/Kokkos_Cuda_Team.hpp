@@ -101,17 +101,6 @@ class CudaTeamMember {
     KOKKOS_IF_ON_HOST((return 1;))
   }
 
-  /** \brief Number of vector lanes per thread (blockDim.x). */
-  KOKKOS_INLINE_FUNCTION int vector_length() const {
-    KOKKOS_IF_ON_DEVICE((return blockDim.x;))
-    KOKKOS_IF_ON_HOST((return 1;))
-  }
-
-  /** \brief Maximum concurrency at team level (team_size * vector_length). */
-  KOKKOS_INLINE_FUNCTION int concurrency() const {
-    return team_size() * vector_length();
-  }
-
   KOKKOS_INLINE_FUNCTION void team_barrier() const {
     KOKKOS_IF_ON_DEVICE((
         if (1 == blockDim.z) { __syncthreads(); }  // team == block
@@ -503,22 +492,21 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
   (void)closure;
   KOKKOS_IF_ON_DEVICE((
       using thread_handle_t = Impl::ThreadHandleType<Impl::CudaTeamMember>;
-      if constexpr (std::is_invocable_v<Closure, iType>) {
-        for (iType i = loop_boundaries.start + threadIdx.y;
-             i < loop_boundaries.end; i += blockDim.y)
+      [[maybe_unused]] auto const thread_handle =
+          thread_handle_t(loop_boundaries.member);
+
+      for (iType i = loop_boundaries.start + threadIdx.y;
+           i < loop_boundaries.end; i += blockDim.y) {
+        if constexpr (std::is_invocable_v<Closure, iType>) {
           closure(i);
-      } else if constexpr (std::is_invocable_v<Closure, thread_handle_t const&,
-                                               iType>) {
-        auto const thread_handle = thread_handle_t(loop_boundaries.member);
-        for (iType i = loop_boundaries.start + threadIdx.y;
-             i < loop_boundaries.end; i += blockDim.y) {
+        } else if constexpr (std::is_invocable_v<
+                                 Closure, thread_handle_t const&, iType>) {
           closure(thread_handle, i);
+        } else {
+          static_assert(Kokkos::Impl::always_false<Closure>::value,
+                        "Kokkos::parallel_for(TeamThreadRange) closure must be "
+                        "invocable with (iType) or (ThreadHandleType, iType)");
         }
-      } else {
-        static_assert(
-            Kokkos::Impl::always_false<Closure>::value,
-            "Kokkos::parallel_for(TeamThreadRange) closure must be invocable "
-            "with (iType) or (ThreadHandleType, iType) on Cuda backend");
       }))
 }
 

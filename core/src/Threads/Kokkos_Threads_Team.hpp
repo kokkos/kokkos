@@ -128,8 +128,6 @@ class ThreadsExecTeamMember {
   KOKKOS_INLINE_FUNCTION int team_rank() const { return m_team_rank; }
   KOKKOS_INLINE_FUNCTION int team_size() const { return m_team_size; }
 
-  KOKKOS_INLINE_FUNCTION static constexpr int vector_length() { return 1; }
-
   KOKKOS_INLINE_FUNCTION void team_barrier() const {
     team_fan_in();
     team_fan_out();
@@ -902,15 +900,22 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
     const Impl::TeamThreadRangeBoundariesStruct<
         iType, Impl::ThreadsExecTeamMember>& loop_boundaries,
     const Lambda& lambda) {
-  // FIXME: Implement ThreadHandle for Threads parallel_for(TeamThreadRange)
   using thread_handle_t = Impl::ThreadHandleType<Impl::ThreadsExecTeamMember>;
-  if constexpr (std::is_invocable_v<Lambda, thread_handle_t const&, iType>) {
-    static_assert(Kokkos::Impl::always_false<Lambda>::value,
-                  "ThreadHandle not yet supported for Threads backend");
-  } else {
-    for (iType i = loop_boundaries.start; i < loop_boundaries.end;
-         i += loop_boundaries.increment)
+  [[maybe_unused]] auto const thread_handle =
+      thread_handle_t(loop_boundaries.member);
+
+  for (iType i = loop_boundaries.start; i < loop_boundaries.end;
+       i += loop_boundaries.increment) {
+    if constexpr (std::is_invocable_v<Lambda, iType>) {
       lambda(i);
+    } else if constexpr (std::is_invocable_v<Lambda, thread_handle_t const&,
+                                             iType>) {
+      closure(thread_handle, i);
+    } else {
+      static_assert(Kokkos::Impl::always_false<Lambda>::value,
+                    "Kokkos::parallel_for(TeamThreadRange) closure must be "
+                    "invocable with (iType) or (ThreadHandleType, iType)");
+    }
   }
 }
 
