@@ -43,7 +43,7 @@ void test_range_policy() {
   Kokkos::RangePolicy<> policy(3, 102931);
   Kokkos::parallel_for(
       policy, KOKKOS_LAMBDA(int i) {
-        if (i == 0) {
+        if (i == 4) {
           d_error() = error_range_policy_config() ? 1 : 0;
         }
       });
@@ -56,7 +56,7 @@ void test_range_policy() {
   Kokkos::parallel_reduce(
       policy,
       KOKKOS_LAMBDA(int i, int&) {
-        if (i == 0) {
+        if (i == 4) {
           d_error() = error_range_policy_config() ? 1 : 0;
         }
       },
@@ -68,7 +68,7 @@ void test_range_policy() {
 
   Kokkos::parallel_scan(
       policy, KOKKOS_LAMBDA(int i, int&, bool) {
-        if (i == 0) {
+        if (i == 4) {
           d_error() = error_range_policy_config() ? 1 : 0;
         }
       });
@@ -98,9 +98,9 @@ bool error_team_policy_config() {
          sycl::ext::oneapi::this_work_item::get_nd_item<2>().get_local_range(
              1) != vector_length;
 #else
-  return sycl::ext::oneapi::experimental::this_nd_item<3>().get_local_range(
+  return sycl::ext::oneapi::experimental::this_nd_item<2>().get_local_range(
              0) != team_size ||
-         sycl::ext::oneapi::experimental::this_nd_item<3>().get_local_range(
+         sycl::ext::oneapi::experimental::this_nd_item<2>().get_local_range(
              0) != vector_length;
 #endif
 #endif
@@ -112,7 +112,7 @@ void test_team_policy() {
   int h_error = 0;
 
   // Just making sure we also use grid on CUDA/HIP because
-  // and its not just 1x1x1
+  // its not just 1x1x1
   Kokkos::TeamPolicy<> policy(1000, team_size, vector_length);
 
   Kokkos::parallel_for(
@@ -151,7 +151,9 @@ TEST(defaultdevicetype, kernel_shape_check) {
 #if !(defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
       defined(KOKKOS_ENABLE_SYCL))
   GTEST_SKIP() << "KernelConfig test is only meaningful for CUDA, HIP and SYCL";
+  KOKKOS_IMPL_UNREACHABLE();
 #endif
+
   test_range_policy();
   test_team_policy();
 }
