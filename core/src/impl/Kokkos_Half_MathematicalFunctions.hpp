@@ -13,19 +13,15 @@
 // exist.
 // If these includes are removed, this mechanism will silently fall back to the
 // generic fallback implementation that uses single-precision fp .
-#ifdef KOKKOS_ENABLE_CUDA
+#if defined(KOKKOS_ENABLE_CUDA)
 #include <Cuda/Kokkos_Cuda_Half_MathematicalFunctions.hpp>
-#endif
-
-#ifdef KOKKOS_ENABLE_HIP
+#elif defined(KOKKOS_ENABLE_HIP)
 #include <HIP/Kokkos_HIP_Half_MathematicalFunctions.hpp>
-#endif
-
-#ifdef KOKKOS_ENABLE_SYCL
+#elif defined(KOKKOS_ENABLE_SYCL)
 #include <SYCL/Kokkos_SYCL_Half_MathematicalFunctions.hpp>
-#endif
-
+#else
 #include <impl/Kokkos_STD_Half_MathematicalFunctions.hpp>
+#endif
 
 // clang-format off
 namespace Kokkos {
