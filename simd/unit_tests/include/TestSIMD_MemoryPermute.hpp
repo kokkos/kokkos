@@ -12,7 +12,6 @@ import kokkos.simd_impl;
 #include <Kokkos_SIMD.hpp>
 #endif
 #include <SIMDTesting_Utilities.hpp>
-#include <span>
 
 template <typename T>
 using simd_index_type =
@@ -148,9 +147,8 @@ inline void host_test_masked_off_scatter_to(Flag flag) {
   index_type past_end(static_cast<simd_index_type<DataType>>(size));
   mask_type none(false);
 
-  // The scattered range is arr[0, size), arr[size] is a guard element
+  // arr[size] is targeted only by past_end
   alignas(size * sizeof(DataType)) DataType arr[size + 1];
-  std::span<DataType> range(arr, size);
 
   auto check_untouched = [&]() {
     gtest_checker checker;
@@ -161,18 +159,17 @@ inline void host_test_masked_off_scatter_to(Flag flag) {
 
   {
     std::fill(std::begin(arr), std::end(arr), untouched);
-    Kokkos::Experimental::unchecked_scatter_to(init, range, none, reverse,
-                                               flag);
+    Kokkos::Experimental::unchecked_scatter_to(init, arr, none, reverse, flag);
     check_untouched();
   }
   {
     std::fill(std::begin(arr), std::end(arr), untouched);
-    Kokkos::Experimental::partial_scatter_to(init, range, none, reverse, flag);
+    Kokkos::Experimental::partial_scatter_to(init, arr, none, reverse, flag);
     check_untouched();
   }
   {
     std::fill(std::begin(arr), std::end(arr), untouched);
-    Kokkos::Experimental::partial_scatter_to(init, range, none, past_end, flag);
+    Kokkos::Experimental::partial_scatter_to(init, arr, none, past_end, flag);
     check_untouched();
   }
 }
