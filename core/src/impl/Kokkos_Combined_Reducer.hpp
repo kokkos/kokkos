@@ -545,6 +545,29 @@ auto parallel_reduce(PolicyType const& policy, Functor const& functor,
   //----------------------------------------
 }
 
+template <class Functor, class ReturnType1, class ReturnType2,
+          class... ReturnTypes>
+void parallel_reduce(std::string const& label, size_t n, Functor const& functor,
+                     ReturnType1&& returnType1, ReturnType2&& returnType2,
+                     ReturnTypes&&... returnTypes) {
+  Kokkos::parallel_reduce(label,
+                          RangePolicy<Kokkos::DefaultExecutionSpace>(0, n),
+                          functor, std::forward<ReturnType1>(returnType1),
+                          std::forward<ReturnType2>(returnType2),
+                          std::forward<ReturnTypes>(returnTypes)...);
+}
+
+template <class Functor, class ReturnType1, class ReturnType2,
+          class... ReturnTypes>
+void parallel_reduce(size_t n, Functor const& functor,
+                     ReturnType1&& returnType1, ReturnType2&& returnType2,
+                     ReturnTypes&&... returnTypes) {
+  Kokkos::parallel_reduce("", n, functor,
+                          std::forward<ReturnType1>(returnType1),
+                          std::forward<ReturnType2>(returnType2),
+                          std::forward<ReturnTypes>(returnTypes)...);
+}
+
 //------------------------------------------------------------------------------
 // <editor-fold desc="Team overloads"> {{{2
 
