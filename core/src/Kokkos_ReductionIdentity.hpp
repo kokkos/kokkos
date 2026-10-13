@@ -72,23 +72,25 @@ struct reduction_identity<Floating> {
 namespace Impl {
 
 template <typename Integral, std::size_t... Is>
-KOKKOS_FUNCTION consteval
-Kokkos::Array<Integral, sizeof...(Is)> array_reduction_identity(Integral value, std::index_sequence<Is...>) {
-  return { ((void)Is, value)... };
+KOKKOS_FUNCTION consteval Kokkos::Array<Integral, sizeof...(Is)>
+array_reduction_identity(Integral value, std::index_sequence<Is...>) {
+  return {((void)Is, value)...};
 }
 
-} // Impl
+}  // namespace Impl
 
 template <std::size_t N, typename Integral>
   requires(std::integral<Integral> && N > 0)
 struct reduction_identity<Kokkos::Array<Integral, N>> {
   KOKKOS_FUNCTION constexpr static Kokkos::Array<Integral, N> max() noexcept {
     constexpr Integral value = Kokkos::reduction_identity<Integral>::max();
-    return Impl::array_reduction_identity<Integral>(value, std::make_index_sequence<N>{});
+    return Impl::array_reduction_identity<Integral>(
+        value, std::make_index_sequence<N>{});
   }
   KOKKOS_FUNCTION constexpr static Kokkos::Array<Integral, N> min() noexcept {
     constexpr Integral value = Kokkos::reduction_identity<Integral>::min();
-    return Impl::array_reduction_identity<Integral>(value, std::make_index_sequence<N>{});
+    return Impl::array_reduction_identity<Integral>(
+        value, std::make_index_sequence<N>{});
   }
 };
 
