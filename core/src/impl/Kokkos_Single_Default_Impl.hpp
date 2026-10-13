@@ -43,9 +43,6 @@ struct Single {
     using parallel_reducer = Impl::ParallelReduce<CombinedFunctorReducerType,
                                                   range_policy, ExecutionSpace>;
 
-    using execution_space = typename Impl::FunctorPolicyExecutionSpace<
-        FunctorType, range_policy>::execution_space;
-
     auto closure =
         construct_with_shared_allocation_tracking_disabled<parallel_reducer>(
             functor_reducer, single_policy.impl_get_range_policy(),
