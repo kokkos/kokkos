@@ -81,7 +81,7 @@ void test_single_policy() {
 }
 
 // Test for the ParallelFor based API
-void test() {
+void test_no_output() {
   TEST_EXECSPACE exec_space;
   double expected = 5;
 
@@ -218,253 +218,46 @@ void test_one_output() {
   EXPECT_EQ(val, 5);
 }
 
-// Test for the ParallelReduce based API with several return values
-// (CombinedReducer based API)
-void test_multiple_outputs() {
-  // Two args
-  {
-    int val1, val2;
+// Test that single can be used to return types non conforming with the
+// requirements for parallel_reduce
+struct Restrictive {
+  int val;
 
-    auto l = KOKKOS_LAMBDA(int& s1, int& s2) {
-      s1 = 1;
-      s2 = 2;
-    };
-
-    // Lambda
-    if constexpr (std::is_same_v<TEST_EXECSPACE,
-                                 Kokkos::DefaultExecutionSpace>) {
-      // These tests use the default execution space, thus they should not be
-      // run when TEST_EXECSPACE != Kokkos::DefaultExecutionSpace
-
-      // Minimal
-      val1 = val2 = 0;
-      Kokkos::single(l, val1, val2);
-      EXPECT_EQ(val1, 1);
-      EXPECT_EQ(val2, 2);
-
-      // +Label
-      val1 = val2 = 0;
-      Kokkos::single("single with multiple outputs+lambda", l, val1, val2);
-      EXPECT_EQ(val1, 1);
-      EXPECT_EQ(val2, 2);
-
-      // +Policy
-      val1 = val2 = 0;
-      Kokkos::single(Kokkos::SinglePolicy(), l, val1, val2);
-      EXPECT_EQ(val1, 1);
-      EXPECT_EQ(val2, 2);
-
-      // Full
-      val1 = val2 = 0;
-      Kokkos::single("single with 2 outputs+lambda+policy",
-                     Kokkos::SinglePolicy(), l, val1, val2);
-      EXPECT_EQ(val1, 1);
-      EXPECT_EQ(val2, 2);
-    }
-
-    // Full with ExecSpace
-    val1 = val2 = 0;
-    Kokkos::single("single with 2 outputs+lambda+exec_space",
-                   Kokkos::SinglePolicy<TEST_EXECSPACE>(), l, val1, val2);
-    EXPECT_EQ(val1, 1);
-    EXPECT_EQ(val2, 2);
-
-    // Functor
-    ReductionFunctor f{};
-    if constexpr (std::is_same_v<TEST_EXECSPACE,
-                                 Kokkos::DefaultExecutionSpace>) {
-      // These tests use the default execution space, thus they should not be
-      // run when TEST_EXECSPACE != Kokkos::DefaultExecutionSpace
-
-      // Minimal
-      val1 = val2 = 0;
-      Kokkos::single(f, val1, val2);
-      EXPECT_EQ(val1, 5);
-      EXPECT_EQ(val2, 5);
-
-      // +Label
-      val1 = val2 = 0;
-      Kokkos::single("single with 2 outputs", f, val1, val2);
-      EXPECT_EQ(val1, 5);
-      EXPECT_EQ(val2, 5);
-
-      // +Policy
-      val1 = val2 = 0;
-      Kokkos::single(Kokkos::SinglePolicy(), f, val1, val2);
-      EXPECT_EQ(val1, 5);
-      EXPECT_EQ(val2, 5);
-
-      // +Policy with WorkTag
-      val1 = val2 = 0;
-      Kokkos::single(Kokkos::SinglePolicy<TenTag>(), f, val1, val2);
-      EXPECT_EQ(val1, 10);
-      EXPECT_EQ(val2, 10);
-
-      // Full
-      val1 = val2 = 0;
-      Kokkos::single("single with 2 outputs+policy", Kokkos::SinglePolicy(), f,
-                     val1, val2);
-      EXPECT_EQ(val1, 5);
-      EXPECT_EQ(val2, 5);
-
-      // Full with WorkTag
-      val1 = val2 = 0;
-      Kokkos::single("single with 2 outputs+worktag",
-                     Kokkos::SinglePolicy<TenTag>(), f, val1, val2);
-      EXPECT_EQ(val1, 10);
-      EXPECT_EQ(val2, 10);
-    }
-
-    // Full with WorkTag and ExecSpace
-    val1 = val2 = 0;
-    Kokkos::single("single with 2 outputs+worktag+execspace",
-                   Kokkos::SinglePolicy<TenTag, TEST_EXECSPACE>(), f, val1,
-                   val2);
-    EXPECT_EQ(val1, 10);
-    EXPECT_EQ(val2, 10);
-
-    // With ExecSpace instance
-    val1 = val2 = 0;
-    TEST_EXECSPACE exec_space;
-    Kokkos::single(Kokkos::SinglePolicy(exec_space), f, val1, val2);
-    exec_space.fence();
-    EXPECT_EQ(val1, 5);
-    EXPECT_EQ(val2, 5);
+ private:
+  Restrictive& operator+=(const Restrictive& rhs) {
+    val += rhs.val;
+    return *this;
   }
+};
 
-  // Three args
-  {
-    int val1, val2, val3;
+namespace Kokkos {
+template <>
+struct reduction_identity<Restrictive> {
+ private:
+  KOKKOS_FORCEINLINE_FUNCTION static Restrictive sum() { return Restrictive{}; }
+};
+}  // namespace Kokkos
 
-    auto l = KOKKOS_LAMBDA(int& s1, int& s2, int& s3) {
-      s1 = 1;
-      s2 = 2;
-      s3 = 3;
-    };
+void test_restrictive_return_type() {
+  Restrictive ret;
 
-    // Lambda
-    if constexpr (std::is_same_v<TEST_EXECSPACE,
-                                 Kokkos::DefaultExecutionSpace>) {
-      // These tests use the default execution space, thus they should not be
-      // run when TEST_EXECSPACE != Kokkos::DefaultExecutionSpace
+  Kokkos::single(
+      Kokkos::SinglePolicy<TEST_EXECSPACE>(),
+      KOKKOS_LAMBDA(Restrictive & r) { r.val = 5; }, ret);
 
-      // Minimal
-      val1 = val2 = val3 = 0;
-      Kokkos::single(l, val1, val2, val3);
-      EXPECT_EQ(val1, 1);
-      EXPECT_EQ(val2, 2);
-      EXPECT_EQ(val3, 3);
-
-      // +Label
-      val1 = val2 = val3 = 0;
-      Kokkos::single("single with 3 outputs+lambda", l, val1, val2, val3);
-      EXPECT_EQ(val1, 1);
-      EXPECT_EQ(val2, 2);
-      EXPECT_EQ(val3, 3);
-
-      // +Policy
-      val1 = val2 = val3 = 0;
-      Kokkos::single(Kokkos::SinglePolicy(), l, val1, val2, val3);
-      EXPECT_EQ(val1, 1);
-      EXPECT_EQ(val2, 2);
-      EXPECT_EQ(val3, 3);
-
-      // Full
-      val1 = val2 = val3 = 0;
-      Kokkos::single("single with 3 outputs+lambda+policy",
-                     Kokkos::SinglePolicy(), l, val1, val2, val3);
-      EXPECT_EQ(val1, 1);
-      EXPECT_EQ(val2, 2);
-      EXPECT_EQ(val3, 3);
-    }
-
-    // Full with ExecSpace
-    val1 = val2 = val3 = 0;
-    Kokkos::single("single with 3 outputs+lambda+exec_space",
-                   Kokkos::SinglePolicy<TEST_EXECSPACE>(), l, val1, val2, val3);
-    EXPECT_EQ(val1, 1);
-    EXPECT_EQ(val2, 2);
-    EXPECT_EQ(val3, 3);
-
-    // Functor
-    ReductionFunctor f{};
-    if constexpr (std::is_same_v<TEST_EXECSPACE,
-                                 Kokkos::DefaultExecutionSpace>) {
-      // These tests use the default execution space, thus they should not be
-      // run when TEST_EXECSPACE != Kokkos::DefaultExecutionSpace
-
-      // Minimal
-      val1 = val2 = val3 = 0;
-      Kokkos::single(f, val1, val2, val3);
-      EXPECT_EQ(val1, 5);
-      EXPECT_EQ(val2, 5);
-      EXPECT_EQ(val3, 5);
-
-      // +Label
-      val1 = val2 = val3 = 0;
-      Kokkos::single("single with 3 outputs", f, val1, val2, val3);
-      EXPECT_EQ(val1, 5);
-      EXPECT_EQ(val2, 5);
-      EXPECT_EQ(val3, 5);
-
-      // +Policy
-      val1 = val2 = val3 = 0;
-      Kokkos::single(Kokkos::SinglePolicy(), f, val1, val2, val3);
-      EXPECT_EQ(val1, 5);
-      EXPECT_EQ(val2, 5);
-      EXPECT_EQ(val3, 5);
-
-      // +Policy with WorkTag
-      val1 = val2 = val3 = 0;
-      Kokkos::single(Kokkos::SinglePolicy<TenTag>(), f, val1, val2, val3);
-      EXPECT_EQ(val1, 10);
-      EXPECT_EQ(val2, 10);
-      EXPECT_EQ(val3, 10);
-
-      // Full
-      val1 = val2 = val3 = 0;
-      Kokkos::single("single with 3 outputs+policy", Kokkos::SinglePolicy(), f,
-                     val1, val2, val3);
-      EXPECT_EQ(val1, 5);
-      EXPECT_EQ(val2, 5);
-      EXPECT_EQ(val3, 5);
-
-      // Full with WorkTag
-      val1 = val2 = val3 = 0;
-      Kokkos::single("single with 3 outputs+worktag",
-                     Kokkos::SinglePolicy<TenTag>(), f, val1, val2, val3);
-      EXPECT_EQ(val1, 10);
-      EXPECT_EQ(val2, 10);
-      EXPECT_EQ(val3, 10);
-    }
-
-    // Full with WorkTag and ExecSpace
-    val1 = val2 = val3 = 0;
-    Kokkos::single("single with 3 outputs+worktag+exec_space",
-                   Kokkos::SinglePolicy<TenTag, TEST_EXECSPACE>(), f, val1,
-                   val2, val3);
-    EXPECT_EQ(val1, 10);
-    EXPECT_EQ(val2, 10);
-    EXPECT_EQ(val3, 10);
-
-    // With ExecSpace instance
-    val1 = val2 = val3 = 0;
-    TEST_EXECSPACE exec_space;
-    Kokkos::single(Kokkos::SinglePolicy(exec_space), f, val1, val2, val3);
-    exec_space.fence();
-    EXPECT_EQ(val1, 5);
-    EXPECT_EQ(val2, 5);
-    EXPECT_EQ(val3, 5);
-  }
+  EXPECT_EQ(ret.val, 5);
 }
 
 namespace Test {
 
 TEST(TEST_CATEGORY, single_policy) { test_single_policy(); }
 
-TEST(TEST_CATEGORY, single) { test(); }
+TEST(TEST_CATEGORY, single) { test_no_output(); }
 
 TEST(TEST_CATEGORY, single_with_output) { test_one_output(); }
 
-TEST(TEST_CATEGORY, single_with_multiple_outputs) { test_multiple_outputs(); }
+TEST(TEST_CATEGORY, single_restrictive_return_type) {
+  test_restrictive_return_type();
+}
+
 }  // namespace Test

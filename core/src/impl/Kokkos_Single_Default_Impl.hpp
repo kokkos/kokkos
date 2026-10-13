@@ -22,19 +22,11 @@ struct Single {
   template <class FunctorType, class SinglePolicy>
   static void execute(const FunctorType& functor,
                       const SinglePolicy& single_policy) {
-    // We will use the standard function for parallel_for, so we need to modify
-    // the functor in order to make it callable by the standard function by
-    // giving it an index parameter
-    ::Kokkos::Impl::UnbindIndexArgument<FunctorType> functor_wrapper{functor};
-
-    using WrapperType = decltype(functor_wrapper);
-
     using base_class = typename std::remove_cvref_t<SinglePolicy>::range_policy;
     const base_class& range_policy = single_policy.impl_get_range_policy();
     auto closure =
         Kokkos::Impl::construct_with_shared_allocation_tracking_disabled<
-            Impl::ParallelFor<WrapperType, base_class>>(functor_wrapper,
-                                                        range_policy);
+            Impl::ParallelFor<FunctorType, base_class>>(functor, range_policy);
     closure.execute();
   }
 
@@ -45,15 +37,20 @@ struct Single {
                       const FunctorReducerType& functor_reducer,
                       const SinglePolicy& single_policy,
                       ReturnType& return_value) {
-    using base_class = typename std::remove_cvref_t<SinglePolicy>::range_policy;
-    using parallel_reducer = Impl::ParallelReduce<CombinedFunctorReducerType,
-                                                  base_class, ExecutionSpace>;
+    using range_policy =
+        typename std::remove_cvref_t<SinglePolicy>::range_policy;
 
-    const base_class& range_policy = single_policy.impl_get_range_policy();
+    using parallel_reducer = Impl::ParallelReduce<CombinedFunctorReducerType,
+                                                  range_policy, ExecutionSpace>;
+
+    using execution_space = typename Impl::FunctorPolicyExecutionSpace<
+        FunctorType, range_policy>::execution_space;
+
     auto closure =
         construct_with_shared_allocation_tracking_disabled<parallel_reducer>(
-            functor_reducer, range_policy,
+            functor_reducer, single_policy.impl_get_range_policy(),
             ReturnValueAdapter::return_value(return_value, functor));
+
     closure.execute();
   }
 };
