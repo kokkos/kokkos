@@ -515,7 +515,8 @@ auto parallel_reduce(std::string const& label, PolicyType const& policy,
       Impl::ParallelReduceAdaptor<PolicyType, combined_functor_type,
                                   combined_reducer_type>;
 
-  reduce_adaptor_t::execute(label, policy, combined_functor, combined_reducer);
+  reduce_adaptor_t::execute(Impl::WithLabel{label}, policy, combined_functor,
+                            combined_reducer);
   Impl::ParallelReduceFence<typename PolicyType::execution_space,
                             combined_reducer_type>::
       fence(
