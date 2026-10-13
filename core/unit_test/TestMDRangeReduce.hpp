@@ -67,4 +67,33 @@ TEST(TEST_CATEGORY, mdrange_parallel_reduce_primitive_types) {
   }
 }
 
+template <typename T, std::size_t N>
+void test_array_reduction_identity() {
+  using array_type = Kokkos::Array<T, N>;
+
+  constexpr array_type array_min =
+      Kokkos::reduction_identity<array_type>::min();
+  constexpr array_type array_max =
+      Kokkos::reduction_identity<array_type>::max();
+
+  for (std::size_t i = 0; i < N; ++i) {
+    ASSERT_EQ(array_min[i], Kokkos::reduction_identity<T>::min());
+    ASSERT_EQ(array_max[i], Kokkos::reduction_identity<T>::max());
+  }
+}
+
+template <typename T>
+void test_array_reduction_identity_sizes() {
+  test_array_reduction_identity<T, 1>();
+  test_array_reduction_identity<T, 2>();
+  test_array_reduction_identity<T, 3>();
+}
+
+TEST(TEST_CATEGORY, array_reduction_identity) {
+  test_array_reduction_identity_sizes<int32_t>();
+  test_array_reduction_identity_sizes<int64_t>();
+  test_array_reduction_identity_sizes<uint32_t>();
+  test_array_reduction_identity_sizes<uint64_t>();
+}
+
 }  // namespace
