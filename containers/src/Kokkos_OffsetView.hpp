@@ -610,13 +610,29 @@ class OffsetView : public View<DataType, Properties...> {
   template <class... P>
   explicit OffsetView(const Kokkos::Impl::ViewCtorProp<P...>& arg_prop,
                       index_list_type begins_, index_list_type ends_)
-      : OffsetView(begins_ends_tag{}, arg_prop, begins_, ends_) {}
+      : OffsetView(begins_ends_tag{}, arg_prop, begins_, ends_) {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
+    static_assert(base_t::rank() != 2,
+                  "Change of behavior for OffsetView. The end index of the "
+                  "label/view_alloc constructors changed from inclusive to "
+                  "exclusive! The pointer constructors OffsetView(ptr, begins, "
+                  "ends) were and still are exclusive.");
+#endif
+  }
 
   template <Kokkos::Impl::ViewLabel Label>
   explicit OffsetView(const Label& arg_label, index_list_type begins_,
                       index_list_type ends_)
       : OffsetView(Kokkos::Impl::ViewCtorProp<std::string>(arg_label), begins_,
-                   ends_) {}
+                   ends_) {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
+    static_assert(base_t::rank() != 2,
+                  "Change of behavior for OffsetView. The end index of the "
+                  "label/view_alloc constructors changed from inclusive to "
+                  "exclusive! The pointer constructors OffsetView(ptr, begins, "
+                  "ends) were and still are exclusive.");
+#endif
+  }
 
   template <class... P, class Begins, class Ends>
     requires(Impl::IsFixedIntegralIndexRange<Begins, base_t::rank()> &&
