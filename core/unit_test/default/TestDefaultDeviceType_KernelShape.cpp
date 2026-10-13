@@ -13,6 +13,38 @@
 // relies on the specific block / nd_item shape. I also check that
 // in CUDA we only use the x dimension of the grid.
 
+// To explain further Kokkos maps parallel iterations to the backend's native
+// execution hierarchy:
+// - CUDA/HIP: iterations are distributed across a grid of threads organized
+// into blocks,
+//   with the total work partitioned by the kernel launch configuration.
+//   For RangePolicy we only use the y dimension of the block, the x dimension
+//   and z dimension are 1. The product of the gridDim.x and the blockDim.y
+//   spans the iteration range. Note that there is an option for parallel reduce
+//   to do reuse where we limit the total number of blocks launched so that we
+//   don't need to allocate almost unbounded memory for the scratch allocation.
+//   For MDRangePolicy we do distribute iterations over all three dimensions of
+//   the block and the grid. For that reason Sacado which reuses the x-dimension
+//   of the block for FAD type concurrency, if Hierarchical parallelism is
+//   enabled, is not compatible with MDRangePolicy. In TeamPolicy we launch a
+//   grid with using the x dimension for the league_rank. The Team corresponds
+//   to a CUDA/HIP block, with the y dimension being the threads, and the x
+//   dimension the vector lane.
+//   For all of it is important to note that warps are 32 consecutive threads,
+//   starting with the x dimension before going to the y dimension of a block.
+//   I.e. the warp lane id is
+//   ((threadIdx.z * blockDim.y + threadIdx.y) * blockDim.x +
+//   threadIdx.x)%WARPSIZE.
+// - SYCL: iterations are expressed through an nd-range, where the work is
+// divided into
+//   a global range of items grouped into local work-groups, matching the
+//   device's underlying parallel structure. We used to only use a rank-1
+//   ndrange for RangePolicy but Sacado needs to leverage a specific dimension
+//   for its internal concurrency. That dimension MUST be the same as vector
+//   lane in a Kokkos team, and MUST be unused in RangePolicy. Hence we went to
+//   using a rank-2 nd_range, where the 1st dimension is reserved for the vector
+//   id, and Sacado style use.
+
 namespace {
 
 KOKKOS_INLINE_FUNCTION
@@ -75,12 +107,7 @@ void test_range_policy() {
   ASSERT_EQ(h_error, 0);
 }
 
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
-    defined(KOKKOS_ENABLE_SYCL)
-static constexpr int team_size = 16;
-#else
-static constexpr int team_size = 1;
-#endif
+static constexpr int team_size     = 16;
 static constexpr int vector_length = 8;
 
 KOKKOS_INLINE_FUNCTION
