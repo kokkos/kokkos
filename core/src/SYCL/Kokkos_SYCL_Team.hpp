@@ -1008,8 +1008,7 @@ inline size_t sycl_get_scratch_index(sycl::nd_item<2> item,
                        sycl::memory_scope::device,
                        sycl::access::address_space::global_space>
           ref(scratch_locks[threadid]);
-      int done = ref.compare_exchange_strong(expected, /*desired*/ 1);
-      if (done) break;
+      if (ref.compare_exchange_strong(expected, /*desired*/ 1)) break;
       threadid = (threadid + 1) % wraparound_len;
     }
   }
