@@ -114,7 +114,11 @@ SYCLInternal::SYCLInternal(const sycl::queue& q) : m_queue(q) {
 
   m_num_scratch_locks = m_maxConcurrency;
   m_scratch_locks = sycl::malloc_device<int32_t>(m_num_scratch_locks, m_queue);
-  m_queue.memset(m_scratch_locks, 0, sizeof(int32_t) * m_num_scratch_locks);
+  auto memset_event =
+      m_queue.memset(m_scratch_locks, 0, sizeof(int32_t) * m_num_scratch_locks);
+#ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
+  m_queue.ext_oneapi_submit_barrier(std::vector{memset_event});
+#endif
 }
 
 int SYCLInternal::acquire_team_scratch_space() {
