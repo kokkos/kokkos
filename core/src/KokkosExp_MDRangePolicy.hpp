@@ -20,6 +20,7 @@ static_assert(false,
 #ifndef KOKKOS_ENABLE_IMPL_TYPEINFO
 #include <typeinfo>
 #endif
+#include <impl/Kokkos_CheckedIntegerOps.hpp>
 #include <type_traits>
 #include <array>
 #include <cmath>
@@ -419,9 +420,9 @@ struct MDRangePolicy<P, Properties...>
     int iter_step   = (inner_direction == Iterate::Right) ? -1 : 1;
 
     // widest possible unsigned integer type
-    using FlatExtentType = std::size_t;
+    using flat_extent_type = std::size_t;
 
-    FlatExtentType total_flat_extent = 1;
+    flat_extent_type total_flat_extent = 1;
 
     // Validate bounds before invoking backend-specific tile recommendations.
     for (int i = inner_rank; i != outer_bound; i += iter_step) {
@@ -435,16 +436,16 @@ struct MDRangePolicy<P, Properties...>
         Kokkos::abort(msg.c_str());
       }
 
-      FlatExtentType inc_flat_extent = total_flat_extent;
-      FlatExtentType cur_range       = this->m_upper[i] - this->m_lower[i];
-      total_flat_extent *= cur_range;
+      flat_extent_type cur_range = this->m_upper[i] - this->m_lower[i];
+
+      bool overflow_happened = Impl::multiply_overflow(
+          total_flat_extent, cur_range, total_flat_extent);
 
       // check if total flat extent exceeds numeric_limits<index_type>::max()
-      // and check for wrap-around if index_type is FlatExtentType
-      if ((total_flat_extent > static_cast<FlatExtentType>(
+      // and check for overflow during the computation
+      if ((total_flat_extent > static_cast<flat_extent_type>(
                                    std::numeric_limits<index_type>::max())) ||
-          ((i != inner_rank) && (cur_range != 0) &&
-           (total_flat_extent < inc_flat_extent))) {
+          overflow_happened) {
         std::string msg =
             "Kokkos::MDRangePolicy bounds error: The product of the ranges ";
 
