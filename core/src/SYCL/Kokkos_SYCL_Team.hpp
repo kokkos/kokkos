@@ -1001,13 +1001,15 @@ inline size_t sycl_get_scratch_index(sycl::nd_item<2> item,
         league_size, num_scratch_locks /
                          (item.get_local_range(0) * item.get_local_range(1)));
     threadid = item.get_group_linear_id() % wraparound_len;
-    for (int done = 0; done == 0; threadid = (threadid + 1) % wraparound_len) {
+    while (true) {
       int zero = 0;
       sycl::atomic_ref<int32_t, sycl::memory_order::relaxed,
                        sycl::memory_scope::device,
                        sycl::access::address_space::global_space>
           ref(scratch_locks[threadid]);
-      done = ref.compare_exchange_strong(zero, 1);
+      int done = ref.compare_exchange_strong(zero, 1);
+      if (done) break;
+      threadid = (threadid + 1) % wraparound_len;
     }
   }
   return sycl::group_broadcast(item.get_group(), threadid);
