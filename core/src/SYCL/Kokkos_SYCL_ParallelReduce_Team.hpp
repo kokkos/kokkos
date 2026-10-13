@@ -75,9 +75,8 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
 
       size_t threadid = 0;
       if (scratch_size[1] > 0)
-        threadid = sycl_get_scratch_index(
-            item, scratch_locks, num_scratch_locks,
-            item.get_group_range(0) * item.get_group_range(1));
+        threadid =
+            sycl_get_scratch_index(item, scratch_locks, num_scratch_locks);
 
       if constexpr (!SYCLReduction::use_shuffle_based_algorithm<ReducerType>) {
         reference_type update =

@@ -45,9 +45,8 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     return [=](sycl::nd_item<2> item) {
       size_t threadid = 0;
       if (scratch_size[1] > 0)
-        threadid = sycl_get_scratch_index(
-            item, scratch_locks, num_scratch_locks,
-            item.get_group_range(0) * item.get_group_range(1));
+        threadid =
+            sycl_get_scratch_index(item, scratch_locks, num_scratch_locks);
 
       const member_type team_member(
           team_scratch_memory_L0.get_multi_ptr<sycl::access::decorated::yes>(),

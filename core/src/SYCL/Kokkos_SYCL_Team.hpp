@@ -993,10 +993,11 @@ namespace Impl {
 
 inline size_t sycl_get_scratch_index(sycl::nd_item<2> item,
                                      int32_t* scratch_locks,
-                                     size_t num_scratch_locks,
-                                     size_t league_size) {
+                                     size_t num_scratch_locks) {
   size_t threadid = 0;
   if (item.get_local_linear_id() == 0) {
+    size_t const league_size =
+        item.get_group_range(0) * item.get_group_range(1);
     size_t const wraparound_len = Kokkos::min(
         league_size, num_scratch_locks /
                          (item.get_local_range(0) * item.get_local_range(1)));
