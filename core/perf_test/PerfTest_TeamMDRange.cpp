@@ -13,108 +13,74 @@ namespace Test {
 
 template <typename ScalarType, typename ViewType>
 void check_team_level_computation(const ViewType& A, const ViewType& B) {
-  int numErrors = 0;
-  auto Ahost    = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), A);
-  auto Bhost    = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), B);
+  using execution_space = typename ViewType::execution_space;
+  using policy_type =
+      Kokkos::MDRangePolicy<execution_space, Kokkos::Rank<ViewType::rank>,
+                            Kokkos::IndexType<int>>;
 
-  ScalarType epsilon = std::numeric_limits<ScalarType>::epsilon() * 100;
+  int numErrors            = 0;
+  const ScalarType epsilon = std::numeric_limits<ScalarType>::epsilon() * 100;
   if constexpr (ViewType::rank == 3) {
-    const int n0 = Ahost.extent_int(0) - 2, n1 = Ahost.extent_int(1) - 2,
-              n2 = Ahost.extent_int(2) - 2;
-    for (int i0 = 1; i0 < n0 + 1; ++i0) {
-      for (int i1 = 1; i1 < n1 + 1; ++i1) {
-        for (int i2 = 1; i2 < n2 + 1; ++i2) {
-          ScalarType check =
-              0.25 *
-              (ScalarType)(Bhost(i0 + 1, i1, i2) + Bhost(i0 - 1, i1, i2) +
-                           Bhost(i0, i1 + 1, i2) + Bhost(i0, i1 - 1, i2) +
-                           Bhost(i0, i1, i2 + 1) + Bhost(i0, i1, i2 - 1) +
-                           Bhost(i0, i1, i2));
-          if (Kokkos::abs(Ahost(i0, i1, i2) - check) > epsilon) {
-            ++numErrors;
-            std::cerr << "Correctness error at index: " << i0 << "," << i1
-                      << "," << i2 << ", got " << Ahost(i0, i1, i2)
-                      << ", expected " << check << "\n";
-          }
-        }
-      }
-    }
+    Kokkos::parallel_reduce(
+        "check_team_level_computation",
+        policy_type({1, 1, 1}, {A.extent_int(0) - 1, A.extent_int(1) - 1,
+                                A.extent_int(2) - 1}),
+        KOKKOS_LAMBDA(const int i0, const int i1, const int i2, int& errors) {
+          const ScalarType check =
+              0.25 * static_cast<ScalarType>(
+                         B(i0 + 1, i1, i2) + B(i0 - 1, i1, i2) +
+                         B(i0, i1 + 1, i2) + B(i0, i1 - 1, i2) +
+                         B(i0, i1, i2 + 1) + B(i0, i1, i2 - 1) + B(i0, i1, i2));
+          if (Kokkos::abs(A(i0, i1, i2) - check) > epsilon) ++errors;
+        },
+        numErrors);
   } else if constexpr (ViewType::rank == 4) {
-    const int n0 = Ahost.extent_int(0) - 2, n1 = Ahost.extent_int(1) - 2,
-              n2 = Ahost.extent_int(2) - 2, n3 = Ahost.extent_int(3) - 2;
-    for (int i0 = 1; i0 < n0 + 1; ++i0) {
-      for (int i1 = 1; i1 < n1 + 1; ++i1) {
-        for (int i2 = 1; i2 < n2 + 1; ++i2) {
-          for (int i3 = 1; i3 < n3 + 1; ++i3) {
-            ScalarType check = 0.25 * (ScalarType)(Bhost(i0 + 1, i1, i2, i3) +
-                                                   Bhost(i0 - 1, i1, i2, i3) +
-                                                   Bhost(i0, i1 + 1, i2, i3) +
-                                                   Bhost(i0, i1 - 1, i2, i3) +
-                                                   Bhost(i0, i1, i2 + 1, i3) +
-                                                   Bhost(i0, i1, i2 - 1, i3) +
-                                                   Bhost(i0, i1, i2, i3 + 1) +
-                                                   Bhost(i0, i1, i2, i3 - 1) +
-                                                   Bhost(i0, i1, i2, i3));
-            if (Kokkos::abs(Ahost(i0, i1, i2, i3) - check) > epsilon) {
-              ++numErrors;
-              std::cerr << "Correctness error at index: " << i0 << "," << i1
-                        << "," << i2 << "," << i3 << ", got "
-                        << Ahost(i0, i1, i2, i3) << ", expected " << check
-                        << "\n";
-            }
-          }
-        }
-      }
-    }
-    if (numErrors != 0) {
-      std::cerr << "Detected some errors for a run with dimensions "
-                << Ahost.extent(0);
-      for (std::size_t i = 1; i < Ahost.rank(); i++) {
-        std::cerr << "x" << Ahost.extent(i);
-      }
-      std::cerr << std::endl;
-    }
+    Kokkos::parallel_reduce(
+        "check_team_level_computation",
+        policy_type({1, 1, 1, 1}, {A.extent_int(0) - 1, A.extent_int(1) - 1,
+                                   A.extent_int(2) - 1, A.extent_int(3) - 1}),
+        KOKKOS_LAMBDA(const int i0, const int i1, const int i2, const int i3,
+                      int& errors) {
+          const ScalarType check =
+              0.25 * static_cast<ScalarType>(
+                         B(i0 + 1, i1, i2, i3) + B(i0 - 1, i1, i2, i3) +
+                         B(i0, i1 + 1, i2, i3) + B(i0, i1 - 1, i2, i3) +
+                         B(i0, i1, i2 + 1, i3) + B(i0, i1, i2 - 1, i3) +
+                         B(i0, i1, i2, i3 + 1) + B(i0, i1, i2, i3 - 1) +
+                         B(i0, i1, i2, i3));
+          if (Kokkos::abs(A(i0, i1, i2, i3) - check) > epsilon) ++errors;
+        },
+        numErrors);
   } else if constexpr (ViewType::rank == 5) {
-    const int n0 = Ahost.extent_int(0) - 2, n1 = Ahost.extent_int(1) - 2,
-              n2 = Ahost.extent_int(2) - 2, n3 = Ahost.extent_int(3) - 2,
-              n4 = Ahost.extent_int(4) - 2;
-    for (int i0 = 1; i0 < n0 + 1; ++i0) {
-      for (int i1 = 1; i1 < n1 + 1; ++i1) {
-        for (int i2 = 1; i2 < n2 + 1; ++i2) {
-          for (int i3 = 1; i3 < n3 + 1; ++i3) {
-            for (int i4 = 1; i4 < n4 + 1; ++i4) {
-              ScalarType check =
-                  0.25 * (ScalarType)(Bhost(i0 + 1, i1, i2, i3, i4) +
-                                      Bhost(i0 - 1, i1, i2, i3, i4) +
-                                      Bhost(i0, i1 + 1, i2, i3, i4) +
-                                      Bhost(i0, i1 - 1, i2, i3, i4) +
-                                      Bhost(i0, i1, i2 + 1, i3, i4) +
-                                      Bhost(i0, i1, i2 - 1, i3, i4) +
-                                      Bhost(i0, i1, i2, i3 + 1, i4) +
-                                      Bhost(i0, i1, i2, i3 - 1, i4) +
-                                      Bhost(i0, i1, i2, i3, i4 + 1) +
-                                      Bhost(i0, i1, i2, i3, i4 - 1) +
-                                      Bhost(i0, i1, i2, i3, i4));
-              if (Kokkos::abs(Ahost(i0, i1, i2, i3, i4) - check) > epsilon) {
-                ++numErrors;
-                std::cerr << "Correctness error at index: " << i0 << "," << i1
-                          << "," << i2 << "," << i3 << "," << i4 << ", got "
-                          << Ahost(i0, i1, i2, i3, i4) << ", expected " << check
-                          << "\n";
-              }
-            }
-          }
-        }
-      }
+    Kokkos::parallel_reduce(
+        "check_team_level_computation",
+        policy_type({1, 1, 1, 1, 1}, {A.extent_int(0) - 1, A.extent_int(1) - 1,
+                                      A.extent_int(2) - 1, A.extent_int(3) - 1,
+                                      A.extent_int(4) - 1}),
+        KOKKOS_LAMBDA(const int i0, const int i1, const int i2, const int i3,
+                      const int i4, int& errors) {
+          const ScalarType check =
+              0.25 * static_cast<ScalarType>(
+                         B(i0 + 1, i1, i2, i3, i4) + B(i0 - 1, i1, i2, i3, i4) +
+                         B(i0, i1 + 1, i2, i3, i4) + B(i0, i1 - 1, i2, i3, i4) +
+                         B(i0, i1, i2 + 1, i3, i4) + B(i0, i1, i2 - 1, i3, i4) +
+                         B(i0, i1, i2, i3 + 1, i4) + B(i0, i1, i2, i3 - 1, i4) +
+                         B(i0, i1, i2, i3, i4 + 1) + B(i0, i1, i2, i3, i4 - 1) +
+                         B(i0, i1, i2, i3, i4));
+          if (Kokkos::abs(A(i0, i1, i2, i3, i4) - check) > epsilon) ++errors;
+        },
+        numErrors);
+  }
+  if (numErrors != 0) {
+    std::string err_msg;
+    err_msg = "Detected " + std::to_string(numErrors) +
+              " errors for a run with dimensions " +
+              std::to_string(A.extent(0));
+    for (std::size_t i = 1; i < ViewType::rank; i++) {
+      err_msg += "x" + std::to_string(A.extent(i));
     }
-    if (numErrors != 0) {
-      std::cerr << "Detected some errors for a run with dimensions "
-                << Ahost.extent(0);
-      for (std::size_t i = 1; i < Ahost.rank(); i++) {
-        std::cerr << "x" << Ahost.extent(i);
-      }
-      std::cerr << std::endl;
-    }
+    err_msg += "\n";
+    Kokkos::abort(err_msg.c_str());
   }
 }
 
@@ -507,7 +473,8 @@ void bench_team_mdrange(benchmark::State& state) {
       ->Unit(benchmark::kMillisecond)                         \
       ->Name("TeamMDRangeStencil_" #dim "D_" #functor)        \
       ->ArgNames({"league_size", "size"})                     \
-      ->ArgsProduct({__VA_ARGS__});
+      ->ArgsProduct({__VA_ARGS__})                            \
+      ->Iterations(10);
 
 #define LEAGUE_SIZES \
   { 256 }
@@ -515,19 +482,19 @@ void bench_team_mdrange(benchmark::State& state) {
 #ifdef KOKKOS_ENABLE_BENCHMARKS_HEAVY
 // Enable the full dim sizes in the case of heavy benchmarks enables
 #define SIZES_2D \
-  { 128, 256, 512 }
+  { 256, 512, 1024 }
 #define SIZES_3D \
-  { 16, 32, 64 }
+  { 32, 64, 128 }
 #define SIZES_4D \
-  { 4, 8, 16 }
+  { 8, 16, 32 }
 #else
 // Restrict to smallest dim size for non-heavy benchmarks
 #define SIZES_2D \
-  { 128 }
+  { 256 }
 #define SIZES_3D \
-  { 16 }
+  { 32 }
 #define SIZES_4D \
-  { 4 }
+  { 8 }
 #endif  // #ifdef KOKKOS_ENABLE_BENCHMARKS_HEAVY
 
 TEAM_MDRANGE_STENCIL_BENCHMARK(TeamThreadMDRangeStencil, 2, bench_team_mdrange,
