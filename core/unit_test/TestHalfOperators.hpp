@@ -409,7 +409,7 @@ struct Functor_TestHalfOperators {
   }
   // END: Binary Arithmetic test helpers
 
-#if !KOKKOS_HALF_T_IS_FLOAT
+#if !KOKKOS_HALF_T_IS_FLOAT && !defined(__STDCPP_FLOAT16_T__)
   using half_impl_type = typename half_type::impl_type;
 #else
   using half_impl_type = half_type;

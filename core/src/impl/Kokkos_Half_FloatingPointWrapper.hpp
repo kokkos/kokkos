@@ -21,6 +21,7 @@
 #ifdef KOKKOS_ENABLE_SYCL
 #include <SYCL/Kokkos_SYCL_Half_Impl_Type.hpp>
 #endif
+#include <stdfloat>
 
 namespace Kokkos::Experimental::Impl {
 /// @brief templated struct for determining if half_t is an alias to float.
@@ -36,9 +37,20 @@ struct is_bfloat16 : std::false_type {};
 
 #if !KOKKOS_HALF_T_IS_FLOAT
 
-/************************* BEGIN forward declarations *************************/
+
 namespace Kokkos {
 namespace Experimental {
+
+#ifdef __STDCPP_FLOAT16_T__
+using half_t = std::float16_t;
+namespace Impl {
+template <>
+struct is_float16<half_t> : std::true_type {};
+}  // namespace Impl
+#else
+
+static_assert(false);
+/************************* BEGIN forward declarations *************************/
 namespace Impl {
 template <class FloatType>
 class floating_point_wrapper;
@@ -47,6 +59,8 @@ class floating_point_wrapper;
 // Declare half_t (binary16)
 using half_t = Kokkos::Experimental::Impl::floating_point_wrapper<
     Kokkos::Impl::half_impl_t::type>;
+
+
 namespace Impl {
 template <>
 struct is_float16<half_t> : std::true_type {};
@@ -110,11 +124,20 @@ template <class T>
 KOKKOS_INLINE_FUNCTION
     std::enable_if_t<std::is_same_v<T, unsigned long long>, T>
         cast_from_half(half_t);
+#endif
 
 // declare bhalf_t
 #if !KOKKOS_BHALF_T_IS_FLOAT
+#if defined(__STDCPP_BFLOAT16_T__)
+using bhalf_t = std::bfloat16_t;
+namespace Impl {
+template <>
+struct is_bfloat16<bhalf_t> : std::true_type {};
+}  // namespace Impl
+#else
 using bhalf_t = Kokkos::Experimental::Impl::floating_point_wrapper<
     Kokkos::Impl ::bhalf_impl_t ::type>;
+
 namespace Impl {
 template <>
 struct is_bfloat16<bhalf_t> : std::true_type {};
@@ -179,7 +202,9 @@ KOKKOS_INLINE_FUNCTION
     std::enable_if_t<std::is_same_v<T, unsigned long long>, T>
         cast_from_bhalf(bhalf_t);
 #endif
+#endif
 
+#if 0
 template <class T>
 static KOKKOS_INLINE_FUNCTION Kokkos::Experimental::half_t cast_to_wrapper(
     T x, const Kokkos::Impl::half_impl_t::type&);
@@ -198,6 +223,7 @@ cast_from_wrapper(const Kokkos::Experimental::half_t& x);
 template <class T>
 static KOKKOS_INLINE_FUNCTION T
 cast_from_wrapper(const Kokkos::Experimental::bhalf_t& x);
+#endif
 #endif
 /************************** END forward declarations **************************/
 
@@ -879,6 +905,7 @@ class alignas(FloatType) floating_point_wrapper {
 };
 }  // namespace Impl
 
+#if 0
 // Declare wrapper overloads now that floating_point_wrapper is declared
 template <class T>
 static KOKKOS_INLINE_FUNCTION Kokkos::Experimental::half_t cast_to_wrapper(
@@ -907,10 +934,98 @@ cast_from_wrapper(const Kokkos::Experimental::bhalf_t& x) {
   return Kokkos::Experimental::cast_from_bhalf<T>(x);
 }
 #endif
+#endif
 
 }  // namespace Experimental
 }  // namespace Kokkos
 
+#endif
+
+// If none of the above actually did anything and defined a half precision type
+// define a fallback implementation here using float
+#if !KOKKOS_HALF_T_IS_FLOAT && defined(__STDCPP_FLOAT16_T__)
+namespace Kokkos {
+namespace Experimental {
+
+// cast_to_half
+KOKKOS_INLINE_FUNCTION
+half_t cast_to_half(float val) { return half_t(val); }
+KOKKOS_INLINE_FUNCTION
+half_t cast_to_half(bool val) { return half_t(val); }
+KOKKOS_INLINE_FUNCTION
+half_t cast_to_half(double val) { return half_t(val); }
+KOKKOS_INLINE_FUNCTION
+half_t cast_to_half(short val) { return half_t(val); }
+KOKKOS_INLINE_FUNCTION
+half_t cast_to_half(unsigned short val) { return half_t(val); }
+KOKKOS_INLINE_FUNCTION
+half_t cast_to_half(int val) { return half_t(val); }
+KOKKOS_INLINE_FUNCTION
+half_t cast_to_half(unsigned int val) { return half_t(val); }
+KOKKOS_INLINE_FUNCTION
+half_t cast_to_half(long val) { return half_t(val); }
+KOKKOS_INLINE_FUNCTION
+half_t cast_to_half(unsigned long val) { return half_t(val); }
+KOKKOS_INLINE_FUNCTION
+half_t cast_to_half(long long val) { return half_t(val); }
+KOKKOS_INLINE_FUNCTION
+half_t cast_to_half(unsigned long long val) { return half_t(val); }
+
+// cast_from_half
+// Using an explicit list here too, since the other ones are explicit and for
+// example don't include char
+template <class T>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<
+    std::is_same_v<T, float> || std::is_same_v<T, bool> ||
+        std::is_same_v<T, double> || std::is_same_v<T, short> ||
+        std::is_same_v<T, unsigned short> || std::is_same_v<T, int> ||
+        std::is_same_v<T, unsigned int> || std::is_same_v<T, long> ||
+        std::is_same_v<T, unsigned long> || std::is_same_v<T, long long> ||
+        std::is_same_v<T, unsigned long long>,
+    T>
+cast_from_half(half_t val) {
+  return T(val);
+}
+
+// cast_to_bhalf
+KOKKOS_INLINE_FUNCTION
+bhalf_t cast_to_bhalf(float val) { return bhalf_t(val); }
+KOKKOS_INLINE_FUNCTION
+bhalf_t cast_to_bhalf(bool val) { return bhalf_t(val); }
+KOKKOS_INLINE_FUNCTION
+bhalf_t cast_to_bhalf(double val) { return bhalf_t(val); }
+KOKKOS_INLINE_FUNCTION
+bhalf_t cast_to_bhalf(short val) { return bhalf_t(val); }
+KOKKOS_INLINE_FUNCTION
+bhalf_t cast_to_bhalf(unsigned short val) { return bhalf_t(val); }
+KOKKOS_INLINE_FUNCTION
+bhalf_t cast_to_bhalf(int val) { return bhalf_t(val); }
+KOKKOS_INLINE_FUNCTION
+bhalf_t cast_to_bhalf(unsigned int val) { return bhalf_t(val); }
+KOKKOS_INLINE_FUNCTION
+bhalf_t cast_to_bhalf(long val) { return bhalf_t(val); }
+KOKKOS_INLINE_FUNCTION
+bhalf_t cast_to_bhalf(unsigned long val) { return bhalf_t(val); }
+KOKKOS_INLINE_FUNCTION
+bhalf_t cast_to_bhalf(long long val) { return bhalf_t(val); }
+KOKKOS_INLINE_FUNCTION
+bhalf_t cast_to_bhalf(unsigned long long val) { return bhalf_t(val); }
+
+// cast_from_bhalf
+template <class T>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<
+    std::is_same_v<T, float> || std::is_same_v<T, bool> ||
+        std::is_same_v<T, double> || std::is_same_v<T, short> ||
+        std::is_same_v<T, unsigned short> || std::is_same_v<T, int> ||
+        std::is_same_v<T, unsigned int> || std::is_same_v<T, long> ||
+        std::is_same_v<T, unsigned long> || std::is_same_v<T, long long> ||
+        std::is_same_v<T, unsigned long long>,
+    T>
+cast_from_bhalf(bhalf_t val) {
+  return T(val);
+}
+}  // namespace Experimental
+}  // namespace Kokkos
 #endif
 
 // If none of the above actually did anything and defined a half precision type

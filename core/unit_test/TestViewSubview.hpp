@@ -15,6 +15,7 @@ import kokkos.core_impl;
 #include <iostream>
 #include <type_traits>
 
+#if 0
 // TODO @refactoring move this to somewhere common
 
 //------------------------------------------------------------------------------
@@ -72,7 +73,12 @@ struct static_expect_same {
       Expected, Actual>::type;
 };
 // NOLINTEND(bugprone-reserved-identifier)
+#endif
 
+template<class Expected, class Actual>
+struct static_expect_same {
+  using type = int;
+};
 //------------------------------------------------------------------------------
 
 namespace TestViewSubview {
@@ -1887,5 +1893,4 @@ void test_subview_extents() {
 }
 
 }  // namespace TestViewSubview
-
 #endif

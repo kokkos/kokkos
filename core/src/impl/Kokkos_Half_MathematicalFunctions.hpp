@@ -267,6 +267,7 @@ KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF, copysi
 // fpclassify
 
 #if !KOKKOS_HALF_T_IS_FLOAT
+#ifndef __STDCPP_FLOAT16_T__
 namespace Impl {
 template <bool fallback = true>
 KOKKOS_INLINE_FUNCTION bool impl_isfinite(Kokkos::Experimental::half_t x) {
@@ -277,13 +278,19 @@ KOKKOS_INLINE_FUNCTION bool impl_isfinite(Kokkos::Experimental::half_t x) {
   return (bit_pattern_x.value & exponent_mask.value) != exponent_mask.value;
 }
 } // namespace Impl
+#endif
 
 KOKKOS_INLINE_FUNCTION bool isfinite(Kokkos::Experimental::half_t x) {
+#ifndef __STDCPP_FLOAT16_T__
   return Impl::impl_isfinite(x);
+#else
+  return std::isfinite(x);
+#endif
 }
 #endif
 
 #if !KOKKOS_BHALF_T_IS_FLOAT
+#ifndef __STDCPP_FLOAT16_T__
 namespace Impl {
 template <bool fallback = true>
 KOKKOS_INLINE_FUNCTION bool impl_isfinite(Kokkos::Experimental::bhalf_t x) {
@@ -294,13 +301,18 @@ KOKKOS_INLINE_FUNCTION bool impl_isfinite(Kokkos::Experimental::bhalf_t x) {
   return (bit_pattern_x.value & exponent_mask.value) != exponent_mask.value;
 }
 } // namespace Impl
-
+#endif
 KOKKOS_INLINE_FUNCTION bool isfinite(Kokkos::Experimental::bhalf_t x) {
+#ifndef __STDCPP_BFLOAT16_T__
   return Impl::impl_isfinite(x);
+#else
+  return std::isfinite(x);
+#endif
 }
 #endif
 
 #if !KOKKOS_HALF_T_IS_FLOAT
+#ifndef __STDCPP_FLOAT16_T__
 namespace Impl {
 template <bool fallback = true>
 KOKKOS_INLINE_FUNCTION bool impl_isinf(Kokkos::Experimental::half_t x) {
@@ -314,13 +326,18 @@ KOKKOS_INLINE_FUNCTION bool impl_isinf(Kokkos::Experimental::half_t x) {
       ((bit_pattern_x.value & fraction_mask.value) == 0));
 }
 } // namespace Impl
-
+#endif
 KOKKOS_INLINE_FUNCTION bool isinf(Kokkos::Experimental::half_t x) {
+#ifndef __STDCPP_FLOAT16_T__
   return Impl::impl_isinf(x);
+#else
+  return std::isinf(x);
+#endif
 }
 #endif
 
 #if !KOKKOS_BHALF_T_IS_FLOAT
+#ifndef __STDCPP_FLOAT16_T__
 namespace Impl {
 template <bool fallback = true>
 KOKKOS_INLINE_FUNCTION bool impl_isinf(Kokkos::Experimental::bhalf_t x) {
@@ -334,13 +351,18 @@ KOKKOS_INLINE_FUNCTION bool impl_isinf(Kokkos::Experimental::bhalf_t x) {
       ((bit_pattern_x.value & fraction_mask.value) == 0));
 }
 } // namespace Impl
-
+#endif
 KOKKOS_INLINE_FUNCTION bool isinf(Kokkos::Experimental::bhalf_t x) {
+#ifndef __STDCPP_FLOAT16_T__
   return Impl::impl_isinf(x);
+#else
+  return std::isinf(x);
+#endif
 }
 #endif
 
 #if !KOKKOS_HALF_T_IS_FLOAT
+#ifndef __STDCPP_FLOAT16_T__
 namespace Impl {
 template <bool fallback = true>
 KOKKOS_INLINE_FUNCTION bool impl_isnan(Kokkos::Experimental::half_t x) {
@@ -354,13 +376,18 @@ KOKKOS_INLINE_FUNCTION bool impl_isnan(Kokkos::Experimental::half_t x) {
       ((bit_pattern_x.value & fraction_mask.value) != 0));
 }
 } // namespace Impl
-
+#endif
 KOKKOS_INLINE_FUNCTION bool isnan(Kokkos::Experimental::half_t x) {
+#ifndef __STDCPP_FLOAT16_T__
   return Impl::impl_isnan(x);
+#else
+  return std::isnan(x);
+#endif
 }
 #endif
 
 #if !KOKKOS_BHALF_T_IS_FLOAT
+#ifndef __STDCPP_FLOAT16_T__
 namespace Impl {
 template <bool fallback = true>
 KOKKOS_INLINE_FUNCTION bool impl_isnan(Kokkos::Experimental::bhalf_t x) {
@@ -374,9 +401,13 @@ KOKKOS_INLINE_FUNCTION bool impl_isnan(Kokkos::Experimental::bhalf_t x) {
       ((bit_pattern_x.value & fraction_mask.value) != 0));
 }
 } // namespace Impl
-
+#endif
 KOKKOS_INLINE_FUNCTION bool isnan(Kokkos::Experimental::bhalf_t x) {
+#ifndef __STDCPP_FLOAT16_T__
   return Impl::impl_isnan(x);
+#else
+  return std::isnan(x);
+#endif
 }
 #endif
 

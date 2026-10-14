@@ -5,7 +5,7 @@
 #define KOKKOS_HALF_NUMERIC_TRAITS_HPP_
 
 #include <Kokkos_NumericTraits.hpp>
-
+#ifndef __STDCPP_FLOAT16_T__
 ////////////// BEGIN HALF_T (binary16) limits //////////////
 // clang-format off
 // '\brief:' below are from the libc definitions for float and double:
@@ -352,5 +352,6 @@ struct Kokkos::Impl::max_exponent_helper<
 };
 #endif
 ////////////// END BHALF_T (bfloat16) limits //////////
+#endif
 
 #endif  // KOKKOS_HALF_NUMERIC_TRAITS_HPP_

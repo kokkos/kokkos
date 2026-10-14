@@ -12,6 +12,8 @@ import kokkos.core;
 
 #include <TestDefaultDeviceType_Category.hpp>
 
+static_assert(std::is_same_v<std::float16_t, Kokkos::Experimental::half_t>);
+
 namespace Test {
 
 TEST(defaultdevicetype, development_test) {}

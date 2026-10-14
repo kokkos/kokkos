@@ -690,10 +690,18 @@
 #define KOKKOS_IMPL_EXPORT
 #endif
 
+#ifdef __STDCPP_FLOAT16_T__
+#define KOKKOS_HAS_NATIVE_HALF_TYPE
+#endif
+
 #ifdef KOKKOS_HAS_NATIVE_HALF_TYPE
 #define KOKKOS_HALF_T_IS_FLOAT false
 #else
 #define KOKKOS_HALF_T_IS_FLOAT true
+#endif
+
+#ifdef __STDCPP_BFLOAT16_T__
+#define KOKKOS_HAS_NATIVE_BHALF_TYPE
 #endif
 
 #ifdef KOKKOS_HAS_NATIVE_BHALF_TYPE

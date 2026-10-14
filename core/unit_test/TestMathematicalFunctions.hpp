@@ -2952,8 +2952,8 @@ struct TestNextAfterHalf {
     const std::uint16_t FP16_SMALLEST_POS = 0x0001;
     const std::uint16_t FP16_SMALLEST_NEG = 0x8001;
 
-    const FP16Type pos_one{1.0f}, pos_two{2.0f};
-    const FP16Type neg_one{-1.0f}, neg_two{-2.0f};
+    const FP16Type pos_one = static_cast<FP16Type>(1.0f), pos_two = static_cast<FP16Type>(2.0f);
+    const FP16Type neg_one = static_cast<FP16Type>(-1.0f), neg_two = static_cast<FP16Type>(-2.0f);
     const FP16Type pos_zero     = Kokkos::bit_cast<FP16Type>(FP16_POS_ZERO);
     const FP16Type neg_zero     = Kokkos::bit_cast<FP16Type>(FP16_NEG_ZERO);
     const FP16Type pos_smallest = Kokkos::bit_cast<FP16Type>(FP16_SMALLEST_POS);
