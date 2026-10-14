@@ -37,7 +37,7 @@ namespace detail {
 
 // Slice Specifier allowing for strides and compile time extent
 template <class OffsetType, class ExtentType, class StrideType>
-struct strided_slice {
+struct extent_slice {
   using offset_type = OffsetType;
   using extent_type = ExtentType;
   using stride_type = StrideType;

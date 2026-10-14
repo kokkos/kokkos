@@ -138,7 +138,7 @@ constexpr bool check_static_bounds()
       return true;
     }
   }
-  else if constexpr (is_strided_slice<S_k>::value) {
+  else if constexpr (is_extent_slice<S_k>::value) {
     using offset_type = typename S_k::offset_type;
 
     if constexpr (is_integral_constant_like_v<offset_type>) {
@@ -291,12 +291,12 @@ constexpr auto canonical_slice([[maybe_unused]] Slice s)
   else if constexpr (std::is_convertible_v<Slice, IndexType>) {
     return canonical_index<IndexType>(std::move(s)); // canonical integer index
   }
-  else if constexpr (is_strided_slice<Slice>::value) {
+  else if constexpr (is_extent_slice<Slice>::value) {
     // Canonicalize each component of the strided_slice
     auto offset = canonical_index<IndexType>(s.offset);
     auto extent = canonical_index<IndexType>(s.extent);
     auto stride = canonical_index<IndexType>(s.stride);
-    return strided_slice<decltype(offset), decltype(extent), decltype(stride)>{
+    return extent_slice<decltype(offset), decltype(extent), decltype(stride)>{
       /* .offset = */ offset,
       /* .extent = */ extent,
       /* .stride = */ stride
@@ -312,7 +312,7 @@ constexpr auto canonical_slice([[maybe_unused]] Slice s)
     auto offset = canonical_index<IndexType>(s_k0);
     auto extent = subtract_ice<IndexType>(s_k0, s_k1);
     auto stride = cw<IndexType(1)>;
-    return strided_slice<decltype(offset), decltype(extent), decltype(stride)>{
+    return extent_slice<decltype(offset), decltype(extent), decltype(stride)>{
       /* .offset = */ offset,
       /* .extent = */ extent,
       /* .stride = */ stride
@@ -361,7 +361,7 @@ constexpr auto canonical_slices_impl(
 // Each canonical slice is one of:
 //   - full_extent_t (for full-extent slices)
 //   - IndexType (for integer index slices)
-//   - strided_slice<...> (for range and strided-range slices)
+//   - extent_slice<...> (for range and strided-range slices)
 // ============================================================
 
 MDSPAN_TEMPLATE_REQUIRES(
