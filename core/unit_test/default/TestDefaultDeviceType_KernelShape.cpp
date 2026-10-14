@@ -5,11 +5,11 @@
 #include <gtest/gtest.h>
 
 // The following tests check some KernelShape behavior for RangePolicy and
-// TeamPolicy We do NOT guarantee this behavior officially in our semantics,
+// TeamPolicy. We do NOT guarantee this behavior officially in our semantics,
 // however Trilinos's Sacado as well as some other specific projects rely on it.
 // If changes to Kokkos's kernel launch behavior would break this test,
 // we need to talk to the affected teams.
-// This only really applies to CUDA, HIP and SYLC right now where Sacado
+// This only really applies to CUDA, HIP and SYCL right now where Sacado
 // relies on the specific block / nd_item shape. I also check that
 // in CUDA we only use the x dimension of the grid.
 
