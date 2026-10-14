@@ -366,9 +366,15 @@ struct MDRangePolicy<P, Properties...>
   MDRangePolicy(const MDRangePolicy<OtherProperties...> p)
       : traits(p),  // base class may contain data such as desired occupancy
         m_space(p.m_space),
-        m_lower(p.m_lower),
-        m_upper(p.m_upper),
-        m_tile(p.m_tile),
+        m_lower(
+            Impl::to_array_potentially_narrowing<index_type, decltype(m_lower)>(
+                p.m_lower)),
+        m_upper(
+            Impl::to_array_potentially_narrowing<index_type, decltype(m_upper)>(
+                p.m_upper)),
+        m_tile(
+            Impl::to_array_potentially_narrowing<index_type, decltype(m_tile)>(
+                p.m_tile)),
         m_tile_end(p.m_tile_end),
         m_num_tiles(p.m_num_tiles),
         m_prod_tile_dims(p.m_prod_tile_dims),
