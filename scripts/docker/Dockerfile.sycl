@@ -1,8 +1,8 @@
-ARG BASE=nvcr.io/nvidia/cuda:12.0.0-devel-ubuntu22.04@sha256:0578d90ce082ed37cdc8daf31d401b5a62594a847e9cf6b5cdf4c2356ac49869
+ARG BASE=nvcr.io/nvidia/cuda:12.8.1-devel-ubuntu24.04@sha256:520292dbb4f755fd360766059e62956e9379485d9e073bbd2f6e3c20c270ed66
 FROM $BASE
 
 ARG ADDITIONAL_PACKAGES
-ARG ONEAPI_VERSION=2025.2
+ARG ONEAPI_VERSION=2026.1
 
 RUN apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/3bf863cc.pub
 
@@ -55,7 +55,13 @@ RUN apt-get update && apt-get install -y \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-ARG UNIFIED_RUNTIME_VERSION=6.2.0
+ARG UNIFIED_RUNTIME_VERSION=7.1.1
+RUN apt-get update && apt-get install -y \
+        hwloc \
+        libhwloc-dev \
+        && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 RUN cd /tmp && git clone https://github.com/intel/llvm.git -b v${UNIFIED_RUNTIME_VERSION} --depth=1 && cd llvm && \
     cmake -S unified-runtime -B build_ur \
       -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ \
