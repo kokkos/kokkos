@@ -497,8 +497,6 @@ void parallel_for(const Impl::TeamThreadRangeBoundariesStruct<
                       iType, Impl::SYCLTeamMember>& loop_boundaries,
                   const Closure& closure) {
   using thread_handle_t = Impl::ThreadHandleType<Impl::SYCLTeamMember>;
-  [[maybe_unused]] auto const thread_handle =
-      thread_handle_t(loop_boundaries.member);
 
   for (iType i = loop_boundaries.start +
                  loop_boundaries.member.item().get_local_id(0);
@@ -508,7 +506,7 @@ void parallel_for(const Impl::TeamThreadRangeBoundariesStruct<
       closure(i);
     } else if constexpr (std::is_invocable_v<Closure, thread_handle_t const&,
                                              iType>) {
-      closure(thread_handle, i);
+      closure(thread_handle_t(loop_boundaries.member), i);
     } else {
       static_assert(Kokkos::Impl::always_false<Closure>::value,
                     "Kokkos::parallel_for(TeamThreadRange) closure must be "
