@@ -910,7 +910,7 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
       lambda(i);
     } else if constexpr (std::is_invocable_v<Lambda, thread_handle_t const&,
                                              iType>) {
-      closure(thread_handle, i);
+      lambda(thread_handle, i);
     } else {
       static_assert(Kokkos::Impl::always_false<Lambda>::value,
                     "Kokkos::parallel_for(TeamThreadRange) closure must be "
