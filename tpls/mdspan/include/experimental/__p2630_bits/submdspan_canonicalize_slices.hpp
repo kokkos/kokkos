@@ -3,7 +3,8 @@
 
 #pragma once
 
-#include "submdspan_extents.hpp"
+#include "constant_wrapper.hpp"
+#include "strided_slice.hpp"
 #include <complex>
 
 namespace MDSPAN_IMPL_STANDARD_NAMESPACE {
@@ -11,6 +12,19 @@ namespace MDSPAN_IMPL_STANDARD_NAMESPACE {
 #if MDSPAN_HAS_CXX_17
 
 namespace detail {
+
+// Helper for identifying extent_slice and range_slice
+template <class T> struct is_extent_slice : std::false_type {};
+
+template <class OffsetType, class ExtentType, class StrideType>
+struct is_extent_slice<
+    extent_slice<OffsetType, ExtentType, StrideType>> : std::true_type {};
+
+template <class T> struct is_range_slice : std::false_type {};
+
+template<class FirstType, class LastType, class StrideType>
+struct is_range_slice<
+  range_slice<FirstType, LastType, StrideType>> : std::true_type {};
 
 // ============================================================
 // de_ice: extract the value of an integral-constant-like type
@@ -138,7 +152,7 @@ constexpr bool check_static_bounds()
       return true;
     }
   }
-  else if constexpr (is_strided_slice<S_k>::value) {
+  else if constexpr (is_extent_slice<S_k>::value) {
     using offset_type = typename S_k::offset_type;
 
     if constexpr (is_integral_constant_like_v<offset_type>) {
@@ -185,6 +199,36 @@ constexpr bool check_static_bounds()
     else {
       return true;
     }
+  } else if constexpr (is_range_slice<S_k>::value) {
+    using first_type = decltype(std::declval<S_k>().first);
+    using last_type = decltype(std::declval<S_k>().last);
+
+    if constexpr (is_integral_constant_like_v<first_type>) {
+      if constexpr (de_ice(first_type{}) < 0) {
+        return false;
+      }
+      else if constexpr (
+        Exts_k != dynamic_extent &&
+        Exts_k < static_cast<size_t>(de_ice(first_type{})))
+      {
+        return false;
+      }
+    }
+
+    if constexpr (is_integral_constant_like_v<last_type>) {
+      if constexpr ((is_integral_constant_like_v<first_type> && (de_ice(first_type()) > de_ice(last_type{})))
+                      || de_ice(last_type{}) < 0) {
+        return false;
+      }
+      else if constexpr (
+        Exts_k != dynamic_extent &&
+        Exts_k < static_cast<size_t>(de_ice(last_type{})))
+      {
+        return false;
+      }
+    }
+
+    return true;
   } else {
     // General pair-like case: attempt to get the first and second elements.
     // If S_k cannot be structured-bound into two elements, this is ill-formed,
@@ -270,6 +314,71 @@ constexpr bool check_submdspan_slice_mandates(
   return (check_submdspan_slice_mandate<typename Extents::index_type, Extents::static_extent(Idx), Slices>(slices) && ... && true);
 }
 
+
+template<class IndexType, class SpanType, class StrideType>
+struct calculate_extents
+{
+  static constexpr IndexType value(SpanType span, StrideType stride)
+  {
+    return static_cast<IndexType>(span != 0 ? 1 + divide<IndexType>(span - 1, stride) : 0);
+  }
+};
+
+template<class IndexType, auto Span, auto Stride>
+struct calculate_extents<IndexType, constant_wrapper<Span>, constant_wrapper<Stride>>
+{
+  static constexpr auto value(constant_wrapper<Span>, constant_wrapper<Stride>)
+  {
+    return cw<static_cast<IndexType>(Span != 0 ? 1 + divide<IndexType>(Span - 1, Stride) : 0)>;
+  }
+};
+
+
+template<class IndexType, class StrideType>
+struct calculate_stride
+{
+  template< class SpanType >
+  static constexpr auto value(SpanType span, StrideType stride)
+  {
+    return span != 0 ? stride : IndexType(1);
+  }
+};
+
+template<class IndexType, auto Stride>
+struct calculate_stride<IndexType, constant_wrapper<Stride>>
+{
+  template< class SpanType >
+  static constexpr auto value(SpanType, constant_wrapper<Stride>)
+  {
+    return cw<Stride>;
+  }
+};
+
+
+// Some compilers do not do ctad properly with canonical_range_slice
+template<class OffsetType, class ExtentType, class StrideType>
+constexpr extent_slice<OffsetType, ExtentType, StrideType>
+make_extent_slice(OffsetType offset, ExtentType extent, StrideType stride)
+{
+  return extent_slice<OffsetType, ExtentType, StrideType>{offset, extent, stride};
+}
+
+template<class IndexType, class OffsetType, class SpanType, class StrideType>
+constexpr auto canonical_range_slice(OffsetType offset, SpanType span, StrideType stride)
+{
+  return make_extent_slice(
+    offset,
+    calculate_extents<IndexType, SpanType, StrideType>::value(span, stride),
+    calculate_stride<IndexType, StrideType>::value(span, stride)
+  );
+}
+
+template<class IndexType, class OffsetType, class SpanType>
+constexpr auto canonical_range_slice(OffsetType offset, SpanType span)
+{
+  return canonical_range_slice<IndexType>(offset, span, cw<IndexType(1)>);
+}
+
 // ============================================================
 // canonical_slice: canonicalize a single slice
 //
@@ -291,16 +400,25 @@ constexpr auto canonical_slice([[maybe_unused]] Slice s)
   else if constexpr (std::is_convertible_v<Slice, IndexType>) {
     return canonical_index<IndexType>(std::move(s)); // canonical integer index
   }
-  else if constexpr (is_strided_slice<Slice>::value) {
+  else if constexpr (is_extent_slice<Slice>::value) {
     // Canonicalize each component of the strided_slice
     auto offset = canonical_index<IndexType>(s.offset);
     auto extent = canonical_index<IndexType>(s.extent);
     auto stride = canonical_index<IndexType>(s.stride);
-    return strided_slice<decltype(offset), decltype(extent), decltype(stride)>{
+    return extent_slice<decltype(offset), decltype(extent), decltype(stride)>{
       /* .offset = */ offset,
       /* .extent = */ extent,
       /* .stride = */ stride
     };
+  }
+  else if constexpr (is_range_slice<Slice>::value) {
+    auto c_first = canonical_index<IndexType>(std::move(s.first));
+    auto c_last = canonical_index<IndexType>(std::move(s.last));
+    return canonical_range_slice<IndexType>(
+      c_first,
+      subtract_ice<IndexType>(c_first, c_last),
+      canonical_index<IndexType>(std::move(s.stride))
+    );
   } else {
     // General pair-like case: structured binding into [first, last)
     auto [s_k0, s_k1] = std::move(s);
@@ -312,7 +430,7 @@ constexpr auto canonical_slice([[maybe_unused]] Slice s)
     auto offset = canonical_index<IndexType>(s_k0);
     auto extent = subtract_ice<IndexType>(s_k0, s_k1);
     auto stride = cw<IndexType(1)>;
-    return strided_slice<decltype(offset), decltype(extent), decltype(stride)>{
+    return extent_slice<decltype(offset), decltype(extent), decltype(stride)>{
       /* .offset = */ offset,
       /* .extent = */ extent,
       /* .stride = */ stride
@@ -361,7 +479,7 @@ constexpr auto canonical_slices_impl(
 // Each canonical slice is one of:
 //   - full_extent_t (for full-extent slices)
 //   - IndexType (for integer index slices)
-//   - strided_slice<...> (for range and strided-range slices)
+//   - extent_slice<...> (for range and strided-range slices)
 // ============================================================
 
 MDSPAN_TEMPLATE_REQUIRES(
