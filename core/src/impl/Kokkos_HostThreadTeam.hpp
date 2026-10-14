@@ -828,8 +828,10 @@ KOKKOS_INLINE_FUNCTION
 KOKKOS_INLINE_FUNCTION
 void parallel_reduce
   (
-Impl::TeamThreadRangeBoundariesStruct<iType,Impl::HostThreadTeamMember<Space>
-> const & loop_boundaries , Closure  const & closure , Joiner   const & joiner
+Impl::TeamThreadRangeBoundariesStruct<iType,Impl::HostThreadTeamMember<Space> >
+             const & loop_boundaries
+  , Closure  const & closure
+  , Joiner   const & joiner
   , ValueType      & result
   )
 {
