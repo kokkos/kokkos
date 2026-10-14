@@ -77,9 +77,7 @@ class ImplRangePolicy<ExecSpace, Properties...>
   using member_type      = typename traits::index_type;
   using index_type       = typename traits::index_type;
 
-  KOKKOS_INLINE_FUNCTION const typename traits::execution_space& space() const {
-    return m_space;
-  }
+  const typename traits::execution_space& space() const { return m_space; }
   KOKKOS_INLINE_FUNCTION member_type begin() const { return m_begin; }
   KOKKOS_INLINE_FUNCTION member_type end() const { return m_end; }
 
