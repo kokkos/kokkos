@@ -436,7 +436,9 @@ struct MDRangePolicy<P, Properties...>
         Kokkos::abort(msg.c_str());
       }
 
-      flat_extent_type cur_range = this->m_upper[i] - this->m_lower[i];
+      flat_extent_type cur_range =
+          static_cast<flat_extent_type>(this->m_upper[i]) -
+          static_cast<flat_extent_type>(this->m_lower[i]);
 
       bool overflow_happened = Impl::multiply_overflow(
           total_flat_extent, cur_range, total_flat_extent);
