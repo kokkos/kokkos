@@ -440,7 +440,10 @@ struct ViewTraits {
   using host_mirror_space = HostMirrorSpace;
   using hooks_policy      = HooksPolicy;
 
-  using size_type = typename MemorySpace::size_type;
+  // ViewTraits doesn't know about extents etc. so this may differ
+  // from View::size_type. Likely we need to deprecate ViewTraits as
+  // a public class.
+  using size_type = size_t;
 
   static constexpr bool impl_is_customized =
       !std::is_same_v<void,
