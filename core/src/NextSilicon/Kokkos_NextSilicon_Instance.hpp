@@ -5,6 +5,7 @@
 #define KOKKOS_NEXTSILICON_INSTANCE_HPP
 
 #include <impl/Kokkos_HostSharedPtr.hpp>
+#include <impl/Kokkos_SharedAlloc.hpp>
 
 #include <cstdint>
 #include <cstddef>
@@ -45,6 +46,9 @@ class NextSiliconInternal {
     auto deleter        = [](Driver* const p) {
       if (p) p->~Driver();
     };
+    // Copy the functor with tracking disabled, as Kokkos::parallel_* do
+    [[maybe_unused]] auto guard =
+        Kokkos::Impl::SharedAllocationDisableTrackingGuard{};
     return std::unique_ptr<Driver, decltype(deleter)>(
         new (buffer) Driver(driver), deleter);
   }
