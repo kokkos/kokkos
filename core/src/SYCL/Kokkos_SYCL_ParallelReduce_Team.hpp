@@ -73,10 +73,17 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
       const FunctorType& functor = functor_reducer.get_functor();
       const ReducerType& reducer = functor_reducer.get_reducer();
 
+// FIXME_SYCL_OUT_OF_ORDER_QUEUES
+#ifdef KOKKOS_ENABLE_IMPL_SYCL_OUT_OF_ORDER_QUEUES
+      (void)scratch_locks;
+      (void)num_scratch_locks;
+      size_t threadid = item.get_group(1);
+#else
       size_t threadid = 0;
       if (scratch_size[1] > 0)
         threadid =
             sycl_get_scratch_index(item, scratch_locks, num_scratch_locks);
+#endif
 
       if constexpr (!SYCLReduction::use_shuffle_based_algorithm<ReducerType>) {
         reference_type update =
@@ -180,8 +187,10 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
                        item.get_local_range()[0] * item.get_local_range()[1]));
         }
       }
+#ifndef KOKKOS_ENABLE_IMPL_SYCL_OUT_OF_ORDER_QUEUES
       if (scratch_size[1] > 0)
         sycl_release_scratch_index(item, scratch_locks, threadid);
+#endif
     };
     return lambda;
   }
@@ -419,11 +428,16 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
     const sycl::global_ptr<char> global_scratch_ptr =
         static_cast<sycl::global_ptr<char>>(instance.resize_team_scratch_space(
             scratch_pool_id,
+#ifdef KOKKOS_ENABLE_IMPL_SYCL_OUT_OF_ORDER_QUEUES
+            static_cast<ptrdiff_t>(m_scratch_size[1]) * m_league_size
+#else
             m_scratch_size[1] *
                 std::min<ptrdiff_t>(
                     instance.m_num_scratch_locks /
                         static_cast<size_t>(m_team_size * m_vector_size),
-                    m_league_size)));
+                    m_league_size)
+#endif
+            ));
 
     using IndirectKernelMem = Kokkos::Impl::SYCLInternal::IndirectKernelMem;
     IndirectKernelMem& indirectKernelMem = instance.get_indirect_kernel_mem();

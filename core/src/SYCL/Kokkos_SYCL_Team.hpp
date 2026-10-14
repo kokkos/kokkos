@@ -989,6 +989,8 @@ void single(const Impl::ThreadSingleStruct<Impl::SYCLTeamMember>& single_struct,
   single_struct.team_member.team_broadcast(val, 0);
 }
 
+// FIXME_SYCL_OUT_OF_ORDER_QUEUES
+#ifndef KOKKOS_ENABLE_IMPL_SYCL_OUT_OF_ORDER_QUEUES
 namespace Impl {
 
 inline size_t sycl_get_scratch_index(sycl::nd_item<2> item,
@@ -1029,6 +1031,7 @@ inline void sycl_release_scratch_index(sycl::nd_item<2> item,
 }
 
 }  // namespace Impl
+#endif
 
 }  // namespace Kokkos
 
