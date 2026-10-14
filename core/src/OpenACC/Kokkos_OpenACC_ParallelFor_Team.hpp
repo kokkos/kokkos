@@ -59,8 +59,6 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
         loop_boundaries,
     const Lambda& lambda) {
   using thread_handle_t = Impl::ThreadHandleType<Impl::OpenACCTeamMember>;
-  [[maybe_unused]] auto const thread_handle =
-      thread_handle_t(loop_boundaries.member);
 
   iType j_start = loop_boundaries.member.team_rank() /
                   loop_boundaries.member.vector_length();
@@ -73,7 +71,7 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
         lambda(j);
       } else if constexpr (std::is_invocable_v<Lambda, thread_handle_t const&,
                                                iType>) {
-        lambda(thread_handle, j);
+        lambda(thread_handle_t(loop_boundaries.member), j);
       } else {
         static_assert(Kokkos::Impl::always_false<Lambda>::value,
                       "Kokkos::parallel_for(TeamThreadRange) closure must be "
