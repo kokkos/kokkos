@@ -37,7 +37,7 @@ namespace detail {
 
 // Slice Specifier allowing for strides and compile time extent
 template <class OffsetType, class ExtentType, class StrideType>
-struct strided_slice {
+struct extent_slice {
   using offset_type = OffsetType;
   using extent_type = ExtentType;
   using stride_type = StrideType;
@@ -48,6 +48,17 @@ struct strided_slice {
 
   static_assert(detail::mdspan_is_index_like_v<OffsetType>);
   static_assert(detail::mdspan_is_index_like_v<ExtentType>);
+  static_assert(detail::mdspan_is_index_like_v<StrideType>);
+};
+
+template<class FirstType, class LastType, class StrideType = detail::constant_wrapper<size_t(1)>>
+struct range_slice {
+  MDSPAN_IMPL_NO_UNIQUE_ADDRESS FirstType first{};
+  MDSPAN_IMPL_NO_UNIQUE_ADDRESS LastType last{};
+  MDSPAN_IMPL_NO_UNIQUE_ADDRESS StrideType stride{};
+
+  static_assert(detail::mdspan_is_index_like_v<FirstType>);
+  static_assert(detail::mdspan_is_index_like_v<LastType>);
   static_assert(detail::mdspan_is_index_like_v<StrideType>);
 };
 
