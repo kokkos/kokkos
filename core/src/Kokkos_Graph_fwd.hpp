@@ -28,6 +28,7 @@ enum class GraphNodeKind : std::uint8_t {
   Aggregate,
   Host,
   Capture,
+  Native
 };
 
 template <Kokkos::ExecutionSpace ExecutionSpace, class Kernel = TypeErasedTag,

@@ -171,4 +171,68 @@ TEST(TEST_CATEGORY, interact_with_hip_node) {
   ASSERT_EQ(data(), 2);
 }
 
+template <typename ViewType>
+struct CheckValue {
+  typename ViewType::const_type data;
+  typename ViewType::non_const_value_type value;
+
+  KOKKOS_FUNCTION
+  void operator()() const {
+    if (data() != value) Kokkos::abort("Wrong value.");
+  }
+};
+
+template <typename ViewType>
+struct CustomHIPNode {
+  typename ViewType::const_type data;
+
+  auto operator()() const noexcept {
+    hipGraphNodeParams params = {};
+    params.type               = hipGraphNodeTypeMemset;
+    params.memset.dst =
+        const_cast<void*>(static_cast<const void*>(this->data.data()));
+    params.memset.pitch       = 0;
+    params.memset.value       = 42;
+    params.memset.elementSize = 4;
+    params.memset.width       = 1;
+    params.memset.height      = 1;
+    return params;
+  }
+};
+
+// Add a HIP memset node using the HIP graph node interoperability
+// feature.
+TEST(TEST_CATEGORY, graph_then_hip_node) {
+  const Kokkos::HIP exec{};
+
+  using view_t = Kokkos::View<int, Kokkos::HIPManagedSpace>;
+
+  const view_t data(Kokkos::view_alloc(exec, "witness"));
+
+  Kokkos::Experimental::Graph graph_with_hip_node{
+      Kokkos::Experimental::get_device_handle(exec)};
+
+  const auto node_check_zero = graph_with_hip_node.root_node().then(
+      Kokkos::Experimental::node_props("check it is zero"),
+      CheckValue<view_t>{.data = data, .value = 0});
+
+  ASSERT_EQ(data.use_count(), 2);
+  const auto node_memset = node_check_zero.then_hip_node(
+      Kokkos::Experimental::node_props("nice interop"),
+      CustomHIPNode<view_t>{.data = data});
+  ASSERT_EQ(data.use_count(), 3);
+
+  ASSERT_EQ(node_memset.get_node_kind(),
+            Kokkos::Experimental::GraphNodeKind::Native);
+
+  const auto node_incr = node_memset.then_parallel_for(
+      Kokkos::RangePolicy(exec, 0, 1), Increment{.data = data});
+
+  graph_with_hip_node.submit(exec);
+
+  exec.fence();
+
+  ASSERT_EQ(data(), 43);
+}
+
 }  // namespace

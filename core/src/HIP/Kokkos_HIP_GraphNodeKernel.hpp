@@ -6,12 +6,14 @@
 
 #include <Kokkos_Graph_fwd.hpp>
 
+#include <impl/Kokkos_DeviceHandle.hpp>
 #include <impl/Kokkos_GraphImpl.hpp>
 
 #include <Kokkos_Parallel.hpp>
 #include <Kokkos_Parallel_Reduce.hpp>
 
 #include <HIP/Kokkos_HIP_GraphNode_Impl.hpp>
+#include <HIP/Kokkos_HIP_Instance.hpp>
 
 namespace Kokkos {
 namespace Impl {
@@ -35,6 +37,24 @@ struct GraphNodeThenHostImpl<Kokkos::HIP, Functor> {
 
     KOKKOS_IMPL_HIP_SAFE_CALL(
         hipGraphAddHostNode(&m_node, graph, nullptr, 0, &params));
+  }
+};
+
+template <typename Functor>
+struct GraphNodeThenNativeImpl<Kokkos::HIP, Functor> {
+  Functor m_functor;
+  hipGraphNode_t m_node = nullptr;
+
+  explicit GraphNodeThenNativeImpl(Functor functor)
+      : m_functor(std::move(functor)) {}
+
+  void add_to_graph(
+      const Kokkos::Impl::DeviceHandle<Kokkos::HIP>& device_handle,
+      hipGraph_t graph) {
+    hipGraphNodeParams params = m_functor();
+    KOKKOS_IMPL_HIP_SAFE_CALL(
+        device_handle.m_exec.impl_internal_space_instance()
+            ->hip_graph_add_node_wrapper(&m_node, graph, nullptr, 0, &params));
   }
 };
 
