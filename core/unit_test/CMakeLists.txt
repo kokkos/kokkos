@@ -872,6 +872,7 @@ set(DEFAULT_DEVICE_SOURCES
     default/TestDefaultDeviceType_a3.cpp
     default/TestDefaultDeviceType_b3.cpp
     default/TestDefaultDeviceType_c3.cpp
+    default/TestDefaultDeviceType_KernelShape.cpp
     default/TestDefaultDeviceTypeResize.cpp
     default/TestDefaultDeviceTypeViewAPI.cpp
 )
@@ -901,6 +902,7 @@ if(KOKKOS_ENABLE_NEXTSILICON)
     default/TestDefaultDeviceType_a3.cpp
     default/TestDefaultDeviceType_b3.cpp
     default/TestDefaultDeviceType_c3.cpp
+    default/TestDefaultDeviceType_KernelShape.cpp
   )
 endif()
 
