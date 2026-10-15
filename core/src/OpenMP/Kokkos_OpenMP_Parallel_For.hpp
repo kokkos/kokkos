@@ -7,6 +7,7 @@
 #include <omp.h>
 #include <OpenMP/Kokkos_OpenMP_Instance.hpp>
 #include <KokkosExp_MDRangePolicy.hpp>
+#include <MDRange/Kokkos_FlatIterate.hpp>
 #include <sstream>
 
 //----------------------------------------------------------------------------
@@ -138,6 +139,117 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::OpenMP> {
 };
 
 // MDRangePolicy impl
+template <class MDRP, class Functor, class Tag>
+  requires std::same_as<typename MDRP::execution_space, Kokkos::OpenMP>
+class FlatIterate<MDRP, Functor, Tag> {
+ public:
+  using range_policy         = typename MDRP::impl_range_policy;
+  using index_type           = typename range_policy::index_type;
+  using iteration_pattern    = typename MDRP::iteration_pattern;
+  using point_type           = typename MDRP::point_type;
+  static constexpr auto rank = MDRP::rank;
+
+  FlatIterate(const MDRP& mdrp, const Functor& fun)
+      : m_md_range_policy(mdrp), m_functor(fun) {}
+
+  void exec(Static) const {
+    if constexpr (iteration_pattern::inner_direction == Iterate::Right) {
+      exec_rank(std::make_integer_sequence<int, rank>{}, m_tag, Static{});
+    } else {
+      exec_rank(make_reverse_integer_sequence<int, rank>{}, m_tag, Static{});
+    }
+  }
+
+  const MDRP& policy() const noexcept { return m_md_range_policy; }
+
+ private:
+  struct NoTag {};
+
+  void apply_to_functor(const point_type& point, NoTag) const {
+    apply(m_functor, point);
+  }
+
+  template<typename AnyTag>
+  void apply_to_functor(const point_type& point, AnyTag tag) const {
+    apply(
+        [tag, this]<typename... Args>(Args&&... args) {
+          m_functor(tag, std::forward<Args>(args)...);
+        },
+        point);
+  }
+
+
+  template <int R1, class TagOrNoTag>
+  void exec_rank(std::integer_sequence< int, R1>, TagOrNoTag tag, Static) const {
+    point_type p;
+    using array_index_type = typename MDRP::array_index_type;
+    #pragma omp parallel for schedule(static, 1) firstprivate(p)
+    for ( array_index_type i = m_md_range_policy.m_lower[R1];
+          i < m_md_range_policy.m_upper[R1]; ++i) {
+      p[R1] = i;
+      apply_to_functor(p, tag);
+    }
+  }
+
+
+  template <int R1, int R2, class TagOrNoTag>
+  void exec_rank(std::integer_sequence< int, R1, R2>, TagOrNoTag tag, Static) const {
+    point_type p;
+    using array_index_type = typename MDRP::array_index_type;
+    #pragma omp parallel for schedule(static, 1) collapse(2) firstprivate(p)
+    for (array_index_type i = m_md_range_policy.m_lower[R1];
+         i < m_md_range_policy.m_upper[R1]; ++i) {
+      for (array_index_type j = m_md_range_policy.m_lower[R2];
+           j < m_md_range_policy.m_upper[R2]; ++j) {
+        p[R1] = i;
+        p[R2] = j;
+        apply_to_functor(p, tag);
+      }
+    }
+  }
+
+  template <int R1, int R2, int R3, class TagOrNoTag, int... Rs>
+  void exec_rank(std::integer_sequence< int, R1, R2, R3, Rs...>, TagOrNoTag tag, Static) const {
+    point_type p;
+    using array_index_type = typename MDRP::array_index_type;
+    #pragma omp parallel for schedule(static, 1) collapse(3) firstprivate(p)
+    for (array_index_type i = m_md_range_policy.m_lower[R1];
+         i < m_md_range_policy.m_upper[R1]; ++i) {
+      for (array_index_type j = m_md_range_policy.m_lower[R2];
+           j < m_md_range_policy.m_upper[R2]; ++j) {
+        for (array_index_type k = m_md_range_policy.m_lower[R3];
+             k < m_md_range_policy.m_upper[R3]; ++k) {
+          p[R1] = i;
+          p[R2] = j;
+          p[R3] = k;
+          exec_rank_nested(std::integer_sequence< int, Rs... >{}, p, tag);
+        }
+      }
+    }
+  }
+
+  template <class TagOrNoTag>
+  void exec_rank_nested(std::integer_sequence<int>, point_type& point, TagOrNoTag tag) const {
+    apply_to_functor(point, tag);
+  }
+
+  template <int Rank, int... RemRanks, class TagOrNoTag>
+  void exec_rank_nested(std::integer_sequence<int, Rank, RemRanks...>,
+                 point_type& point, TagOrNoTag tag) const {
+    using array_index_type = typename MDRP::array_index_type;
+    for (array_index_type i = m_md_range_policy.m_lower[Rank];
+         i < m_md_range_policy.m_upper[Rank]; ++i) {
+      point[Rank] = i;
+      exec_rank_nested(std::integer_sequence<int, RemRanks...>{}, point,
+                tag);
+    }
+  }
+
+  const MDRP m_md_range_policy;
+  const Functor m_functor;
+  static constexpr std::conditional_t<std::is_void_v<Tag>, NoTag, Tag> m_tag{};
+};
+
 template <class FunctorType, class... Traits>
 class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
                   Kokkos::OpenMP> {
@@ -149,18 +261,19 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   using Member = typename Policy::member_type;
 
   using index_type   = typename Policy::index_type;
-  using iterate_type = typename Kokkos::Impl::HostIterateTile<
-      MDRangePolicy, FunctorType, typename MDRangePolicy::work_tag, void>;
+  //using iterate_type = typename Kokkos::Impl::HostIterateTile<
+  //    MDRangePolicy, FunctorType, typename MDRangePolicy::work_tag, void>;
+  using iterate_type = FlatIterate<MDRangePolicy, FunctorType, typename MDRangePolicy::work_tag>;
 
   OpenMPInternal* m_instance;
   const iterate_type m_iter;
 
-  inline void exec_range(const Member ibeg, const Member iend) const {
-    KOKKOS_PRAGMA_IVDEP_IF_ENABLED
-    for (Member iwork = ibeg; iwork < iend; ++iwork) {
-      m_iter(iwork);
-    }
-  }
+  //inline void exec_range(const Member ibeg, const Member iend) const {
+  //  KOKKOS_PRAGMA_IVDEP_IF_ENABLED
+  //  for (Member iwork = ibeg; iwork < iend; ++iwork) {
+  //    m_iter(iwork);
+  //  }
+  //}
 
   template <class Policy>
   typename std::enable_if_t<
@@ -191,41 +304,14 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     // Serialize kernels on the same execution space instance
     std::lock_guard<std::mutex> lock(m_instance->m_instance_mutex);
 
-    if (execute_in_serial(m_iter.m_rp.space())) {
-      exec_range(0, m_iter.m_rp.m_num_tiles);
+    if (execute_in_serial(m_iter.policy().space())) {
+      m_iter.exec(Static{});
+      //exec_range(0, m_iter.m_rp.m_num_tiles);
       return;
     }
 
-#ifndef KOKKOS_INTERNAL_DISABLE_NATIVE_OPENMP
-    execute_parallel<Policy>();
-#else
-    constexpr bool is_dynamic =
-        std::is_same<typename Policy::schedule_type::type,
-                     Kokkos::Dynamic>::value;
-
-#pragma omp parallel num_threads(m_instance->thread_pool_size())
-    {
-      HostThreadTeamData& data = *(m_instance->get_thread_data());
-
-      data.set_work_partition(m_iter.m_rp.m_num_tiles, 1);
-
-      if (is_dynamic) {
-        // Make sure work partition is set before stealing
-        if (data.pool_rendezvous()) data.pool_rendezvous_release();
-      }
-
-      std::pair<int64_t, int64_t> range(0, 0);
-
-      do {
-        range = is_dynamic ? data.get_work_stealing_chunk()
-                           : data.get_work_partition();
-
-        exec_range(range.first, range.second);
-
-      } while (is_dynamic && 0 <= range.first);
-    }
-    // END #pragma omp parallel
-#endif
+    m_iter.exec(Static{});
+    //execute_parallel<Policy>();
   }
 
   inline ParallelFor(const FunctorType& arg_functor, MDRangePolicy arg_policy)
