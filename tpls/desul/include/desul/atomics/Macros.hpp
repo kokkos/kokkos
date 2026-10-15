@@ -190,8 +190,15 @@ static constexpr bool desul_impl_omp_on_host() { return false; }
   template <class T, class MemoryOrder, class MemoryScope>                            \
   ANNOTATION T HOST_OR_DEVICE##_atomic_load(                                          \
       const T* const dest, MemoryOrder order, MemoryScope scope) {                    \
-    return HOST_OR_DEVICE##_atomic_fetch_oper(                                        \
-        _load_fetch_operator<T, const T>(), const_cast<T*>(dest), T(), order, scope); \
+    if constexpr (HOST_OR_DEVICE##_atomic_always_lock_free<T>) {                      \
+      return HOST_OR_DEVICE##_atomic_compare_exchange(                                \
+          const_cast<T*>(dest), T(), T(),                                             \
+          cmpexch_failure_memory_order<MemoryOrder>{}, scope);                        \
+    } else {                                                                          \
+      return HOST_OR_DEVICE##_atomic_fetch_oper(                                      \
+          _load_fetch_operator<T, const T>(), const_cast<T*>(dest), T(), order,       \
+          scope);                                                                     \
+    }                                                                                 \
   }                                                                                   \
                                                                                       \
   template <class T, class MemoryOrder, class MemoryScope>                            \
