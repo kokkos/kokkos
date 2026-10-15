@@ -582,6 +582,7 @@ if(Kokkos_ENABLE_HPX)
     hpx/TestHPX_IndependentInstancesInstanceIds.cpp
     hpx/TestHPX_IndependentInstancesRefCounting.cpp
     hpx/TestHPX_IndependentInstancesSynchronization.cpp
+    hpx/TestHPX_IndependentInstancesViewAlloc.cpp
   )
 endif()
 
