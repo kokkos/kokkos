@@ -12,6 +12,15 @@ template <class ExecSpace>
 using float_tensor4_t = Kokkos::View<float[4][4][4][16], ExecSpace>;
 
 template <class Handle, class X>
+  requires(X::rank == 1)
+KOKKOS_INLINE_FUNCTION void sum_views(const Handle& handle, const X& x,
+                                      const float c) {
+  Kokkos::parallel_for(
+      Kokkos::RangePolicy(handle, 0, x.extent_int(0)),
+      KOKKOS_LAMBDA(const int i) { x(i) += c; });
+}
+
+template <class Handle, class X>
   requires(X::rank == 2)
 KOKKOS_INLINE_FUNCTION void sum_views(const Handle& handle, const X& x,
                                       const float c) {
@@ -205,6 +214,46 @@ struct CheckRangePolicyWithConstructedThreadHandleInSingle {
         M, 5.f, "check_range_policy_with_constructed_thread_handle_in_single");
   }
 };
+
+template <class ExecSpace>
+struct CheckRangePolicyWithInlineHandle {
+  void operator()() const {
+    float_tensor4_t<ExecSpace> M("M");
+    Kokkos::deep_copy(M, 0.f);
+
+    using team_t          = team_member_t<ExecSpace>;
+    using thread_handle   = typename team_t::thread_handle;
+    using inline_handle   = typename thread_handle::inline_handle;
+    const int num_leagues = M.extent_int(0);
+    const int num_threads = M.extent_int(1);
+    const int num_vectors = M.extent_int(2);
+    Kokkos::parallel_for(
+        "check_range_policy_with_inline_handle",
+        Kokkos::TeamPolicy<ExecSpace>(num_leagues, Kokkos::AUTO()),
+        KOKKOS_LAMBDA(const team_t& team) {
+          auto M_sub = Kokkos::subview(M, team.league_rank(), Kokkos::ALL(),
+                                       Kokkos::ALL(), Kokkos::ALL());
+          // TeamThreadRange(team, num_threads) with (thread_handle, i).
+          Kokkos::parallel_for(
+              Kokkos::TeamThreadRange(team, num_threads),
+              [&](const thread_handle& th, int i) {
+                auto M_sub_sub =
+                    Kokkos::subview(M_sub, i, Kokkos::ALL(), Kokkos::ALL());
+                // RangePolicy(inline_handle, ...) runs serially within the
+                // thread. The innermost sum_views is also an inline range.
+                Kokkos::parallel_for(
+                    Kokkos::RangePolicy(inline_handle(th), 0, num_vectors),
+                    [&](int j) {
+                      auto M_sub_sub_sub =
+                          Kokkos::subview(M_sub_sub, j, Kokkos::ALL());
+                      sum_views(inline_handle(th), M_sub_sub_sub, 6.f);
+                    });
+              });
+        });
+
+    verify<ExecSpace>(M, 6.f, "check_range_policy_with_inline_handle");
+  }
+};
 }  // namespace
 
 TEST(TEST_CATEGORY, self_similar_range_policy_with_execution_space) {
@@ -226,4 +275,8 @@ TEST(TEST_CATEGORY, self_similar_range_policy_with_constructed_thread_handle) {
 TEST(TEST_CATEGORY,
      self_similar_range_policy_with_constructed_thread_handle_in_single) {
   CheckRangePolicyWithConstructedThreadHandleInSingle<TEST_EXECSPACE>{}();
+}
+
+TEST(TEST_CATEGORY, self_similar_range_policy_with_inline_handle) {
+  CheckRangePolicyWithInlineHandle<TEST_EXECSPACE>{}();
 }
