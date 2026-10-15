@@ -136,13 +136,11 @@ struct TeamThreadMDRangeStencil {
       : A(A_), B(B_), ranges(dims) {}
 
   auto get_policy(int league_size) {
-    int team_size_max =
-        team_policy(league_size, 1, team_policy::vector_length_max())
-            .team_size_max(*this, Kokkos::ParallelForTag{});
+    int team_size_max = team_policy(league_size, 1)
+                            .team_size_max(*this, Kokkos::ParallelForTag{});
     int team_size = std::min(32, team_size_max);
 
-    return team_policy(league_size, team_size,
-                       team_policy::vector_length_max());
+    return team_policy(league_size, team_size);
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -328,19 +326,25 @@ struct ThreadVectorMDRangeStencil {
   view_type B;
   const Kokkos::Array<int, dimension> ranges;
 
+  int team_thread_size = 16;
+
   ThreadVectorMDRangeStencil(const view_type& A_, const view_type& B_,
                              const Kokkos::Array<int, dimension>& dims)
       : A(A_), B(B_), ranges(dims) {}
 
   auto get_policy(int league_size) {
-    assert(league_size % 32 == 0);
+    if (league_size % team_thread_size != 0) {
+      Kokkos::abort(
+          "League size must be divisible by TeamThreadRange dimension for "
+          "ThreadVectorMDRangeStencil.");
+    }
 
-    int team_size_max =
-        team_policy(league_size / 32, 1, team_policy::vector_length_max())
-            .team_size_max(*this, Kokkos::ParallelForTag{});
+    int team_size_max = team_policy(league_size / team_thread_size, 1,
+                                    team_policy::vector_length_max())
+                            .team_size_max(*this, Kokkos::ParallelForTag{});
     int team_size = std::min(32, team_size_max);
 
-    return team_policy(league_size / 32, team_size,
+    return team_policy(league_size / team_thread_size, team_size,
                        team_policy::vector_length_max());
   }
 
@@ -350,9 +354,9 @@ struct ThreadVectorMDRangeStencil {
   {
     const int league_rank = team.league_rank();
 
-    auto team_thread_range = Kokkos::TeamThreadRange(team, 32);
+    auto team_thread_range = Kokkos::TeamThreadRange(team, team_thread_size);
     Kokkos::parallel_for(team_thread_range, [=, this](int i0) {
-      const auto i = league_rank * 32 + i0 + 1;
+      const auto i = league_rank * team_thread_size + i0 + 1;
 
       auto vector_range = thread_vector_mdrange(team, ranges[0], ranges[1]);
       Kokkos::parallel_for(vector_range, [=, this](int i1, int i2) {
@@ -372,9 +376,9 @@ struct ThreadVectorMDRangeStencil {
   {
     const int league_rank = team.league_rank();
 
-    auto team_thread_range = Kokkos::TeamThreadRange(team, 32);
+    auto team_thread_range = Kokkos::TeamThreadRange(team, team_thread_size);
     Kokkos::parallel_for(team_thread_range, [=, this](int i0) {
-      const auto i = league_rank * 32 + i0 + 1;
+      const auto i = league_rank * team_thread_size + i0 + 1;
 
       auto vector_range =
           thread_vector_mdrange(team, ranges[0], ranges[1], ranges[2]);
@@ -398,9 +402,9 @@ struct ThreadVectorMDRangeStencil {
   {
     const int league_rank = team.league_rank();
 
-    auto team_thread_range = Kokkos::TeamThreadRange(team, 32);
+    auto team_thread_range = Kokkos::TeamThreadRange(team, team_thread_size);
     Kokkos::parallel_for(team_thread_range, [=, this](int i0) {
-      const auto i = league_rank * 32 + i0 + 1;
+      const auto i = league_rank * team_thread_size + i0 + 1;
 
       auto vector_range = thread_vector_mdrange(team, ranges[0], ranges[1],
                                                 ranges[2], ranges[3]);
@@ -479,23 +483,12 @@ void bench_team_mdrange(benchmark::State& state) {
 #define LEAGUE_SIZES \
   { 256 }
 
-#ifdef KOKKOS_ENABLE_BENCHMARKS_HEAVY
-// Enable the full dim sizes in the case of heavy benchmarks enables
 #define SIZES_2D \
   { 256, 512, 1024 }
 #define SIZES_3D \
   { 32, 64, 128 }
 #define SIZES_4D \
   { 8, 16, 32 }
-#else
-// Restrict to smallest dim size for non-heavy benchmarks
-#define SIZES_2D \
-  { 256 }
-#define SIZES_3D \
-  { 32 }
-#define SIZES_4D \
-  { 8 }
-#endif  // #ifdef KOKKOS_ENABLE_BENCHMARKS_HEAVY
 
 TEAM_MDRANGE_STENCIL_BENCHMARK(TeamThreadMDRangeStencil, 2, bench_team_mdrange,
                                LEAGUE_SIZES, SIZES_2D)
