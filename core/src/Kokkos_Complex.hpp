@@ -693,7 +693,14 @@ KOKKOS_INLINE_FUNCTION Kokkos::complex<RealType> cos(
 template <class RealType>
 KOKKOS_INLINE_FUNCTION Kokkos::complex<RealType> tan(
     const complex<RealType>& x) {
-  return sin(x) / cos(x);
+  // Scale by 1/cosh(imag(x)) without forming overflowing hyperbolic functions.
+  const RealType e = exp(-fabs(x.imag()));
+  const RealType h = RealType(2) * e / (RealType(1) + e * e);
+  const RealType t = tanh(x.imag());
+  const RealType c = cos(x.real()) * h;
+  const RealType s = sin(x.real()) * h;
+  const RealType d = c * c + t * t;
+  return Kokkos::complex<RealType>(s * c / d, t / d);
 }
 
 //! hyperbolic sine of a complex number.
@@ -716,7 +723,9 @@ KOKKOS_INLINE_FUNCTION Kokkos::complex<RealType> cosh(
 template <class RealType>
 KOKKOS_INLINE_FUNCTION Kokkos::complex<RealType> tanh(
     const complex<RealType>& x) {
-  return sinh(x) / cosh(x);
+  const Kokkos::complex<RealType> t =
+      tan(Kokkos::complex<RealType>(-x.imag(), x.real()));
+  return Kokkos::complex<RealType>(t.imag(), -t.real());
 }
 
 //! inverse hyperbolic sine of a complex number.

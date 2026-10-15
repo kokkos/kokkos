@@ -401,6 +401,48 @@ TEST(TEST_CATEGORY, complex_special_funtions) {
   test.testit();
 }
 
+template <class ExecSpace, class RealType>
+void testComplexTanLargeArguments() {
+  const RealType large    = sizeof(RealType) == sizeof(float) ? 100 : 1000;
+  const RealType moderate = sizeof(RealType) == sizeof(float) ? 40 : 350;
+  const Kokkos::Array<RealType, 3> magnitudes = {
+      moderate, large, Kokkos::finite_max_v<RealType>};
+  Kokkos::View<Kokkos::complex<RealType> **, ExecSpace> results(
+      "TestComplexTanLargeArguments", 18, 2);
+  Kokkos::parallel_for(
+      Kokkos::RangePolicy<ExecSpace>(0, 18), KOKKOS_LAMBDA(int i) {
+        const RealType r  = (i % 2 == 0 ? 1 : -1) * magnitudes[i / 6];
+        const RealType im = RealType(i / 2 % 3 - 1) / 2;
+        results(i, 0)     = Kokkos::tanh(Kokkos::complex<RealType>(r, im));
+        results(i, 1)     = Kokkos::tan(Kokkos::complex<RealType>(im, r));
+      });
+  Kokkos::fence();
+  auto h_results =
+      Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), results);
+  for (int i = 0; i < 18; ++i) {
+    const RealType r  = (i % 2 == 0 ? 1 : -1) * magnitudes[i / 6];
+    const RealType im = RealType(i / 2 % 3 - 1) / 2;
+    SCOPED_TRACE(::testing::Message()
+                 << "input " << std::complex<RealType>(r, im)
+                 << ", sizeof(RealType) " << sizeof(RealType));
+    const std::complex<RealType> expected[] = {
+        std::tanh(std::complex<RealType>(r, im)),
+        std::tan(std::complex<RealType>(im, r))};
+    for (int j = 0; j < 2; ++j) {
+      const RealType tol = 8 * Kokkos::epsilon_v<RealType>;
+      EXPECT_NEAR(h_results(i, j).real(), expected[j].real(),
+                  tol * std::abs(expected[j].real()));
+      EXPECT_NEAR(h_results(i, j).imag(), expected[j].imag(),
+                  tol * std::abs(expected[j].imag()));
+    }
+  }
+}
+
+TEST(TEST_CATEGORY, complex_tan_large_arguments) {
+  testComplexTanLargeArguments<TEST_EXECSPACE, float>();
+  testComplexTanLargeArguments<TEST_EXECSPACE, double>();
+}
+
 TEST(TEST_CATEGORY, complex_io) { testComplexIO(); }
 
 static_assert(std::is_trivially_copyable_v<Kokkos::complex<float>>);
