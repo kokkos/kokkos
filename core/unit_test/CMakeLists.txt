@@ -644,53 +644,39 @@ if(Kokkos_ENABLE_CUDA)
     CoreUnitTest_CudaInterOpGraphMultiGPU SOURCES UnitTestMainInit.cpp cuda/TestCuda_InterOp_GraphMultiGPU.cpp
   )
 
-  # This CUDA interop test is the only thing in the tree that needs CUPTI.
-  #
-  # FindCUDAToolkit already ran in cmake/Modules/FindTPLCUDA.cmake, and it has
-  # provided CUDA::cupti since CMake 3.17. The catch is the include path:
-  # cupti.h lives in extras/CUPTI/include, which is not on the normal CUDA
-  # include path, and CMake only started locating it (as
-  # CUDAToolkit_CUPTI_INCLUDE_DIR) and attaching it to the target in 3.24. We
-  # support CMake back to 3.22, so 3.22 and 3.23 need the manual search below,
-  # as does any toolkit layout CMake does not fully describe.
-  # https://cmake.org/cmake/help/latest/module/FindCUDAToolkit.html#cupti
-  set(KOKKOS_CUPTI_FOUND OFF)
-  if(TARGET CUDA::cupti AND CUDAToolkit_CUPTI_INCLUDE_DIR)
-    set(KOKKOS_CUPTI_FOUND ON)
-  else()
-    find_path(
-      KOKKOS_CUPTI_INCLUDE_DIR
-      NAMES cupti.h
-      HINTS "${CUDAToolkit_ROOT}" "${CUDAToolkit_LIBRARY_ROOT}" ENV CUDA_HOME ENV CUDA_PATH
-      PATH_SUFFIXES extras/CUPTI/include include
-    )
-    find_library(
-      KOKKOS_CUPTI_LIBRARY
-      NAMES cupti
-      HINTS "${CUDAToolkit_ROOT}" "${CUDAToolkit_LIBRARY_ROOT}" ENV CUDA_HOME ENV CUDA_PATH
-      PATH_SUFFIXES extras/CUPTI/lib64 lib64 lib
-    )
-
-    if(KOKKOS_CUPTI_INCLUDE_DIR AND KOKKOS_CUPTI_LIBRARY)
-      set(KOKKOS_CUPTI_FOUND ON)
+  # The only test needing CUPTI. CMake 3.28+ is required for policy CMP0152.
+  if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.28)
+    # CUDA::cupti's library path can contain bin/../, which Ninja fails to
+    # resolve at link time, so link the resolved file and take only the
+    # include directories from the target.
+    # https://cmake.org/cmake/help/latest/module/FindCUDAToolkit.html#cupti
+    set(_cupti_real_location "")
+    if(TARGET CUDA::cupti)
+      get_target_property(_cupti_location CUDA::cupti IMPORTED_LOCATION)
+      if(_cupti_location)
+        cmake_policy(PUSH)
+        cmake_policy(SET CMP0152 NEW)
+        file(REAL_PATH "${_cupti_location}" _cupti_real_location)
+        cmake_policy(POP)
+      endif()
     endif()
-  endif()
 
-  if(KOKKOS_CUPTI_FOUND)
-    kokkos_add_executable_and_test(
-      CoreUnitTest_CudaCUPTILaunchRoute SOURCES UnitTestMainInit.cpp cuda/TestCuda_CUPTI_LaunchRoute.cpp
-    )
-
-    if(TARGET CUDA::cupti AND CUDAToolkit_CUPTI_INCLUDE_DIR)
-      target_link_libraries(Kokkos_CoreUnitTest_CudaCUPTILaunchRoute PRIVATE CUDA::cupti)
+    if(_cupti_real_location AND EXISTS "${_cupti_real_location}")
+      message(STATUS "Using CUPTI library: ${_cupti_real_location}")
+      kokkos_add_executable_and_test(
+        CoreUnitTest_CudaCUPTILaunchRoute SOURCES UnitTestMainInit.cpp cuda/TestCuda_CUPTI_LaunchRoute.cpp
+      )
+      target_include_directories(
+        Kokkos_CoreUnitTest_CudaCUPTILaunchRoute SYSTEM
+        PRIVATE "$<TARGET_PROPERTY:CUDA::cupti,INTERFACE_INCLUDE_DIRECTORIES>"
+      )
+      target_link_libraries(Kokkos_CoreUnitTest_CudaCUPTILaunchRoute PRIVATE "${_cupti_real_location}")
     else()
-      target_include_directories(Kokkos_CoreUnitTest_CudaCUPTILaunchRoute PRIVATE "${KOKKOS_CUPTI_INCLUDE_DIR}")
-      target_link_libraries(Kokkos_CoreUnitTest_CudaCUPTILaunchRoute PRIVATE "${KOKKOS_CUPTI_LIBRARY}")
+      message(STATUS "CUPTI not found; skipping CUDA launch-route test")
     endif()
-  else()
-    message(STATUS "CUPTI not found; skipping CUDA launch-route test")
+    unset(_cupti_location)
+    unset(_cupti_real_location)
   endif()
-  unset(KOKKOS_CUPTI_FOUND)
 endif()
 
 if(Kokkos_ENABLE_HIP)
