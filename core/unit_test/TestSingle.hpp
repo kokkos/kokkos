@@ -12,12 +12,12 @@ import kokkos.core;
 
 #include <KokkosTest_Utils.hpp>
 
-struct TimesTwoTag {};
+struct AssignTwoTag {};
 
 struct Functor {
   Kokkos::View<double, TEST_EXECSPACE> v;
-  KOKKOS_FUNCTION void operator()() const { v() *= 3; }
-  KOKKOS_FUNCTION void operator()(const TimesTwoTag) const { v() *= 2; }
+  KOKKOS_FUNCTION void operator()() const { v() = 3; }
+  KOKKOS_FUNCTION void operator()(const AssignTwoTag) const { v() = 2; }
 };
 
 struct TenTag {};
@@ -83,69 +83,68 @@ void test_single_policy() {
 // Test for the ParallelFor based API
 void test_no_output() {
   TEST_EXECSPACE exec_space;
-  double expected = 5;
 
-  Kokkos::View<double, TEST_EXECSPACE> v("v");
-  Kokkos::deep_copy(v, expected);
+  Kokkos::View<double, TEST_EXECSPACE> res("res");
+  Kokkos::deep_copy(res, 0);
 
-  Functor f{v};
+  Functor f{res};
 
   if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::DefaultExecutionSpace>) {
     // These tests use the default execution space, thus they should not be run
     // when TEST_EXECSPACE != Kokkos::DefaultExecutionSpace
 
     // Minimal
+    Kokkos::deep_copy(res, 0);
     Kokkos::single(f);
-    expected *= 3;
-    EXPECT_TRUE(KokkosTest::contains(exec_space, v, expected));
+    EXPECT_TRUE(KokkosTest::contains(exec_space, res, 3));
 
     // Minimal lambda
-    Kokkos::single(KOKKOS_LAMBDA() { v() += 2; });
-    expected += 2;
-    EXPECT_TRUE(KokkosTest::contains(exec_space, v, expected));
+    Kokkos::deep_copy(res, 0);
+    Kokkos::single(KOKKOS_LAMBDA() { res() = 5; });
+    EXPECT_TRUE(KokkosTest::contains(exec_space, res, 5));
 
     // +kernel_name
+    Kokkos::deep_copy(res, 0);
     Kokkos::single("single", f);
-    expected *= 3;
-    EXPECT_TRUE(KokkosTest::contains(exec_space, v, expected));
+    EXPECT_TRUE(KokkosTest::contains(exec_space, res, 3));
 
     // +WorkTag
-    Kokkos::single(Kokkos::SinglePolicy<TimesTwoTag>(), f);
-    expected *= 2;
-    EXPECT_TRUE(KokkosTest::contains(exec_space, v, expected));
+    Kokkos::deep_copy(res, 0);
+    Kokkos::single(Kokkos::SinglePolicy<AssignTwoTag>(), f);
+    EXPECT_TRUE(KokkosTest::contains(exec_space, res, 2));
 
     // +WorkTag +kernel_name
-    Kokkos::single("single+worktag", Kokkos::SinglePolicy<TimesTwoTag>(), f);
-    expected *= 2;
-    EXPECT_TRUE(KokkosTest::contains(exec_space, v, expected));
+    Kokkos::deep_copy(res, 0);
+    Kokkos::single("single+worktag", Kokkos::SinglePolicy<AssignTwoTag>(), f);
+    EXPECT_TRUE(KokkosTest::contains(exec_space, res, 2));
   }
 
   // +kernal_name +WorkTag +ExecSpace
+  Kokkos::deep_copy(res, 0);
   Kokkos::single("single+worktag+exec_space",
-                 Kokkos::SinglePolicy<TimesTwoTag, TEST_EXECSPACE>(), f);
-  expected *= 2;
-  EXPECT_TRUE(KokkosTest::contains(exec_space, v, expected));
+                 Kokkos::SinglePolicy<AssignTwoTag, TEST_EXECSPACE>(), f);
+  EXPECT_TRUE(KokkosTest::contains(exec_space, res, 2));
 
   // +WorkTag +ExecSpace
-  Kokkos::single(Kokkos::SinglePolicy<TimesTwoTag, TEST_EXECSPACE>(), f);
-  expected *= 2;
-  EXPECT_TRUE(KokkosTest::contains(exec_space, v, expected));
+  Kokkos::deep_copy(res, 0);
+  Kokkos::single(Kokkos::SinglePolicy<AssignTwoTag, TEST_EXECSPACE>(), f);
+  EXPECT_TRUE(KokkosTest::contains(exec_space, res, 2));
 
   // +ExecSpace
+  Kokkos::deep_copy(res, 0);
   Kokkos::single(Kokkos::SinglePolicy<TEST_EXECSPACE>(), f);
-  expected *= 3;
-  EXPECT_TRUE(KokkosTest::contains(exec_space, v, expected));
+  EXPECT_TRUE(KokkosTest::contains(exec_space, res, 3));
 
   // +kernel_name +ExecSpace
+  Kokkos::deep_copy(res, 0);
   Kokkos::single("single+policy", Kokkos::SinglePolicy<TEST_EXECSPACE>(), f);
-  expected *= 3;
-  EXPECT_TRUE(KokkosTest::contains(exec_space, v, expected));
+  EXPECT_TRUE(KokkosTest::contains(exec_space, res, 3));
 
   // +ExecSpace instance
+  Kokkos::deep_copy(res, 0);
   Kokkos::single(Kokkos::SinglePolicy(exec_space), f);
   exec_space.fence();
-  expected *= 3;
-  EXPECT_TRUE(KokkosTest::contains(exec_space, v, expected));
+  EXPECT_TRUE(KokkosTest::contains(exec_space, res, 3));
 }
 
 // Test for the ParallelReduce based API with a single return value
@@ -243,7 +242,7 @@ void test_restrictive_return_type() {
 
   Kokkos::single(
       Kokkos::SinglePolicy<TEST_EXECSPACE>(),
-      KOKKOS_LAMBDA(Restrictive & r) { r.val = 5; }, ret);
+      KOKKOS_LAMBDA(Restrictive& r) { r.val = 5; }, ret);
 
   EXPECT_EQ(ret.val, 5);
 }
