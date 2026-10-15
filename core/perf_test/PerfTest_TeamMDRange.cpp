@@ -481,7 +481,7 @@ void bench_team_mdrange(benchmark::State& state) {
       ->Iterations(10);
 
 #define LEAGUE_SIZES \
-  { 256 }
+  { 128 }
 
 #define SIZES_2D \
   { 256, 512, 1024 }
