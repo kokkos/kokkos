@@ -25,27 +25,6 @@ struct TenTag {};
 struct ReductionFunctor {
   KOKKOS_FUNCTION void operator()(int& res) const { res = 5; }
   KOKKOS_FUNCTION void operator()(const TenTag, int& res) const { res = 10; }
-
-  KOKKOS_FUNCTION void operator()(int& res1, int& res2) const {
-    res1 = 5;
-    res2 = 5;
-  }
-  KOKKOS_FUNCTION void operator()(const TenTag, int& res1, int& res2) const {
-    res1 = 10;
-    res2 = 10;
-  }
-
-  KOKKOS_FUNCTION void operator()(int& res1, int& res2, int& res3) const {
-    res1 = 5;
-    res2 = 5;
-    res3 = 5;
-  }
-  KOKKOS_FUNCTION void operator()(const TenTag, int& res1, int& res2,
-                                  int& res3) const {
-    res1 = 10;
-    res2 = 10;
-    res3 = 10;
-  }
 };
 
 void test_single_policy() {
@@ -242,7 +221,7 @@ void test_restrictive_return_type() {
 
   Kokkos::single(
       Kokkos::SinglePolicy<TEST_EXECSPACE>(),
-      KOKKOS_LAMBDA(Restrictive& r) { r.val = 5; }, ret);
+      KOKKOS_LAMBDA(Restrictive & r) { r.val = 5; }, ret);
 
   EXPECT_EQ(ret.val, 5);
 }
