@@ -380,7 +380,13 @@ struct MDRangePolicy<P, Properties...>
         m_prod_tile_dims(p.m_prod_tile_dims),
         m_tune_tile_size(p.m_tune_tile_size),
         m_max_total_tile_size(p.m_max_total_tile_size),
-        m_max_threads_dimensions(p.m_max_threads_dimensions) {}
+        m_max_threads_dimensions(p.m_max_threads_dimensions) {
+    int inner_rank  = (inner_direction == Iterate::Right) ? rank - 1 : 0;
+    int outer_bound = (inner_direction == Iterate::Right) ? -1 : rank;
+    int iter_step   = (inner_direction == Iterate::Right) ? -1 : 1;
+
+    check_bounds_and_flat_extent(inner_rank, outer_bound, iter_step);
+  }
 
   void impl_change_tile_size(const point_type& tile) {
     this->m_tile = tile;
@@ -396,41 +402,14 @@ struct MDRangePolicy<P, Properties...>
   index_type max_total_tile_size() const { return m_max_total_tile_size; }
 
  private:
-  void update_tiling_properties() {
-    auto properties        = Impl::get_tile_size_properties(m_space);
-    this->m_num_tiles      = 1;
-    this->m_prod_tile_dims = 1;
-    this->m_max_total_tile_size =
-        static_cast<index_type>(properties.max_total_tile_size);
-    this->m_max_threads_dimensions = properties.max_threads_dimensions;
-
-    index_type effective_max_tile_size = this->m_max_total_tile_size;
-
-    constexpr bool enforce_launch_bounds =
-#if defined(KOKKOS_ENABLE_CUDA)
-        std::is_same_v<execution_space, Kokkos::Cuda>;
-#elif defined(KOKKOS_ENABLE_HIP)
-        std::is_same_v<execution_space, Kokkos::HIP>;
-#else
-        false;
-#endif
-
-    if constexpr (enforce_launch_bounds && launch_bounds::maxTperB != 0) {
-      effective_max_tile_size =
-          std::min(effective_max_tile_size,
-                   static_cast<index_type>(launch_bounds::maxTperB));
-    }
-
-    int inner_rank  = (inner_direction == Iterate::Right) ? rank - 1 : 0;
-    int outer_bound = (inner_direction == Iterate::Right) ? -1 : rank;
-    int iter_step   = (inner_direction == Iterate::Right) ? -1 : 1;
-
+  void check_bounds_and_flat_extent(int inner_rank, int outer_bound,
+                                    int iter_step) const {
     // widest possible unsigned integer type
     using flat_extent_type = std::size_t;
 
     flat_extent_type total_flat_extent = 1;
 
-    // Validate bounds before invoking backend-specific tile recommendations.
+    // Validate bounds
     for (int i = inner_rank; i != outer_bound; i += iter_step) {
       if (this->m_upper[i] < this->m_lower[i]) {
         std::string msg =
@@ -476,6 +455,40 @@ struct MDRangePolicy<P, Properties...>
         Kokkos::abort(msg.c_str());
       }
     }
+  }
+
+  void update_tiling_properties() {
+    auto properties        = Impl::get_tile_size_properties(m_space);
+    this->m_num_tiles      = 1;
+    this->m_prod_tile_dims = 1;
+    this->m_max_total_tile_size =
+        static_cast<index_type>(properties.max_total_tile_size);
+    this->m_max_threads_dimensions = properties.max_threads_dimensions;
+
+    index_type effective_max_tile_size = this->m_max_total_tile_size;
+
+    constexpr bool enforce_launch_bounds =
+#if defined(KOKKOS_ENABLE_CUDA)
+        std::is_same_v<execution_space, Kokkos::Cuda>;
+#elif defined(KOKKOS_ENABLE_HIP)
+        std::is_same_v<execution_space, Kokkos::HIP>;
+#else
+        false;
+#endif
+
+    if constexpr (enforce_launch_bounds && launch_bounds::maxTperB != 0) {
+      effective_max_tile_size =
+          std::min(effective_max_tile_size,
+                   static_cast<index_type>(launch_bounds::maxTperB));
+    }
+
+    int inner_rank  = (inner_direction == Iterate::Right) ? rank - 1 : 0;
+    int outer_bound = (inner_direction == Iterate::Right) ? -1 : rank;
+    int iter_step   = (inner_direction == Iterate::Right) ? -1 : 1;
+
+    // Validate bounds and flat extent before invoking backend-specific tile
+    // recommendations.
+    check_bounds_and_flat_extent(inner_rank, outer_bound, iter_step);
 
     tile_type default_tile = this->tile_size_recommended();
 
