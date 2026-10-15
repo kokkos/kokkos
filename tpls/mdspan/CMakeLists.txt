@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
 
-project(mdspan
+project(MDSpan
   VERSION 0.6.0
   LANGUAGES CXX
 )
