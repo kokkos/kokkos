@@ -88,7 +88,7 @@ struct NoOpReducer : Impl::BaseReducer<Scalar, Space> {
   using parent_type::parent_type;
 
   KOKKOS_INLINE_FUNCTION
-  void join(value_type& dest, const value_type& src) const { dest = src; }
+  void join(value_type&, const value_type&) const {}
 
   KOKKOS_INLINE_FUNCTION
   void init(value_type&) const {}
