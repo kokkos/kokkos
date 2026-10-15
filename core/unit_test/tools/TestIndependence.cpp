@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 #include <impl/Kokkos_Tools.hpp>
 
+// NOLINTNEXTLINE(bugprone-exception-escape)
 int main(int argc, char* argv[]) {
   Kokkos::Tools::initialize(argc, argv);
   Kokkos::Tools::pushRegion(
@@ -14,4 +15,5 @@ int main(int argc, char* argv[]) {
       "declare the causes which impel them to the separation.");
   Kokkos::Tools::popRegion();
   Kokkos::Tools::finalize();
+  return 0;
 }

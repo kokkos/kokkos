@@ -190,9 +190,6 @@ auto create_deep_copyable_compatible_view_with_same_extent(ViewType view) {
     const std::size_t ext1     = view.extent(1);
     return view_deep_copyable_t{"view_dc", ext0, ext1};
   }
-
-  // this is needed for intel to avoid
-  // error #1011: missing return statement at end of non-void function
 }
 
 template <class ViewType>

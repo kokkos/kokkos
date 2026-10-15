@@ -12,8 +12,6 @@ import kokkos.core;
 #endif
 
 TEST(TEST_CATEGORY_DEATH, abort_from_host) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-
   char msg[] = "Goodbye cruel world";
   EXPECT_DEATH({ Kokkos::abort(msg); }, msg);
 }
@@ -88,7 +86,7 @@ void test_abort_from_device() {
 }
 
 TEST(TEST_CATEGORY_DEATH, abort_from_device) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+  GTEST_FLAG_SET(death_test_style, "threadsafe");
 // FIXME_OPENACC FIXME_NVHPC: NVHPC fails when targetting CPUs.
 #if defined(KOKKOS_ENABLE_OPENACC) && defined(KOKKOS_COMPILER_NVHPC) && \
     defined(KOKKOS_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE)
@@ -96,6 +94,14 @@ TEST(TEST_CATEGORY_DEATH, abort_from_device) {
     GTEST_SKIP()
         << "skipping since the OpenACC backend compiled by NVHPC for CPU "
            "crashes at runtime.";
+  }
+#endif
+
+#if defined(KOKKOS_ENABLE_IMPL_SYCL_OUT_OF_ORDER_QUEUES) && \
+    !defined(NDEBUG)  // FIXME_SYCL
+  if (std::is_same_v<TEST_EXECSPACE, Kokkos::SYCL>) {
+    GTEST_SKIP() << "skipping since the SYCL backend with out-of-order queues "
+                    "fails to die.";
   }
 #endif
   test_abort_from_device<TEST_EXECSPACE>();

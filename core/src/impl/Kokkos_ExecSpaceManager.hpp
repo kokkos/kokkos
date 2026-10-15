@@ -23,6 +23,7 @@ using public_member_types_t = std::enable_if_t<
     Kokkos::is_device_v<typename T::device_type> &&
     Kokkos::is_array_layout_v<typename T::array_layout> &&
     std::unsigned_integral<typename T::size_type> &&
+    std::signed_integral<typename T::index_type> &&
     Kokkos::is_memory_space_v<typename T::scratch_memory_space>>;
 
 template <class T>
@@ -86,6 +87,9 @@ constexpr bool check_valid_execution_space() {
   using Kokkos::is_detected_v;
   static_assert(std::is_default_constructible_v<ExecutionSpace>);
   static_assert(is_detected_v<public_member_types_t, ExecutionSpace>);
+  static_assert(
+      std::is_same_v<typename ExecutionSpace::index_type,
+                     std::make_signed_t<typename ExecutionSpace::size_type>>);
   static_assert(is_detected_v<print_configuration_t, ExecutionSpace>);
   static_assert(is_detected_v<initialize_finalize_t, ExecutionSpace>);
   static_assert(is_detected_v<fence_t, ExecutionSpace>);

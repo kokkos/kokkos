@@ -1,18 +1,6 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
+
 #pragma once
 
 #include "macros.hpp"
@@ -128,20 +116,18 @@ class layout_right::mapping {
 #if MDSPAN_HAS_CXX_17
     MDSPAN_TEMPLATE_REQUIRES(
         class Mapping,
-        /* requires */ (
-        MDSPAN_IMPL_PROPOSED_NAMESPACE::detail::is_layout_right_padded_mapping<Mapping>::value
-        && std::is_constructible_v<extents_type, typename Mapping::extents_type>))
-    MDSPAN_CONDITIONAL_EXPLICIT((!std::is_convertible_v<typename Mapping::extents_type, extents_type>))
-    MDSPAN_INLINE_FUNCTION constexpr
-    mapping(const Mapping &other) noexcept
-        : m_extents(other.extents())
-    {
-      MDSPAN_IMPL_PROPOSED_NAMESPACE::detail::
-          check_padded_layout_converting_constructor_mandates<
-            extents_type, Mapping>(detail::with_rank<extents_type::rank()>{});
-      MDSPAN_IMPL_PROPOSED_NAMESPACE::detail::
-          check_padded_layout_converting_constructor_preconditions<
-            extents_type>(detail::with_rank<extents_type::rank()>{}, other);
+        /* requires */ (detail::is_layout_right_padded_mapping<Mapping>::value
+                            &&std::is_constructible_v<
+                                extents_type, typename Mapping::extents_type>))
+    MDSPAN_CONDITIONAL_EXPLICIT(
+        (!std::is_convertible_v<typename Mapping::extents_type, extents_type>))
+    MDSPAN_INLINE_FUNCTION constexpr mapping(const Mapping &other) noexcept
+        : m_extents(other.extents()) {
+      detail::check_padded_layout_converting_constructor_mandates<extents_type,
+                                                                  Mapping>(
+          detail::with_rank<extents_type::rank()>{});
+      detail::check_padded_layout_converting_constructor_preconditions<
+          extents_type>(detail::with_rank<extents_type::rank()>{}, other);
     }
 #endif
 

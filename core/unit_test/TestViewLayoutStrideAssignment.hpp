@@ -639,7 +639,6 @@ TEST(TEST_CATEGORY_DEATH, view_layoutstride_right_to_layoutleft_assignment) {
 
     Kokkos::View<double**, Kokkos::LayoutLeft, exec_space> dst;
 
-    ::testing::FLAGS_gtest_death_test_style = "threadsafe";
     ASSERT_DEATH({ dst = src; },
                  "View assignment must have compatible layouts");
   }
@@ -654,7 +653,6 @@ TEST(TEST_CATEGORY_DEATH, view_layoutstride_right_to_layoutleft_assignment) {
 
     Kokkos::View<double***, Kokkos::LayoutLeft, exec_space> dst;
 
-    ::testing::FLAGS_gtest_death_test_style = "threadsafe";
     ASSERT_DEATH({ dst = src; },
                  "View assignment must have compatible layouts");
   }
@@ -669,7 +667,6 @@ TEST(TEST_CATEGORY_DEATH, view_layoutstride_right_to_layoutleft_assignment) {
 
     Kokkos::View<double****, Kokkos::LayoutLeft, exec_space> dst;
 
-    ::testing::FLAGS_gtest_death_test_style = "threadsafe";
     ASSERT_DEATH({ dst = src; },
                  "View assignment must have compatible layouts");
   }
@@ -684,7 +681,6 @@ TEST(TEST_CATEGORY_DEATH, view_layoutstride_right_to_layoutleft_assignment) {
 
     Kokkos::View<double*****, Kokkos::LayoutLeft, exec_space> dst;
 
-    ::testing::FLAGS_gtest_death_test_style = "threadsafe";
     ASSERT_DEATH({ dst = src; },
                  "View assignment must have compatible layouts");
   }
@@ -699,7 +695,6 @@ TEST(TEST_CATEGORY_DEATH, view_layoutstride_right_to_layoutleft_assignment) {
 
     Kokkos::View<double******, Kokkos::LayoutLeft, exec_space> dst;
 
-    ::testing::FLAGS_gtest_death_test_style = "threadsafe";
     ASSERT_DEATH({ dst = src; },
                  "View assignment must have compatible layouts");
   }
@@ -714,7 +709,6 @@ TEST(TEST_CATEGORY_DEATH, view_layoutstride_right_to_layoutleft_assignment) {
 
     Kokkos::View<double*******, Kokkos::LayoutLeft, exec_space> dst;
 
-    ::testing::FLAGS_gtest_death_test_style = "threadsafe";
     ASSERT_DEATH({ dst = src; },
                  "View assignment must have compatible layouts");
   }
@@ -729,7 +723,6 @@ TEST(TEST_CATEGORY_DEATH, view_layoutstride_right_to_layoutleft_assignment) {
 
     Kokkos::View<double********, Kokkos::LayoutLeft, exec_space> dst;
 
-    ::testing::FLAGS_gtest_death_test_style = "threadsafe";
     ASSERT_DEATH({ dst = src; },
                  "View assignment must have compatible layouts");
   }
@@ -787,7 +780,6 @@ TEST(TEST_CATEGORY_DEATH, view_layoutstride_left_to_layoutright_assignment) {
 
     Kokkos::View<double**, Kokkos::LayoutRight, exec_space> dst;
 
-    ::testing::FLAGS_gtest_death_test_style = "threadsafe";
     ASSERT_DEATH({ dst = src; },
                  "View assignment must have compatible layouts");
   }
@@ -802,7 +794,6 @@ TEST(TEST_CATEGORY_DEATH, view_layoutstride_left_to_layoutright_assignment) {
 
     Kokkos::View<double***, Kokkos::LayoutRight, exec_space> dst;
 
-    ::testing::FLAGS_gtest_death_test_style = "threadsafe";
     ASSERT_DEATH({ dst = src; },
                  "View assignment must have compatible layouts");
   }
@@ -817,7 +808,6 @@ TEST(TEST_CATEGORY_DEATH, view_layoutstride_left_to_layoutright_assignment) {
 
     Kokkos::View<double****, Kokkos::LayoutRight, exec_space> dst;
 
-    ::testing::FLAGS_gtest_death_test_style = "threadsafe";
     ASSERT_DEATH({ dst = src; },
                  "View assignment must have compatible layouts");
   }
@@ -832,7 +822,6 @@ TEST(TEST_CATEGORY_DEATH, view_layoutstride_left_to_layoutright_assignment) {
 
     Kokkos::View<double*****, Kokkos::LayoutRight, exec_space> dst;
 
-    ::testing::FLAGS_gtest_death_test_style = "threadsafe";
     ASSERT_DEATH({ dst = src; },
                  "View assignment must have compatible layouts");
   }
@@ -847,7 +836,6 @@ TEST(TEST_CATEGORY_DEATH, view_layoutstride_left_to_layoutright_assignment) {
 
     Kokkos::View<double******, Kokkos::LayoutRight, exec_space> dst;
 
-    ::testing::FLAGS_gtest_death_test_style = "threadsafe";
     ASSERT_DEATH({ dst = src; },
                  "View assignment must have compatible layouts");
   }
@@ -862,7 +850,6 @@ TEST(TEST_CATEGORY_DEATH, view_layoutstride_left_to_layoutright_assignment) {
 
     Kokkos::View<double*******, Kokkos::LayoutRight, exec_space> dst;
 
-    ::testing::FLAGS_gtest_death_test_style = "threadsafe";
     ASSERT_DEATH({ dst = src; },
                  "View assignment must have compatible layouts");
   }
@@ -877,15 +864,9 @@ TEST(TEST_CATEGORY_DEATH, view_layoutstride_left_to_layoutright_assignment) {
 
     Kokkos::View<double********, Kokkos::LayoutRight, exec_space> dst;
 
-    ::testing::FLAGS_gtest_death_test_style = "threadsafe";
     ASSERT_DEATH({ dst = src; },
                  "View assignment must have compatible layouts");
   }
 }
 
 }  // namespace Test
-
-#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
-// FIXME: We need a new mdspan test for custom layouts
-#include <TestIrregularLayout.hpp>
-#endif

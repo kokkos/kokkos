@@ -35,7 +35,7 @@ struct NestedView {
   KOKKOS_DEFAULTED_FUNCTION NestedView &operator=(NestedView &&)      = default;
 
   KOKKOS_INLINE_FUNCTION
-  ~NestedView() {
+  ~NestedView() /* NOLINT(bugprone-exception-escape) */ {
     if (member.extent(0)) {
       Kokkos::atomic_add(&member(0), -1);
     }

@@ -84,16 +84,23 @@ TEST(TEST_CATEGORY, graph_instantiate_and_debug_dot_print) {
 
   // We could write a check against the full kernel's function signature, but
   // it would make the test rely too much on internal implementation details.
-  // Therefore, we just look for the functor and policy. Note that the
-  // signature is mangled in the 'dot' output.
-  const std::string expected("[A-Za-z0-9_]+Increment[A-Za-z0-9_]+RangePolicy");
+  // Therefore, we just look for the functor and policy.
+  //
+  // The DOT output format may vary across HIP/ROCm versions: some expose a
+  // mangled kernel name while others print a demangled C++ signature.
+  const std::string expected_mangled(
+      "[A-Za-z0-9_]+Increment[A-Za-z0-9_]+RangePolicy");
+  const std::string expected_demangled("Increment<.*RangePolicy<");
 
   std::stringstream buffer;
   buffer << std::ifstream(dot).rdbuf();
 
-  ASSERT_TRUE(std::regex_search(buffer.str(), std::regex(expected)))
-      << "Could not find expected signature regex " << std::quoted(expected)
-      << " in " << dot;
+  const std::string dot_contents = buffer.str();
+  ASSERT_TRUE(std::regex_search(dot_contents, std::regex(expected_mangled)) ||
+              std::regex_search(dot_contents, std::regex(expected_demangled)))
+      << "Could not find expected signature regex "
+      << std::quoted(expected_mangled) << " or "
+      << std::quoted(expected_demangled) << " in " << dot;
 }
 
 // Build a Kokkos::Graph from an existing hipGraph_t.

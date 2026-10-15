@@ -1009,6 +1009,7 @@ KOKKOS_INLINE_FUNCTION
        i += loop_boundaries.increment) {
     lambda(i, scan_val, true);
   }
+  reducer.reference() = scan_val;
 }
 
 //----------------------------------------------------------------------------

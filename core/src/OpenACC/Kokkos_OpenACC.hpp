@@ -20,17 +20,13 @@ static_assert(false,
 #include <impl/Kokkos_HostSharedPtr.hpp>
 
 #include <openacc.h>
-#ifdef KOKKOS_COMPILER_CLANG
-#include <omp.h>
-#endif
 
 #include <iosfwd>
 #include <string>
 
 // FIXME_OPENACC: Below macro is temporarily enabled to avoid issues on existing
 // OpenACC compilers not supporting lambda with parallel loops.
-// LLVM/Clacc compiler does not need this.
-#ifndef KOKKOS_COMPILER_CLANG
+#ifdef KOKKOS_COMPILER_NVHPC
 #define KOKKOS_ENABLE_OPENACC_COLLAPSE_HIERARCHICAL_CONSTRUCTS
 #define KOKKOS_ENABLE_OPENACC_COLLAPSE_MDRANGE_LOOPS
 #endif

@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
-#include <impl/Kokkos_Half_FloatingPointWrapper.hpp>
-
 #ifndef TESTHALFOPERATOR_HPP_
 #define TESTHALFOPERATOR_HPP_
+
+#include <cstring>  // std::memcpy
+
 namespace Test {
 using namespace Kokkos::Experimental;
 using ExecutionSpace = TEST_EXECSPACE;
@@ -408,11 +409,11 @@ struct Functor_TestHalfOperators {
   }
   // END: Binary Arithmetic test helpers
 
-#if !defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
+#if !KOKKOS_HALF_T_IS_FLOAT
   using half_impl_type = typename half_type::impl_type;
 #else
   using half_impl_type = half_type;
-#endif  // !defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
+#endif  // !KOKKOS_HALF_T_IS_FLOAT
 
   KOKKOS_FUNCTION
   void operator()(Batch0, int) const {
@@ -1036,7 +1037,23 @@ void test_bhalf_operators() {
   }
 }
 
-TEST(TEST_CATEGORY, half_operators) { test_half_operators(); }
-TEST(TEST_CATEGORY, bhalf_operators) { test_bhalf_operators(); }
+TEST(TEST_CATEGORY, half_operators) {
+// FIXME_NEXTSILICON: projection errors in 1.3.0-120
+#ifdef KOKKOS_ENABLE_NEXTSILICON
+  if (std::is_same_v<Kokkos::DefaultExecutionSpace,
+                     Kokkos::Experimental::NextSilicon>)
+    GTEST_SKIP() << "projection errors in 1.3.0-120";
+#endif
+  test_half_operators();
+}
+TEST(TEST_CATEGORY, bhalf_operators) {
+// FIXME_NEXTSILICON: projection errors in 1.3.0-120
+#ifdef KOKKOS_ENABLE_NEXTSILICON
+  if (std::is_same_v<Kokkos::DefaultExecutionSpace,
+                     Kokkos::Experimental::NextSilicon>)
+    GTEST_SKIP() << "projection errors in 1.3.0-120";
+#endif
+  test_bhalf_operators();
+}
 }  // namespace Test
 #endif  // TESTHALFOPERATOR_HPP_

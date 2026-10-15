@@ -47,7 +47,7 @@
 //           2**15 * (1 + 0.9990234375) =
 //           65504.0
 //
-#if defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
+#if !KOKKOS_HALF_T_IS_FLOAT
 /// \brief: Infinity
 ///
 /// Binary16 encoding:
@@ -258,7 +258,7 @@ struct Kokkos::Impl::max_exponent_helper<
 ////////////// END HALF_T (binary16) limits //////////////
 
 ////////////// BEGIN BHALF_T (bfloat16) limits //////////////
-#if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
+#if !KOKKOS_BHALF_T_IS_FLOAT
 /// \brief: Infinity
 ///
 /// Bfloat16 encoding:

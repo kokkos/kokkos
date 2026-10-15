@@ -48,9 +48,12 @@ void reverse_exespace_impl(const std::string& label, const ExecutionSpace& ex,
   if (last >= first + 2) {
     // only need half
     const auto num_elements = Kokkos::Experimental::distance(first, last) / 2;
-    ::Kokkos::parallel_for(label,
-                           RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-                           StdReverseFunctor(first, last));
+    ::Kokkos::parallel_for(
+        label,
+        RangePolicy<ExecutionSpace,
+                    IndexType<typename InputIterator::difference_type>>(
+            ex, 0, num_elements),
+        StdReverseFunctor(first, last));
     ex.fence("Kokkos::reverse: fence after operation");
   }
 }

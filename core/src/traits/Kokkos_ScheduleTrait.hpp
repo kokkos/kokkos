@@ -8,6 +8,7 @@
 #include <Kokkos_Concepts.hpp>  // is_schedule_type, Schedule
 #include <traits/Kokkos_PolicyTraitAdaptor.hpp>
 #include <traits/Kokkos_Traits_fwd.hpp>
+#include <traits/Kokkos_PolicyTraitMatcher.hpp>
 
 namespace Kokkos {
 

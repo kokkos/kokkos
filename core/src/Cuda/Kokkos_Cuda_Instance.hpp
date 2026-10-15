@@ -44,12 +44,14 @@ struct CudaTraits {
       0x008000; /* 32k bytes */
   static constexpr CudaSpace::size_type ConstantMemoryCache =
       0x002000; /*  8k bytes */
-  static constexpr CudaSpace::size_type KernelArgumentLimit =
 #ifdef KOKKOS_IMPL_CUDA_USE_GRID_CONSTANT
-      0x008000; /* 32k bytes */
+  static constexpr bool GridConstantLaunchEnabled = true;
 #else
-      0x001000; /*  4k bytes */
-#endif
+  static constexpr bool GridConstantLaunchEnabled = false;
+#endif  // defined(KOKKOS_IMPL_CUDA_USE_GRID_CONSTANT)
+  static constexpr CudaSpace::size_type KernelArgumentLimit =
+      GridConstantLaunchEnabled ? 0x008000  /* 32k bytes */
+                                : 0x001000; /*  4k bytes */
   static constexpr CudaSpace::size_type MaxHierarchicalParallelism =
       1024; /* team_size * vector_length */
   using ConstantGlobalBufferType =
@@ -102,7 +104,11 @@ class CudaInternal {
   mutable size_type* m_scratchFlags   = nullptr;
   mutable size_type* m_scratchUnified = nullptr;
   mutable size_type* m_scratchFunctor = nullptr;
-  cudaStream_t m_stream               = nullptr;
+
+  // mutex to access shared memory
+  mutable std::mutex m_mutexScratchSpace;
+
+  cudaStream_t m_stream = nullptr;
   uint32_t m_instance_id =
       Kokkos::Tools::Experimental::Impl::idForInstance<Kokkos::Cuda>(
           reinterpret_cast<uintptr_t>(this));
@@ -116,11 +122,13 @@ class CudaInternal {
   size_t m_num_scratch_locks                      = 0;
 
   static std::set<int> cuda_devices;
+#ifndef KOKKOS_IMPL_CUDA_USE_GRID_CONSTANT
   KOKKOS_IMPL_EXPORT static std::map<int, unsigned long*>
       constantMemHostStagingPerDevice;
   KOKKOS_IMPL_EXPORT static std::map<int, cudaEvent_t>
       constantMemReusablePerDevice;
   KOKKOS_IMPL_EXPORT static std::map<int, std::mutex> constantMemMutexPerDevice;
+#endif
 
   int verify_is_initialized(const char* const label) const;
 

@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
+/// \file Kokkos_Parallel_Reduce.hpp
+/// \brief Declaration of parallel_reduce interface
+
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #include <Kokkos_Macros.hpp>
 static_assert(false,
@@ -9,14 +12,17 @@ static_assert(false,
 #ifndef KOKKOS_PARALLEL_REDUCE_HPP
 #define KOKKOS_PARALLEL_REDUCE_HPP
 
-#include <impl/Kokkos_BuiltinReducers.hpp>
-#include <impl/Kokkos_CheckUsage.hpp>
+#include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_ExecPolicy.hpp>
 #include <Kokkos_View.hpp>
+
+#include <impl/Kokkos_BuiltinReducers.hpp>
+#include <impl/Kokkos_CheckUsage.hpp>
 #include <impl/Kokkos_FunctorAnalysis.hpp>
 #include <impl/Kokkos_Tools_Generic.hpp>
 
 #include <type_traits>
+#include <string>
 
 namespace Kokkos {
 namespace Impl {

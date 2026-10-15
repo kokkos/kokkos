@@ -1,0 +1,58 @@
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
+
+#ifndef KOKKOS_INITIALIZE_FINALIZE_HPP
+#define KOKKOS_INITIALIZE_FINALIZE_HPP
+
+#include <impl/Kokkos_InitializationSettings.hpp>
+
+#include <functional>
+#include <iosfwd>
+#include <string>
+
+namespace Kokkos {
+
+void initialize(int& argc, char* argv[]);
+
+void initialize(
+    InitializationSettings const& settings = InitializationSettings());
+
+void finalize();
+
+/**
+ * \brief Push a user-defined function to be called in
+ *   Kokkos::finalize, before any Kokkos state is finalized.
+ *
+ * This function is the Kokkos analog to std::atexit.  If you call
+ * this with a function f, then your function will get called when
+ * Kokkos::finalize is called.  Specifically, it will be called BEFORE
+ * Kokkos does any finalization.  This means that all execution
+ * spaces, memory spaces, etc. that were initialized will still be
+ * initialized when your function is called.
+ *
+ * Just like std::atexit, if you call push_finalize_hook in sequence
+ * with multiple functions (f, g, h), Kokkos::finalize will call them
+ * in reverse order (h, g, f), as if popping a stack.  Furthermore,
+ * just like std::atexit, if any of your functions throws but does not
+ * catch an exception, Kokkos::finalize will call std::terminate.
+ */
+void push_finalize_hook(std::function<void()> f);
+
+[[nodiscard]] bool is_initialized() noexcept;
+[[nodiscard]] bool is_finalized() noexcept;
+
+}  // namespace Kokkos
+
+namespace Kokkos::Impl {
+
+void pre_initialize(const InitializationSettings& settings);
+
+void post_initialize(const InitializationSettings& settings);
+
+void pre_finalize();
+
+void post_finalize();
+
+}  // namespace Kokkos::Impl
+
+#endif

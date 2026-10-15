@@ -16,41 +16,18 @@ void test_moving_view_use_count_and_label(ViewType v) {
   // NOLINTBEGIN(bugprone-use-after-move)
 
   ViewType w(std::move(v));  // move construction
-#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
-  if (w.use_count() != 0)
-    EXPECT_EQ(w.use_count(), cnt + 1);
-  else
-    EXPECT_EQ(w.use_count(), 0);
-#else
   EXPECT_EQ(w.use_count(), cnt);
-#endif
   EXPECT_EQ(w.data(), ptr);
   EXPECT_EQ(w.label(), lbl);
-#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
-  EXPECT_EQ(v.use_count(), w.use_count());
-  EXPECT_EQ(v.label(), lbl);
-#else
   EXPECT_EQ(v.use_count(), 0);
   EXPECT_EQ(v.label(), std::string(""));
-#endif
   EXPECT_EQ(v.data(), ptr);
 
   v = std::move(w);  // move assignment
-#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
-  if (v.use_count() != 0)
-    EXPECT_EQ(v.use_count(), cnt + 1);
-  else
-    EXPECT_EQ(w.use_count(), 0);
-#else
   EXPECT_EQ(v.use_count(), cnt);
-#endif
   EXPECT_EQ(v.data(), ptr);
   EXPECT_EQ(v.label(), lbl);
-#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
-  EXPECT_EQ(w.use_count(), v.use_count());
-#else
   EXPECT_EQ(w.use_count(), 0);
-#endif
   EXPECT_EQ(w.data(), v.data());
   EXPECT_EQ(v.label(), lbl);
 
@@ -143,6 +120,15 @@ void test_moved_from_view(ViewType v) {
 }
 
 TEST(TEST_CATEGORY, view_moved_from) {
+#if defined(KOKKOS_ENABLE_OPENACC) && (KOKKOS_COMPILER_NVHPC > 240500) && \
+    (KOKKOS_COMPILER_NVHPC <= 260500)
+  // FIXME_OPENACC: Test is known to fail if 24.5 < NVHPC version <= 26.5.
+  // Error message: failed moved-from view after calling move constructor
+  //                failed moved-from view after calling move assignment
+  //                operator
+  GTEST_SKIP() << "skipping since the OpenACC backend test fails if 24.5 < "
+                  "NVHPC version <= 26.5";
+#else
   using ExecutionSpace = TEST_EXECSPACE;
 
   test_moved_from_view(Kokkos::View<int, ExecutionSpace>("v0"));
@@ -160,6 +146,7 @@ TEST(TEST_CATEGORY, view_moved_from) {
   test_moved_from_view(Kokkos::View<double**, ExecutionSpace,
                                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>(
       v2.data(), v2.extent(0), v2.extent(1)));
+#endif
 }
 
 #if !(defined(KOKKOS_COMPILER_NVCC) || defined(KOKKOS_COMPILER_NVHPC) || \

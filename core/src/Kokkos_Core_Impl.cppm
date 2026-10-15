@@ -34,8 +34,8 @@ export {
   using ::Kokkos::Impl::CheckedReferenceCountedAccessor;
   using ::Kokkos::Impl::CheckedReferenceCountedRelaxedAtomicAccessor;
   using ::Kokkos::Impl::CheckedRelaxedAtomicAccessor;
-  using ::Kokkos::Impl::choose_create_mirror;
   using ::Kokkos::Impl::CommonSubview;
+  using ::Kokkos::Impl::convert_to_kokkos_pair_if_std_pair;
   using ::Kokkos::Impl::DataTypeFromExtents;
   using ::Kokkos::Impl::DeepCopy;
   using ::Kokkos::Impl::ExtentsFromDataType;
@@ -49,7 +49,6 @@ export {
   using ::Kokkos::Impl::MDSpanViewTraits;
   using ::Kokkos::Impl::MemoryTraitsFromAccessor;
   using ::Kokkos::Impl::MirrorViewType;
-  using ::Kokkos::Impl::ParseViewExtents;
   using ::Kokkos::Impl::rank_dynamic;
   using ::Kokkos::Impl::RankDataType;
   using ::Kokkos::Impl::ReferenceCountedAccessor;
@@ -60,18 +59,13 @@ export {
   using ::Kokkos::Impl::SharedAllocationTracker;
   using ::Kokkos::Impl::size_mismatch;
   using ::Kokkos::Impl::SpaceAwareAccessor;
-  using ::Kokkos::Impl::SubviewExtents;
-  using ::Kokkos::Impl::SubviewLegalArgsCompileTime;
+  using ::Kokkos::Impl::transform_kokkos_slice_to_mdspan_canonical_slice;
   using ::Kokkos::Impl::ViewArguments;
   using ::Kokkos::Impl::ViewArrayAnalysis;
-  using ::Kokkos::Impl::ViewCopy;
   using ::Kokkos::Impl::ViewCtorProp;
   using ::Kokkos::Impl::ViewCustomArguments;
   using ::Kokkos::Impl::ViewDataAnalysis;
-  using ::Kokkos::Impl::ViewDataHandle;
   using ::Kokkos::Impl::ViewDimension;
-  using ::Kokkos::Impl::ViewMapping;
-  using ::Kokkos::Impl::ViewOffset;
   using ::Kokkos::Impl::ViewRemap;
   using ::Kokkos::Impl::with_properties_if_unset;
   using ::Kokkos::Impl::WithoutInitializing_t;
@@ -102,6 +96,7 @@ export {
   // miscellaneous
   namespace Impl {
   using ::Kokkos::Impl::FunctorAnalysis;
+  using ::Kokkos::Impl::FunctorPatternInterface;
   using ::Kokkos::Impl::integral_constant;
   using ::Kokkos::Impl::python_view_type_impl_t;
   using ::Kokkos::Impl::throw_runtime_exception;

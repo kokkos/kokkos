@@ -396,13 +396,6 @@ TEST(simd, device_arithmetic_ops) {
       << "skipping due to a GCC bug associated with the computation of "
          "floating-point values in a 32-bit build.";
 #endif
-#if defined(KOKKOS_ENABLE_OPENACC) && \
-    defined(KOKKOS_COMPILER_CLANG)  // FIXME_CLACC
-  GTEST_SKIP()
-      << "skipping because of a non-deterministic failure reporting: "
-         "Failure to synchronize stream (nil): Error in "
-         "cuStreamSynchronize: an illegal memory access was encountered";
-#endif
   Kokkos::parallel_for(1, simd_device_arithmetic_ops_functor());
   Kokkos::fence();
 }

@@ -260,13 +260,13 @@ int main(int argc, char* argv[]) {
 
   for (int i = 0; i < argc; i++) {
     if ((strcmp(argv[i], "-N") == 0)) {
-      N = atoi(argv[++i]);
+      N = std::stoi(argv[++i]);
       if (N < 1) {
         std::cout << "Array extent must be >= 1" << std::endl;
         exit(1);
       }
     } else if (strcmp(argv[i], "-i") == 0) {
-      num_iter = atoi(argv[++i]);
+      num_iter = std::stoi(argv[++i]);
       if (num_iter < 1) {
         std::cout << "Number of iterations must be >= 1" << std::endl;
         exit(1);

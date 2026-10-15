@@ -11,21 +11,6 @@
 #include <Kokkos_Parallel.hpp>
 #include <type_traits>
 
-// Clacc uses an alternative implementation to work around not-yet-implemented
-// OpenACC features: Clacc does not fully support private clauses for
-// gang-private variables, and the alternative implementation allocates
-// the gang-private arrays on GPU global memory using array expansion,
-// instead of using the private clause.
-#ifdef KOKKOS_COMPILER_CLANG
-#define KOKKOS_IMPL_OPENACC_VECTOR_RED_TEMP_ACCESS1(THREADID) \
-  vector_red_temp[team_id * chunk_size + THREADID]
-#define KOKKOS_IMPL_OPENACC_VECTOR_RED_TEMP_ACCESS2(THREADID) \
-  vector_red_temp[THREADID]
-#define KOKKOS_IMPL_OPENACC_VECTOR_RED_TEMP_CLAUSE1 \
-  create(vector_red_temp [0:n_chunks * chunk_size])
-#define KOKKOS_IMPL_OPENACC_VECTOR_RED_TEMP_CLAUSE2 \
-  create(vector_red_temp [0:chunk_size])
-#else
 #define KOKKOS_IMPL_OPENACC_VECTOR_RED_TEMP_ACCESS1(THREADID) \
   vector_red_temp[THREADID]
 #define KOKKOS_IMPL_OPENACC_VECTOR_RED_TEMP_ACCESS2(THREADID) \
@@ -34,7 +19,6 @@
   private(vector_red_temp [0:chunk_size])
 #define KOKKOS_IMPL_OPENACC_VECTOR_RED_TEMP_CLAUSE2 \
   private(vector_red_temp [0:chunk_size])
-#endif
 
 #define KOKKOS_IMPL_OPENACC_CHUNK_SIZE 64
 
@@ -146,15 +130,11 @@ void OpenACCParallelReduceCustom(Schedule<Static>, Policy const& apolicy,
   if (chunk_size <= 1) {
     chunk_size = KOKKOS_IMPL_OPENACC_CHUNK_SIZE;
   }
-  const IndexType begin    = policy.begin();
-  const IndexType end      = policy.end();
-  const IndexType N        = end - begin;
-  const IndexType n_chunks = (N + chunk_size - 1) / chunk_size;
-#ifdef KOKKOS_COMPILER_CLANG
-  const IndexType num_elements = n_chunks * chunk_size;
-#else
+  const IndexType begin        = policy.begin();
+  const IndexType end          = policy.end();
+  const IndexType N            = end - begin;
+  const IndexType n_chunks     = (N + chunk_size - 1) / chunk_size;
   const IndexType num_elements = chunk_size;
-#endif
   Kokkos::View<ValueType, Kokkos::Experimental::OpenACCSpace> m_result_view(
       "Kokkos::OpenACCParallelScan::m_result_view");
   Kokkos::View<ValueType*, Kokkos::Experimental::OpenACCSpace> gang_red_temp(

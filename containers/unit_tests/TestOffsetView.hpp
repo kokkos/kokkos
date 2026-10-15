@@ -726,7 +726,6 @@ TEST(TEST_CATEGORY, offsetview_unmanaged_construction) {
 }
 
 TEST(TEST_CATEGORY_DEATH, offsetview_unmanaged_construction) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
   test_offsetview_unmanaged_construction_death<int, TEST_EXECSPACE>();
 }
 

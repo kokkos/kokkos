@@ -9,6 +9,8 @@ import kokkos.core_impl;
 #include <Kokkos_Core.hpp>
 #endif
 
+#include <desul/atomics.hpp>
+
 #include <type_traits>
 
 // Checking requirement of explict type conversion to View
@@ -81,6 +83,27 @@ constexpr bool test_equivalence() {
           Kokkos::MemoryTraits<Kokkos::Atomic>>);
   return true;
 }
+
+using memory_scope = desul::MemoryScopeCore;
+
+// Check that CheckedRelaxedAtomicAccessor preserves memory scope.
+static_assert(std::is_same_v<
+              Kokkos::Impl::CheckedRelaxedAtomicAccessor<
+                  float, Kokkos::HostSpace, memory_scope>,
+              Kokkos::Impl::SpaceAwareAccessor<
+                  Kokkos::HostSpace,
+                  Kokkos::Impl::AtomicAccessorRelaxed<float, memory_scope>>>);
+// Check that CheckedReferenceCountedRelaxedAtomicAccessor preserves memory
+// scope.
+static_assert(
+    std::is_same_v<
+        Kokkos::Impl::CheckedReferenceCountedRelaxedAtomicAccessor<
+            float, Kokkos::HostSpace, memory_scope>,
+        Kokkos::Impl::SpaceAwareAccessor<
+            Kokkos::HostSpace,
+            Kokkos::Impl::ReferenceCountedAccessor<
+                Kokkos::HostSpace,
+                Kokkos::Impl::AtomicAccessorRelaxed<float, memory_scope>>>>);
 
 static_assert(test_equivalence<float, Kokkos::DefaultExecutionSpace>());
 static_assert(

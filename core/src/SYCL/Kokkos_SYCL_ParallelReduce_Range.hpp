@@ -126,7 +126,7 @@ class Kokkos::Impl::ParallelReduce<
               sycl::global_ptr<value_type> results_ptr, int values_per_thread) {
             const auto begin = policy.begin();
 
-            auto lambda = [=](sycl::nd_item<1> item) {
+            auto lambda = [=](sycl::nd_item<2> item) {
               const auto n_wgroups   = item.get_group_range()[0];
               const auto wgroup_size = item.get_local_range()[0];
 
@@ -301,7 +301,8 @@ class Kokkos::Impl::ParallelReduce<
             local_mem, num_teams_done, results_ptr, values_per_thread);
 
         cgh.parallel_for(
-            sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
+            sycl::nd_range<2>(sycl::range<2>(n_wgroups * wgroup_size, 1),
+                              sycl::range<2>(wgroup_size, 1)),
             reduction_lambda);
       };
 

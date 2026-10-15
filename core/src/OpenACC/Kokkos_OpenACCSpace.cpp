@@ -11,6 +11,8 @@
 
 #include <openacc.h>
 
+// Allocations unrelated to a View do not provide arg_logical_size and report
+// arg_alloc_size. View-related allocations provide and report arg_logical_size.
 void *Kokkos::Experimental::OpenACCSpace::allocate(
     const Kokkos::Experimental::OpenACC &exec_space,
     const size_t arg_alloc_size) const {
@@ -24,8 +26,19 @@ void *Kokkos::Experimental::OpenACCSpace::allocate(
 
 void *Kokkos::Experimental::OpenACCSpace::allocate(
     const Kokkos::Experimental::OpenACC &exec_space, const char *arg_label,
+    const size_t arg_alloc_size) const {
+  return impl_allocate(exec_space, arg_label, arg_alloc_size, arg_alloc_size);
+}
+
+void *Kokkos::Experimental::OpenACCSpace::allocate(
+    const Kokkos::Experimental::OpenACC &exec_space, const char *arg_label,
     const size_t arg_alloc_size, const size_t arg_logical_size) const {
   return impl_allocate(exec_space, arg_label, arg_alloc_size, arg_logical_size);
+}
+
+void *Kokkos::Experimental::OpenACCSpace::allocate(
+    const char *arg_label, const size_t arg_alloc_size) const {
+  return impl_allocate(arg_label, arg_alloc_size, arg_alloc_size);
 }
 
 void *Kokkos::Experimental::OpenACCSpace::allocate(
@@ -36,15 +49,16 @@ void *Kokkos::Experimental::OpenACCSpace::allocate(
 
 void *Kokkos::Experimental::OpenACCSpace::impl_allocate(
     const Kokkos::Experimental::OpenACC &exec_space, const char *arg_label,
-    const size_t arg_alloc_size, const size_t arg_logical_size,
+    const size_t arg_alloc_size, const size_t arg_reported_size,
     const Kokkos::Tools::SpaceHandle arg_handle) const {
   (void)exec_space;
-  return impl_allocate(arg_label, arg_alloc_size, arg_logical_size, arg_handle);
+  return impl_allocate(arg_label, arg_alloc_size, arg_reported_size,
+                       arg_handle);
 }
 
 void *Kokkos::Experimental::OpenACCSpace::impl_allocate(
     const char *arg_label, const size_t arg_alloc_size,
-    const size_t arg_logical_size,
+    const size_t arg_reported_size,
     const Kokkos::Tools::SpaceHandle arg_handle) const {
   static_assert(sizeof(void *) == sizeof(uintptr_t),
                 "Error sizeof(void*) != sizeof(uintptr_t)");
@@ -58,9 +72,8 @@ void *Kokkos::Experimental::OpenACCSpace::impl_allocate(
   }
 
   if (Kokkos::Profiling::profileLibraryLoaded()) {
-    const size_t reported_size =
-        (arg_logical_size > 0) ? arg_logical_size : arg_alloc_size;
-    Kokkos::Profiling::allocateData(arg_handle, arg_label, ptr, reported_size);
+    Kokkos::Profiling::allocateData(arg_handle, arg_label, ptr,
+                                    arg_reported_size);
   }
 
   return ptr;
@@ -73,19 +86,23 @@ void Kokkos::Experimental::OpenACCSpace::deallocate(
 
 void Kokkos::Experimental::OpenACCSpace::deallocate(
     const char *arg_label, void *const arg_alloc_ptr,
+    const size_t arg_alloc_size) const {
+  impl_deallocate(arg_label, arg_alloc_ptr, arg_alloc_size, arg_alloc_size);
+}
+
+void Kokkos::Experimental::OpenACCSpace::deallocate(
+    const char *arg_label, void *const arg_alloc_ptr,
     const size_t arg_alloc_size, const size_t arg_logical_size) const {
   impl_deallocate(arg_label, arg_alloc_ptr, arg_alloc_size, arg_logical_size);
 }
 
 void Kokkos::Experimental::OpenACCSpace::impl_deallocate(
     const char *arg_label, void *const arg_alloc_ptr,
-    const size_t arg_alloc_size, const size_t arg_logical_size,
+    const size_t /*arg_alloc_size*/, const size_t arg_reported_size,
     const Kokkos::Tools::SpaceHandle arg_handle) const {
   if (Kokkos::Profiling::profileLibraryLoaded()) {
-    const size_t reported_size =
-        (arg_logical_size > 0) ? arg_logical_size : arg_alloc_size;
     Kokkos::Profiling::deallocateData(arg_handle, arg_label, arg_alloc_ptr,
-                                      reported_size);
+                                      arg_reported_size);
   }
 
   if (arg_alloc_ptr) {

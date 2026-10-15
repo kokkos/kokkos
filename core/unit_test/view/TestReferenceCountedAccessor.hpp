@@ -16,11 +16,9 @@ using element_t      = float;
 using memory_space_t = TEST_EXECSPACE::memory_space;
 using defacc_t       = Kokkos::default_accessor<element_t>;
 using const_defacc_t = Kokkos::default_accessor<const element_t>;
-using acc_t =
-    Kokkos::Impl::ReferenceCountedAccessor<element_t, memory_space_t, defacc_t>;
+using acc_t = Kokkos::Impl::ReferenceCountedAccessor<memory_space_t, defacc_t>;
 using const_acc_t =
-    Kokkos::Impl::ReferenceCountedAccessor<const element_t, memory_space_t,
-                                           const_defacc_t>;
+    Kokkos::Impl::ReferenceCountedAccessor<memory_space_t, const_defacc_t>;
 using data_handle_t       = typename acc_t::data_handle_type;
 using const_data_handle_t = typename const_acc_t::data_handle_type;
 }  // namespace
@@ -34,10 +32,9 @@ TEST(TEST_CATEGORY, RefCountedAcc_Typedefs) {
   static_assert(
       std::is_same_v<typename acc_t::reference, typename defacc_t::reference>);
   static_assert(
-      std::is_same_v<
-          typename acc_t::offset_policy,
-          Kokkos::Impl::ReferenceCountedAccessor<
-              element_t, memory_space_t, typename defacc_t::offset_policy>>);
+      std::is_same_v<typename acc_t::offset_policy,
+                     Kokkos::Impl::ReferenceCountedAccessor<
+                         memory_space_t, typename defacc_t::offset_policy>>);
 }
 
 template <class T>
@@ -120,10 +117,12 @@ TEST(TEST_CATEGORY, RefCountedAcc_Access) { test_refcountedacc_access(); }
 void test_refcountedacc_conversion() {
   Kokkos::parallel_for(
       Kokkos::RangePolicy<TEST_EXECSPACE>(0, 1), KOKKOS_LAMBDA(int) {
-        using acc_anonym_t = Kokkos::Impl::ReferenceCountedAccessor<
-            element_t, Kokkos::AnonymousSpace, defacc_t>;
-        using const_acc_anonym_t = Kokkos::Impl::ReferenceCountedAccessor<
-            const element_t, Kokkos::AnonymousSpace, const_defacc_t>;
+        using acc_anonym_t =
+            Kokkos::Impl::ReferenceCountedAccessor<Kokkos::AnonymousSpace,
+                                                   defacc_t>;
+        using const_acc_anonym_t =
+            Kokkos::Impl::ReferenceCountedAccessor<Kokkos::AnonymousSpace,
+                                                   const_defacc_t>;
         acc_t acc;
         const_acc_t c_acc(acc);
         acc_anonym_t acc_anonym(acc);
@@ -134,10 +133,10 @@ void test_refcountedacc_conversion() {
         static_assert(!std::is_constructible_v<acc_anonym_t, const_acc_t>);
         static_assert(
             !std::is_constructible_v<acc_anonym_t, const_acc_anonym_t>);
-        static_assert(
-            !std::is_constructible_v<Kokkos::Impl::ReferenceCountedAccessor<
-                                         double, memory_space_t, defacc_t>,
-                                     acc_t>);
+        static_assert(!std::is_constructible_v<
+                      Kokkos::Impl::ReferenceCountedAccessor<
+                          memory_space_t, Kokkos::default_accessor<double>>,
+                      acc_t>);
 
         unused_variable_sink(c_acc);
         unused_variable_sink(c_acc_anonym);

@@ -19,10 +19,6 @@
 
 namespace Kokkos {
 
-OpenMP::~OpenMP() {
-  Impl::check_execution_space_destructor_precondition(name());
-}
-
 OpenMP::OpenMP()
     : m_space_instance(
           (Impl::check_execution_space_constructor_precondition(name()),

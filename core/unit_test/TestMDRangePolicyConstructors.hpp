@@ -104,7 +104,6 @@ TEST(TEST_CATEGORY_DEATH, md_range_policy_bounds_unsafe_narrowing_conversions) {
       "original value.\n";
   std::string expected = std::regex_replace(msg, std::regex("\\(|\\)"), "\\$&");
 
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
   ASSERT_DEATH({ (void)Rank1Policy({-1}, {2}); }, expected);
   ASSERT_DEATH({ (void)Rank2Policy({-1, 0}, {2, 3}); }, expected);
 }
@@ -112,8 +111,6 @@ TEST(TEST_CATEGORY_DEATH, md_range_policy_bounds_unsafe_narrowing_conversions) {
 TEST(TEST_CATEGORY_DEATH, md_range_policy_invalid_bounds) {
   using Rank1Policy = Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<1>>;
   using Rank2Policy = Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>;
-
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 
   auto rank2_dim0 =
       (Rank2Policy::inner_direction == Kokkos::Iterate::Right) ? 1 : 0;
@@ -156,7 +153,6 @@ TEST(TEST_CATEGORY_DEATH, md_range_policy_tile_dims_exceed_launch_bounds) {
       "LaunchBounds (32) - choose smaller tile dims\n";
 
   std::string expected = std::regex_replace(msg, std::regex("\\(|\\)"), "\\$&");
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 
   using Policy = Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>,
                                        Kokkos::LaunchBounds<32>>;

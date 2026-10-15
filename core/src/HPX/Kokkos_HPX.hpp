@@ -91,7 +91,7 @@ template <typename T>
 constexpr hpx_range<T> get_chunk_range(const T i_chunk, const T offset,
                                        const T chunk_size, const T max) {
   const T begin = offset + i_chunk * chunk_size;
-  const T end   = (std::min)(begin + chunk_size, max);
+  const T end   = std::min(static_cast<T>(begin + chunk_size), max);
   return {begin, end};
 }
 
@@ -147,6 +147,7 @@ class HPX {
           name,
           Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{m_instance_id},
           [&]() {
+            if (hpx::get_runtime_ptr() == nullptr) return;
             auto &s = m_sender;
             hpx::this_thread::experimental::sync_wait(std::move(s));
             s = hpx::execution::experimental::unique_any_sender<>(
@@ -186,8 +187,12 @@ class HPX {
 
 #pragma GCC diagnostic pop
 
-  ~HPX() {
-    Kokkos::Impl::check_execution_space_destructor_precondition(name());
+  // Must be __host__ __device__ for the implicitly defined
+  // ~RangePolicy<ExecSpace>(); see the comment on ~Cuda() in
+  // Cuda/Kokkos_Cuda.hpp.
+  KOKKOS_FUNCTION ~HPX() {
+    KOKKOS_IF_ON_HOST(
+        (Kokkos::Impl::check_execution_space_destructor_precondition(name());))
   }
   explicit HPX(instance_mode mode)
       : m_instance_data(
@@ -792,6 +797,14 @@ class TeamPolicyInternal<Kokkos::Experimental::HPX, Properties...>
            team_size_ * m_thread_scratch_size[level];
   }
 
+  size_t team_scratch_size(int level) const {
+    return m_team_scratch_size[level];
+  }
+
+  size_t thread_scratch_size(int level) const {
+    return m_thread_scratch_size[level];
+  }
+
   inline static int scratch_size_max(int level) {
     return (level == 0 ? 1024 * 32 :  // Roughly L1 size
                 20 * 1024 * 1024);    // Limit to keep compatibility with CUDA
@@ -1116,8 +1129,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
         m_result_ptr(arg_view.data()),
         m_force_synchronous(!arg_view.impl_track().has_record()) {
     static_assert(
-        Kokkos::Impl::MemorySpaceAccess<typename ViewType::memory_space,
-                                        Kokkos::HostSpace>::accessible,
+        Kokkos::Impl::MemorySpaceAccess<
+            Kokkos::HostSpace, typename ViewType::memory_space>::accessible,
         "HPX reduce result must be a View accessible from HostSpace");
   }
 };
@@ -1211,8 +1224,8 @@ class ParallelReduce<CombinedFunctorReducerType,
         m_result_ptr(arg_view.data()),
         m_force_synchronous(!arg_view.impl_track().has_record()) {
     static_assert(
-        Kokkos::Impl::MemorySpaceAccess<typename ViewType::memory_space,
-                                        Kokkos::HostSpace>::accessible,
+        Kokkos::Impl::MemorySpaceAccess<
+            Kokkos::HostSpace, typename ViewType::memory_space>::accessible,
         "HPX reduce result must be a View accessible from HostSpace");
   }
 
@@ -1445,8 +1458,8 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
         m_policy(arg_policy),
         m_result_ptr(arg_result_view.data()) {
     static_assert(
-        Kokkos::Impl::MemorySpaceAccess<typename ViewType::memory_space,
-                                        Kokkos::HostSpace>::accessible,
+        Kokkos::Impl::MemorySpaceAccess<
+            Kokkos::HostSpace, typename ViewType::memory_space>::accessible,
         "Kokkos::HPX parallel_scan result must be host-accessible!");
   }
 };
@@ -1666,8 +1679,8 @@ class ParallelReduce<CombinedFunctorReducerType,
                      m_functor_reducer.get_functor(), arg_policy.team_size())),
         m_force_synchronous(!arg_result.impl_track().has_record()) {
     static_assert(
-        Kokkos::Impl::MemorySpaceAccess<typename ViewType::memory_space,
-                                        Kokkos::HostSpace>::accessible,
+        Kokkos::Impl::MemorySpaceAccess<
+            Kokkos::HostSpace, typename ViewType::memory_space>::accessible,
         "HPX reduce result must be a View accessible from HostSpace");
     if ((arg_policy.scratch_size(0) +
          FunctorTeamShmemSize<FunctorType>::value(

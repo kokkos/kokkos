@@ -8,6 +8,8 @@
 #include <impl/Kokkos_DeviceManagement.hpp>
 #include <impl/Kokkos_Command_Line_Parsing.hpp>
 
+#include "Kokkos_SetEnv.hpp"
+
 #include <cstdlib>
 #include <mutex>
 #include <optional>
@@ -34,12 +36,8 @@ class EnvVarsHelper {
         skip_ = std::make_optional<std::string>(name);
         break;
       }
-#ifdef _WIN32
-      int const error_code = _putenv((name + "=" + value).c_str());
-#else
       int const error_code =
-          setenv(name.c_str(), value.c_str(), /*overwrite=*/0);
-#endif
+          Kokkos::Impl::setenv(name.c_str(), value.c_str(), /*overwrite=*/0);
       if (error_code != 0) {
         std::cerr << "failed to set environment variable '" << name << "="
                   << value << "'\n";
@@ -50,11 +48,7 @@ class EnvVarsHelper {
   }
   void teardown() {
     for (auto const& name : vars_) {
-#ifdef _WIN32
-      int const error_code = _putenv((name + "=").c_str());
-#else
-      int const error_code = unsetenv(name.c_str());
-#endif
+      int const error_code = Kokkos::Impl::unsetenv(name.c_str());
       if (error_code != 0) {
         std::cerr << "failed to unset environment variable '" << name << "'\n";
         std::abort();

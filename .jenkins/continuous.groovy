@@ -33,6 +33,11 @@ pipeline {
                       echo "Hostname: ${NODE_NAME}" && \
                       pre-commit run --all-files'''
             }
+            post {
+                always {
+                    cleanWs()
+                       }
+                 }
         }
         stage('Build-1') {
             parallel {
@@ -83,6 +88,11 @@ pipeline {
                               cmake --build build && \
                               ctest --test-dir build --verbose'''
                     }
+                    post {
+                        always {
+                            cleanWs()
+                               }
+                         }
                 }
 
                 stage('GCC-10.5.0') {
@@ -113,7 +123,6 @@ pipeline {
                                 -DCMAKE_CXX_FLAGS=-Werror \
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
-                                -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_5=ON \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_OPENMP=ON \
@@ -122,11 +131,13 @@ pipeline {
                                 -DKokkos_ENABLE_SERIAL=ON \
                               .. && \
                               set +x && \
+                              ulimit -c 0 && \
                               make -j8 && ctest --no-compress-output -T Test --verbose && gcc -I$PWD/../core/src/ ../core/unit_test/tools/TestCInterface.c'''
                     }
                     post {
                         always {
                             xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                            cleanWs()
                         }
                     }
                 }
@@ -156,7 +167,6 @@ pipeline {
                                 -DCMAKE_CXX_STANDARD=20 \
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
-                                -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_5=ON \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_HIP=ON \
@@ -165,6 +175,7 @@ pipeline {
                                 -DCMAKE_INSTALL_PREFIX=${PWD}/../install \
                               .. && \
                               set +x && \
+                              ulimit -c 0 && \
                               make -j16 install && ctest --no-compress-output -T Test --verbose && \
                               cd .. && \
                               export CMAKE_PREFIX_PATH=${PWD}/install && \
@@ -183,6 +194,7 @@ pipeline {
                         always {
                             sh 'ccache --show-stats'
                             xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                            cleanWs()
                         }
                     }
                 }
@@ -225,13 +237,13 @@ pipeline {
                                 -DKokkos_ENABLE_OPENMP=OFF \
                                 -DKokkos_ENABLE_CUDA=ON \
                                 -DKokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE=ON \
-                                -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_5=ON \
                                 -DKokkos_ENABLE_MULTIPLE_CMAKE_LANGUAGES=ON \
                                 \
                                 -DCMAKE_INSTALL_PREFIX=${PWD}/../install \
                               .. && \
                               set +x && \
+                              ulimit -c 0 && \
                               make -j8 install && \
                               cd .. && \
                               rm -rf build-tests && mkdir -p build-tests && cd build-tests && \
@@ -277,6 +289,7 @@ pipeline {
                         always {
                             sh 'ccache --show-stats'
                             xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build-tests/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                            cleanWs()
                         }
                     }
                 }
@@ -309,12 +322,12 @@ pipeline {
                                 -DCMAKE_CXX_STANDARD=20 \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_EXPERIMENTAL_CXX20_MODULES=ON \
-                                -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_5=OFF \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_EXAMPLES=ON \
                                 -DKokkos_ENABLE_SERIAL=ON && \
                               set +x && \
+                              ulimit -c 0 && \
                               cmake --build build --target install -j 8 && \
                               ctest --test-dir build --no-compress-output -T Test --verbose && \
                               cd example/build_cmake_installed_modules && \
@@ -332,6 +345,7 @@ pipeline {
                     post {
                         always {
                             xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                            cleanWs()
                         }
                     }
                 }
@@ -365,11 +379,13 @@ pipeline {
                                 -DKokkos_ARCH_VOLTA70=ON \
                               .. && \
                               set +x && \
+                              ulimit -c 0 && \
                               make -j8 && ctest --no-compress-output -T Test --verbose'''
                     }
                     post {
                         always {
                             xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                            cleanWs()
                         }
                     }
 
@@ -405,18 +421,19 @@ pipeline {
                                 -DCMAKE_CXX_FLAGS="-Werror -Werror=all-warnings --diag_suppress=implicit_return_from_non_void_function" \
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
-                                -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_5=OFF \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_CUDA=ON \
                                 -DKokkos_ENABLE_OPENMP=ON \
                               .. && \
                               set +x && \
+                              ulimit -c 0 && \
                               make -j8 && ctest --no-compress-output -T Test --verbose'''
                     }
                     post {
                         always {
                             xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                            cleanWs()
                         }
                     }
 
@@ -445,7 +462,6 @@ pipeline {
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ARCH_AMPERE80=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
-                                -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_5=OFF \
                                 -DKokkos_ENABLE_EXAMPLES=ON \
                                 -DKokkos_ENABLE_TESTS=ON \
@@ -456,12 +472,14 @@ pipeline {
                                 -DCMAKE_CXX_STANDARD=20 \
                               .. && \
                               set +x && \
+                              ulimit -c 0 && \
                               make -j8 && ctest --no-compress-output -T Test --verbose'''
                     }
                     post {
                         always {
                             sh 'ccache --show-stats'
                             xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                            cleanWs()
                         }
                     }
                 }
@@ -497,21 +515,21 @@ pipeline {
                                 -DCMAKE_CXX_STANDARD=20 \
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
-                                -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_5=OFF \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_HIP=ON \
                                 -DKokkos_ENABLE_OPENMP=ON \
-                                -DKokkos_ENABLE_IMPL_MDSPAN=OFF \
                                 -DKokkos_ENABLE_HIP_MULTIPLE_KERNEL_INSTANTIATIONS=ON \
                               .. && \
                               set +x && \
+                              ulimit -c 0 && \
                               make -j16 && ctest --no-compress-output -T Test --verbose'''
                     }
                     post {
                         always {
                             sh 'ccache --show-stats'
                             xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                            cleanWs()
                         }
                     }
                 }
@@ -547,18 +565,19 @@ pipeline {
                                 -DCMAKE_CXX_STANDARD=20 \
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
-                                -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_5=ON \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_HIP=ON \
                               .. && \
                               set +x && \
+                              ulimit -c 0 && \
                               make -j16 && ctest --no-compress-output -T Test --verbose'''
                     }
                     post {
                         always {
                             sh 'ccache --show-stats'
                             xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                            cleanWs()
                         }
                     }
                 }
@@ -588,7 +607,6 @@ pipeline {
                                 -DCMAKE_CXX_STANDARD=20 \
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
-                                -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_5=ON \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_CUDA=ON \
@@ -596,12 +614,14 @@ pipeline {
                                 -DKokkos_ARCH_VOLTA70=ON \
                               .. && \
                               set +x && \
+                              ulimit -c 0 && \
                               make -j8 && ctest --no-compress-output -T Test --verbose'''
                     }
                     post {
                         always {
                             sh 'ccache --show-stats'
                             xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                            cleanWs()
                         }
                     }
                 }
@@ -631,7 +651,6 @@ pipeline {
                                 -DCMAKE_CXX_STANDARD=20 \
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
-                                -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_5=ON \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_CUDA=ON \
@@ -640,12 +659,14 @@ pipeline {
                                 -DKokkos_ARCH_VOLTA70=ON \
                               .. && \
                               set +x && \
+                              ulimit -c 0 && \
                               make -j8 && ctest --no-compress-output -T Test --verbose'''
                     }
                     post {
                         always {
                             sh 'ccache --show-stats'
                             xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                            cleanWs()
                         }
                     }
                 }
@@ -680,7 +701,6 @@ pipeline {
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_DEBUG=ON \
                                 -DKokkos_ENABLE_DEBUG_BOUNDS_CHECK=ON \
-                                -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_5=OFF \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_CUDA=ON \
@@ -689,6 +709,7 @@ pipeline {
                                 -DKokkos_ENABLE_IMPL_CUDA_MALLOC_ASYNC=ON \
                               .. && \
                               set +x && \
+                              ulimit -c 0 && \
                               make -j8 && ctest --no-compress-output -T Test --verbose && \
                               cd ../example/build_cmake_in_tree && \
                               rm -rf build && mkdir -p build && cd build && \
@@ -698,6 +719,7 @@ pipeline {
                         always {
                             sh 'ccache --show-stats'
                             xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                            cleanWs()
                         }
                     }
                 }

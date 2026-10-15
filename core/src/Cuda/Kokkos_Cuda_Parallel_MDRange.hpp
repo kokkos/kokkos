@@ -251,8 +251,8 @@ class ParallelReduce<CombinedFunctorReducerType,
   using size_type      = Cuda::size_type;
   using reducer_type   = ReducerType;
 
-  // Conditionally set word_size_type to int16_t or int8_t if value_type is
-  // smaller than int32_t (Kokkos::Cuda::size_type)
+  // Conditionally set word_size_type to uint16_t or uint8_t if value_type is
+  // smaller than 32 bits (width of Kokkos::Cuda::size_type)
   // word_size_type is used to determine the word count, shared memory buffer
   // size, and global memory buffer size before the reduction is performed.
   // Within the reduction, the word count is recomputed based on word_size_type
@@ -266,7 +266,8 @@ class ParallelReduce<CombinedFunctorReducerType,
   static_assert(sizeof(size_type) == 4);
   using word_size_type = std::conditional_t<
       sizeof(value_type) < 4,
-      std::conditional_t<sizeof(value_type) == 2, int16_t, int8_t>, size_type>;
+      std::conditional_t<sizeof(value_type) == 2, uint16_t, uint8_t>,
+      size_type>;
 
   // Algorithmic constraints: blockSize is a power of two AND blockDim.y ==
   // blockDim.z == 1
@@ -305,9 +306,8 @@ class ParallelReduce<CombinedFunctorReducerType,
   }
 
   inline __device__ void operator()() const {
-    const integral_nonzero_constant<word_size_type,
-                                    ReducerType::static_value_size() /
-                                        sizeof(word_size_type)>
+    const integral_nonzero_constant<
+        size_type, ReducerType::static_value_size() / sizeof(word_size_type)>
         word_count(m_functor_reducer.get_reducer().value_size() /
                    sizeof(word_size_type));
 
@@ -392,7 +392,7 @@ class ParallelReduce<CombinedFunctorReducerType,
   }
 
   inline void execute() {
-    const auto nwork = m_policy.m_num_tiles;
+    const index_type nwork = m_policy.m_num_tiles;
     if (nwork) {
       int block_size = m_policy.m_prod_tile_dims;
       // CONSTRAINT: Algorithm requires block_size >= product of tile dimensions
@@ -407,11 +407,11 @@ class ParallelReduce<CombinedFunctorReducerType,
                        : suggested_blocksize;  // Note: block_size must be less
                                                // than or equal to 512
 
-      m_scratch_space =
-          reinterpret_cast<word_size_type*>(cuda_internal_scratch_space(
-              m_policy.space(),
-              m_functor_reducer.get_reducer().value_size() *
-                  block_size /* block_size == max block_count */));
+      // Only let one instance at a time resize the instance's scratch memory
+      // allocations.
+      std::scoped_lock<std::mutex> scratch_buffers_lock(
+          m_policy.space().impl_internal_space_instance()->m_mutexScratchSpace);
+
       m_scratch_flags =
           cuda_internal_scratch_flags(m_policy.space(), sizeof(size_type));
       m_unified_space =
@@ -420,8 +420,13 @@ class ParallelReduce<CombinedFunctorReducerType,
 
       // REQUIRED ( 1 , N , 1 )
       const dim3 block(1, block_size, 1);
-      // Required grid.x <= block.y
-      const dim3 grid(std::min(int(block.y), int(nwork)), 1, 1);
+      const int cc = m_policy.space().concurrency() / block_size;
+      const dim3 grid(static_cast<uint32_t>(std::min(index_type(cc), nwork)), 1,
+                      1);
+      m_scratch_space =
+          reinterpret_cast<word_size_type*>(cuda_internal_scratch_space(
+              m_policy.space(),
+              m_functor_reducer.get_reducer().value_size() * grid.x));
 
       // TODO @graph We need to effectively insert this in to the graph
       const int shmem =

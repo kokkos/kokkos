@@ -29,7 +29,6 @@ kokkos_enable_option(CUDA_RELOCATABLE_DEVICE_CODE OFF "Whether to enable relocat
 kokkos_enable_option(IMPL_CUDA_MALLOC_ASYNC OFF "Whether to enable CudaMallocAsync (requires CUDA Toolkit 11.2)")
 kokkos_enable_option(IMPL_CUDA_UNIFIED_MEMORY OFF "Whether to leverage unified memory architectures for CUDA")
 
-kokkos_enable_option(DEPRECATED_CODE_4 OFF "Whether code deprecated in major release 4 is available")
 kokkos_enable_option(DEPRECATED_CODE_5 ON "Whether code deprecated in major release 5 is available")
 kokkos_enable_option(DEPRECATION_WARNINGS ON "Whether to emit deprecation warnings")
 kokkos_enable_option(HIP_RELOCATABLE_DEVICE_CODE OFF "Whether to enable relocatable device code (RDC) for HIP")
@@ -109,49 +108,26 @@ kokkos_enable_option(
   IMPL_REF_COUNT_BRANCH_UNLIKELY ON "Whether to use the C++20 `[[unlikely]]` attribute in the view reference counting"
 )
 mark_as_advanced(Kokkos_ENABLE_IMPL_REF_COUNT_BRANCH_UNLIKELY)
-kokkos_enable_option(
-  IMPL_VIEW_OF_VIEWS_DESTRUCTOR_PRECONDITION_VIOLATION_WORKAROUND OFF
-  "Whether to enable a workaround for invalid use of View of Views that causes program hang on destruction."
-)
-mark_as_advanced(Kokkos_ENABLE_IMPL_VIEW_OF_VIEWS_DESTRUCTOR_PRECONDITION_VIOLATION_WORKAROUND)
 
 kokkos_enable_option(EXPERIMENTAL_CXX20_MODULES OFF "Whether to export C++20 modules for Kokkos")
 if(Kokkos_ENABLE_EXPERIMENTAL_CXX20_MODULES)
   if(CMAKE_VERSION VERSION_LESS 3.28.2)
     message(FATAL_ERROR "Enabling Kokkos_ENABLE_EXPERIMENTAL_CXX20_MODULES requires at least CMake 3.28.2")
   endif()
-  if(Kokkos_ENABLE_DEPRECATED_CODE_4)
-    message(
-      FATAL_ERROR "Enabling Kokkos_ENABLE_EXPERIMENTAL_CXX20_MODULES requires Kokkos_ENABLE_DEPRECATED_CODE_4=OFF"
-    )
-  endif()
 endif()
 
-kokkos_enable_option(IMPL_MDSPAN ON "Whether to enable mdspan support (internal use only)")
 kokkos_enable_option(MDSPAN_EXTERNAL OFF "Whether to use an external version of mdspan")
 kokkos_enable_option(
   IMPL_CHECK_POSSIBLY_BREAKING_LAYOUTS
   OFF
   "Whether to check for uses of LayoutRight that have an explicit stride that may have changed in the new View implementation."
 )
-mark_as_advanced(Kokkos_ENABLE_IMPL_MDSPAN)
 mark_as_advanced(Kokkos_ENABLE_MDSPAN_EXTERNAL)
 mark_as_advanced(IMPL_CHECK_POSSIBLY_BREAKING_LAYOUTS)
 
-if(Kokkos_ENABLE_IMPL_MDSPAN)
-  set(VIEW_LEGACY_DEFAULT OFF)
-else()
-  set(VIEW_LEGACY_DEFAULT ON)
-endif()
-kokkos_enable_option(IMPL_VIEW_LEGACY ${VIEW_LEGACY_DEFAULT} "Whether to use the legacy implementation of View")
-mark_as_advanced(Kokkos_ENABLE_IMPL_VIEW_LEGACY)
-if(NOT Kokkos_ENABLE_IMPL_VIEW_LEGACY AND NOT Kokkos_ENABLE_IMPL_MDSPAN)
-  message(FATAL_ERROR "Kokkos_ENABLE_IMPL_MDSPAN must be set to use the new View implementation")
-endif()
-
 kokkos_enable_option(COMPLEX_ALIGN ON "Whether to align Kokkos::complex to 2*alignof(RealType)")
 
-if(KOKKOS_ENABLE_TESTS)
+if(KOKKOS_ENABLE_TESTS AND NOT Kokkos_ENABLE_EXPERIMENTAL_CXX20_MODULES)
   set(HEADER_SELF_CONTAINMENT_TESTS_DEFAULT ON)
 else()
   set(HEADER_SELF_CONTAINMENT_TESTS_DEFAULT OFF)
@@ -214,11 +190,6 @@ check_device_specific_options(
 )
 check_device_specific_options(DEVICE HPX OPTIONS IMPL_HPX_ASYNC_DISPATCH)
 check_device_specific_options(DEVICE OPENACC OPTIONS OPENACC_FORCE_HOST_AS_DEVICE)
-
-# Needed due to change from deprecated name to new header define name
-if(KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION)
-  set(KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION ON)
-endif()
 
 # Force consistency of KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE
 # and CMAKE_CUDA_SEPARABLE_COMPILATION when we are compiling

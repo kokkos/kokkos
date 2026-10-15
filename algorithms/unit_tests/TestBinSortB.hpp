@@ -18,6 +18,7 @@ import kokkos.std_algorithms;
 #include <TestStdAlgorithmsCommon.hpp>
 #include <random>
 #include <numeric>  //needed for iota
+#include <unordered_map>
 
 namespace Test {
 namespace BinSortSetB {

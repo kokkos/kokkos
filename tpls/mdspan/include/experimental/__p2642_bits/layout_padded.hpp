@@ -1,18 +1,6 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-//
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
+
 #pragma once
 
 #include <cassert>
@@ -26,7 +14,6 @@
 #include "../__p0009_bits/utility.hpp"
 
 namespace MDSPAN_IMPL_STANDARD_NAMESPACE {
-namespace MDSPAN_IMPL_PROPOSED_NAMESPACE {
 namespace detail {
 template<class T, class U>
 MDSPAN_INLINE_FUNCTION
@@ -81,7 +68,7 @@ struct static_array_type_for_padded_extent {
   using extents_type = Extents;
   using type = ::MDSPAN_IMPL_STANDARD_NAMESPACE::detail::maybe_static_array<
       index_type, size_t, dynamic_extent,
-      ::MDSPAN_IMPL_STANDARD_NAMESPACE::MDSPAN_IMPL_PROPOSED_NAMESPACE::detail::
+      ::MDSPAN_IMPL_STANDARD_NAMESPACE::detail::
           get_actual_static_padding_value<extents_type, PaddingValue,
                                           ExtentToPadIdx>()>;
 };
@@ -593,7 +580,7 @@ public:
       /* requires */ (sizeof...(Indices) == extents_type::rank() &&
                       (::MDSPAN_IMPL_STANDARD_NAMESPACE::detail::
                            are_valid_indices<index_type, Indices...>())))
-  MDSPAN_INLINE_FUNCTION constexpr size_t
+  MDSPAN_INLINE_FUNCTION constexpr index_type
   operator()(Indices... idxs) const noexcept {
 #if !defined(NDEBUG)
     ::MDSPAN_IMPL_STANDARD_NAMESPACE::detail::check_all_indices(this->extents(),
@@ -986,7 +973,7 @@ public:
       /* requires */ (sizeof...(Indices) == extents_type::rank() &&
                       (::MDSPAN_IMPL_STANDARD_NAMESPACE::detail::
                            are_valid_indices<index_type, Indices...>())))
-  MDSPAN_INLINE_FUNCTION constexpr size_t
+  MDSPAN_INLINE_FUNCTION constexpr index_type
   operator()(Indices... idxs) const noexcept {
     return compute_offset(std::index_sequence_for<Indices...>{}, idxs...);
   }
@@ -1085,5 +1072,4 @@ public:
          return src.submdspan_mapping_impl(slices...);
      }
 };
-}
 }

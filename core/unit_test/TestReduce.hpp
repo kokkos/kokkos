@@ -772,9 +772,12 @@ TEST(TEST_CATEGORY, reduction_with_large_iteration_count) {
 
 /* Test that searching the Max of a View containing only -inf returns -inf and
    the Min of a View containing only +inf returns +inf. */
-template <typename ScalarType>
+template <typename ScalarType, class DeviceType>
 class TestReductionOverInfiniteFloat {
  public:
+  using execution_space = DeviceType;
+  using memory_space    = typename execution_space::memory_space;
+
   TestReductionOverInfiniteFloat() { runTest(); }
 
   void runTest() {
@@ -784,12 +787,12 @@ class TestReductionOverInfiniteFloat {
     // Ensure that inf correctly correspond to infinity for type `ScalarType`
     EXPECT_TRUE((inf == inf * inf) && (inf == inf + 1));
 
-    Kokkos::View<ScalarType*> view("view", N);
+    Kokkos::View<ScalarType*, memory_space> view("view", N);
 
     Kokkos::deep_copy(view, inf);
     ScalarType min;
     Kokkos::parallel_reduce(
-        N,
+        Kokkos::RangePolicy<execution_space>(0, N),
         KOKKOS_LAMBDA(const int i, ScalarType& partial_min) {
           if (view[i] < partial_min) {
             partial_min = view[i];
@@ -802,7 +805,7 @@ class TestReductionOverInfiniteFloat {
     Kokkos::deep_copy(view, -inf);
     ScalarType max;
     Kokkos::parallel_reduce(
-        N,
+        Kokkos::RangePolicy<execution_space>(0, N),
         KOKKOS_LAMBDA(const int i, ScalarType& partial_max) {
           if (view[i] > partial_max) {
             partial_max = view[i];
@@ -828,15 +831,17 @@ TEST(TEST_CATEGORY, reduction_identity_min_max_floating_point_types) {
   // FIXME_CUDA cuda-clang 17 cannot compile the max parallel_reduce for half_t
   // and bhalf_t. The min parallel_reduce works correctly.
 #if !defined(KOKKOS_ENABLE_CUDA) || !defined(KOKKOS_COMPILER_CLANG)
-  TestReductionOverInfiniteFloat<Kokkos::Experimental::half_t>();
-  TestReductionOverInfiniteFloat<Kokkos::Experimental::bhalf_t>();
+  TestReductionOverInfiniteFloat<Kokkos::Experimental::half_t,
+                                 TEST_EXECSPACE>();
+  TestReductionOverInfiniteFloat<Kokkos::Experimental::bhalf_t,
+                                 TEST_EXECSPACE>();
 #endif
-  TestReductionOverInfiniteFloat<float>();
-  TestReductionOverInfiniteFloat<double>();
+  TestReductionOverInfiniteFloat<float, TEST_EXECSPACE>();
+  TestReductionOverInfiniteFloat<double, TEST_EXECSPACE>();
 
 #if !defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_ENABLE_HIP) && \
     !defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ENABLE_OPENACC)
-  TestReductionOverInfiniteFloat<long double>();
+  TestReductionOverInfiniteFloat<long double, TEST_EXECSPACE>();
 #endif
 }
 KOKKOS_IMPL_DISABLE_UNREACHABLE_WARNINGS_POP()

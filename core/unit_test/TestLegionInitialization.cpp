@@ -28,8 +28,6 @@ struct ReductionFunctor {
 // The purpose of this test is to mimic Legion's use case of initializing and
 // finalizing individual backends
 TEST(Legion_DeathTest, individual_backend_initialization) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-
   EXPECT_EXIT(
       {
         bool success = true;

@@ -34,6 +34,27 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   int m_shmem_size;
   size_t m_scratch_size[2];
 
+ public:
+  static auto create_team_for_lambda(
+      const auto& functor_wrapper,
+      const sycl::local_accessor<char, 1>& team_scratch_memory_L0,
+      const size_t (&scratch_size)[2], const int shmem_begin,
+      const sycl::global_ptr<char> global_scratch_ptr) {
+    return [=](sycl::nd_item<2> item) {
+      const member_type team_member(
+          team_scratch_memory_L0.get_multi_ptr<sycl::access::decorated::yes>(),
+          shmem_begin, scratch_size[0],
+          global_scratch_ptr + item.get_group(1) * scratch_size[1],
+          scratch_size[1], item, item.get_group_linear_id(),
+          item.get_group_range(1));
+      if constexpr (std::is_void_v<work_tag>)
+        functor_wrapper.get_functor()(team_member);
+      else
+        functor_wrapper.get_functor()(work_tag(), team_member);
+    };
+  }
+
+ private:
   template <typename FunctorWrapper>
   sycl::event sycl_direct_launch(
       const sycl::global_ptr<char> global_scratch_ptr,
@@ -57,19 +78,9 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
       const auto shmem_begin       = m_shmem_begin;
       const size_t scratch_size[2] = {m_scratch_size[0], m_scratch_size[1]};
 
-      auto lambda = [=](sycl::nd_item<2> item) {
-        const member_type team_member(
-            team_scratch_memory_L0
-                .get_multi_ptr<sycl::access::decorated::yes>(),
-            shmem_begin, scratch_size[0],
-            global_scratch_ptr + item.get_group(1) * scratch_size[1],
-            scratch_size[1], item, item.get_group_linear_id(),
-            item.get_group_range(1));
-        if constexpr (std::is_void_v<work_tag>)
-          functor_wrapper.get_functor()(team_member);
-        else
-          functor_wrapper.get_functor()(work_tag(), team_member);
-      };
+      auto lambda =
+          create_team_for_lambda(functor_wrapper, team_scratch_memory_L0,
+                                 scratch_size, shmem_begin, global_scratch_ptr);
 
       static sycl::kernel kernel = [&] {
         sycl::kernel_id functor_kernel_id =
@@ -123,11 +134,6 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
     auto& instance = *m_policy.space().impl_internal_space_instance();
 
-    // Only let one instance at a time resize the instance's scratch memory
-    // allocations.
-    std::scoped_lock<std::mutex> team_scratch_lock(
-        instance.m_team_scratch_mutex);
-
     // Functor's reduce memory, team scan memory, and team shared memory depend
     // upon team size.
     int scratch_pool_id = instance.acquire_team_scratch_space();
@@ -145,7 +151,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     sycl::event event = sycl_direct_launch(global_scratch_ptr, functor_wrapper,
                                            functor_wrapper.get_copy_event());
     functor_wrapper.register_event(event);
-    instance.register_team_scratch_event(scratch_pool_id, event);
+    instance.release_team_scratch_space(scratch_pool_id);
   }
 
   ParallelFor(FunctorType const& arg_functor, Policy const& arg_policy)

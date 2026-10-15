@@ -19,10 +19,7 @@ if(NOT desul_FOUND)
     endif()
   endif()
   if(KOKKOS_ENABLE_OPENACC)
-    # FIXME_OPENACC FIXME_CLACC - Below condition will be removed if Clacc can compile atomics.
-    if(KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
-      set(DESUL_ATOMICS_ENABLE_OPENACC ON)
-    endif()
+    set(DESUL_ATOMICS_ENABLE_OPENACC ON)
   endif()
   if(BUILD_SHARED_LIBS)
     set(DESUL_IMPL_BUILD_SHARED_LIBS ON)
@@ -149,34 +146,15 @@ if(NOT desul_FOUND)
   endif()
 endif()
 
-if(Kokkos_ENABLE_IMPL_MDSPAN)
-  if(Kokkos_ENABLE_MDSPAN_EXTERNAL)
-    global_set(KOKKOS_MDSPAN_VERSION "unknown")
-    message(STATUS "Using external mdspan")
-    target_link_libraries(kokkoscore PUBLIC mdspan::mdspan)
-  else()
-    target_include_directories(kokkoscore SYSTEM PUBLIC $<BUILD_INTERFACE:${KOKKOS_SOURCE_DIR}/tpls/mdspan/include>)
-
-    append_glob(KOKKOS_CORE_HEADERS ${KOKKOS_SOURCE_DIR}/tpls/mdspan/include/experimental/__p0009_bits/*.hpp)
-    append_glob(KOKKOS_CORE_HEADERS ${KOKKOS_SOURCE_DIR}/tpls/mdspan/include/experimental/mdspan)
-
-    install(
-      DIRECTORY "${KOKKOS_SOURCE_DIR}/tpls/mdspan/include/"
-      DESTINATION ${KOKKOS_HEADER_DIR}
-      FILES_MATCHING
-      PATTERN "mdspan"
-      PATTERN "*.hpp"
-    )
-
-    file(STRINGS "${KOKKOS_SOURCE_DIR}/tpls/mdspan-hash.txt" KOKKOS_MDSPAN_HASH)
-    global_set(KOKKOS_MDSPAN_VERSION "${KOKKOS_MDSPAN_HASH}")
-    message(STATUS "Using bundled mdspan copy (kokkos/mdspan@${KOKKOS_MDSPAN_HASH})")
-  endif()
+if(Kokkos_ENABLE_MDSPAN_EXTERNAL)
+  global_set(KOKKOS_MDSPAN_VERSION "unknown")
+  message(STATUS "Using external mdspan")
+else()
+  file(STRINGS "${KOKKOS_SOURCE_DIR}/tpls/mdspan-hash.txt" KOKKOS_MDSPAN_HASH)
+  global_set(KOKKOS_MDSPAN_VERSION "${KOKKOS_MDSPAN_HASH}")
+  message(STATUS "Using bundled mdspan copy (kokkos/mdspan@${KOKKOS_MDSPAN_HASH})")
 endif()
-
-if(Kokkos_ENABLE_IMPL_VIEW_LEGACY)
-  global_set(KOKKOS_MDSPAN_VERSION "not applicable")
-endif()
+target_link_libraries(kokkoscore PUBLIC mdspan::mdspan)
 
 kokkos_link_tpl(kokkoscore PUBLIC HWLOC)
 kokkos_link_tpl(kokkoscore PUBLIC CUDA)

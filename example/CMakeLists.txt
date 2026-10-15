@@ -1,6 +1,8 @@
 kokkos_add_example_directories(query_device)
-if(NOT Kokkos_ENABLE_SYCL AND (NOT Kokkos_ENABLE_CUDA OR Kokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE)
+if(NOT Kokkos_ENABLE_SYCL
+   AND (NOT Kokkos_ENABLE_CUDA OR Kokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE)
    AND (NOT Kokkos_ENABLE_HIP OR Kokkos_ENABLE_HIP_RELOCATABLE_DEVICE_CODE)
+   AND (NOT Kokkos_ENABLE_OPENACC)
 )
   kokkos_add_example_directories(virtual_functions)
 endif()

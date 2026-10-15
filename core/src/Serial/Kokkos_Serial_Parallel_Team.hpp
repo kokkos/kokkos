@@ -92,6 +92,12 @@ class TeamPolicyInternal<Kokkos::Serial, Properties...>
   inline size_t scratch_size(const int& level, int = 0) const {
     return m_team_scratch_size[level] + m_thread_scratch_size[level];
   }
+  inline size_t team_scratch_size(int level) const {
+    return m_team_scratch_size[level];
+  }
+  inline size_t thread_scratch_size(int level) const {
+    return m_thread_scratch_size[level];
+  }
 
   inline int impl_vector_length() const { return 1; }
   inline static int vector_length_max() {
@@ -390,8 +396,8 @@ class ParallelReduce<CombinedFunctorReducerType,
                   "Reduction result on Kokkos::Serial must be a Kokkos::View");
 
     static_assert(
-        Kokkos::Impl::MemorySpaceAccess<typename ViewType::memory_space,
-                                        Kokkos::HostSpace>::accessible,
+        Kokkos::Impl::MemorySpaceAccess<
+            Kokkos::HostSpace, typename ViewType::memory_space>::accessible,
         "Kokkos::Serial reduce result must be a View accessible from "
         "HostSpace");
     if ((arg_policy.scratch_size(0) +

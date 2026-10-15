@@ -40,8 +40,8 @@ class ParallelReduce<CombinedFunctorReducerType,
   using reducer_type   = ReducerType;
   using size_type      = HIP::size_type;
 
-  // Conditionally set word_size_type to int16_t or int8_t if value_type is
-  // smaller than int32_t (Kokkos::HIP::size_type)
+  // Conditionally set word_size_type to uint16_t or uint8_t if value_type is
+  // smaller than 32 bits (width of Kokkos::HIP::size_type)
   // word_size_type is used to determine the word count, shared memory buffer
   // size, and global memory buffer size before the reduction is performed.
   // Within the reduction, the word count is recomputed based on word_size_type
@@ -55,7 +55,8 @@ class ParallelReduce<CombinedFunctorReducerType,
   static_assert(sizeof(size_type) == 4);
   using word_size_type = std::conditional_t<
       sizeof(value_type) < 4,
-      std::conditional_t<sizeof(value_type) == 2, int16_t, int8_t>, size_type>;
+      std::conditional_t<sizeof(value_type) == 2, uint16_t, uint8_t>,
+      size_type>;
 
   // Algorithmic constraints: blockSize is a power of two AND blockDim.y ==
   // blockDim.z == 1
@@ -79,9 +80,8 @@ class ParallelReduce<CombinedFunctorReducerType,
   inline __device__ void operator()() const {
     const ReducerType& reducer = m_functor_reducer.get_reducer();
 
-    const integral_nonzero_constant<word_size_type,
-                                    ReducerType::static_value_size() /
-                                        sizeof(word_size_type)>
+    const integral_nonzero_constant<
+        size_type, ReducerType::static_value_size() / sizeof(word_size_type)>
         word_count(reducer.value_size() / sizeof(word_size_type));
 
     {
@@ -151,8 +151,7 @@ class ParallelReduce<CombinedFunctorReducerType,
   inline void execute() {
     ReducerType reducer = m_functor_reducer.get_reducer();
 
-    const auto nwork = m_policy.m_num_tiles;
-    if (nwork) {
+    if (m_policy.m_num_tiles) {
       int block_size = m_policy.m_prod_tile_dims;
       // CONSTRAINT: Algorithm requires block_size >= product of tile dimensions
       // Nearest power of two
@@ -166,20 +165,53 @@ class ParallelReduce<CombinedFunctorReducerType,
                        : suggested_blocksize;  // Note: block_size must be less
                                                // than or equal to 512
 
+      // REQUIRED ( 1 , N , 1 )
+      dim3 block(1, block_size, 1);
+      // use a slightly less constrained, but still well bounded limit for
+      // scratch
+      const index_type nwork = m_policy.m_num_tiles * m_policy.m_prod_tile_dims;
+      index_type nblocks     = (nwork + block.y - 1) / block.y;
+      // Heuristic deciding the value of nblocks.
+      // The general idea here is we want to:
+      //    1. Not undersubscribe the device (i.e., we want at least
+      //    preferred_block_min blocks)
+      //    2. Have each thread reduce > 1 value to minimize overheads
+      //    3. Limit the total # of blocks, to avoid unbounded scratch space
+      constexpr int block_max           = 4096;
+      constexpr int preferred_block_min = 1024;
+
+      if (nblocks < preferred_block_min) {
+        // keep blocks as is, already have low parallelism
+      } else if (nblocks > block_max) {
+        // "large dispatch" -> already have lots of parallelism
+        nblocks = block_max;
+      } else {
+        // in the intermediate range, try to have each thread process multiple
+        // items to offset the cost of the reduction (with not enough
+        // parallelism to hide it)
+        int items_per_thread =
+            (nwork + nblocks * block_size - 1) / (nblocks * block_size);
+        if (items_per_thread < 4) {
+          int ratio = std::min(
+              (nblocks + preferred_block_min - 1) / preferred_block_min,
+              static_cast<index_type>(4 + items_per_thread - 1) /
+                  items_per_thread);
+          nblocks /= ratio;
+        }
+      }
+
+      dim3 grid(static_cast<uint32_t>(nblocks), 1, 1);
+
+      // Only let one instance at a time resize the instance's scratch memory
+      // allocations.
+      std::scoped_lock<std::mutex> scratch_buffers_lock(
+          m_policy.space().impl_internal_space_instance()->m_mutexScratchSpace);
+
       m_scratch_space =
           reinterpret_cast<word_size_type*>(hip_internal_scratch_space(
-              m_policy.space(),
-              reducer.value_size() *
-                  block_size /* block_size == max block_count */));
+              m_policy.space(), reducer.value_size() * grid.x));
       m_scratch_flags =
           hip_internal_scratch_flags(m_policy.space(), sizeof(size_type));
-
-      // REQUIRED ( 1 , N , 1 )
-      const dim3 block(1, block_size, 1);
-      // Required grid.x <= block.y
-      const dim3 grid(std::min(static_cast<uint32_t>(block.y),
-                               static_cast<uint32_t>(nwork)),
-                      1, 1);
 
       const int shmem =
           ::Kokkos::Impl::hip_single_inter_block_reduce_scan_shmem<

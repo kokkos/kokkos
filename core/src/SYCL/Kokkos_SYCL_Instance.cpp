@@ -114,16 +114,18 @@ SYCLInternal::SYCLInternal(const sycl::queue& q) : m_queue(q) {
 }
 
 int SYCLInternal::acquire_team_scratch_space() {
-  // Grab the next scratch memory allocation. We must make sure that the last
-  // kernel using the allocation has completed, so we wait for the event that
-  // was registered with that kernel.
-  int current_team_scratch = desul::atomic_fetch_inc_mod(
-      &m_current_team_scratch, m_n_team_scratch - 1,
-      desul::MemoryOrderRelaxed(), desul::MemoryScopeDevice());
-
-  m_team_scratch_event[current_team_scratch].wait_and_throw();
+  int current_team_scratch = 0;
+  int zero                 = 0;
+  while (!m_team_scratch_pool[current_team_scratch].compare_exchange_weak(
+      zero, 1, std::memory_order_release, std::memory_order_relaxed)) {
+    current_team_scratch = (current_team_scratch + 1) % m_n_team_scratch;
+  }
 
   return current_team_scratch;
+}
+
+void SYCLInternal::release_team_scratch_space(int scratch_pool_id) {
+  m_team_scratch_pool[scratch_pool_id] = 0;
 }
 
 sycl::global_ptr<void> SYCLInternal::resize_team_scratch_space(
@@ -149,11 +151,6 @@ sycl::global_ptr<void> SYCLInternal::resize_team_scratch_space(
                            m_team_scratch_current_size[scratch_pool_id]);
   }
   return m_team_scratch_ptr[scratch_pool_id];
-}
-
-void SYCLInternal::register_team_scratch_event(int scratch_pool_id,
-                                               sycl::event event) {
-  m_team_scratch_event[scratch_pool_id] = event;
 }
 
 uint32_t SYCLInternal::impl_get_instance_id() const { return m_instance_id; }

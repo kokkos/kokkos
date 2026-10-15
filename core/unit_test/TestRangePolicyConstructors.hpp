@@ -69,8 +69,6 @@ TEST(TEST_CATEGORY, range_policy_runtime_parameters) {
 }
 
 TEST(TEST_CATEGORY_DEATH, range_policy_invalid_bounds) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-
   using Policy    = Kokkos::RangePolicy<TEST_EXECSPACE>;
   using ChunkSize = Kokkos::ChunkSize;
 
@@ -85,7 +83,6 @@ TEST(TEST_CATEGORY_DEATH, range_policy_invalid_bounds) {
                msg);
 }
 TEST(TEST_CATEGORY_DEATH, range_policy_check_exceeding_max) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
   // Trigger due to exceeding a policy's range maximum
   using IntPolicy = Kokkos::RangePolicy<int>;
 
@@ -97,7 +94,6 @@ TEST(TEST_CATEGORY_DEATH, range_policy_check_exceeding_max) {
 }
 
 TEST(TEST_CATEGORY_DEATH, range_policy_check_exceeding_min) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
   // Trigger due to exceeding a policy's range minimum
   using IntPolicy = Kokkos::RangePolicy<int>;
 
@@ -119,8 +115,6 @@ struct W {  // round-trip conversion check for narrowing should "fire"
 };
 
 TEST(TEST_CATEGORY_DEATH, range_policy_round_trip_conversion_fires) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-
   using Policy = Kokkos::RangePolicy<>;
 
   static_assert(std::is_convertible_v<W, Policy::index_type>);
@@ -154,8 +148,6 @@ TEST(TEST_CATEGORY, range_policy_one_way_convertible_bounds) {
 }
 
 TEST(TEST_CATEGORY_DEATH, range_policy_check_sign_changes) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-
   using UInt32Policy =
       Kokkos::RangePolicy<TEST_EXECSPACE, Kokkos::IndexType<std::uint32_t>>;
 
@@ -186,7 +178,6 @@ TEST(TEST_CATEGORY_DEATH, range_policy_implicitly_converted_bounds) {
   [[maybe_unused]] auto get_error_msg = [](auto str, auto val) {
     return str.insert(str.find("(") + 1, std::to_string(val).c_str());
   };
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 
   std::string expected = std::regex_replace(msg, std::regex("\\(|\\)"), "\\$&");
   {

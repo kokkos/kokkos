@@ -1,0 +1,15 @@
+diff --git a/googletest/include/gtest/gtest.h b/googletest/include/gtest/gtest.h
+index de7d528f..b2dfc2dd 100644
+--- a/googletest/include/gtest/gtest.h
++++ b/googletest/include/gtest/gtest.h
+@@ -49,6 +49,10 @@
+ #ifndef GOOGLETEST_INCLUDE_GTEST_GTEST_H_
+ #define GOOGLETEST_INCLUDE_GTEST_GTEST_H_
+ 
++#ifdef __NVCOMPILER
++#pragma nv_diag_suppress 177
++#endif
++
+ #include <cstddef>
+ #include <cstdint>
+ #include <iomanip>

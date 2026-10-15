@@ -36,16 +36,7 @@ class RandomAccessIterator<::Kokkos::View<DataType, Args...>> {
 
  private:
   static constexpr bool view_is_always_strided =
-#ifdef KOKKOS_ENABLE_IMPL_MDSPAN
       decltype(std::declval<view_type>().to_mdspan())::is_always_strided();
-#else
-      (std::is_same_v<typename view_type::traits::array_layout,
-                      Kokkos::LayoutLeft> ||
-       std::is_same_v<typename view_type::traits::array_layout,
-                      Kokkos::LayoutRight> ||
-       std::is_same_v<typename view_type::traits::array_layout,
-                      Kokkos::LayoutStride>);
-#endif
 
   static_assert(view_type::rank == 1 && view_is_always_strided);
 

@@ -70,6 +70,7 @@ class InitializationSettings;
 /// or chosen from the enabled execution spaces in the following order:
 /// Kokkos::Cuda, Kokkos::OpenMP,
 /// Kokkos::Threads, Kokkos::Serial
+/// Also define the derivative DefaultMemorySpace
 
 #if defined(__clang_analyzer__)
 #define KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION \
@@ -85,25 +86,34 @@ namespace Kokkos {
 
 #if defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_CUDA)
 using DefaultExecutionSpace KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION = Cuda;
+using DefaultMemorySpace = CudaSpace;
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HIP)
 using DefaultExecutionSpace KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION = HIP;
+using DefaultMemorySpace = HIPSpace;
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SYCL)
 using DefaultExecutionSpace KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION = SYCL;
+using DefaultMemorySpace = SYCLDeviceUSMSpace;
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENACC)
 using DefaultExecutionSpace KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION =
     Experimental::OpenACC;
+using DefaultMemorySpace = Experimental::OpenACCSpace;
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_NEXTSILICON)
 using DefaultExecutionSpace KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION =
-    Kokkos::Experimental::NextSilicon;
+    Experimental::NextSilicon;
+using DefaultMemorySpace = Experimental::NextSiliconSharedSpace;
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMP)
 using DefaultExecutionSpace KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION = OpenMP;
+using DefaultMemorySpace = HostSpace;
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_THREADS)
 using DefaultExecutionSpace KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION = Threads;
+using DefaultMemorySpace = HostSpace;
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HPX)
 using DefaultExecutionSpace KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION =
-    Kokkos::Experimental::HPX;
+    Experimental::HPX;
+using DefaultMemorySpace = HostSpace;
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SERIAL)
 using DefaultExecutionSpace KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION = Serial;
+using DefaultMemorySpace = HostSpace;
 #else
 #error \
     "At least one of the following execution spaces must be defined in order to use Kokkos: Kokkos::Cuda, Kokkos::HIP, Kokkos::SYCL, Kokkos::Experimental::OpenACC, Kokkos::Experimental::NextSilicon, Kokkos::OpenMP, Kokkos::Threads, Kokkos::Experimental::HPX, or Kokkos::Serial."
@@ -138,7 +148,11 @@ using DefaultHostExecutionSpace KOKKOS_IMPL_DEFAULT_HOST_EXEC_SPACE_ANNOTATION =
     "At least one of the following execution spaces must be defined in order to use Kokkos: Kokkos::OpenMP, Kokkos::Threads, Kokkos::Experimental::HPX, or Kokkos::Serial."
 #endif
 
-// check for devices that support sharedSpace
+// define the DefaultHostMemorySpace which right now always is HostSpace
+// In the past (Intel KNL with HBM + DDR) that was not always true
+using DefaultHostMemorySpace = HostSpace;
+
+// check for devices that support SharedSpace
 #if defined(KOKKOS_ENABLE_CUDA)
 using SharedSpace = CudaUVMSpace;
 #define KOKKOS_HAS_SHARED_SPACE
@@ -263,15 +277,6 @@ template <class DstSpace, class SrcSpace,
           class ExecutionSpace = typename DstSpace::execution_space,
           class Enable         = void>
 struct DeepCopy;
-
-template <class ViewType, class Layout = typename ViewType::array_layout,
-          class ExecSpace = typename ViewType::execution_space,
-          int Rank = ViewType::rank, typename iType = int64_t>
-struct ViewFill;
-
-template <class ViewTypeA, class ViewTypeB, class Layout, class ExecSpace,
-          int Rank, typename iType>
-struct ViewCopy;
 
 template <class Functor, class Policy>
 struct FunctorPolicyExecutionSpace;

@@ -2,7 +2,9 @@
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #include <TestStdAlgorithmsCommon.hpp>
+#ifndef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
 #include "std_algorithms/Kokkos_InclusiveScan.hpp"
+#endif
 
 namespace Test {
 namespace stdalgos {

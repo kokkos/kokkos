@@ -52,5 +52,23 @@ TEST(TEST_CATEGORY, team_scratch_memory_index_parallel_for) {
   Kokkos::parallel_for("kernel", policy, DummyTeamParallelForFunctor());
 }
 
+TEST(TEST_CATEGORY, scratch_size_query) {
+  const int thread_scratch[] = {4, 32};
+  const int team_scratch[]   = {64, 256};
+  const int league_size      = 10;
+  const int team_size        = 1;
+
+  Kokkos::TeamPolicy<TEST_EXECSPACE> policy(league_size, team_size);
+  policy.set_scratch_size(0, Kokkos::PerTeam(team_scratch[0]),
+                          Kokkos::PerThread(thread_scratch[0]));
+  policy.set_scratch_size(1, Kokkos::PerTeam(team_scratch[1]),
+                          Kokkos::PerThread(thread_scratch[1]));
+
+  ASSERT_EQ(policy.team_scratch_size(0), team_scratch[0]);
+  ASSERT_EQ(policy.team_scratch_size(1), team_scratch[1]);
+  ASSERT_EQ(policy.thread_scratch_size(0), thread_scratch[0]);
+  ASSERT_EQ(policy.thread_scratch_size(1), thread_scratch[1]);
+}
+
 }  // namespace Test
 #endif

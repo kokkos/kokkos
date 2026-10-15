@@ -9,6 +9,7 @@
 #include <Kokkos_Rank.hpp>                       // Rank
 #include <Kokkos_Layout.hpp>                     // Iterate
 #include <type_traits>                           // is_void
+#include <traits/Kokkos_PolicyTraitMatcher.hpp>
 
 namespace Kokkos {
 namespace Impl {

@@ -5,7 +5,7 @@
 #ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
 import kokkos.core;
 #else
-#include <Kokkos_Core.hpp>
+#include <Kokkos_InitializeFinalize.hpp>
 #endif
 
 #include <gtest/gtest.h>
@@ -14,6 +14,7 @@ import kokkos.core;
 #include <exception>
 #include <iostream>
 #include <string>
+#include <thread>
 
 #include "KokkosExecutionEnvironmentNeverInitializedFixture.hpp"
 
@@ -49,8 +50,6 @@ struct Hook4 {
 };
 
 TEST_F(PushFinalizeHook_DeathTest, called_in_reverse_order) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-
   std::string const expectedOutput([] {
     std::ostringstream os;
     os << hook4str << '\n'
@@ -85,8 +84,6 @@ char const my_terminate_handler_msg[] = "my terminate handler was called\n";
 }
 
 TEST_F(PushFinalizeHook_DeathTest, terminate_on_throw) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-
   auto terminate_handler = std::get_terminate();
 
   std::set_terminate(my_terminate_handler);
@@ -101,6 +98,84 @@ TEST_F(PushFinalizeHook_DeathTest, terminate_on_throw) {
       my_terminate_handler_msg);
 
   std::set_terminate(terminate_handler);
+}
+
+TEST_F(PushFinalizeHook_DeathTest, ignore_late_registration) {
+  EXPECT_EXIT(
+      {
+        Kokkos::initialize();
+        Kokkos::finalize();
+        // legal to register after finalize but will never be called
+        Kokkos::push_finalize_hook(
+            [] { throw std::runtime_error("never actually thrown"); });
+        std::exit(EXIT_SUCCESS);
+      },
+      ::testing::ExitedWithCode(EXIT_SUCCESS), "");
+}
+
+TEST_F(PushFinalizeHook_DeathTest, thread_safe) {
+  EXPECT_EXIT(
+      ([] {
+        constexpr int num_pushes_1 = 8;
+        constexpr int num_pushes_2 = 4;
+        constexpr int num_pushes_3 = 2;
+        int count                  = 0;
+        // generates a nullary callable that pushes n times a callback to
+        // increment the counter by one
+        auto push_increment_n = [&count](int n) {
+          return [&count, n] {
+            for (int i = 0; i < n; ++i)
+              Kokkos::push_finalize_hook([&count] { ++count; });
+          };
+        };
+        Kokkos::initialize(
+            Kokkos::InitializationSettings().set_disable_warnings(true));
+        std::thread t1(push_increment_n(num_pushes_1));
+        std::thread t2(push_increment_n(num_pushes_2));
+        std::thread t3(push_increment_n(num_pushes_3));
+        t1.join();
+        t2.join();
+        t3.join();
+        Kokkos::finalize();
+        std::exit(count == num_pushes_1 + num_pushes_2 + num_pushes_3
+                      ? EXIT_SUCCESS
+                      : EXIT_FAILURE);
+      }()),
+      ::testing::ExitedWithCode(EXIT_SUCCESS), "");
+}
+
+// Registering a hook from within a running finalize hook must not deadlock,
+// since finalize_hooks_mutex is not held while a hook is being called.
+TEST_F(PushFinalizeHook_DeathTest,
+       hook_registered_during_finalization_is_called) {
+  EXPECT_EXIT(
+      {
+        static bool hook_from_hook_ran = false;
+        Kokkos::push_finalize_hook([] {
+          Kokkos::push_finalize_hook([] { hook_from_hook_ran = true; });
+        });
+        Kokkos::initialize(
+            Kokkos::InitializationSettings().set_disable_warnings(true));
+        Kokkos::finalize();
+        std::exit(hook_from_hook_ran ? EXIT_SUCCESS : EXIT_FAILURE);
+      },
+      ::testing::ExitedWithCode(EXIT_SUCCESS), "");
+}
+
+TEST_F(PushFinalizeHook_DeathTest, finalizes_at_exit) {
+  EXPECT_EXIT(
+      {
+        static bool finalize_hook_called = false;
+        std::atexit([] {
+          if (!finalize_hook_called) std::_Exit(EXIT_FAILURE);
+        });
+        Kokkos::initialize(
+            Kokkos::InitializationSettings().set_disable_warnings(true));
+        std::atexit([] { Kokkos::finalize(); });
+        Kokkos::push_finalize_hook([] { finalize_hook_called = true; });
+        std::exit(EXIT_SUCCESS);
+      },
+      ::testing::ExitedWithCode(EXIT_SUCCESS), "");
 }
 
 }  // namespace

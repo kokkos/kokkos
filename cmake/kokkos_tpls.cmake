@@ -76,9 +76,23 @@ if(Kokkos_ENABLE_DESUL_ATOMICS_EXTERNAL)
   kokkos_export_cmake_tpl(desul REQUIRED COMPONENTS atomics)
 endif()
 
-if(Kokkos_ENABLE_IMPL_MDSPAN AND Kokkos_ENABLE_MDSPAN_EXTERNAL)
+if(Kokkos_ENABLE_MDSPAN_EXTERNAL)
   find_package(mdspan REQUIRED)
   kokkos_export_cmake_tpl(mdspan REQUIRED)
+else()
+  include(FetchContent)
+
+  FetchContent_Declare(mdspan SOURCE_DIR ${KOKKOS_SOURCE_DIR}/tpls/mdspan)
+  set(MDSPAN_CXX_STANDARD ${KOKKOS_CXX_STANDARD})
+  FetchContent_MakeAvailable(mdspan)
+
+  # Treat the bundled mdspan headers as system headers for Kokkos consumers.
+  get_target_property(KOKKOS_MDSPAN_INCLUDE_DIRECTORIES mdspan INTERFACE_INCLUDE_DIRECTORIES)
+  set_property(
+    TARGET mdspan APPEND PROPERTY INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${KOKKOS_MDSPAN_INCLUDE_DIRECTORIES}"
+  )
+
+  install(TARGETS mdspan EXPORT KokkosTargets)
 endif()
 
 if(Kokkos_ENABLE_OPENMP)

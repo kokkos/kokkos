@@ -10,8 +10,15 @@ import kokkos.core;
 #include <Kokkos_Core.hpp>
 #endif
 
+#include <cstdlib>
+
+// NOLINTNEXTLINE(bugprone-exception-escape)
 int main(int argc, char *argv[]) {
   Kokkos::initialize(argc, argv);
+  // We want to use "threadsafe" by default while the default in GTest on Linux
+  // is "fast"
+  if (!std::getenv("GTEST_DEATH_TEST_STYLE"))
+    GTEST_FLAG_SET(death_test_style, "threadsafe");
   ::testing::InitGoogleTest(&argc, argv);
 
   int result = RUN_ALL_TESTS();

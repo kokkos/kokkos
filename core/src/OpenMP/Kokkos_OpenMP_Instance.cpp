@@ -175,6 +175,7 @@ void OpenMPInternal::fence(const std::string &name) {
       [this]() { std::lock_guard<std::mutex> lock(m_instance_mutex); });
 }
 
+// NOLINTNEXTLINE(bugprone-exception-escape)
 OpenMPInternal::~OpenMPInternal() {
   if (omp_in_parallel()) {
     std::string msg("Kokkos::OpenMP::finalize ERROR : in parallel");

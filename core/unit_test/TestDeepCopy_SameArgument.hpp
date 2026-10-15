@@ -46,8 +46,6 @@ void test_deep_copy_same_argument(View v) {
 }
 
 TEST(TEST_CATEGORY_DEATH, deep_copy_same_view) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-
   test_deep_copy_same_argument(Kokkos::View<double, TEST_EXECSPACE>("v0"));
   test_deep_copy_same_argument(Kokkos::View<int*, TEST_EXECSPACE>("v1", 10));
 }

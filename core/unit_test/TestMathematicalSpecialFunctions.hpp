@@ -1913,7 +1913,18 @@ TEST(TEST_CATEGORY, mathspecialfunc_errorfunc) {
   GTEST_SKIP() << "skipping when compiling with -ffinite-math-only";
 #endif
   TestComplexErrorFunction<TEST_EXECSPACE> test;
+
+// FIXME_NEXTSILICON: > 60 minutes to project on 1.3.0-84
+#ifdef KOKKOS_ENABLE_NEXTSILICON
+  if constexpr (!std::is_same_v<TEST_EXECSPACE,
+                                Kokkos::Experimental::NextSilicon>) {
+    test.testit();
+  } else {
+    GTEST_SKIP() << "Slow projection on NextSilicon";
+  }
+#else
   test.testit();
+#endif
 }
 
 TEST(TEST_CATEGORY, mathspecialfunc_cbesselj0y0) {

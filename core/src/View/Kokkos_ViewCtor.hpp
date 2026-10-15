@@ -77,7 +77,7 @@ template <typename... P>
 struct ViewCtorProp;
 
 // Forward declare
-template <typename Specialize, typename T>
+template <typename T>
 struct CommonViewAllocProp;
 
 /* Dummy to allow for empty ViewCtorProp object
@@ -87,11 +87,11 @@ struct ViewCtorProp<void> {};
 
 /* Common value_type stored as ViewCtorProp
  */
-template <typename Specialize, typename T>
-struct ViewCtorProp<void, CommonViewAllocProp<Specialize, T>> {
+template <typename T>
+struct ViewCtorProp<void, CommonViewAllocProp<T>> {
   ViewCtorProp() = default;
 
-  using type = CommonViewAllocProp<Specialize, T>;
+  using type = CommonViewAllocProp<T>;
 
   KOKKOS_FUNCTION
   ViewCtorProp(const type &arg) : value(arg) {}
@@ -262,7 +262,7 @@ struct ViewCtorProp : public ViewCtorProp<void, P>... {
 
   /* Copy from a matching property subset */
   KOKKOS_FUNCTION ViewCtorProp(pointer_type arg0)
-      : ViewCtorProp<void, pointer_type>(arg0) {}
+      : view_ctor_prop_base<pointer_type>(arg0) {}
 
   // If we use `ViewCtorProp<Args...>` and `ViewCtorProp<void, Args>...` here
   // directly, MSVC 16.5.5+CUDA 10.2 appears to think that `ViewCtorProp` refers
@@ -400,10 +400,6 @@ KOKKOS_FUNCTION const auto &get_property(
     return view_ctor_prop;
   }
 }
-#ifdef KOKKOS_IMPL_INTEL_BOGUS_MISSING_RETURN_STATEMENT_AT_END_OF_NON_VOID_FUNCTION
-#pragma warning(pop)
-#undef KOKKOS_IMPL_INTEL_BOGUS_MISSING_RETURN_STATEMENT_AT_END_OF_NON_VOID_FUNCTION
-#endif
 
 template <typename Tag, typename... P>
 KOKKOS_FUNCTION auto &get_property(ViewCtorProp<P...> &view_ctor_prop) {

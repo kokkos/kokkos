@@ -4,8 +4,6 @@
 #ifndef TESTHALFCONVERSION_HPP_
 #define TESTHALFCONVERSION_HPP_
 
-#include <impl/Kokkos_Half_FloatingPointWrapper.hpp>
-
 namespace Test {
 
 template <class T>
@@ -21,11 +19,12 @@ void test_half_conversion_type() {
     ASSERT_NEAR(b, test_value, epsilon);
   }
 
+  using MemorySpace = typename TEST_EXECSPACE::memory_space;
+
   auto test_values_device = Kokkos::create_mirror_view_and_copy(
-      Kokkos::DefaultExecutionSpace::memory_space{},
-      Kokkos::View<T*, Kokkos::HostSpace>(test_values.data(),
-                                          test_values.size()));
-  Kokkos::View<T*> b_v("b_v", test_values.size());
+      MemorySpace{}, Kokkos::View<T*, Kokkos::HostSpace>(test_values.data(),
+                                                         test_values.size()));
+  Kokkos::View<T*, MemorySpace> b_v("b_v", test_values.size());
   Kokkos::parallel_for(
       "TestHalfConversion", test_values.size(), KOKKOS_LAMBDA(int i) {
         Kokkos::Experimental::half_t d_a =
@@ -51,11 +50,12 @@ void test_bhalf_conversion_type() {
     ASSERT_NEAR(b, test_value, epsilon);
   }
 
+  using MemorySpace = typename TEST_EXECSPACE::memory_space;
+
   auto test_values_device = Kokkos::create_mirror_view_and_copy(
-      Kokkos::DefaultExecutionSpace::memory_space{},
-      Kokkos::View<T*, Kokkos::HostSpace>(test_values.data(),
-                                          test_values.size()));
-  Kokkos::View<T*> b_v("b_v", test_values.size());
+      MemorySpace{}, Kokkos::View<T*, Kokkos::HostSpace>(test_values.data(),
+                                                         test_values.size()));
+  Kokkos::View<T*, MemorySpace> b_v("b_v", test_values.size());
   Kokkos::parallel_for(
       "TestHalfConversion", test_values.size(), KOKKOS_LAMBDA(int i) {
         Kokkos::Experimental::bhalf_t d_a =
