@@ -258,9 +258,7 @@ struct MDRangePolicy<P, Properties...>
   static constexpr auto Right = Iterate::Right;
   static constexpr auto Left  = Iterate::Left;
 
-  KOKKOS_INLINE_FUNCTION const typename traits::execution_space& space() const {
-    return m_space;
-  }
+  const typename traits::execution_space& space() const { return m_space; }
 
   MDRangePolicy() = default;
 
