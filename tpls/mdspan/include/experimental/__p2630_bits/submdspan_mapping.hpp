@@ -89,14 +89,14 @@ MDSPAN_INLINE_FUNCTION constexpr auto construct_sub_strides(
 }
 
 template<class SliceSpecifier, class IndexType>
-constexpr bool is_range_like_slice_v = false;
+constexpr bool is_range_slice_v = false;
 
 template<class IndexType>
-constexpr bool is_range_like_slice_v<full_extent_t, IndexType> = true;
+constexpr bool is_range_slice_v<full_extent_t, IndexType> = true;
 
 template<class OffsetType, class ExtentType, auto Stride, class IndexType>
-constexpr bool is_range_like_slice_v<
-    extent_slice<
+constexpr bool is_range_slice_v<
+    strided_slice<
       OffsetType,
       ExtentType,
       constant_wrapper<Stride>>,
@@ -145,13 +145,13 @@ struct deduce_layout_left_submapping<
       return true;
     // Use layout_left for rank 1 result if leftmost slice specifier is range like
     } else if constexpr (SubRank == 1) {
-      return ((Idx > 0 || is_range_like_slice_v<SliceSpecifiers, IndexType>)&&...);
+      return ((Idx > 0 || is_range_slice_v<SliceSpecifiers, IndexType>)&&...);
     } else {
       // Preserve if leftmost SubRank-1 slices are full_extent_t and
       // the slice at idx Subrank - 1 is a range and
       // for idx > SubRank the slice is an index
       return ((((Idx <  SubRank - 1) && std::is_same_v<SliceSpecifiers, full_extent_t>) ||
-               ((Idx == SubRank - 1) && is_range_like_slice_v<SliceSpecifiers, IndexType>) ||
+               ((Idx == SubRank - 1) && is_range_slice_v<SliceSpecifiers, IndexType>) ||
                ((Idx >  SubRank - 1) && is_index_slice_v<SliceSpecifiers, IndexType>)) && ...);
     }
 #if defined(__NVCC__) && !defined(__CUDA_ARCH__) && defined(__GNUC__)
@@ -172,10 +172,10 @@ struct deduce_layout_left_submapping<
     // then another range slice
     // then more index slices
     // e.g. R I I I F F F R I I for obtaining a rank-5 from a rank-10
-    return ((((Idx == 0)                                       && is_range_like_slice_v<SliceSpecifiers, IndexType>) ||
+    return ((((Idx == 0)                                       && is_range_slice_v<SliceSpecifiers, IndexType>) ||
              ((Idx > 0 && Idx <= gap_len)                     && is_index_slice_v<SliceSpecifiers, IndexType>) ||
              ((Idx > gap_len && Idx < gap_len + SubRank - 1) && std::is_same_v<SliceSpecifiers, full_extent_t>) ||
-             ((Idx == gap_len + SubRank - 1)                  && is_range_like_slice_v<SliceSpecifiers, IndexType>) ||
+             ((Idx == gap_len + SubRank - 1)                  && is_range_slice_v<SliceSpecifiers, IndexType>) ||
              ((Idx >  gap_len + SubRank - 1)                  && is_index_slice_v<SliceSpecifiers, IndexType>)) && ... );
   }
 };
@@ -379,13 +379,13 @@ struct deduce_layout_right_submapping<
       return true;
     // Use layout_right for rank 1 result if rightmost slice specifier is range like
     } else if constexpr (SubRank == 1) {
-      return ((Idx < Rank - 1 || is_range_like_slice_v<SliceSpecifiers, IndexType>)&&...);
+      return ((Idx < Rank - 1 || is_range_slice_v<SliceSpecifiers, IndexType>)&&...);
     } else {
       // Preserve if rightmost SubRank-1 slices are full_extent_t and
       // the slice at idx Rank-Subrank is a range and
       // for idx < Rank - SubRank the slice is an index
       return ((((Idx >= Rank - SubRank) && std::is_same_v<SliceSpecifiers, full_extent_t>) ||
-               ((Idx == Rank - SubRank) && is_range_like_slice_v<SliceSpecifiers, IndexType>) ||
+               ((Idx == Rank - SubRank) && is_range_slice_v<SliceSpecifiers, IndexType>) ||
                ((Idx <  Rank - SubRank) && is_index_slice_v<SliceSpecifiers, IndexType>)) && ...);
     }
 #if defined(__NVCC__) && !defined(__CUDA_ARCH__) && defined(__GNUC__)
@@ -406,10 +406,10 @@ struct deduce_layout_right_submapping<
     // then another range slice
     // then more index slices
     // e.g. I I R F F F I I I R for obtaining a rank-5 from a rank-10
-    return ((((Idx == Rank - 1)                                               && is_range_like_slice_v<SliceSpecifiers, IndexType>) ||
+    return ((((Idx == Rank - 1)                                               && is_range_slice_v<SliceSpecifiers, IndexType>) ||
              ((Idx >= Rank - gap_len - 1 && Idx < Rank - 1)                  && is_index_slice_v<SliceSpecifiers, IndexType>) ||
              ((Idx >  Rank - gap_len - SubRank && Idx < Rank - gap_len - 1) && std::is_same_v<SliceSpecifiers, full_extent_t>) ||
-             ((Idx == Rank - gap_len - SubRank)                              && is_range_like_slice_v<SliceSpecifiers, IndexType>) ||
+             ((Idx == Rank - gap_len - SubRank)                              && is_range_slice_v<SliceSpecifiers, IndexType>) ||
              ((Idx <  Rank - gap_len - SubRank)                              && is_index_slice_v<SliceSpecifiers, IndexType>)) && ... );
   }
 };
@@ -422,10 +422,7 @@ compute_s_static_layout_right (std::index_sequence<Idx...>) {
   // Neither StaticStride nor any of the provided extents can be zero.
   // StaticStride can never be zero, the static_extents we are looking at are associated with
   // integral slice specifiers - which wouldn't be valid for zero extent
-  // Note the condition was originally written as Idx >= Extents::rank() - 1 - NumGaps && Idx < Extents::rank() - 1
-  // But that triggered CodeQL warnings.
-    size_t val = ((Idx + 1 + NumGaps >= Extents::rank() && Idx + 1 < Extents::rank() ?
-       (Extents::static_extent(Idx) == dynamic_extent?0:Extents::static_extent(Idx)) : 1) * ... * (StaticStride == dynamic_extent?0:StaticStride));
+    size_t val = ((Idx >= Extents::rank() - 1 - NumGaps && Idx < Extents::rank() - 1 ? (Extents::static_extent(Idx) == dynamic_extent?0:Extents::static_extent(Idx)) : 1) * ... * (StaticStride == dynamic_extent?0:StaticStride));
     return val == 0?dynamic_extent:val;
   }
 
