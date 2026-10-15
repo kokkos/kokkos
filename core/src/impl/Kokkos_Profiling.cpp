@@ -217,6 +217,7 @@ void tool_invoked_fence(const uint32_t /* devID */) {
 #ifdef KOKKOS_ENABLE_TUNING
 static size_t kernel_name_context_variable_id;
 static size_t kernel_type_context_variable_id;
+size_t problem_size_context_variable_id;
 static std::unordered_map<size_t, std::unordered_set<size_t>>
     features_per_context;
 static std::unordered_set<size_t> active_features;
@@ -293,7 +294,8 @@ static void updateProfileLibraryState() {
 }
 
 void beginParallelFor(const std::string& kernelPrefix, const uint32_t devID,
-                      uint64_t* kernelID) {
+                      uint64_t* kernelID,
+                      [[maybe_unused]] int64_t problemSize) {
   Experimental::invoke_kokkosp_callback(
       Experimental::MayRequireGlobalFencing::Yes,
       Experimental::current_callbacks.begin_parallel_for, kernelPrefix.c_str(),
@@ -306,8 +308,10 @@ void beginParallelFor(const std::string& kernelPrefix, const uint32_t devID,
         Experimental::make_variable_value(
             Experimental::kernel_name_context_variable_id, kernelPrefix),
         Experimental::make_variable_value(
-            Experimental::kernel_type_context_variable_id, "parallel_for")};
-    Experimental::set_input_values(context_id, 2, contextValues);
+            Experimental::kernel_type_context_variable_id, "parallel_for"),
+        Experimental::make_variable_value(
+            Experimental::problem_size_context_variable_id, problemSize)};
+    Experimental::set_input_values(context_id, 3, contextValues);
   }
 #endif
 }
@@ -324,7 +328,8 @@ void endParallelFor(const uint64_t kernelID) {
 }
 
 void beginParallelScan(const std::string& kernelPrefix, const uint32_t devID,
-                       uint64_t* kernelID) {
+                       uint64_t* kernelID,
+                       [[maybe_unused]] int64_t problemSize) {
   Experimental::invoke_kokkosp_callback(
       Experimental::MayRequireGlobalFencing::Yes,
       Experimental::current_callbacks.begin_parallel_scan, kernelPrefix.c_str(),
@@ -337,8 +342,10 @@ void beginParallelScan(const std::string& kernelPrefix, const uint32_t devID,
         Experimental::make_variable_value(
             Experimental::kernel_name_context_variable_id, kernelPrefix),
         Experimental::make_variable_value(
-            Experimental::kernel_type_context_variable_id, "parallel_scan")};
-    Experimental::set_input_values(context_id, 2, contextValues);
+            Experimental::kernel_type_context_variable_id, "parallel_scan"),
+        Experimental::make_variable_value(
+            Experimental::problem_size_context_variable_id, problemSize)};
+    Experimental::set_input_values(context_id, 3, contextValues);
   }
 #endif
 }
@@ -355,7 +362,8 @@ void endParallelScan(const uint64_t kernelID) {
 }
 
 void beginParallelReduce(const std::string& kernelPrefix, const uint32_t devID,
-                         uint64_t* kernelID) {
+                         uint64_t* kernelID,
+                         [[maybe_unused]] int64_t problemSize) {
   Experimental::invoke_kokkosp_callback(
       Experimental::MayRequireGlobalFencing::Yes,
       Experimental::current_callbacks.begin_parallel_reduce,
@@ -368,8 +376,10 @@ void beginParallelReduce(const std::string& kernelPrefix, const uint32_t devID,
         Experimental::make_variable_value(
             Experimental::kernel_name_context_variable_id, kernelPrefix),
         Experimental::make_variable_value(
-            Experimental::kernel_type_context_variable_id, "parallel_reduce")};
-    Experimental::set_input_values(context_id, 2, contextValues);
+            Experimental::kernel_type_context_variable_id, "parallel_reduce"),
+        Experimental::make_variable_value(
+            Experimental::problem_size_context_variable_id, problemSize)};
+    Experimental::set_input_values(context_id, 3, contextValues);
   }
 #endif
 }
@@ -786,6 +796,14 @@ void initialize(const std::string& profileLibrary) {
   kernel_type.candidates = kernel_type_variable_candidates;
   Experimental::kernel_type_context_variable_id =
       Experimental::declare_input_type("kokkos.kernel_type", kernel_type);
+
+  Experimental::VariableInfo problem_size;
+  problem_size.type     = Experimental::ValueType::kokkos_value_int64;
+  problem_size.category = Experimental::StatisticalCategory::kokkos_value_ratio;
+  problem_size.valueQuantity =
+      Experimental::CandidateValueType::kokkos_value_unbounded;
+  Experimental::problem_size_context_variable_id =
+      Experimental::declare_input_type("kokkos.problem_size", problem_size);
 
 #endif
 

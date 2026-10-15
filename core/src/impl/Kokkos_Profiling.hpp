@@ -70,13 +70,13 @@ struct ToolResponse {
 bool profileLibraryLoaded();
 
 void beginParallelFor(const std::string& kernelPrefix, const uint32_t devID,
-                      uint64_t* kernelID);
+                      uint64_t* kernelID, int64_t problemSize = 0);
 void endParallelFor(const uint64_t kernelID);
 void beginParallelScan(const std::string& kernelPrefix, const uint32_t devID,
-                       uint64_t* kernelID);
+                       uint64_t* kernelID, int64_t problemSize = 0);
 void endParallelScan(const uint64_t kernelID);
 void beginParallelReduce(const std::string& kernelPrefix, const uint32_t devID,
-                         uint64_t* kernelID);
+                         uint64_t* kernelID, int64_t problemSize = 0);
 void endParallelReduce(const uint64_t kernelID);
 
 void pushRegion(const std::string& kName);
