@@ -353,7 +353,6 @@ std::enable_if_t<is_openacc_integral_type_v<T>, T> device_atomic_xor_fetch(
 }
 //</editor-fold>
 
-
 }  // namespace Impl
 }  // namespace desul
 
