@@ -24,6 +24,7 @@ class SYCLTeamMember {
   using execution_space      = Kokkos::SYCL;
   using scratch_memory_space = execution_space::scratch_memory_space;
   using team_handle          = SYCLTeamMember;
+  using thread_handle        = ThreadHandleType<team_handle>;
 
  private:
   mutable sycl::local_ptr<void> m_team_reduce;
@@ -495,11 +496,23 @@ template <typename iType, class Closure>
 void parallel_for(const Impl::TeamThreadRangeBoundariesStruct<
                       iType, Impl::SYCLTeamMember>& loop_boundaries,
                   const Closure& closure) {
+  using thread_handle_t = Impl::ThreadHandleType<Impl::SYCLTeamMember>;
+
   for (iType i = loop_boundaries.start +
                  loop_boundaries.member.item().get_local_id(0);
        i < loop_boundaries.end;
-       i += loop_boundaries.member.item().get_local_range(0))
-    closure(i);
+       i += loop_boundaries.member.item().get_local_range(0)) {
+    if constexpr (std::is_invocable_v<Closure, iType>) {
+      closure(i);
+    } else if constexpr (std::is_invocable_v<Closure, thread_handle_t const&,
+                                             iType>) {
+      closure(thread_handle_t(loop_boundaries.member), i);
+    } else {
+      static_assert(Kokkos::Impl::always_false<Closure>::value,
+                    "Kokkos::parallel_for(TeamThreadRange) closure must be "
+                    "invocable with (iType) or (ThreadHandleType, iType)");
+    }
+  }
 }
 
 //----------------------------------------------------------------------------

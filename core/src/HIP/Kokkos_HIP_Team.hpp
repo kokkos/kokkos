@@ -45,6 +45,7 @@ class HIPTeamMember {
   using execution_space      = HIP;
   using scratch_memory_space = execution_space::scratch_memory_space;
   using team_handle          = HIPTeamMember;
+  using thread_handle        = ThreadHandleType<team_handle>;
 
  private:
   mutable void* m_team_reduce;
@@ -451,9 +452,21 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
         loop_boundaries,
     const Closure& closure) {
 #ifdef __HIP_DEVICE_COMPILE__
+  using thread_handle_t = Impl::ThreadHandleType<Impl::HIPTeamMember>;
+
   for (iType i = loop_boundaries.start + threadIdx.y; i < loop_boundaries.end;
-       i += blockDim.y)
-    closure(i);
+       i += blockDim.y) {
+    if constexpr (std::is_invocable_v<Closure, iType>) {
+      closure(i);
+    } else if constexpr (std::is_invocable_v<Closure, thread_handle_t const&,
+                                             iType>) {
+      closure(thread_handle_t(loop_boundaries.member), i);
+    } else {
+      static_assert(Kokkos::Impl::always_false<Closure>::value,
+                    "Kokkos::parallel_for(TeamThreadRange) closure must be "
+                    "invocable with (iType) or (ThreadHandleType, iType)");
+    }
+  }
 #else
   (void)loop_boundaries;
   (void)closure;

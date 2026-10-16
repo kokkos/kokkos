@@ -28,22 +28,22 @@ struct ExecutionSpaceMixin : AnalyzeNextTrait {
 
   static constexpr auto show_execution_space_error_in_compilation_message =
       show_extra_execution_space_erroneously_given_to_execution_policy<
-          std::conditional_t<base_t::execution_space_is_defaulted, void,
+          std::conditional_t<base_t::execution_space_is_not_set, void,
                              typename base_t::execution_space>>{};
-  static_assert(base_t::execution_space_is_defaulted,
+  static_assert(base_t::execution_space_is_not_set,
                 "Kokkos Error: More than one execution space given. Search "
                 "compiler output for 'show_extra_execution_space' to see the "
                 "type of the errant tag.");
 
-  static constexpr auto execution_space_is_defaulted = false;
+  static constexpr auto execution_space_is_not_set = false;
 
   using execution_space = ExecSpace;
 };
 
 struct ExecutionSpaceTrait : TraitSpecificationBase<ExecutionSpaceTrait> {
   struct base_traits {
-    static constexpr auto execution_space_is_defaulted = true;
-    using execution_space                              = void;
+    static constexpr auto execution_space_is_not_set = true;
+    using execution_space                            = void;
     KOKKOS_IMPL_MSVC_NVCC_EBO_WORKAROUND
   };
   template <class T>
