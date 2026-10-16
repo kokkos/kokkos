@@ -298,7 +298,11 @@ struct test_random_scalar {
 
 #if !KOKKOS_HALF_T_IS_FLOAT
       if (std::is_same_v<Scalar, Kokkos::Experimental::half_t>) {
-        mean_eps_expect       = 0.0003;
+        // For half types, the floating point error is larger than the expected
+        // statistical error so the modified tolerances here are found
+        // experimentally. In particular, we have seen that the error here is
+        // larger for std::float16_t than for Cuda, HIP, or SYCL half types.
+        mean_eps_expect       = 0.00035;
         variance_eps_expect   = 1.0;
         covariance_eps_expect = 5.0e4;
       }
