@@ -26,13 +26,13 @@ static_assert(false,
 namespace Kokkos {
 namespace Impl {
 template <bool HasLabel, Kokkos::ExecutionPolicy ExecPolicy, class FunctorType>
-inline void parallel_for_impl(const OptionalLabel<HasLabel> maybe_label,
+inline void parallel_for_impl(const OptionalLabel<HasLabel> optional_label,
                               const ExecPolicy& policy,
                               const FunctorType& functor) {
   /** Enforce correct use **/
   if constexpr (HasLabel) {
-    CheckUsage<UsageRequires::insideExecEnv>::check("parallel_for", policy,
-                                                    maybe_label.get().c_str());
+    CheckUsage<UsageRequires::insideExecEnv>::check(
+        "parallel_for", policy, optional_label.get().c_str());
   } else {
     CheckUsage<UsageRequires::insideExecEnv>::check("parallel_for", policy);
   }
@@ -40,25 +40,25 @@ inline void parallel_for_impl(const OptionalLabel<HasLabel> maybe_label,
   uint64_t kpID = 0;
   /** Request a tuned policy from the tools subsystem */
   const auto& response = Kokkos::Tools::Impl::begin_parallel_for(
-      policy, functor, maybe_label, kpID);
+      policy, functor, optional_label, kpID);
   const auto& inner_policy = response.policy;
 
   auto closure = construct_with_shared_allocation_tracking_disabled<
       ParallelFor<FunctorType, ExecPolicy>>(functor, inner_policy);
 
   closure.execute();
-  Kokkos::Tools::Impl::end_parallel_for(inner_policy, functor, maybe_label,
+  Kokkos::Tools::Impl::end_parallel_for(inner_policy, functor, optional_label,
                                         kpID);
 }
 
 template <bool HasLabel, class FunctorType>
-inline void parallel_for_impl(const OptionalLabel<HasLabel> maybe_label,
+inline void parallel_for_impl(const OptionalLabel<HasLabel> optional_label,
                               const size_t work_count,
                               const FunctorType& functor) {
   /** Enforce correct use **/
   if constexpr (HasLabel) {
-    CheckUsage<UsageRequires::insideExecEnv>::check("parallel_for", work_count,
-                                                    maybe_label.get().c_str());
+    CheckUsage<UsageRequires::insideExecEnv>::check(
+        "parallel_for", work_count, optional_label.get().c_str());
   } else {
     CheckUsage<UsageRequires::insideExecEnv>::check("parallel_for", work_count);
   }
@@ -68,7 +68,7 @@ inline void parallel_for_impl(const OptionalLabel<HasLabel> maybe_label,
   using policy = RangePolicy<execution_space>;
 
   policy execution_policy = policy(0, work_count);
-  ::Kokkos::Impl::parallel_for_impl(maybe_label, execution_policy, functor);
+  ::Kokkos::Impl::parallel_for_impl(optional_label, execution_policy, functor);
 }
 }  // namespace Impl
 
