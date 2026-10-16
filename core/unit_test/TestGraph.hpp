@@ -1341,7 +1341,8 @@ struct NoOp {
   KOKKOS_FUNCTION void operator()(Args&&...) const {}
 };
 
-TEST(TEST_CATEGORY, execution_policy_with_default_execution_space_instance) {
+TEST(TEST_CATEGORY_DEATH,
+     execution_policy_with_default_execution_space_instance) {
   Kokkos::Experimental::Graph<TEST_EXECSPACE> graph{};
 
   const auto [exec] =

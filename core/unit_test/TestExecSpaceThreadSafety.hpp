@@ -385,6 +385,7 @@ void run_exec_space_thread_safety_range_scan_different_sizes() {
   ASSERT_FALSE(failed);
 }
 
+// FIXME_NEXTSILICON: very slow (~2 min) during training on 1.3.0-120
 TEST(TEST_CATEGORY, exec_space_thread_safety_range_scan_different_sizes) {
   KOKKOS_TEST_SKIP_IF_NEEDED();
 #ifdef KOKKOS_ENABLE_OPENMP
