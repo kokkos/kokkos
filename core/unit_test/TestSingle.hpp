@@ -98,7 +98,7 @@ void test_no_output() {
     EXPECT_TRUE(KokkosTest::contains(exec_space, res, 2));
   }
 
-  // +kernal_name +WorkTag +ExecSpace
+  // +kernel_name +WorkTag +ExecSpace
   Kokkos::deep_copy(res, 0);
   Kokkos::single("single+worktag+exec_space",
                  Kokkos::SinglePolicy<AssignTwoTag, TEST_EXECSPACE>(), f);
@@ -127,7 +127,7 @@ void test_no_output() {
 }
 
 // Test for the ParallelReduce based API with a single return value
-void test_one_output() {
+void test_output() {
   int val;
   ReductionFunctor f;
 
@@ -232,7 +232,7 @@ TEST(TEST_CATEGORY, single_policy) { test_single_policy(); }
 
 TEST(TEST_CATEGORY, single) { test_no_output(); }
 
-TEST(TEST_CATEGORY, single_with_output) { test_one_output(); }
+TEST(TEST_CATEGORY, single_output) { test_output(); }
 
 TEST(TEST_CATEGORY, single_restrictive_return_type) {
   test_restrictive_return_type();
