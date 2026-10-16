@@ -17,11 +17,13 @@ namespace Impl {
 
 // clang-format off
 #define DESUL_IMPL_GCC_HOST_ATOMIC_FETCH_OP_ORDER_SCOPE(_OP, CONSTRAINT, MEMORY_ORDER, MEMORY_SCOPE) \
+  DESUL_IMPL_ACC_ROUTINE_DIRECTIVE                                                                   \
   template <class T>                                                                                 \
   std::enable_if_t<CONSTRAINT<T>::value && host_atomic_always_lock_free<T>, T>                       \
   host_atomic_fetch##_OP  (T* const dest, T value, MEMORY_ORDER, MEMORY_SCOPE) {                     \
     return __atomic_fetch##_OP  (dest, value, GCCMemoryOrder<MEMORY_ORDER>::value);                  \
   }                                                                                                  \
+  DESUL_IMPL_ACC_ROUTINE_DIRECTIVE                                                                   \
   template <class T>                                                                                 \
   std::enable_if_t<CONSTRAINT<T>::value && host_atomic_always_lock_free<T>, T>                       \
   host_atomic##_OP##_fetch(T* const dest, T value, MEMORY_ORDER, MEMORY_SCOPE) {                     \

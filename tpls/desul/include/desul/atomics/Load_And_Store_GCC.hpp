@@ -16,6 +16,7 @@ SPDX-License-Identifier: (BSD-3-Clause)
 namespace desul {
 namespace Impl {
 
+DESUL_IMPL_ACC_ROUTINE_DIRECTIVE
 template <class T, class MemoryOrder, class MemoryScope>
 std::enable_if_t<host_atomic_always_lock_free<T>, T> host_atomic_load(T* ptr,
                                                                       MemoryOrder,
@@ -25,14 +26,16 @@ std::enable_if_t<host_atomic_always_lock_free<T>, T> host_atomic_load(T* ptr,
   return ret;
 }
 
+DESUL_IMPL_ACC_ROUTINE_DIRECTIVE
 template <class T, class MemoryOrder, class MemoryScope>
 std::enable_if_t<host_atomic_always_lock_free<T>> host_atomic_store(T* ptr,
                                                                     T val,
                                                                     MemoryOrder,
                                                                     MemoryScope) {
-  return __atomic_store(ptr, &val, GCCMemoryOrder<MemoryOrder>::value);
+  __atomic_store(ptr, &val, GCCMemoryOrder<MemoryOrder>::value);
 }
 
+DESUL_IMPL_ACC_ROUTINE_DIRECTIVE
 template <class T, class MemoryOrder, class MemoryScope>
 std::enable_if_t<!host_atomic_always_lock_free<T>, T> host_atomic_load(
     T* ptr, MemoryOrder, MemoryScope scope) {
@@ -46,6 +49,7 @@ std::enable_if_t<!host_atomic_always_lock_free<T>, T> host_atomic_load(
   return ret;
 }
 
+DESUL_IMPL_ACC_ROUTINE_DIRECTIVE
 template <class T, class MemoryOrder, class MemoryScope>
 std::enable_if_t<!host_atomic_always_lock_free<T>> host_atomic_store(
     T* ptr, T val, MemoryOrder, MemoryScope scope) {

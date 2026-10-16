@@ -130,6 +130,7 @@ static constexpr bool desul_impl_omp_on_host() { return false; }
 
 #if defined(DESUL_HAVE_OPENACC_ATOMICS)
 #include <openacc.h>
+#include <type_traits>
 #ifdef __NVCOMPILER
 // FIXME_OPENACC We cannot determine in a constant expresion whether we are on host or
 // on device with NVHPC.  We use the device implementation on both sides.
@@ -137,6 +138,16 @@ static constexpr bool desul_impl_omp_on_host() { return false; }
   { DESUL_IMPL_STRIP_PARENS(CODE) }
 #define DESUL_IF_ON_HOST(CODE) \
   {}
+// The device implementation is not atomic on the host.  For 32- and 64-bit integers,
+// the host implementation (GCC builtins) lowers fine in device code.  Test at run time
+// whether we are on the host and, if so, use it.  Must precede DESUL_IF_ON_DEVICE, and
+// CODE must return.
+#define DESUL_IF_ON_HOST_INTEGRAL(T, CODE)                                      \
+  if constexpr (std::is_integral_v<T> && (sizeof(T) == 4 || sizeof(T) == 8)) { \
+    if (acc_on_device(acc_device_host)) {                                       \
+      DESUL_IMPL_STRIP_PARENS(CODE)                                             \
+    }                                                                           \
+  }
 #else
 #define DESUL_IF_ON_DEVICE(CODE)                      \
   if constexpr (acc_on_device(acc_device_not_host)) { \
@@ -146,6 +157,7 @@ static constexpr bool desul_impl_omp_on_host() { return false; }
   if constexpr (acc_on_device(acc_device_host)) { \
     DESUL_IMPL_STRIP_PARENS(CODE)                 \
   }
+#define DESUL_IF_ON_HOST_INTEGRAL(T, CODE)
 #endif
 #define DESUL_IMPL_ACC_ROUTINE_DIRECTIVE _Pragma("acc routine seq")
 #else

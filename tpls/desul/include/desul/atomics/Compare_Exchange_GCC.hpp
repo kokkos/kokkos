@@ -28,6 +28,7 @@ namespace Impl {
 #pragma GCC diagnostic ignored "-Watomic-alignment"
 #endif
 
+DESUL_IMPL_ACC_ROUTINE_DIRECTIVE
 template <class T, class MemoryOrder, class MemoryScope>
 std::enable_if_t<host_atomic_always_lock_free<T>, T> host_atomic_exchange(T* dest,
                                                                           T value,
@@ -40,6 +41,7 @@ std::enable_if_t<host_atomic_always_lock_free<T>, T> host_atomic_exchange(T* des
 
 // Failure mode for host_atomic_compare_exchange_n cannot be RELEASE nor ACQ_REL so
 // Those two get handled separately.
+DESUL_IMPL_ACC_ROUTINE_DIRECTIVE
 template <class T, class MemoryOrder, class MemoryScope>
 std::enable_if_t<host_atomic_always_lock_free<T>, T> host_atomic_compare_exchange(
     T* dest, T compare, T value, MemoryOrder, MemoryScope) {
@@ -52,6 +54,7 @@ std::enable_if_t<host_atomic_always_lock_free<T>, T> host_atomic_compare_exchang
   return compare;
 }
 
+DESUL_IMPL_ACC_ROUTINE_DIRECTIVE
 template <class T, class MemoryScope>
 std::enable_if_t<host_atomic_always_lock_free<T>, T> host_atomic_compare_exchange(
     T* dest, T compare, T value, MemoryOrderRelease, MemoryScope) {
@@ -60,6 +63,7 @@ std::enable_if_t<host_atomic_always_lock_free<T>, T> host_atomic_compare_exchang
   return compare;
 }
 
+DESUL_IMPL_ACC_ROUTINE_DIRECTIVE
 template <class T, class MemoryScope>
 std::enable_if_t<host_atomic_always_lock_free<T>, T> host_atomic_compare_exchange(
     T* dest, T compare, T value, MemoryOrderAcqRel, MemoryScope) {
@@ -68,6 +72,7 @@ std::enable_if_t<host_atomic_always_lock_free<T>, T> host_atomic_compare_exchang
   return compare;
 }
 
+DESUL_IMPL_ACC_ROUTINE_DIRECTIVE
 template <class T, class MemoryOrder, class MemoryScope>
 std::enable_if_t<!host_atomic_always_lock_free<T>, T> host_atomic_exchange(
     T* const dest,
@@ -87,6 +92,7 @@ std::enable_if_t<!host_atomic_always_lock_free<T>, T> host_atomic_exchange(
   return return_val;
 }
 
+DESUL_IMPL_ACC_ROUTINE_DIRECTIVE
 template <class T, class MemoryOrder, class MemoryScope>
 std::enable_if_t<!host_atomic_always_lock_free<T>, T> host_atomic_compare_exchange(
     T* const dest,
