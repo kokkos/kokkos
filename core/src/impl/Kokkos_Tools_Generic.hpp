@@ -189,14 +189,14 @@ auto default_tuned_version_of(const Policy& policy) {
 template <class Tuner, class Functor, class TagType, bool HasLabel,
           class TuningPermissionFunctor, class Map, class Policy>
 auto generic_tune_policy(
-    const Kokkos::Impl::OptionalLabel<HasLabel> maybe_label, Map& map,
+    const Kokkos::Impl::OptionalLabel<HasLabel> optional_label, Map& map,
     const Policy& policy, const Functor& functor, const TagType& tag,
     const TuningPermissionFunctor& should_tune) {
   if (should_tune(policy)) {
     using policy_type = std::remove_reference_t<decltype(policy)>;
     using work_tag    = typename policy_type::work_tag;
     Kokkos::Impl::ParallelConstructName<Functor, work_tag, HasLabel> name(
-        maybe_label);
+        optional_label);
     std::string label = name.get();
 
     auto tuner_iter = [&]() {
@@ -215,14 +215,14 @@ auto generic_tune_policy(
 template <class Tuner, class ReducerType, class Functor, class TagType,
           bool HasLabel, class TuningPermissionFunctor, class Map, class Policy>
 auto generic_tune_policy(
-    const Kokkos::Impl::OptionalLabel<HasLabel> maybe_label, Map& map,
+    const Kokkos::Impl::OptionalLabel<HasLabel> optional_label, Map& map,
     const Policy& policy, const Functor& functor, const TagType& tag,
     const TuningPermissionFunctor& should_tune) {
   if (should_tune(policy)) {
     using policy_type = std::remove_reference_t<decltype(policy)>;
     using work_tag    = typename policy_type::work_tag;
     Kokkos::Impl::ParallelConstructName<Functor, work_tag, HasLabel> name(
-        maybe_label);
+        optional_label);
     std::string label = name.get();
 
     auto tuner_iter = [&]() {
@@ -242,11 +242,11 @@ auto generic_tune_policy(
 // tune a TeamPolicy, without reducer
 template <class Functor, class TagType, bool HasLabel, class... Properties>
 auto tune_policy(const size_t /**tuning_context*/,
-                 const Kokkos::Impl::OptionalLabel<HasLabel> maybe_label,
+                 const Kokkos::Impl::OptionalLabel<HasLabel> optional_label,
                  const Kokkos::TeamPolicy<Properties...>& policy,
                  const Functor& functor, const TagType& tag) {
   return generic_tune_policy<Experimental::TeamSizeTuner>(
-      maybe_label, team_tuners, policy, functor, tag,
+      optional_label, team_tuners, policy, functor, tag,
       [](const Kokkos::TeamPolicy<Properties...>& candidate_policy) {
         return (candidate_policy.impl_auto_team_size() ||
                 candidate_policy.impl_auto_vector_length());
@@ -257,11 +257,11 @@ auto tune_policy(const size_t /**tuning_context*/,
 template <class ReducerType, class Functor, class TagType, bool HasLabel,
           class... Properties>
 auto tune_policy(const size_t /**tuning_context*/,
-                 const Kokkos::Impl::OptionalLabel<HasLabel> maybe_label,
+                 const Kokkos::Impl::OptionalLabel<HasLabel> optional_label,
                  const Kokkos::TeamPolicy<Properties...>& policy,
                  const Functor& functor, const TagType& tag) {
   return generic_tune_policy<Experimental::TeamSizeTuner, ReducerType>(
-      maybe_label, team_tuners, policy, functor, tag,
+      optional_label, team_tuners, policy, functor, tag,
       [](const Kokkos::TeamPolicy<Properties...>& candidate_policy) {
         return (candidate_policy.impl_auto_team_size() ||
                 candidate_policy.impl_auto_vector_length());
@@ -271,23 +271,23 @@ auto tune_policy(const size_t /**tuning_context*/,
 template <class Functor, class TagType, bool HasLabel, class... Properties>
 auto tune_occupancy_controlled_policy(
     const size_t /**tuning_context*/,
-    const Kokkos::Impl::OptionalLabel<HasLabel> maybe_label,
+    const Kokkos::Impl::OptionalLabel<HasLabel> optional_label,
     const Kokkos::RangePolicy<Properties...>& policy, const Functor& functor,
     const TagType& tag) {
   return generic_tune_policy<Experimental::RangePolicyOccupancyTuner>(
-      maybe_label, range_policy_tuners, policy, functor, tag,
+      optional_label, range_policy_tuners, policy, functor, tag,
       [](const Kokkos::RangePolicy<Properties...>& candidate_policy) {
         return candidate_policy.impl_get_occupancy_control().should_tune();
       });
 }
 template <class Functor, class TagType, bool HasLabel, class... Properties>
-auto tune_range_policy(const size_t tuning_context,
-                       const Kokkos::Impl::OptionalLabel<HasLabel> maybe_label,
-                       const Kokkos::RangePolicy<Properties...>& policy,
-                       const Functor& functor, const TagType& tag,
-                       std::true_type) {
-  return tune_occupancy_controlled_policy(tuning_context, maybe_label, policy,
-                                          functor, tag);
+auto tune_range_policy(
+    const size_t tuning_context,
+    const Kokkos::Impl::OptionalLabel<HasLabel> optional_label,
+    const Kokkos::RangePolicy<Properties...>& policy, const Functor& functor,
+    const TagType& tag, std::true_type) {
+  return tune_occupancy_controlled_policy(tuning_context, optional_label,
+                                          policy, functor, tag);
 }
 template <class Functor, class TagType, bool HasLabel, class... Properties>
 auto tune_range_policy(const size_t /**tuning_context*/,
@@ -303,23 +303,23 @@ template <class RT, class Functor, class TagType, bool HasLabel,
           class... Properties>
 auto tune_occupancy_controlled_policy(
     const size_t /**tuning_context*/,
-    const Kokkos::Impl::OptionalLabel<HasLabel> maybe_label,
+    const Kokkos::Impl::OptionalLabel<HasLabel> optional_label,
     const Kokkos::RangePolicy<Properties...>& policy, const Functor& functor,
     const TagType& tag) {
   return generic_tune_policy<Experimental::RangePolicyOccupancyTuner>(
-      maybe_label, range_policy_tuners, policy, functor, tag,
+      optional_label, range_policy_tuners, policy, functor, tag,
       [](const Kokkos::RangePolicy<Properties...>& candidate_policy) {
         return candidate_policy.impl_get_occupancy_control().should_tune();
       });
 }
 template <class RT, class Functor, class TagType, bool HasLabel,
           class... Properties>
-auto tune_range_policy(const size_t tuning_context,
-                       const Kokkos::Impl::OptionalLabel<HasLabel> maybe_label,
-                       const Kokkos::RangePolicy<Properties...>& policy,
-                       const Functor& functor, const TagType& tag,
-                       std::true_type) {
-  return tune_occupancy_controlled_policy<RT>(tuning_context, maybe_label,
+auto tune_range_policy(
+    const size_t tuning_context,
+    const Kokkos::Impl::OptionalLabel<HasLabel> optional_label,
+    const Kokkos::RangePolicy<Properties...>& policy, const Functor& functor,
+    const TagType& tag, std::true_type) {
+  return tune_occupancy_controlled_policy<RT>(tuning_context, optional_label,
                                               policy, functor, tag);
 }
 template <class ReducerType, class Functor, class TagType, bool HasLabel,
@@ -335,14 +335,14 @@ auto tune_range_policy(
 // tune a RangePolicy, without reducer
 template <class Functor, class TagType, bool HasLabel, class... Properties>
 auto tune_policy(const size_t tuning_context,
-                 const Kokkos::Impl::OptionalLabel<HasLabel> maybe_label,
+                 const Kokkos::Impl::OptionalLabel<HasLabel> optional_label,
                  const Kokkos::RangePolicy<Properties...>& policy,
                  const Functor& functor, const TagType& tag) {
   using policy_t = Kokkos::RangePolicy<Properties...>;
   using has_desired_occupancy =
       typename std::is_same<typename policy_t::occupancy_control,
                             Kokkos::Experimental::DesiredOccupancy>::type;
-  return tune_range_policy(tuning_context, maybe_label, policy, functor, tag,
+  return tune_range_policy(tuning_context, optional_label, policy, functor, tag,
                            has_desired_occupancy{});
 }
 
@@ -350,27 +350,27 @@ auto tune_policy(const size_t tuning_context,
 template <class ReducerType, class Functor, class TagType, bool HasLabel,
           class... Properties>
 auto tune_policy(const size_t tuning_context,
-                 const Kokkos::Impl::OptionalLabel<HasLabel> maybe_label,
+                 const Kokkos::Impl::OptionalLabel<HasLabel> optional_label,
                  const Kokkos::RangePolicy<Properties...>& policy,
                  const Functor& functor, const TagType& tag) {
   using policy_t = Kokkos::RangePolicy<Properties...>;
   using has_desired_occupancy =
       typename std::is_same<typename policy_t::occupancy_control,
                             Kokkos::Experimental::DesiredOccupancy>::type;
-  return tune_range_policy<ReducerType>(tuning_context, maybe_label, policy,
+  return tune_range_policy<ReducerType>(tuning_context, optional_label, policy,
                                         functor, tag, has_desired_occupancy{});
 }
 
 // tune a MDRangePolicy, without reducer
 template <class Functor, class TagType, bool HasLabel, class... Properties>
 auto tune_policy(const size_t /**tuning_context*/,
-                 const Kokkos::Impl::OptionalLabel<HasLabel> maybe_label,
+                 const Kokkos::Impl::OptionalLabel<HasLabel> optional_label,
                  const Kokkos::MDRangePolicy<Properties...>& policy,
                  const Functor& functor, const TagType& tag) {
   using Policy              = Kokkos::MDRangePolicy<Properties...>;
   static constexpr int rank = Policy::rank;
   return generic_tune_policy<Experimental::MDRangeTuner<rank>>(
-      maybe_label, mdrange_tuners<rank>, policy, functor, tag,
+      optional_label, mdrange_tuners<rank>, policy, functor, tag,
       [](const Policy& candidate_policy) {
         return candidate_policy.impl_tune_tile_size();
       });
@@ -380,13 +380,13 @@ auto tune_policy(const size_t /**tuning_context*/,
 template <class ReducerType, class Functor, class TagType, bool HasLabel,
           class... Properties>
 auto tune_policy(const size_t /**tuning_context*/,
-                 const Kokkos::Impl::OptionalLabel<HasLabel> maybe_label,
+                 const Kokkos::Impl::OptionalLabel<HasLabel> optional_label,
                  const Kokkos::MDRangePolicy<Properties...>& policy,
                  const Functor& functor, const TagType& tag) {
   using Policy              = Kokkos::MDRangePolicy<Properties...>;
   static constexpr int rank = Policy::rank;
   return generic_tune_policy<Experimental::MDRangeTuner<rank>, ReducerType>(
-      maybe_label, mdrange_tuners<rank>, policy, functor, tag,
+      optional_label, mdrange_tuners<rank>, policy, functor, tag,
       [](const Policy& candidate_policy) {
         return candidate_policy.impl_tune_tile_size();
       });
@@ -424,14 +424,14 @@ struct ReductionSwitcher<Kokkos::InvalidType> {
 template <class Tuner, class Functor, class TagType,
           class TuningPermissionFunctor, class Map, class Policy, bool HasLabel>
 void generic_report_results(
-    const Kokkos::Impl::OptionalLabel<HasLabel> maybe_label, Map& map,
+    const Kokkos::Impl::OptionalLabel<HasLabel> optional_label, Map& map,
     const Policy& policy, const Functor&, const TagType&,
     const TuningPermissionFunctor& should_tune) {
   if (should_tune(policy)) {
     using policy_type = std::remove_reference_t<decltype(policy)>;
     using work_tag    = typename policy_type::work_tag;
     Kokkos::Impl::ParallelConstructName<Functor, work_tag, HasLabel> name(
-        maybe_label);
+        optional_label);
     std::string label = name.get();
     auto tuner_iter   = map.find(label);
     if (tuner_iter != map.end()) {
@@ -450,11 +450,11 @@ void report_policy_results(const size_t,
 template <class Functor, class TagType, bool HasLabel, class... Properties>
 void report_policy_results(
     const size_t /**tuning_context*/,
-    const Kokkos::Impl::OptionalLabel<HasLabel> maybe_label,
+    const Kokkos::Impl::OptionalLabel<HasLabel> optional_label,
     const Kokkos::TeamPolicy<Properties...>& policy, const Functor& functor,
     const TagType& tag) {
   generic_report_results<Experimental::TeamSizeTuner>(
-      maybe_label, team_tuners, policy, functor, tag,
+      optional_label, team_tuners, policy, functor, tag,
       [](const Kokkos::TeamPolicy<Properties...>& candidate_policy) {
         return (candidate_policy.impl_auto_team_size() ||
                 candidate_policy.impl_auto_vector_length());
@@ -465,13 +465,13 @@ void report_policy_results(
 template <class Functor, class TagType, bool HasLabel, class... Properties>
 void report_policy_results(
     const size_t /**tuning_context*/,
-    const Kokkos::Impl::OptionalLabel<HasLabel> maybe_label,
+    const Kokkos::Impl::OptionalLabel<HasLabel> optional_label,
     const Kokkos::MDRangePolicy<Properties...>& policy, const Functor& functor,
     const TagType& tag) {
   using Policy              = Kokkos::MDRangePolicy<Properties...>;
   static constexpr int rank = Policy::rank;
   generic_report_results<Experimental::MDRangeTuner<rank>>(
-      maybe_label, mdrange_tuners<rank>, policy, functor, tag,
+      optional_label, mdrange_tuners<rank>, policy, functor, tag,
       [](const Policy& candidate_policy) {
         return candidate_policy.impl_tune_tile_size();
       });
@@ -481,12 +481,12 @@ void report_policy_results(
 template <class Functor, class TagType, bool HasLabel, class... Properties>
 void report_policy_results(
     const size_t /**tuning_context*/,
-    const Kokkos::Impl::OptionalLabel<HasLabel> maybe_label,
+    const Kokkos::Impl::OptionalLabel<HasLabel> optional_label,
     const Kokkos::RangePolicy<Properties...>& policy, const Functor& functor,
     const TagType& tag) {
   using Policy = Kokkos::RangePolicy<Properties...>;
   generic_report_results<Experimental::RangePolicyOccupancyTuner>(
-      maybe_label, range_policy_tuners, policy, functor, tag,
+      optional_label, range_policy_tuners, policy, functor, tag,
       [](const Policy&) {
         return Kokkos::RangePolicy<
             Properties...>::traits::experimental_contains_desired_occupancy;
@@ -500,16 +500,17 @@ void report_policy_results(
 namespace Impl {
 
 template <class ExecPolicy, class FunctorType, bool HasLabel>
-auto begin_parallel_for(const ExecPolicy& policy, FunctorType& functor,
-                        const Kokkos::Impl::OptionalLabel<HasLabel> maybe_label,
-                        uint64_t& kpID) {
+auto begin_parallel_for(
+    const ExecPolicy& policy, FunctorType& functor,
+    const Kokkos::Impl::OptionalLabel<HasLabel> optional_label,
+    uint64_t& kpID) {
   using response_type =
       Kokkos::Tools::Impl::ToolResponse<ExecPolicy, FunctorType>;
   response_type response{policy};
   if (Kokkos::Tools::profileLibraryLoaded()) {
     Kokkos::Impl::ParallelConstructName<FunctorType,
                                         typename ExecPolicy::work_tag, HasLabel>
-        name(maybe_label);
+        name(optional_label);
     Kokkos::Tools::beginParallelFor(
         name.get(), Kokkos::Profiling::Experimental::device_id(policy.space()),
         &kpID);
@@ -519,7 +520,7 @@ auto begin_parallel_for(const ExecPolicy& policy, FunctorType& functor,
   size_t context_id = Kokkos::Tools::Experimental::get_current_context_id();
   if (Kokkos::tune_internals()) {
     return response_type{Kokkos::Tools::Experimental::Impl::tune_policy(
-        context_id, maybe_label, policy, functor, Kokkos::ParallelForTag{})};
+        context_id, optional_label, policy, functor, Kokkos::ParallelForTag{})};
   }
 #else
   (void)functor;
@@ -528,9 +529,10 @@ auto begin_parallel_for(const ExecPolicy& policy, FunctorType& functor,
 }
 
 template <class ExecPolicy, class FunctorType, bool HasLabel>
-void end_parallel_for(const ExecPolicy& policy, FunctorType& functor,
-                      const Kokkos::Impl::OptionalLabel<HasLabel> maybe_label,
-                      uint64_t& kpID) {
+void end_parallel_for(
+    const ExecPolicy& policy, FunctorType& functor,
+    const Kokkos::Impl::OptionalLabel<HasLabel> optional_label,
+    uint64_t& kpID) {
   if (Kokkos::Tools::profileLibraryLoaded()) {
     Kokkos::Tools::endParallelFor(kpID);
   }
@@ -538,26 +540,27 @@ void end_parallel_for(const ExecPolicy& policy, FunctorType& functor,
   size_t context_id = Kokkos::Tools::Experimental::get_current_context_id();
   if (Kokkos::tune_internals()) {
     Experimental::Impl::report_policy_results(
-        context_id, maybe_label, policy, functor, Kokkos::ParallelForTag{});
+        context_id, optional_label, policy, functor, Kokkos::ParallelForTag{});
   }
 #else
   (void)policy;
   (void)functor;
-  (void)maybe_label;
+  (void)optional_label;
 #endif
 }
 
 template <class ExecPolicy, class FunctorType, bool HasLabel>
 auto begin_parallel_scan(
     const ExecPolicy& policy, FunctorType& functor,
-    const Kokkos::Impl::OptionalLabel<HasLabel> maybe_label, uint64_t& kpID) {
+    const Kokkos::Impl::OptionalLabel<HasLabel> optional_label,
+    uint64_t& kpID) {
   using response_type =
       Kokkos::Tools::Impl::ToolResponse<ExecPolicy, FunctorType>;
   response_type response{policy};
   if (Kokkos::Tools::profileLibraryLoaded()) {
     Kokkos::Impl::ParallelConstructName<FunctorType,
                                         typename ExecPolicy::work_tag, HasLabel>
-        name(maybe_label);
+        name(optional_label);
     Kokkos::Tools::beginParallelScan(
         name.get(), Kokkos::Profiling::Experimental::device_id(policy.space()),
         &kpID);
@@ -566,7 +569,8 @@ auto begin_parallel_scan(
   size_t context_id = Kokkos::Tools::Experimental::get_current_context_id();
   if (Kokkos::tune_internals()) {
     return response_type{Kokkos::Tools::Experimental::Impl::tune_policy(
-        context_id, maybe_label, policy, functor, Kokkos::ParallelScanTag{})};
+        context_id, optional_label, policy, functor,
+        Kokkos::ParallelScanTag{})};
   }
 #else
   (void)functor;
@@ -575,9 +579,10 @@ auto begin_parallel_scan(
 }
 
 template <class ExecPolicy, class FunctorType, bool HasLabel>
-void end_parallel_scan(const ExecPolicy& policy, FunctorType& functor,
-                       const Kokkos::Impl::OptionalLabel<HasLabel> maybe_label,
-                       uint64_t& kpID) {
+void end_parallel_scan(
+    const ExecPolicy& policy, FunctorType& functor,
+    const Kokkos::Impl::OptionalLabel<HasLabel> optional_label,
+    uint64_t& kpID) {
   if (Kokkos::Tools::profileLibraryLoaded()) {
     Kokkos::Tools::endParallelScan(kpID);
   }
@@ -585,25 +590,26 @@ void end_parallel_scan(const ExecPolicy& policy, FunctorType& functor,
   size_t context_id = Kokkos::Tools::Experimental::get_current_context_id();
   if (Kokkos::tune_internals()) {
     Experimental::Impl::report_policy_results(
-        context_id, maybe_label, policy, functor, Kokkos::ParallelScanTag{});
+        context_id, optional_label, policy, functor, Kokkos::ParallelScanTag{});
   }
 #else
   (void)policy;
   (void)functor;
-  (void)maybe_label;
+  (void)optional_label;
 #endif
 }
 
 template <class ReducerType, class ExecPolicy, class FunctorType, bool HasLabel>
 auto begin_parallel_reduce(
     const ExecPolicy& policy, FunctorType& functor,
-    const Kokkos::Impl::OptionalLabel<HasLabel> maybe_label, uint64_t& kpID) {
+    const Kokkos::Impl::OptionalLabel<HasLabel> optional_label,
+    uint64_t& kpID) {
   using response_type = ToolResponse<ExecPolicy, FunctorType>;
   response_type response{policy};
   if (Kokkos::Tools::profileLibraryLoaded()) {
     Kokkos::Impl::ParallelConstructName<FunctorType,
                                         typename ExecPolicy::work_tag, HasLabel>
-        name(maybe_label);
+        name(optional_label);
     Kokkos::Tools::beginParallelReduce(
         name.get(), Kokkos::Profiling::Experimental::device_id(policy.space()),
         &kpID);
@@ -611,7 +617,8 @@ auto begin_parallel_reduce(
 #ifdef KOKKOS_ENABLE_TUNING
   size_t context_id = Kokkos::Tools::Experimental::get_current_context_id();
   return response_type{Experimental::Impl::ReductionSwitcher<ReducerType>::tune(
-      context_id, maybe_label, policy, functor, Kokkos::ParallelReduceTag{})};
+      context_id, optional_label, policy, functor,
+      Kokkos::ParallelReduceTag{})};
 #else
   (void)functor;
 #endif
@@ -621,20 +628,22 @@ auto begin_parallel_reduce(
 template <class ReducerType, class ExecPolicy, class FunctorType, bool HasLabel>
 void end_parallel_reduce(
     const ExecPolicy& policy, FunctorType& functor,
-    const Kokkos::Impl::OptionalLabel<HasLabel> maybe_label, uint64_t& kpID) {
+    const Kokkos::Impl::OptionalLabel<HasLabel> optional_label,
+    uint64_t& kpID) {
   if (Kokkos::Tools::profileLibraryLoaded()) {
     Kokkos::Tools::endParallelReduce(kpID);
   }
 #ifdef KOKKOS_ENABLE_TUNING
   size_t context_id = Kokkos::Tools::Experimental::get_current_context_id();
   if (Kokkos::tune_internals()) {
-    Experimental::Impl::report_policy_results(
-        context_id, maybe_label, policy, functor, Kokkos::ParallelReduceTag{});
+    Experimental::Impl::report_policy_results(context_id, optional_label,
+                                              policy, functor,
+                                              Kokkos::ParallelReduceTag{});
   }
 #else
   (void)policy;
   (void)functor;
-  (void)maybe_label;
+  (void)optional_label;
 #endif
 }
 

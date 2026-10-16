@@ -181,7 +181,7 @@ struct ParallelReduceAdaptor {
   }
 
   template <bool HasLabel>
-  static inline void execute(const OptionalLabel<HasLabel> maybe_label,
+  static inline void execute(const OptionalLabel<HasLabel> optional_label,
                              const PolicyType& policy,
                              const FunctorType& functor,
                              ReturnType& return_value)
@@ -207,7 +207,7 @@ struct ParallelReduceAdaptor {
                          functor, return_value)));
     const auto& response = Kokkos::Tools::Impl::begin_parallel_reduce<
         typename return_value_adapter::reducer_type>(policy, functor_reducer,
-                                                     maybe_label, kpID);
+                                                     optional_label, kpID);
     const auto& inner_policy = response.policy;
 
     if constexpr (Kokkos::is_view_v<ReturnType>) {
@@ -234,7 +234,7 @@ struct ParallelReduceAdaptor {
     closure.execute();
 
     Kokkos::Tools::Impl::end_parallel_reduce<PassedReducerType>(
-        inner_policy, functor, maybe_label, kpID);
+        inner_policy, functor, optional_label, kpID);
   }
 };
 }  // namespace Impl
@@ -283,7 +283,7 @@ struct ParallelReduceFence {
 
 template <bool HasLabel, Kokkos::ExecutionPolicy PolicyType, class FunctorType,
           class ReturnType>
-inline void parallel_reduce_impl(const OptionalLabel<HasLabel> maybe_label,
+inline void parallel_reduce_impl(const OptionalLabel<HasLabel> optional_label,
                                  const PolicyType& policy,
                                  const FunctorType& functor,
                                  ReturnType& return_value)
@@ -293,8 +293,8 @@ inline void parallel_reduce_impl(const OptionalLabel<HasLabel> maybe_label,
 {
   /** Enforce correct use **/
   if constexpr (HasLabel) {
-    CheckUsage<UsageRequires::insideExecEnv>::check("parallel_reduce", policy,
-                                                    maybe_label.get().c_str());
+    CheckUsage<UsageRequires::insideExecEnv>::check(
+        "parallel_reduce", policy, optional_label.get().c_str());
   } else {
     CheckUsage<UsageRequires::insideExecEnv>::check("parallel_reduce", policy);
   }
@@ -305,7 +305,7 @@ inline void parallel_reduce_impl(const OptionalLabel<HasLabel> maybe_label,
       "reducer return type!");
 
   ParallelReduceAdaptor<PolicyType, FunctorType, ReturnType>::execute(
-      maybe_label, policy, functor, return_value);
+      optional_label, policy, functor, return_value);
   ParallelReduceFence<typename PolicyType::execution_space, ReturnType>::fence(
       policy.space(),
       "Kokkos::parallel_reduce: fence due to result being value, not view",
@@ -313,7 +313,7 @@ inline void parallel_reduce_impl(const OptionalLabel<HasLabel> maybe_label,
 }
 
 template <bool HasLabel, class FunctorType, class ReturnType>
-inline void parallel_reduce_impl(const OptionalLabel<HasLabel> maybe_label,
+inline void parallel_reduce_impl(const OptionalLabel<HasLabel> optional_label,
                                  const size_t& work_count,
                                  const FunctorType& functor,
                                  ReturnType& return_value)
@@ -324,7 +324,7 @@ inline void parallel_reduce_impl(const OptionalLabel<HasLabel> maybe_label,
   /** Enforce correct use **/
   if constexpr (HasLabel) {
     CheckUsage<UsageRequires::insideExecEnv>::check(
-        "parallel_reduce", work_count, maybe_label.get().c_str());
+        "parallel_reduce", work_count, optional_label.get().c_str());
   } else {
     CheckUsage<UsageRequires::insideExecEnv>::check("parallel_reduce",
                                                     work_count);
@@ -332,13 +332,13 @@ inline void parallel_reduce_impl(const OptionalLabel<HasLabel> maybe_label,
 
   using policy_type =
       typename ParallelReducePolicyType<size_t, FunctorType>::policy_type;
-  ::Kokkos::Impl::parallel_reduce_impl(maybe_label, policy_type(0, work_count),
-                                       functor, return_value);
+  ::Kokkos::Impl::parallel_reduce_impl(
+      optional_label, policy_type(0, work_count), functor, return_value);
 }
 
 template <bool HasLabel, Kokkos::ExecutionPolicy PolicyType, class FunctorType,
           class ReturnType>
-inline void parallel_reduce_impl(const OptionalLabel<HasLabel> maybe_label,
+inline void parallel_reduce_impl(const OptionalLabel<HasLabel> optional_label,
                                  const PolicyType& policy,
                                  const FunctorType& functor,
                                  const ReturnType& return_value)
@@ -348,15 +348,15 @@ inline void parallel_reduce_impl(const OptionalLabel<HasLabel> maybe_label,
 {
   /** Enforce correct use **/
   if constexpr (HasLabel) {
-    CheckUsage<UsageRequires::insideExecEnv>::check("parallel_reduce", policy,
-                                                    maybe_label.get().c_str());
+    CheckUsage<UsageRequires::insideExecEnv>::check(
+        "parallel_reduce", policy, optional_label.get().c_str());
   } else {
     CheckUsage<UsageRequires::insideExecEnv>::check("parallel_reduce", policy);
   }
 
   ReturnType return_value_impl = return_value;
   ParallelReduceAdaptor<PolicyType, FunctorType, ReturnType>::execute(
-      maybe_label, policy, functor, return_value_impl);
+      optional_label, policy, functor, return_value_impl);
   ParallelReduceFence<typename PolicyType::execution_space, ReturnType>::fence(
       policy.space(),
       "Kokkos::parallel_reduce: fence" /*FIXME: describe correct reason*/,
@@ -364,7 +364,7 @@ inline void parallel_reduce_impl(const OptionalLabel<HasLabel> maybe_label,
 }
 
 template <bool HasLabel, class FunctorType, class ReturnType>
-inline void parallel_reduce_impl(const OptionalLabel<HasLabel> maybe_label,
+inline void parallel_reduce_impl(const OptionalLabel<HasLabel> optional_label,
                                  const size_t& work_count,
                                  const FunctorType& functor,
                                  const ReturnType& return_value)
@@ -375,7 +375,7 @@ inline void parallel_reduce_impl(const OptionalLabel<HasLabel> maybe_label,
   /** Enforce correct use **/
   if constexpr (HasLabel) {
     CheckUsage<UsageRequires::insideExecEnv>::check(
-        "parallel_reduce", work_count, maybe_label.get().c_str());
+        "parallel_reduce", work_count, optional_label.get().c_str());
   } else {
     CheckUsage<UsageRequires::insideExecEnv>::check("parallel_reduce",
                                                     work_count);
@@ -383,18 +383,18 @@ inline void parallel_reduce_impl(const OptionalLabel<HasLabel> maybe_label,
 
   using policy_type =
       typename ParallelReducePolicyType<size_t, FunctorType>::policy_type;
-  ::Kokkos::Impl::parallel_reduce_impl(maybe_label, policy_type(0, work_count),
-                                       functor, return_value);
+  ::Kokkos::Impl::parallel_reduce_impl(
+      optional_label, policy_type(0, work_count), functor, return_value);
 }
 
 template <bool HasLabel, Kokkos::ExecutionPolicy PolicyType, class FunctorType>
-inline void parallel_reduce_impl(const OptionalLabel<HasLabel> maybe_label,
+inline void parallel_reduce_impl(const OptionalLabel<HasLabel> optional_label,
                                  const PolicyType& policy,
                                  const FunctorType& functor) {
   /** Enforce correct use **/
   if constexpr (HasLabel) {
-    CheckUsage<UsageRequires::insideExecEnv>::check("parallel_reduce", policy,
-                                                    maybe_label.get().c_str());
+    CheckUsage<UsageRequires::insideExecEnv>::check(
+        "parallel_reduce", policy, optional_label.get().c_str());
   } else {
     CheckUsage<UsageRequires::insideExecEnv>::check("parallel_reduce", policy);
   }
@@ -414,17 +414,17 @@ inline void parallel_reduce_impl(const OptionalLabel<HasLabel> maybe_label,
   result_view_type result_view;
 
   ParallelReduceAdaptor<PolicyType, FunctorType, result_view_type>::execute(
-      maybe_label, policy, functor, result_view);
+      optional_label, policy, functor, result_view);
 }
 
 template <bool HasLabel, class FunctorType>
-inline void parallel_reduce_impl(const OptionalLabel<HasLabel> maybe_label,
+inline void parallel_reduce_impl(const OptionalLabel<HasLabel> optional_label,
                                  const size_t& work_count,
                                  const FunctorType& functor) {
   /** Enforce correct use **/
   if constexpr (HasLabel) {
     CheckUsage<UsageRequires::insideExecEnv>::check(
-        "parallel_reduce", work_count, maybe_label.get().c_str());
+        "parallel_reduce", work_count, optional_label.get().c_str());
   } else {
     CheckUsage<UsageRequires::insideExecEnv>::check("parallel_reduce",
                                                     work_count);
@@ -432,8 +432,8 @@ inline void parallel_reduce_impl(const OptionalLabel<HasLabel> maybe_label,
   using policy_type =
       typename ParallelReducePolicyType<size_t, FunctorType>::policy_type;
 
-  ::Kokkos::Impl::parallel_reduce_impl(maybe_label, policy_type(0, work_count),
-                                       functor);
+  ::Kokkos::Impl::parallel_reduce_impl(optional_label,
+                                       policy_type(0, work_count), functor);
 }
 
 }  // namespace Impl
