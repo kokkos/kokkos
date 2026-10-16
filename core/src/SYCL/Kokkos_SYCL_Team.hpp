@@ -989,6 +989,50 @@ void single(const Impl::ThreadSingleStruct<Impl::SYCLTeamMember>& single_struct,
   single_struct.team_member.team_broadcast(val, 0);
 }
 
+// FIXME_SYCL_OUT_OF_ORDER_QUEUES
+#ifndef KOKKOS_ENABLE_IMPL_SYCL_OUT_OF_ORDER_QUEUES
+namespace Impl {
+
+inline size_t sycl_get_scratch_index(sycl::nd_item<2> item,
+                                     int32_t* scratch_locks,
+                                     size_t num_scratch_locks) {
+  size_t threadid = 0;
+  if (item.get_local_linear_id() == 0) {
+    size_t const league_size =
+        item.get_group_range(0) * item.get_group_range(1);
+    size_t const wraparound_len = Kokkos::min(
+        league_size, num_scratch_locks /
+                         (item.get_local_range(0) * item.get_local_range(1)));
+    threadid = item.get_group_linear_id() % wraparound_len;
+    while (true) {
+      int expected = 0;
+      sycl::atomic_ref<int32_t, sycl::memory_order::relaxed,
+                       sycl::memory_scope::device,
+                       sycl::access::address_space::global_space>
+          ref(scratch_locks[threadid]);
+      if (ref.compare_exchange_strong(expected, /*desired*/ 1)) break;
+      threadid = (threadid + 1) % wraparound_len;
+    }
+  }
+  return sycl::group_broadcast(item.get_group(), threadid);
+}
+
+inline void sycl_release_scratch_index(sycl::nd_item<2> item,
+                                       int32_t* scratch_locks,
+                                       size_t threadid) {
+  sycl::group_barrier(item.get_group());
+  if (item.get_local_linear_id() == 0) {
+    sycl::atomic_ref<int32_t, sycl::memory_order::relaxed,
+                     sycl::memory_scope::device,
+                     sycl::access::address_space::global_space>
+        ref(scratch_locks[threadid]);
+    ref = 0;
+  }
+}
+
+}  // namespace Impl
+#endif
+
 }  // namespace Kokkos
 
 #endif
