@@ -677,16 +677,38 @@ KOKKOS_INLINE_FUNCTION Kokkos::complex<RealType> log10(
 template <class RealType>
 KOKKOS_INLINE_FUNCTION Kokkos::complex<RealType> sin(
     const complex<RealType>& x) {
-  return Kokkos::complex<RealType>(sin(x.real()) * cosh(x.imag()),
-                                   cos(x.real()) * sinh(x.imag()));
+  const RealType s = sin(x.real());
+  const RealType c = cos(x.real());
+  const RealType h = cosh(x.imag());
+  if (isinf(h) && isfinite(x.imag())) {
+    // Multiply the trigonometric factors before the hyperbolic amplitude
+    // overflows. Four factors also retain components with subnormal factors.
+    const RealType e = exp(fabs(x.imag()) / RealType(4));
+    return Kokkos::complex<RealType>(
+        s == RealType(0) ? s : (((s * e) * e) * e) * (e / RealType(2)),
+        c == RealType(0)
+            ? c * copysign(RealType(1), x.imag())
+            : (((c * e) * e) * e) * copysign(e / RealType(2), x.imag()));
+  }
+  return Kokkos::complex<RealType>(s * h, c * sinh(x.imag()));
 }
 
 //! cosine of a complex number.
 template <class RealType>
 KOKKOS_INLINE_FUNCTION Kokkos::complex<RealType> cos(
     const complex<RealType>& x) {
-  return Kokkos::complex<RealType>(cos(x.real()) * cosh(x.imag()),
-                                   -sin(x.real()) * sinh(x.imag()));
+  const RealType c = cos(x.real());
+  const RealType s = -sin(x.real());
+  const RealType h = cosh(x.imag());
+  if (isinf(h) && isfinite(x.imag())) {
+    const RealType e = exp(fabs(x.imag()) / RealType(4));
+    return Kokkos::complex<RealType>(
+        c == RealType(0) ? c : (((c * e) * e) * e) * (e / RealType(2)),
+        s == RealType(0)
+            ? s * copysign(RealType(1), x.imag())
+            : (((s * e) * e) * e) * copysign(e / RealType(2), x.imag()));
+  }
+  return Kokkos::complex<RealType>(c * h, s * sinh(x.imag()));
 }
 
 //! tangent of a complex number.
@@ -707,16 +729,16 @@ KOKKOS_INLINE_FUNCTION Kokkos::complex<RealType> tan(
 template <class RealType>
 KOKKOS_INLINE_FUNCTION Kokkos::complex<RealType> sinh(
     const complex<RealType>& x) {
-  return Kokkos::complex<RealType>(sinh(x.real()) * cos(x.imag()),
-                                   cosh(x.real()) * sin(x.imag()));
+  const Kokkos::complex<RealType> s =
+      sin(Kokkos::complex<RealType>(-x.imag(), x.real()));
+  return Kokkos::complex<RealType>(s.imag(), -s.real());
 }
 
 //! hyperbolic cosine of a complex number.
 template <class RealType>
 KOKKOS_INLINE_FUNCTION Kokkos::complex<RealType> cosh(
     const complex<RealType>& x) {
-  return Kokkos::complex<RealType>(cosh(x.real()) * cos(x.imag()),
-                                   sinh(x.real()) * sin(x.imag()));
+  return cos(Kokkos::complex<RealType>(-x.imag(), x.real()));
 }
 
 //! hyperbolic tangent of a complex number.
