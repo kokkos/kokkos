@@ -1214,46 +1214,64 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
 
 namespace Impl {
 
-template <typename FunctorType, typename TagType,
+template <bool HasLabel>
+struct OptionalLabel;
+
+template <>
+struct OptionalLabel<true> {
+  static constexpr bool has_label = true;
+  // Borrows the string, label must outlive this wrapper
+  const std::string& label_ref;
+  const std::string& get() const { return label_ref; }
+  explicit OptionalLabel(const std::string& label) : label_ref(label) {}
+  OptionalLabel(const std::string&&) = delete;
+};
+
+template <>
+struct OptionalLabel<false> {
+  static constexpr bool has_label = false;
+};
+using NoLabel   = OptionalLabel<false>;
+using WithLabel = OptionalLabel<true>;
+
+template <typename FunctorType, typename TagType, bool HasLabel,
           bool HasTag = !std::is_void_v<TagType>>
 struct ParallelConstructName;
 
-template <typename FunctorType, typename TagType>
-struct ParallelConstructName<FunctorType, TagType, true> {
-  ParallelConstructName(std::string const& label) : label_ref(label) {
-    if (label.empty()) {
-#ifdef KOKKOS_ENABLE_IMPL_TYPEINFO
-      default_name =
-          std::string(TypeInfo<std::remove_const_t<FunctorType>>::name()) +
-          "/" + std::string(TypeInfo<TagType>::name());
-#else
-      default_name = std::string(typeid(FunctorType).name()) + "/" +
-                     typeid(TagType).name();
-#endif
-    }
-  }
-  std::string const& get() {
-    return (label_ref.empty()) ? default_name : label_ref;
-  }
+template <typename FunctorType, typename TagType, bool HasTag>
+struct ParallelConstructName<FunctorType, TagType, true, HasTag> {
+  ParallelConstructName(const OptionalLabel<true> label)
+      : label_ref(label.get()) {}
+  std::string const& get() { return label_ref; }
   std::string const& label_ref;
+};
+
+template <typename FunctorType, typename TagType>
+struct ParallelConstructName<FunctorType, TagType, false, false> {
+  ParallelConstructName(const NoLabel) {
+#ifdef KOKKOS_ENABLE_IMPL_TYPEINFO
+    default_name = TypeInfo<std::remove_const_t<FunctorType>>::name();
+#else
+    default_name = typeid(FunctorType).name();
+#endif
+  }
+  std::string const& get() { return default_name; }
   std::string default_name;
 };
 
 template <typename FunctorType, typename TagType>
-struct ParallelConstructName<FunctorType, TagType, false> {
-  ParallelConstructName(std::string const& label) : label_ref(label) {
-    if (label.empty()) {
+struct ParallelConstructName<FunctorType, TagType, false, true> {
+  ParallelConstructName(const NoLabel) {
 #ifdef KOKKOS_ENABLE_IMPL_TYPEINFO
-      default_name = TypeInfo<std::remove_const_t<FunctorType>>::name();
+    default_name =
+        std::string(TypeInfo<std::remove_const_t<FunctorType>>::name()) + "/" +
+        std::string(TypeInfo<TagType>::name());
 #else
-      default_name = typeid(FunctorType).name();
+    default_name =
+        std::string(typeid(FunctorType).name()) + "/" + typeid(TagType).name();
 #endif
-    }
   }
-  std::string const& get() {
-    return (label_ref.empty()) ? default_name : label_ref;
-  }
-  std::string const& label_ref;
+  std::string const& get() { return default_name; }
   std::string default_name;
 };
 
