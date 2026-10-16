@@ -186,6 +186,7 @@ export {
   using ::Kokkos::WorkGraphPolicy;
   namespace Experimental {
   using ::Kokkos::Experimental::DesiredOccupancy;
+  using ::Kokkos::Experimental::InlineHandle;
   using ::Kokkos::Experimental::is_work_item_property;
   using ::Kokkos::Experimental::is_work_item_property_v;
   using ::Kokkos::Experimental::MaximizeOccupancy;
@@ -193,6 +194,7 @@ export {
   using ::Kokkos::Experimental::prefer;
   using ::Kokkos::Experimental::require;
   using ::Kokkos::Experimental::StaticBatchSize;
+  using ::Kokkos::Experimental::ThreadHandle;
   using ::Kokkos::Experimental::WorkItemProperty;
   }  // namespace Experimental
 

@@ -20,6 +20,7 @@
 #include <Kokkos_Vectorization.hpp>
 
 #include <impl/Kokkos_Tools.hpp>
+#include <type_traits>
 #include <typeinfo>
 
 //----------------------------------------------------------------------------
@@ -50,6 +51,7 @@ class CudaTeamMember {
   using execution_space      = Kokkos::Cuda;
   using scratch_memory_space = execution_space::scratch_memory_space;
   using team_handle          = CudaTeamMember;
+  using thread_handle        = ThreadHandleType<team_handle>;
 
  private:
   mutable void* m_team_reduce;
@@ -448,6 +450,8 @@ Impl::VectorSingleStruct<Impl::CudaTeamMember> PerThread(
  *  Executes closure(iType i) for each i=[0..N).
  *
  * The range [0..N) is mapped to all threads of the the calling thread team.
+ * If the closure accepts (thread_handle, iType), the thread handle is passed
+ * so the body can use the vector lanes.
  */
 template <typename iType, class Closure>
 KOKKOS_INLINE_FUNCTION void parallel_for(
@@ -456,9 +460,22 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
     const Closure& closure) {
   (void)loop_boundaries;
   (void)closure;
-  KOKKOS_IF_ON_DEVICE(
-      (for (iType i = loop_boundaries.start + threadIdx.y;
-            i < loop_boundaries.end; i += blockDim.y) { closure(i); }))
+  KOKKOS_IF_ON_DEVICE((
+      using thread_handle_t = Impl::ThreadHandleType<Impl::CudaTeamMember>;
+
+      for (iType i = loop_boundaries.start + threadIdx.y;
+           i < loop_boundaries.end; i += blockDim.y) {
+        if constexpr (std::is_invocable_v<Closure, iType>) {
+          closure(i);
+        } else if constexpr (std::is_invocable_v<
+                                 Closure, thread_handle_t const&, iType>) {
+          closure(thread_handle_t(loop_boundaries.member), i);
+        } else {
+          static_assert(Kokkos::Impl::always_false<Closure>::value,
+                        "Kokkos::parallel_for(TeamThreadRange) closure must be "
+                        "invocable with (iType) or (ThreadHandleType, iType)");
+        }
+      }))
 }
 
 //----------------------------------------------------------------------------
@@ -660,6 +677,27 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
                      ? 0xffffffff
                      : ((1 << blockDim.x) - 1)
                            << (threadIdx.y % (32 / blockDim.x)) * blockDim.x);))
+}
+
+/** \brief  Serial parallel_for nested under a thread handle.
+ *
+ *  Executes closure(iType i) for each i in [start, end) on vector lane 0.
+ */
+template <typename iType, class Closure>
+KOKKOS_INLINE_FUNCTION void parallel_for(
+    const Impl::InlineRangeBoundariesStruct<iType, Impl::CudaTeamMember>&
+        loop_boundaries,
+    const Closure& closure) {
+  (void)loop_boundaries;
+  (void)closure;
+  KOKKOS_IF_ON_DEVICE((if (threadIdx.x == 0) {
+    for (iType i = loop_boundaries.start; i < loop_boundaries.end; ++i) {
+      closure(i);
+    }
+  } __syncwarp(blockDim.x == 32
+                   ? 0xffffffff
+                   : ((1 << blockDim.x) - 1)
+                         << (threadIdx.y % (32 / blockDim.x)) * blockDim.x);))
 }
 
 //----------------------------------------------------------------------------
