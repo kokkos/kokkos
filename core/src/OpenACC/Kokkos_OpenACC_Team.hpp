@@ -236,7 +236,7 @@ class TeamPolicyInternal<Kokkos::Experimental::OpenACC, Properties...>
     return m_thread_scratch_size[level];
   }
 
-  Kokkos::Experimental::OpenACC space() const { return m_space; }
+  const Kokkos::Experimental::OpenACC& space() const { return m_space; }
 
   template <class... OtherProperties>
   TeamPolicyInternal(const TeamPolicyInternal<OtherProperties...>& p)

@@ -778,7 +778,10 @@ class DynRankView : private View<DataType*******, Properties...> {
                   drdtraits::template createLayout<traits, P...>(arg_prop,
                                                                  arg_layout)),
         m_rank(drdtraits::computeRank(arg_prop, arg_layout) -
-               (traits::impl_is_customized ? 1 : 0)) {}
+               (traits::impl_is_customized &&
+                        !Kokkos::Impl::ViewCtorProp<P...>::has_accessor_arg
+                    ? 1
+                    : 0)) {}
 
   template <class... P>
   explicit DynRankView(

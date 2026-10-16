@@ -18,13 +18,13 @@ namespace Kokkos::Experimental::Impl {
 
 template <int N>
 using NextSiliconMDRangeBegin =
-    decltype(MDRangePolicy<NextSilicon, Rank<N>>::m_lower);
+    typename MDRangePolicy<NextSilicon, Rank<N>>::point_type;
 template <int N>
 using NextSiliconMDRangeEnd =
-    decltype(MDRangePolicy<NextSilicon, Rank<N>>::m_upper);
+    typename MDRangePolicy<NextSilicon, Rank<N>>::point_type;
 template <int N>
 using NextSiliconMDRangeTile =
-    decltype(MDRangePolicy<NextSilicon, Rank<N>>::m_tile);
+    typename MDRangePolicy<NextSilicon, Rank<N>>::tile_type;
 
 template <typename WorkTag, typename Direction, typename Functor, int Dim>
 class NextSiliconParallelMDRangePolicyFunctor {
@@ -173,9 +173,12 @@ class ParallelFor<Functor, Kokkos::MDRangePolicy<Traits...>,
     const std::lock_guard<std::recursive_mutex> device_lock =
         this->m_policy.space().impl_internal_space_instance()->lock_device();
 
+    const auto lb = m_policy.lower();
+    const auto ub = m_policy.upper();
+
     constexpr int rank = Policy::rank;
     for (int i = 0; i < rank; ++i) {
-      if (m_policy.m_lower[i] >= m_policy.m_upper[i]) {
+      if (lb[i] >= ub[i]) {
         return;
       }
     }
@@ -183,12 +186,10 @@ class ParallelFor<Functor, Kokkos::MDRangePolicy<Traits...>,
     // FIXME_NEXTSILICON: throw away requested tiling
     using Direction = std::integral_constant<Iterate, Policy::inner_direction>;
 
-    auto total_range = Kokkos::Experimental::Impl::getFlatRange<rank>(
-        m_policy.m_lower, m_policy.m_upper);
+    auto total_range = Kokkos::Experimental::Impl::getFlatRange<rank>(lb, ub);
     auto wrapped_functor =
         Kokkos::Experimental::Impl::NextSiliconParallelMDRangePolicyFunctor<
-            WorkTag, Direction, Functor, rank>(m_functor, m_policy.m_lower,
-                                               m_policy.m_upper);
+            WorkTag, Direction, Functor, rank>(m_functor, lb, ub);
 
     auto flat_policy = Kokkos::RangePolicy<Experimental::NextSilicon>(
         m_policy.space(), 0, total_range);
@@ -237,11 +238,12 @@ class ParallelReduce<CombinedFunctorReducerType, MDRangePolicy<Traits...>,
         CombinedFunctorReducer<WrappedFunctorType, ReducerType>;
     using RangePolicyType = RangePolicy<Experimental::NextSilicon>;
 
+    const auto lb = m_policy.lower();
+    const auto ub = m_policy.upper();
+
     // FIXME_NEXTSILICON: throw away requested tiling
-    auto total_range = Experimental::Impl::getFlatRange<rank>(m_policy.m_lower,
-                                                              m_policy.m_upper);
-    auto wrapped_functor =
-        WrappedFunctorType(functor, m_policy.m_lower, m_policy.m_upper);
+    auto total_range     = Experimental::Impl::getFlatRange<rank>(lb, ub);
+    auto wrapped_functor = WrappedFunctorType(functor, lb, ub);
 
     auto policy = RangePolicyType(m_policy.space(), 0, total_range);
 
