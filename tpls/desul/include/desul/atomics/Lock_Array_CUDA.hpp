@@ -61,11 +61,15 @@ void finalize_lock_arrays_cuda();
 /// That is the purpose of the ensure_cuda_lock_arrays_on_device function.
 #ifdef DESUL_ATOMICS_ENABLE_CUDA_SEPARABLE_COMPILATION
 extern
+#else
+static
 #endif
     __device__ __constant__ int32_t* CUDA_SPACE_ATOMIC_LOCKS_DEVICE;
 
 #ifdef DESUL_ATOMICS_ENABLE_CUDA_SEPARABLE_COMPILATION
 extern
+#else
+static
 #endif
     __device__ __constant__ int32_t* CUDA_SPACE_ATOMIC_LOCKS_NODE;
 
@@ -126,6 +130,34 @@ inline static
   }();
   (void)once;
 }
+
+#ifndef DESUL_ATOMICS_ENABLE_CUDA_SEPARABLE_COMPILATION
+/// \brief Each translation unit registers a function that copies the host lock
+///        array pointers into its own (static) device symbols.
+///
+/// init_lock_arrays_cuda() invokes all registered copiers, so every translation
+/// unit's instance is valid regardless of which translation unit launches the
+/// kernel.  This matters when user code is compiled with relocatable device code
+/// while desul is not: a __device__ function using a lock-based atomic may be
+/// defined in a translation unit that never launches a kernel itself.
+///
+/// Translation units must be registered before init_lock_arrays_cuda() is
+/// called and must not be unloaded before finalization, i.e. loading shared
+/// libraries (dlopen) after initialization or unloading them (dlclose) before
+/// finalization is not supported.  The copiers are not invoked again by
+/// finalize, since initializing again after finalization is not supported
+/// either.
+DESUL_IMPL_EXPORT void register_cuda_lock_arrays_copier(void (*copier)());
+
+namespace {
+struct CudaLockArraysCopierRegistrar {
+  CudaLockArraysCopierRegistrar() {
+    register_cuda_lock_arrays_copier(&copy_cuda_lock_arrays_to_device);
+  }
+};
+CudaLockArraysCopierRegistrar cuda_lock_arrays_copier_registrar;
+}  // namespace
+#endif
 
 }  // namespace Impl
 }  // namespace desul
