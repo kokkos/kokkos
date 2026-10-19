@@ -7,6 +7,7 @@
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_Core_fwd.hpp>
 #include <impl/Kokkos_Error.hpp>  // Impl::throw_runtime_exception
+#include <Kokkos_Atomics_Desul_Wrapper.hpp>
 
 #include <cstdint>
 #include <string>
@@ -179,8 +180,7 @@ class SharedAllocationRecord<void, void> {
   /* User's memory begins at the end of the header */
   size_t size() const { return m_alloc_size - sizeof(SharedAllocationHeader); }
 
-  /* Cannot be 'constexpr' because 'm_count' is volatile */
-  int use_count() const { return *static_cast<const volatile int*>(&m_count); }
+  constexpr int use_count() const { return Kokkos::atomic_load(&m_count); }
 
   /* Increment use count */
   static void increment(SharedAllocationRecord*);
