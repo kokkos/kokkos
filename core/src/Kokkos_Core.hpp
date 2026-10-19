@@ -60,6 +60,7 @@
 #include <impl/Kokkos_CStyleMemoryManagement.hpp>
 #include <impl/Kokkos_RuntimeInfo.hpp>
 #include <impl/Kokkos_Fence.hpp>
+#include <impl/Kokkos_Volatile_Load.hpp>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
