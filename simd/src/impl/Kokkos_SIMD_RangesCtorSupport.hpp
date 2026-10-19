@@ -101,4 +101,18 @@ using range_value_t = typename std::iterator_traits<
 }  // namespace Kokkos::Experimental::Impl::Ranges
 #endif
 
+namespace Kokkos::Experimental::Impl::Ranges {
+
+template <typename R>
+KOKKOS_FORCEINLINE_FUNCTION constexpr auto size(R&& r) {
+  using range_type = std::remove_cvref_t<R>;
+  if constexpr (std::is_bounded_array_v<range_type>) {
+    return std::extent_v<range_type>;
+  } else {
+    return r.size();
+  }
+}
+
+}  // namespace Kokkos::Experimental::Impl::Ranges
+
 #endif
