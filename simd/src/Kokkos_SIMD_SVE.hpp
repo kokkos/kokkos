@@ -2268,6 +2268,10 @@ class basic_simd<std::int64_t,
       basic_simd<double, abi_type> const& other) noexcept;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit basic_simd(
       basic_simd<std::uint64_t, abi_type> const& other) noexcept;
+#if SVE_DOUBLES_IN_VECTOR == 8
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(
+      basic_simd<std::int32_t, abi_type> const& other) noexcept;
+#endif
   template <class G>
     requires Impl::InvocableWithReturnType<
         G, value_type, std::integral_constant<Impl::simd_size_t, 0>>
@@ -3379,6 +3383,14 @@ basic_simd<std::uint64_t, simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>::
                    simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const&
             other) noexcept
     : m_value(svreinterpret_u64(other.to_s64())) {}
+
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+basic_simd<std::int64_t, simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>::
+    basic_simd(
+        basic_simd<std::int32_t,
+                   simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const&
+            other) noexcept
+    : m_value(other.to_s64()) {}
 #else
 
 // Map simd type int32_t[SVE_DOUBLES_IN_VECTOR] on Neon:
