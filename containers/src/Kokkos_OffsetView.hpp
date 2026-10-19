@@ -16,7 +16,10 @@ import kokkos.core_impl;
 #include <Kokkos_Core.hpp>
 #endif
 
+#include <Kokkos_Abort.hpp>
+#include <Kokkos_NumericTraits.hpp>
 #include <Kokkos_View.hpp>
+#include <impl/Kokkos_StringManipulation.hpp>
 
 #include <array>
 #include <span>
