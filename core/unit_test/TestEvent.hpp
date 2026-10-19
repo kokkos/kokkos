@@ -166,6 +166,31 @@ TEST(TEST_CATEGORY, event_move_semantics) {
   EXPECT_TRUE(evt2.is_complete());
 }
 
+TEST(TEST_CATEGORY_DEATH, event_moved_from_preconditions) {
+  bool checked_preconditions = false;
+  // NOLINTNEXTLINE(bugprone-assignment-in-if-condition)
+  KOKKOS_EXPECTS(checked_preconditions = true);
+  if (!checked_preconditions) GTEST_SKIP() << "Preconditions are not checked.";
+
+  TEST_EXECSPACE space;
+  Kokkos::Experimental::Event<TEST_EXECSPACE> source("moved from", space);
+  auto destination = std::move(source);
+  destination.fence();
+
+  const char* message = "Expected precondition .*m_handle.* evaluated false.";
+  EXPECT_DEATH(source.record(space), message);
+  EXPECT_DEATH(source.fence(), message);
+  EXPECT_DEATH((void)source.is_complete(), message);
+  EXPECT_DEATH((void)source.label(), message);
+  EXPECT_DEATH(Kokkos::Experimental::space_depends_on(space, source), message);
+  []<class EventType>(EventType& event) {
+    if constexpr (requires { event.cuda_event(); }) {
+      EXPECT_DEATH((void)event.cuda_event(),
+                   "Expected precondition .*m_handle.* evaluated false.");
+    }
+  }(source);
+}
+
 TEST(TEST_CATEGORY, event_copy_semantics) {
   using exec_space   = TEST_EXECSPACE;
   using memory_space = typename exec_space::memory_space;

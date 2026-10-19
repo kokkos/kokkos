@@ -14,9 +14,11 @@ static_assert(false,
 #if defined(KOKKOS_ENABLE_CUDA)
 
 #include <Kokkos_Event.hpp>
+#include <Kokkos_Assert.hpp>
 
 #include <Cuda/Kokkos_Cuda.hpp>
 #include <Cuda/Kokkos_Cuda_Error.hpp>
+#include <Cuda/Kokkos_Cuda_Instance.hpp>
 
 #include <memory>
 #include <string>
@@ -33,9 +35,9 @@ struct EventResource<Kokkos::Cuda> {
   explicit EventResource(const std::string& label,
                          const Kokkos::Cuda& exec_space)
       : m_label(label), m_cudaDev(exec_space.cuda_device()) {
-    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
-    KOKKOS_IMPL_CUDA_SAFE_CALL(
-        cudaEventCreateWithFlags(&m_event, cudaEventDisableTiming));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(exec_space.impl_internal_space_instance()
+                                   ->cuda_event_create_with_flags_wrapper(
+                                       &m_event, cudaEventDisableTiming));
   }
 
   ~EventResource() {
@@ -62,10 +64,12 @@ namespace Experimental {
 /// counting.  The last copy standing destroys the event.  Re-recording
 /// through any copy affects all copies (same semantics as sharing a
 /// raw cudaEvent_t).
+/// After a move, an Event may be destroyed or assigned a valid Event.
+/// Other operations require a valid handle.
 template <>
 class Event<Kokkos::Cuda> {
  public:
-  Event(const std::string& label)
+  explicit Event(const std::string& label)
       : m_handle(std::make_shared<Kokkos::Impl::EventResource<Kokkos::Cuda>>(
             label, Kokkos::Cuda())) {}
 
@@ -76,15 +80,20 @@ class Event<Kokkos::Cuda> {
   }
 
   void record(const Kokkos::Cuda& exec_space) {
+    KOKKOS_EXPECTS(bool(m_handle));
+    KOKKOS_EXPECTS(exec_space.cuda_device() == m_handle->m_cudaDev);
     KOKKOS_IMPL_CUDA_SAFE_CALL(
-        cudaEventRecord(m_handle->m_event, exec_space.cuda_stream()));
+        exec_space.impl_internal_space_instance()->cuda_event_record_wrapper(
+            m_handle->m_event));
   }
 
   void fence() const {
+    KOKKOS_EXPECTS(bool(m_handle));
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaEventSynchronize(m_handle->m_event));
   }
 
   bool is_complete() const {
+    KOKKOS_EXPECTS(bool(m_handle));
     cudaError_t err = cudaEventQuery(m_handle->m_event);
     if (err == cudaSuccess) return true;
     if (err == cudaErrorNotReady) return false;
@@ -92,18 +101,27 @@ class Event<Kokkos::Cuda> {
     return false;
   }
 
-  const std::string& label() const { return m_handle->m_label; }
-  cudaEvent_t cuda_event() const noexcept { return m_handle->m_event; }
+  const std::string& label() const {
+    KOKKOS_EXPECTS(bool(m_handle));
+    return m_handle->m_label;
+  }
+  cudaEvent_t cuda_event() const noexcept {
+    KOKKOS_EXPECTS(bool(m_handle));
+    return m_handle->m_event;
+  }
 
  private:
   std::shared_ptr<Kokkos::Impl::EventResource<Kokkos::Cuda>> m_handle;
 };
 
 /// CUDA: insert a stream wait for the recorded event (non-blocking on host).
-inline void space_depends_on(const Kokkos::Cuda& exec_space,
-                             const Event<Kokkos::Cuda>& event) {
+template <>
+inline void space_depends_on<Kokkos::Cuda, Kokkos::Cuda>(
+    const Kokkos::Cuda& exec_space, const Event<Kokkos::Cuda>& event) {
+  const auto cuda_event = event.cuda_event();
+  exec_space.impl_internal_space_instance()->set_cuda_device();
   KOKKOS_IMPL_CUDA_SAFE_CALL(
-      cudaStreamWaitEvent(exec_space.cuda_stream(), event.cuda_event(), 0));
+      cudaStreamWaitEvent(exec_space.cuda_stream(), cuda_event, 0));
 }
 
 }  // namespace Experimental

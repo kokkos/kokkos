@@ -640,6 +640,7 @@ if(Kokkos_ENABLE_CUDA)
   kokkos_add_executable_and_test(
     CoreUnitTest_CudaInterOpStreamsMultiGPU SOURCES UnitTestMainInit.cpp cuda/TestCuda_InterOp_StreamsMultiGPU.cpp
   )
+  kokkos_add_executable_and_test(CoreUnitTest_CudaEvent SOURCES UnitTestMainInit.cpp cuda/TestCuda_Event.cpp)
 
   kokkos_add_executable_and_test(
     CoreUnitTest_CudaInterOpGraph SOURCES UnitTestMainInit.cpp cuda/TestCuda_InterOp_Graph.cpp
