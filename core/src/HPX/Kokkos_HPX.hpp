@@ -1078,10 +1078,15 @@ struct hpx_mdrange_bounds {
   point_type m_tile_end{};
 
   explicit hpx_mdrange_bounds(MDRangePolicy const &policy)
-      : m_lower(policy.m_lower),
-        m_upper(policy.m_upper),
-        m_tile(policy.m_tile),
-        m_tile_end(policy.m_tile_end) {}
+      : m_lower(policy.lower()),
+        m_upper(policy.upper()),
+        m_tile(policy.tile_size()),
+        m_tile_end(policy.impl_tile_end()) {}
+
+  point_type lower() const { return m_lower; }
+  point_type upper() const { return m_upper; }
+  tile_type tile_size() const { return m_tile; }
+  point_type impl_tile_end() const { return m_tile_end; }
 };
 
 template <class Functor, class IndexOrPolicy, class ResultPtr = void *,
@@ -1101,10 +1106,10 @@ struct hpx_dispatch<Functor, Index, ResultPtr,
   int concurrency           = 0;
   ResultPtr result_ptr{};
 
-  hpx_dispatch(Functor f, Index b, Index c, Index e,
+  hpx_dispatch(const Functor &f, Index b, Index c, Index e,
                hpx_thread_buffer *buf = nullptr, int conc = 0,
                ResultPtr rp = {})
-      : functor(std::move(f)),
+      : functor(f),
         begin(b),
         chunk(c),
         end(e),
