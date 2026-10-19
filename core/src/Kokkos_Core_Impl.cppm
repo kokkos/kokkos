@@ -88,7 +88,7 @@ export {
   // execution policies
   namespace Impl {
   using ::Kokkos::Impl::NoLabel;
-  using ::Kokkos::Impl::OptionalLabel;
+  using ::Kokkos::Impl::OptionalLabelRef;
   using ::Kokkos::Impl::ParallelConstructName;
   using ::Kokkos::Impl::PolicyTraits;
   using ::Kokkos::Impl::PolicyUpdate;

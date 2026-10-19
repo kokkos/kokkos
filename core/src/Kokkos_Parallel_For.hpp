@@ -26,7 +26,7 @@ static_assert(false,
 namespace Kokkos {
 namespace Impl {
 template <bool HasLabel, Kokkos::ExecutionPolicy ExecPolicy, class FunctorType>
-inline void parallel_for_impl(const OptionalLabel<HasLabel> optional_label,
+inline void parallel_for_impl(const OptionalLabelRef<HasLabel> optional_label,
                               const ExecPolicy& policy,
                               const FunctorType& functor) {
   /** Enforce correct use **/
@@ -52,7 +52,7 @@ inline void parallel_for_impl(const OptionalLabel<HasLabel> optional_label,
 }
 
 template <bool HasLabel, class FunctorType>
-inline void parallel_for_impl(const OptionalLabel<HasLabel> optional_label,
+inline void parallel_for_impl(const OptionalLabelRef<HasLabel> optional_label,
                               const size_t work_count,
                               const FunctorType& functor) {
   /** Enforce correct use **/

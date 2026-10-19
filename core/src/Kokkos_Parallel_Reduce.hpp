@@ -181,7 +181,7 @@ struct ParallelReduceAdaptor {
   }
 
   template <bool HasLabel>
-  static inline void execute(const OptionalLabel<HasLabel> optional_label,
+  static inline void execute(const OptionalLabelRef<HasLabel> optional_label,
                              const PolicyType& policy,
                              const FunctorType& functor,
                              ReturnType& return_value)
@@ -283,10 +283,9 @@ struct ParallelReduceFence {
 
 template <bool HasLabel, Kokkos::ExecutionPolicy PolicyType, class FunctorType,
           class ReturnType>
-inline void parallel_reduce_impl(const OptionalLabel<HasLabel> optional_label,
-                                 const PolicyType& policy,
-                                 const FunctorType& functor,
-                                 ReturnType& return_value)
+inline void parallel_reduce_impl(
+    const OptionalLabelRef<HasLabel> optional_label, const PolicyType& policy,
+    const FunctorType& functor, ReturnType& return_value)
   requires(!Kokkos::is_view<ReturnType>::value &&
            !Kokkos::is_reducer<ReturnType>::value &&
            !std::is_pointer_v<ReturnType>)
@@ -313,10 +312,9 @@ inline void parallel_reduce_impl(const OptionalLabel<HasLabel> optional_label,
 }
 
 template <bool HasLabel, class FunctorType, class ReturnType>
-inline void parallel_reduce_impl(const OptionalLabel<HasLabel> optional_label,
-                                 const size_t& work_count,
-                                 const FunctorType& functor,
-                                 ReturnType& return_value)
+inline void parallel_reduce_impl(
+    const OptionalLabelRef<HasLabel> optional_label, const size_t& work_count,
+    const FunctorType& functor, ReturnType& return_value)
   requires(!Kokkos::is_view<ReturnType>::value &&
            !Kokkos::is_reducer<ReturnType>::value &&
            !std::is_pointer_v<ReturnType>)
@@ -338,10 +336,9 @@ inline void parallel_reduce_impl(const OptionalLabel<HasLabel> optional_label,
 
 template <bool HasLabel, Kokkos::ExecutionPolicy PolicyType, class FunctorType,
           class ReturnType>
-inline void parallel_reduce_impl(const OptionalLabel<HasLabel> optional_label,
-                                 const PolicyType& policy,
-                                 const FunctorType& functor,
-                                 const ReturnType& return_value)
+inline void parallel_reduce_impl(
+    const OptionalLabelRef<HasLabel> optional_label, const PolicyType& policy,
+    const FunctorType& functor, const ReturnType& return_value)
   requires(Kokkos::is_view<ReturnType>::value ||
            Kokkos::is_reducer<ReturnType>::value ||
            std::is_pointer_v<ReturnType>)
@@ -364,10 +361,9 @@ inline void parallel_reduce_impl(const OptionalLabel<HasLabel> optional_label,
 }
 
 template <bool HasLabel, class FunctorType, class ReturnType>
-inline void parallel_reduce_impl(const OptionalLabel<HasLabel> optional_label,
-                                 const size_t& work_count,
-                                 const FunctorType& functor,
-                                 const ReturnType& return_value)
+inline void parallel_reduce_impl(
+    const OptionalLabelRef<HasLabel> optional_label, const size_t& work_count,
+    const FunctorType& functor, const ReturnType& return_value)
   requires(Kokkos::is_view<ReturnType>::value ||
            Kokkos::is_reducer<ReturnType>::value ||
            std::is_pointer_v<ReturnType>)
@@ -388,9 +384,9 @@ inline void parallel_reduce_impl(const OptionalLabel<HasLabel> optional_label,
 }
 
 template <bool HasLabel, Kokkos::ExecutionPolicy PolicyType, class FunctorType>
-inline void parallel_reduce_impl(const OptionalLabel<HasLabel> optional_label,
-                                 const PolicyType& policy,
-                                 const FunctorType& functor) {
+inline void parallel_reduce_impl(
+    const OptionalLabelRef<HasLabel> optional_label, const PolicyType& policy,
+    const FunctorType& functor) {
   /** Enforce correct use **/
   if constexpr (HasLabel) {
     CheckUsage<UsageRequires::insideExecEnv>::check(
@@ -418,9 +414,9 @@ inline void parallel_reduce_impl(const OptionalLabel<HasLabel> optional_label,
 }
 
 template <bool HasLabel, class FunctorType>
-inline void parallel_reduce_impl(const OptionalLabel<HasLabel> optional_label,
-                                 const size_t& work_count,
-                                 const FunctorType& functor) {
+inline void parallel_reduce_impl(
+    const OptionalLabelRef<HasLabel> optional_label, const size_t& work_count,
+    const FunctorType& functor) {
   /** Enforce correct use **/
   if constexpr (HasLabel) {
     CheckUsage<UsageRequires::insideExecEnv>::check(
