@@ -9,14 +9,15 @@
 /// selective host synchronisation.
 ///
 /// API:
-///   - space_depends_on(exec_space, event) — GPU-side dependency
-///   (non-blocking on host)
+///   - space_depends_on(exec_space, event) — order work after the event;
+///     some specializations (e.g. CUDA) are non-blocking on the host, while
+///     fallback and cross-backend dependencies may block the host
 ///   - event.fence()                       — host-side blocking synchronisation
 ///   - event.is_complete()                 — non-blocking query
 ///
 /// Currently only the CUDA backend provides a native implementation.
-/// For other backends the fallback records a fence on record() and
-/// space_depends_on / fence / is_complete are no-ops or trivially satisfied.
+/// Other backends enqueue a completion marker on record(). Cross-backend
+/// dependencies synchronize the event on the host before returning.
 
 #ifndef KOKKOS_EVENT_HPP
 #define KOKKOS_EVENT_HPP
@@ -28,7 +29,9 @@
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_View.hpp>
+#include <mutex>
 #include <thread>
+#include <type_traits>
 
 namespace Kokkos {
 
@@ -44,19 +47,17 @@ struct EventResource {
   using flag_memory_space_t = Kokkos::SharedHostPinnedSpace;
 #endif
 
-  EventResource(
-      const std::string& label_,
-      const Kokkos::View<uint64_t, Kokkos::SharedHostPinnedSpace>& flag_,
-      const ExecutionSpace& exec_)
-      : label(label_),
-        counter(0),
-        flag(flag_),
-        exec(exec_),
-        lock(std::mutex()) {}
+  using flag_t =
+      Kokkos::View<uint64_t,
+                   Kokkos::Device<ExecutionSpace, flag_memory_space_t>>;
+
+  EventResource(const std::string& label_, const flag_t& flag_,
+                const ExecutionSpace& exec_)
+      : label(label_), counter(0), flag(flag_), exec(exec_), lock() {}
   std::string label;
 
   uint64_t counter;
-  Kokkos::View<uint64_t, Kokkos::SharedHostPinnedSpace> flag;
+  flag_t flag;
 
   ExecutionSpace exec;
   std::mutex lock;
@@ -71,36 +72,39 @@ namespace Experimental {
 
 /// Portable fallback event for backends without native event support.
 ///
-/// On record(), a fence is issued so that subsequent space_depends_on()
-/// and fence() are trivially satisfied.  This preserves correctness at
-/// the cost of synchronisation -- the same trade-off existing Kokkos
-/// code already makes.
+/// record() enqueues a completion marker and fence() waits on the host.
+/// A dependency on the same instance relies on that instance's ordering;
+/// dependencies on other instances or backends wait for event completion.
 ///
 /// Backends that provide a native implementation (e.g. CUDA) specialize
 /// this template in backend-specific headers.
+///
+/// After a move, an Event may be destroyed or assigned a valid Event.
+/// Other operations require a valid handle.
 
 // forward declare the class and the friend function space_depends_on
 // so that we can make namespace qualified call work
 template <Kokkos::ExecutionSpace Exec = DefaultExecutionSpace>
-struct Event;
+class Event;
 
-// Device-side dependency: the given execution space waits until the event
-// has occured.
-template <Kokkos::ExecutionSpace Exec>
-void space_depends_on(const Exec& exec_space, const Event<Exec>& event);
+// Order subsequent work in the given execution space after the event.
+template <Kokkos::ExecutionSpace WaiterExec, Kokkos::ExecutionSpace EventExec>
+void space_depends_on(const WaiterExec& exec_space,
+                      const Event<EventExec>& event);
 
 // FIXME: tried to use SeqCst for load and store but it didn't compile for CUDA
 template <Kokkos::ExecutionSpace Exec>
-struct Event {
+class Event {
+ public:
   using execution_space = Exec;
 
  private:
   using resource_t = Kokkos::Impl::EventResource<execution_space>;
   using handle_t   = std::shared_ptr<resource_t>;
-  using flag_t     = Kokkos::View<uint64_t, Kokkos::SharedHostPinnedSpace>;
+  using flag_t     = typename resource_t::flag_t;
 
  public:
-  Event(const std::string& label_)
+  explicit Event(const std::string& label_)
       : m_handle(std::make_shared<resource_t>(
             label_, flag_t(std::string("Kokkos::Event::flag:" + label_)),
             execution_space())) {
@@ -123,7 +127,8 @@ struct Event {
 
   // Create an event at the current spot in the execution space queue
   void record(const execution_space& exec_space) {
-    m_handle->lock.lock();
+    KOKKOS_EXPECTS(bool(m_handle));
+    std::lock_guard<std::mutex> guard(m_handle->lock);
     m_handle->exec = exec_space;
     desul::atomic_inc(&m_handle->counter, desul::MemoryOrderSeqCst(),
                       desul::MemoryScopeNode());
@@ -134,12 +139,36 @@ struct Event {
           desul::atomic_inc(&(flag()), desul::MemoryOrderSeqCst(),
                             desul::MemoryScopeNode());
         });
-    m_handle->lock.unlock();
   }
 
   // Wait until the event occurs
   void fence() const {
-    m_handle->lock.lock();
+    KOKKOS_EXPECTS(bool(m_handle));
+    std::lock_guard<std::mutex> guard(m_handle->lock);
+    wait_locked();
+  }
+
+  // Check whether the event has occured.
+  bool is_complete() const {
+    KOKKOS_EXPECTS(bool(m_handle));
+    return desul::atomic_load(&m_handle->flag(), desul::MemoryOrderAcquire(),
+                              desul::MemoryScopeNode()) ==
+           desul::atomic_load(&m_handle->counter, desul::MemoryOrderAcquire(),
+                              desul::MemoryScopeNode());
+  }
+
+  const std::string& label() const {
+    KOKKOS_EXPECTS(bool(m_handle));
+    return m_handle->label;
+  }
+
+  // Enqueue a dependency on the event in an execution space instance
+  friend void space_depends_on<execution_space, execution_space>(
+      const execution_space& exec_space, const Event<execution_space>& event);
+
+ private:
+  // The caller must hold m_handle->lock throughout this wait.
+  void wait_locked() const {
     // Comparing for != is correct here, because of the lock mechanism
     // furthermore that actually means it will work with wrap around overflow
     // however unlikely that is considering the use of a 64bit integer
@@ -148,32 +177,23 @@ struct Event {
            desul::atomic_load(&m_handle->counter, desul::MemoryOrderAcquire(),
                               desul::MemoryScopeNode()))
       std::this_thread::yield();
-    m_handle->lock.unlock();
   }
 
-  // Check whether the event has occured
-  bool is_complete() const {
-    return desul::atomic_load(&m_handle->flag(), desul::MemoryOrderAcquire(),
-                              desul::MemoryScopeNode()) ==
-           desul::atomic_load(&m_handle->counter, desul::MemoryOrderAcquire(),
-                              desul::MemoryScopeNode());
-  }
-
-  const std::string& label() const { return m_handle->label; }
-
-  // Enqueue a dependency on the event in an execution space instance
-  friend void space_depends_on<execution_space>(
-      const execution_space& exec_space, const Event<execution_space>& event);
-
- private:
   handle_t m_handle;
 };
 
-template <Kokkos::ExecutionSpace Exec>
-void space_depends_on(const Exec& exec_space, const Event<Exec>& event) {
-  // Only need to wait if its not the same execution space instance
-  // Otherwise any work issues to the same instance will happen after the event
-  if (exec_space != event.m_handle->exec) event.fence();
+template <Kokkos::ExecutionSpace WaiterExec, Kokkos::ExecutionSpace EventExec>
+void space_depends_on(const WaiterExec& exec_space,
+                      const Event<EventExec>& event) {
+  if constexpr (std::is_same_v<WaiterExec, EventExec>) {
+    KOKKOS_EXPECTS(bool(event.m_handle));
+    // Only compare instances of the same backend. Matching instances already
+    // order subsequent work after the event.
+    std::lock_guard<std::mutex> guard(event.m_handle->lock);
+    if (exec_space != event.m_handle->exec) event.wait_locked();
+  } else {
+    event.fence();
+  }
 }
 }  // namespace Experimental
 }  // namespace Kokkos
