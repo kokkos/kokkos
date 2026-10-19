@@ -27,6 +27,11 @@ TEST(ExcessMemoryAllocation_DeathTest, ExcessMemoryAllocationFailsTest) {
   GTEST_SKIP()
       << "Allocations > 4GB are not supported on 32-bit builds.";  // FIXME_32BIT
 #endif
+#ifdef KOKKOS_ENABLE_NEXTSILICON
+  GTEST_SKIP()
+      << "Known to fail with SIGTEM with NextSilicon";  // FIXME_NEXTSILICON
+#endif
+
   // allocate 9 chunks ~4.5 GB
   ASSERT_EXIT(allocate_views(CHUNK, 9), ::testing::ExitedWithCode(1),
               ".*WARNING!.*Total allocation.*GB.*exceeds.*GB limit!");
