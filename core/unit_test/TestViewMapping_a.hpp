@@ -649,11 +649,14 @@ void test_view_mapping() {
           // constructing the ParallelReduce object (with reference-counting
           // turned off). When the parallel dispatch accepts a move for the
           // lambda, this count should become 2.
+          // With the only host asynchronous backend, HPX, in particular, we
+          // observe count 2 already.
 
-          if (a.use_count() != 3) ++e;
+          const int initial_count = a.use_count();
+          if (initial_count > 3 || initial_count < 2) ++e;
           V x = a;
-          if (a.use_count() != 3) ++e;
-          if (x.use_count() != 3) ++e;
+          if (a.use_count() != initial_count) ++e;
+          if (x.use_count() != initial_count) ++e;
         },
         errors);
     ASSERT_EQ(errors, 0);
