@@ -153,6 +153,8 @@ using DefaultHostExecutionSpace KOKKOS_IMPL_DEFAULT_HOST_EXEC_SPACE_ANNOTATION =
 using DefaultHostMemorySpace = HostSpace;
 
 // check for devices that support SharedSpace
+// KOKKOS_HAS_SHARED_SPACE and KOKKOS_HAS_SHARED_HOST_PINNED_SPACE are defined
+// in Kokkos_Macros.hpp so that these macros can be used in C++20 modules builds
 #if defined(KOKKOS_ENABLE_CUDA)
 using SharedSpace = CudaUVMSpace;
 #elif defined(KOKKOS_ENABLE_HIP)
