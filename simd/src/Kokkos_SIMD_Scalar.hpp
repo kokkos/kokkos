@@ -503,7 +503,10 @@ template <Impl::SimdVecType V, Impl::Ranges::contiguous_range R,
            std::same_as<typename V::abi_type, simd_abi::scalar>
 KOKKOS_FORCEINLINE_FUNCTION constexpr V partial_gather_from(
     R&& in, const I& indices, simd_flags<Flags...> = simd_flag_default) {
-  return unchecked_gather_from<V>(in, indices);
+  using T = typename V::value_type;
+  return V(Impl::is_index_in_range(indices[0], Impl::Ranges::size(in))
+               ? in[indices[0]]
+               : T{});
 }
 
 template <Impl::SimdVecType V, Impl::Ranges::contiguous_range R,
@@ -513,7 +516,11 @@ template <Impl::SimdVecType V, Impl::Ranges::contiguous_range R,
 KOKKOS_FORCEINLINE_FUNCTION constexpr V partial_gather_from(
     R&& in, const typename I::mask_type& mask, const I& indices,
     simd_flags<Flags...> = simd_flag_default) {
-  return unchecked_gather_from<V>(in, mask, indices);
+  using T = typename V::value_type;
+  return V(
+      (mask[0] && Impl::is_index_in_range(indices[0], Impl::Ranges::size(in)))
+          ? in[indices[0]]
+          : T{});
 }
 
 template <Impl::SimdVecType V, Impl::Ranges::contiguous_range R,
@@ -543,7 +550,8 @@ template <Impl::SimdVecType V, Impl::Ranges::contiguous_range R,
 KOKKOS_FORCEINLINE_FUNCTION constexpr void partial_scatter_to(
     const V& v, R&& out, const I& indices,
     simd_flags<Flags...> = simd_flag_default) {
-  unchecked_scatter_to<V>(v, out, indices);
+  if (Impl::is_index_in_range(indices[0], Impl::Ranges::size(out)))
+    out[indices[0]] = v[0];
 }
 
 template <Impl::SimdVecType V, Impl::Ranges::contiguous_range R,
@@ -553,7 +561,8 @@ template <Impl::SimdVecType V, Impl::Ranges::contiguous_range R,
 KOKKOS_FORCEINLINE_FUNCTION constexpr void partial_scatter_to(
     const V& v, R&& out, const typename I::mask_type& mask, const I& indices,
     simd_flags<Flags...> = simd_flag_default) {
-  unchecked_scatter_to<V>(v, out, mask, indices);
+  if (mask[0] && Impl::is_index_in_range(indices[0], Impl::Ranges::size(out)))
+    out[indices[0]] = v[0];
 }
 
 template <class T>
