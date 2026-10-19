@@ -157,11 +157,14 @@ static constexpr bool desul_impl_omp_on_host() { return false; }
   if constexpr (acc_on_device(acc_device_host)) { \
     DESUL_IMPL_STRIP_PARENS(CODE)                 \
   }
-#define DESUL_IF_ON_HOST_INTEGRAL(T, CODE)
 #endif
 #define DESUL_IMPL_ACC_ROUTINE_DIRECTIVE _Pragma("acc routine seq")
 #else
 #define DESUL_IMPL_ACC_ROUTINE_DIRECTIVE
+#endif
+
+#ifndef DESUL_IF_ON_HOST_INTEGRAL
+#define DESUL_IF_ON_HOST_INTEGRAL(T, CODE)
 #endif
 
 #if !defined(DESUL_IF_ON_HOST) && !defined(DESUL_IF_ON_DEVICE)
