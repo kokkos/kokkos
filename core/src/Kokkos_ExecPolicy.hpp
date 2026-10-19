@@ -1240,24 +1240,26 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
 namespace Impl {
 
 template <bool HasLabel>
-struct OptionalLabel;
+struct OptionalLabelRef;
 
 template <>
-struct OptionalLabel<true> {
+struct OptionalLabelRef<true> {
   static constexpr bool has_label = true;
   // Borrows the string, label must outlive this wrapper
-  const std::string& label_ref;
   const std::string& get() const { return label_ref; }
-  explicit OptionalLabel(const std::string& label) : label_ref(label) {}
-  OptionalLabel(const std::string&&) = delete;
+  explicit OptionalLabelRef(const std::string& label) : label_ref(label) {}
+  OptionalLabelRef(const std::string&&) = delete;
+
+ private:
+  const std::string& label_ref;
 };
 
 template <>
-struct OptionalLabel<false> {
+struct OptionalLabelRef<false> {
   static constexpr bool has_label = false;
 };
-using NoLabel   = OptionalLabel<false>;
-using WithLabel = OptionalLabel<true>;
+using NoLabel   = OptionalLabelRef<false>;
+using WithLabel = OptionalLabelRef<true>;
 
 template <typename FunctorType, typename TagType, bool HasLabel,
           bool HasTag = !std::is_void_v<TagType>>
@@ -1265,7 +1267,7 @@ struct ParallelConstructName;
 
 template <typename FunctorType, typename TagType, bool HasTag>
 struct ParallelConstructName<FunctorType, TagType, true, HasTag> {
-  ParallelConstructName(const OptionalLabel<true> label)
+  ParallelConstructName(const OptionalLabelRef<true> label)
       : label_ref(label.get()) {}
   std::string const& get() { return label_ref; }
   std::string const& label_ref;

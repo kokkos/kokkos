@@ -28,7 +28,7 @@ namespace Impl {
 
 template <bool HasLabel, Kokkos::ExecutionPolicy ExecutionPolicy,
           class FunctorType>
-inline void parallel_scan_impl(const OptionalLabel<HasLabel> optional_label,
+inline void parallel_scan_impl(const OptionalLabelRef<HasLabel> optional_label,
                                const ExecutionPolicy& policy,
                                const FunctorType& functor) {
   /** Enforce correct use **/
@@ -55,7 +55,7 @@ inline void parallel_scan_impl(const OptionalLabel<HasLabel> optional_label,
 }
 
 template <bool HasLabel, class FunctorType>
-inline void parallel_scan_impl(const OptionalLabel<HasLabel> optional_label,
+inline void parallel_scan_impl(const OptionalLabelRef<HasLabel> optional_label,
                                const size_t work_count,
                                const FunctorType& functor) {
   /** Enforce correct use **/
@@ -78,7 +78,7 @@ inline void parallel_scan_impl(const OptionalLabel<HasLabel> optional_label,
 
 template <bool HasLabel, Kokkos::ExecutionPolicy ExecutionPolicy,
           class FunctorType, class ReturnType>
-inline void parallel_scan_impl(const OptionalLabel<HasLabel> optional_label,
+inline void parallel_scan_impl(const OptionalLabelRef<HasLabel> optional_label,
                                const ExecutionPolicy& policy,
                                const FunctorType& functor,
                                ReturnType& return_value) {
@@ -118,7 +118,7 @@ inline void parallel_scan_impl(const OptionalLabel<HasLabel> optional_label,
 }
 
 template <bool HasLabel, class FunctorType, class ReturnType>
-inline void parallel_scan_impl(const OptionalLabel<HasLabel> optional_label,
+inline void parallel_scan_impl(const OptionalLabelRef<HasLabel> optional_label,
                                const size_t work_count,
                                const FunctorType& functor,
                                ReturnType& return_value) {
