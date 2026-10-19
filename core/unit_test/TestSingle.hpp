@@ -126,7 +126,7 @@ void test_no_output() {
   EXPECT_TRUE(KokkosTest::contains(exec_space, res, 3));
 }
 
-// Test for the ParallelReduce based API with a single return value
+// Test for the ParallelReduce based API with a return value
 void test_output() {
   int val;
   ReductionFunctor f;
@@ -196,6 +196,77 @@ void test_output() {
   EXPECT_EQ(val, 5);
 }
 
+// Test for the ParallelReduce based API with a view as return value
+void test_output_view() {
+  TEST_EXECSPACE exec_space;
+
+  Kokkos::View<int, TEST_EXECSPACE> val("val");
+  ReductionFunctor f;
+
+  // Full signature
+  // Functor
+  Kokkos::deep_copy(val, 0);
+  Kokkos::single("single with output+worktag+exec_space",
+                 Kokkos::SinglePolicy<TEST_EXECSPACE, TenTag>(), f, val);
+  EXPECT_TRUE(KokkosTest::contains(exec_space, val, 10));
+
+  // Lambda
+  Kokkos::deep_copy(val, 0);
+  Kokkos::single(
+      "single with output+lambda+exec_space",
+      Kokkos::SinglePolicy<TEST_EXECSPACE>(),
+      KOKKOS_LAMBDA(int& ret) { ret = 5; }, val);
+  EXPECT_TRUE(KokkosTest::contains(exec_space, val, 5));
+
+  if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::DefaultExecutionSpace>) {
+    // These tests use the default execution space, thus they should not be run
+    // when TEST_EXECSPACE != Kokkos::DefaultExecutionSpace
+
+    // Minimal
+    Kokkos::deep_copy(val, 0);
+    Kokkos::single(f, val);
+    EXPECT_TRUE(KokkosTest::contains(exec_space, val, 5));
+
+    // +kernel_name
+    Kokkos::deep_copy(val, 0);
+    Kokkos::single("single with output", f, val);
+    EXPECT_TRUE(KokkosTest::contains(exec_space, val, 5));
+
+    // +Worktag
+    Kokkos::deep_copy(val, 0);
+    Kokkos::single(Kokkos::SinglePolicy<TenTag>(), f, val);
+    EXPECT_TRUE(KokkosTest::contains(exec_space, val, 10));
+
+    // +kernel_name +Worktag
+    Kokkos::deep_copy(val, 0);
+    Kokkos::single("single with output+worktag", Kokkos::SinglePolicy<TenTag>(),
+                   f, val);
+    EXPECT_TRUE(KokkosTest::contains(exec_space, val, 10));
+  }
+
+  // +Policy
+  Kokkos::deep_copy(val, 0);
+  Kokkos::single(Kokkos::SinglePolicy<TEST_EXECSPACE>(), f, val);
+  EXPECT_TRUE(KokkosTest::contains(exec_space, val, 5));
+
+  // +kernel_name +Policy
+  Kokkos::deep_copy(val, 0);
+  Kokkos::single("single with output+exec_space",
+                 Kokkos::SinglePolicy<TEST_EXECSPACE>(), f, val);
+  EXPECT_TRUE(KokkosTest::contains(exec_space, val, 5));
+
+  // +Worktag +Policy
+  Kokkos::deep_copy(val, 0);
+  Kokkos::single(Kokkos::SinglePolicy<TEST_EXECSPACE, TenTag>(), f, val);
+  EXPECT_TRUE(KokkosTest::contains(exec_space, val, 10));
+
+  // +ExecSpace instance
+  Kokkos::deep_copy(val, 0);
+  Kokkos::single(Kokkos::SinglePolicy(exec_space), f, val);
+  exec_space.fence();
+  EXPECT_TRUE(KokkosTest::contains(exec_space, val, 5));
+}
+
 // Test that single can be used to return types non conforming with the
 // requirements for parallel_reduce
 struct Restrictive {
@@ -233,6 +304,8 @@ TEST(TEST_CATEGORY, single_policy) { test_single_policy(); }
 TEST(TEST_CATEGORY, single) { test_no_output(); }
 
 TEST(TEST_CATEGORY, single_output) { test_output(); }
+
+TEST(TEST_CATEGORY, single_output_view) { test_output_view(); }
 
 TEST(TEST_CATEGORY, single_restrictive_return_type) {
   test_restrictive_return_type();

@@ -23,14 +23,6 @@ static_assert(false,
 
 namespace Kokkos::Impl {
 
-// This serves as a wrapper for the value inside single in order to have a
-// neutral element for the allocation done in the NoOpReducer
-template <class Content>
-struct SingleInternalValueWrapper {
-  Content content;
-  bool init;
-};
-
 // Reducer performing no operation used within single to return a value without
 // imposing the value's type to have any operation defined.
 template <class Scalar, class Space>
@@ -46,33 +38,31 @@ struct NoOpReducer : Impl::BaseReducer<Scalar, Space> {
   using parent_type::parent_type;
 
   KOKKOS_INLINE_FUNCTION
-  void join(value_type& dest, const value_type& src) const {
-    if (src.init) {
-      dest = src;
-    }
-  }
+#ifndef KOKKOS_ENABLE_OPENMP
+  void join(value_type& dest, const value_type& src) const { dest = src; }
+#else
+  // OpenMP call join with inactive threads, causing dest to be erased by
+  // uninitialized values
+  void join(value_type&, const value_type&) const {}
+#endif
 
   KOKKOS_INLINE_FUNCTION
-  void init(value_type& val) const { val.init = false; }
+  void init(value_type&) const {}
 };
 
 template <class FunctorType>
 struct SingleReductionWrapper {
   FunctorType m_functor;
   template <class WorkTag, class Index, class ReturnType>
-  KOKKOS_INLINE_FUNCTION void operator()(
-      WorkTag&& worktag, Index&&,
-      SingleInternalValueWrapper<ReturnType>& ret) const {
+  KOKKOS_INLINE_FUNCTION void operator()(WorkTag&& worktag, Index&&,
+                                         ReturnType& ret) const {
     static_assert(std::is_empty_v<std::remove_cvref_t<WorkTag>>);
-    m_functor(worktag, ret.content);
-    ret.init = true;
+    m_functor(worktag, ret);
   }
 
   template <class Index, class ReturnType>
-  KOKKOS_INLINE_FUNCTION void operator()(
-      Index&&, SingleInternalValueWrapper<ReturnType>& ret) const {
-    m_functor(ret.content);
-    ret.init = true;
+  KOKKOS_INLINE_FUNCTION void operator()(Index&&, ReturnType& ret) const {
+    m_functor(ret);
   }
 };
 
@@ -99,11 +89,11 @@ struct Single {
     Impl::SingleReductionWrapper<FunctorType> functor_wrapper{functor};
     using FunctorWrapper = decltype(functor_wrapper);
 
-    using InternalReturn = Impl::SingleInternalValueWrapper<ReturnType>;
-
     using ReturnValueAdapter =
-        typename Kokkos::Impl::ParallelReduceReturnValue<void, InternalReturn,
+        typename Kokkos::Impl::ParallelReduceReturnValue<void, ReturnType,
                                                          FunctorWrapper>;
+
+    using InternalReturn = typename ReturnValueAdapter::value_type;
 
     using ReducerType =
         typename Impl::NoOpReducer<InternalReturn, ExecutionSpace>;
@@ -117,10 +107,8 @@ struct Single {
         Kokkos::Impl::CombinedFunctorReducer<FunctorWrapper,
                                              typename Analysis::Reducer>;
 
-    InternalReturn container;
-
     CombinedFunctorReducerType functor_reducer(
-        functor_wrapper, typename Analysis::Reducer(container));
+        functor_wrapper, typename Analysis::Reducer(return_value));
 
     using ParallelReducer =
         Impl::ParallelReduce<CombinedFunctorReducerType,
@@ -129,11 +117,9 @@ struct Single {
     auto closure =
         construct_with_shared_allocation_tracking_disabled<ParallelReducer>(
             functor_reducer, policy.impl_get_range_policy(),
-            ReturnValueAdapter::return_value(container, functor_wrapper));
+            ReturnValueAdapter::return_value(return_value, functor_wrapper));
 
     closure.execute();
-
-    return_value = container.content;
   }
 };
 

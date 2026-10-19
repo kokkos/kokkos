@@ -91,14 +91,20 @@ inline void single(const std::string& label,
 }
 
 template <class FunctorType, class ReturnType, class... PolicyProperties>
-  requires(std::is_invocable_v<FunctorType, ReturnType&>)
+  requires(std::is_invocable_v<FunctorType, ReturnType&> ||
+           (Kokkos::is_view<ReturnType>::value &&
+            std::is_invocable_v<FunctorType, typename ReturnType::data_type&> &&
+            ReturnType::rank == 0))
 inline void single(const SinglePolicy<PolicyProperties...>& single_policy,
                    const FunctorType& functor, ReturnType& return_value) {
   ::Kokkos::single("", single_policy, functor, return_value);
 }
 
 template <class FunctorType, class ReturnType>
-  requires(std::is_invocable_v<FunctorType, ReturnType&>)
+  requires(std::is_invocable_v<FunctorType, ReturnType&> ||
+           (Kokkos::is_view<ReturnType>::value &&
+            std::is_invocable_v<FunctorType, typename ReturnType::data_type&> &&
+            ReturnType::rank == 0))
 inline void single(const std::string label, const FunctorType& functor,
                    ReturnType& return_value) {
   using execution_space =
@@ -109,7 +115,10 @@ inline void single(const std::string label, const FunctorType& functor,
 }
 
 template <class FunctorType, class ReturnType>
-  requires(std::is_invocable_v<FunctorType, ReturnType&>)
+  requires(std::is_invocable_v<FunctorType, ReturnType&> ||
+           (Kokkos::is_view<ReturnType>::value &&
+            std::is_invocable_v<FunctorType, typename ReturnType::data_type&> &&
+            ReturnType::rank == 0))
 inline void single(const FunctorType& functor, ReturnType& return_value) {
   ::Kokkos::single("", functor, return_value);
 }
