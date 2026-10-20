@@ -717,4 +717,13 @@
 #define KOKKOS_BHALF_T_IS_FLOAT true
 #endif
 
+// check for backends that support SharedSpace and SharedHostPinnedSpace
+#if !defined(KOKKOS_ENABLE_OPENACC)
+#define KOKKOS_HAS_SHARED_SPACE
+#endif
+
+#if !defined(KOKKOS_ENABLE_OPENACC) && !defined(KOKKOS_ENABLE_NEXTSILICON)
+#define KOKKOS_HAS_SHARED_HOST_PINNED_SPACE
+#endif
+
 #endif  // #ifndef KOKKOS_MACROS_HPP

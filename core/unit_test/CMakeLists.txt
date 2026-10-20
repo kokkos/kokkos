@@ -41,6 +41,7 @@ set(COMPILE_ONLY_SOURCES
     TestHalfCommonType.cpp
     TestInterOp.cpp
     TestRangePolicyCTAD.cpp
+    TestSharedSpaceCompileOnly.cpp
     TestStringManipulation.cpp
     TestVersionMacros.cpp
     TestViewRank.cpp
