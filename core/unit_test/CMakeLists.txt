@@ -368,13 +368,6 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;NextSilicon)
         ViewMDSpanTemplateArgumentSubview
       )
     endif()
-    # Fails for the OpenACC backend if 24.5 < NVHPC version <= 26.5
-    if(Kokkos_ENABLE_OPENACC AND KOKKOS_CXX_COMPILER_VERSION VERSION_GREATER 24.5 AND KOKKOS_CXX_COMPILER_VERSION
-                                                                                      VERSION_LESS_EQUAL 26.5
-    )
-      list(REMOVE_ITEM BV_TestNames SubviewALLFullExtentEquivalence)
-    endif()
-
     # FIXME_NEXTSILICON
     if(Kokkos_ENABLE_NEXTSILICON)
       list(REMOVE_ITEM BV_TestNames ViewCustomizationAccessorFromMapping # TeamPolicy
