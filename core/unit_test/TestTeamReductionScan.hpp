@@ -8,6 +8,12 @@
 namespace Test {
 
 TEST(TEST_CATEGORY, team_reduction_scan) {
+// FIXME_NEXTSILICON
+#ifdef KOKKOS_ENABLE_NEXTSILICON
+  if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::NextSilicon>) {
+    GTEST_SKIP() << "very slow during handoff on 1.3.0-120";
+  }
+#endif
   TestScanTeam<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >(0);
   TestScanTeam<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >(0);
   TestScanTeam<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >(10);

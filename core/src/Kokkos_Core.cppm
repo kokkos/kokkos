@@ -193,6 +193,7 @@ export {
   using ::Kokkos::Experimental::prefer;
   using ::Kokkos::Experimental::require;
   using ::Kokkos::Experimental::StaticBatchSize;
+  using ::Kokkos::Experimental::ThreadHandle;
   using ::Kokkos::Experimental::WorkItemProperty;
   }  // namespace Experimental
 
