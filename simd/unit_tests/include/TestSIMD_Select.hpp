@@ -20,7 +20,7 @@ inline void host_check_select() {
     using mask_type = typename simd_type::mask_type;
 
     auto select_op = [](mask_type const& mask, simd_type const& a,
-                           simd_type const& b) {
+                        simd_type const& b) {
       return Kokkos::Experimental::select(mask, a, b);
     };
 
@@ -31,6 +31,20 @@ inline void host_check_select() {
     EXPECT_TRUE(all_of(select_result == value_b));
     select_result = select_op(mask_type(true), value_a, value_b);
     EXPECT_TRUE(all_of(select_result == value_a));
+
+    mask_type mask([](std::size_t i) { return i % 2 == 0; });
+    select_result = select_op(mask, value_a, value_b);
+    for (std::size_t i = 0; i < simd_type::size(); ++i) {
+      EXPECT_EQ(select_result[i], mask[i] ? value_a[i] : value_b[i]);
+    }
+
+    mask_type mask_a([](std::size_t i) { return i % 3 == 0; });
+    mask_type mask_b([](std::size_t i) { return i % 3 != 1; });
+    mask_type mask_result = Kokkos::Experimental::select(mask, mask_a, mask_b);
+
+    for (std::size_t i = 0; i < simd_type::size(); ++i) {
+      EXPECT_EQ(mask_result[i], mask[i] ? mask_a[i] : mask_b[i]);
+    }
   }
 }
 
@@ -55,7 +69,7 @@ KOKKOS_INLINE_FUNCTION void device_check_select() {
     kokkos_checker checker;
 
     auto select_op = [](mask_type const& mask, simd_type const& a,
-                           simd_type const& b) {
+                        simd_type const& b) {
       return Kokkos::Experimental::select(mask, a, b);
     };
 
@@ -66,6 +80,20 @@ KOKKOS_INLINE_FUNCTION void device_check_select() {
     checker.truth(all_of(select_result == value_b));
     select_result = select_op(mask_type(true), value_a, value_b);
     checker.truth(all_of(select_result == value_a));
+
+    mask_type mask([](std::size_t i) { return i % 2 == 0; });
+    select_result = select_op(mask, value_a, value_b);
+    for (std::size_t i = 0; i < simd_type::size(); ++i) {
+      checker.equality(select_result[i], mask[i] ? value_a[i] : value_b[i]);
+    }
+
+    mask_type mask_a([](std::size_t i) { return i % 3 == 0; });
+    mask_type mask_b([](std::size_t i) { return i % 3 != 1; });
+    mask_type mask_result = Kokkos::Experimental::select(mask, mask_a, mask_b);
+
+    for (std::size_t i = 0; i < simd_type::size(); ++i) {
+      checker.equality(mask_result[i], mask[i] ? mask_a[i] : mask_b[i]);
+    }
   }
 }
 
@@ -85,8 +113,7 @@ KOKKOS_INLINE_FUNCTION void device_check_select_all_abis(
 class simd_device_select_functor {
  public:
   KOKKOS_INLINE_FUNCTION void operator()(int) const {
-    device_check_select_all_abis(
-        Kokkos::Experimental::Impl::device_abi_set());
+    device_check_select_all_abis(Kokkos::Experimental::Impl::device_abi_set());
   }
 };
 
