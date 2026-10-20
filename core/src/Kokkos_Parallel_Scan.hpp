@@ -28,9 +28,9 @@ namespace Impl {
 
 template <bool HasLabel, Kokkos::ExecutionPolicy ExecutionPolicy,
           class FunctorType>
-inline void parallel_scan_impl(const OptionalLabelRef<HasLabel> optional_label,
-                               const ExecutionPolicy& policy,
-                               const FunctorType& functor) {
+inline void parallel_scan_dispatch(
+    const OptionalLabelRef<HasLabel> optional_label,
+    const ExecutionPolicy& policy, const FunctorType& functor) {
   /** Enforce correct use **/
   if constexpr (HasLabel) {
     CheckUsage<UsageRequires::insideExecEnv>::check(
@@ -55,9 +55,9 @@ inline void parallel_scan_impl(const OptionalLabelRef<HasLabel> optional_label,
 }
 
 template <bool HasLabel, class FunctorType>
-inline void parallel_scan_impl(const OptionalLabelRef<HasLabel> optional_label,
-                               const size_t work_count,
-                               const FunctorType& functor) {
+inline void parallel_scan_dispatch(
+    const OptionalLabelRef<HasLabel> optional_label, const size_t work_count,
+    const FunctorType& functor) {
   /** Enforce correct use **/
   if constexpr (HasLabel) {
     CheckUsage<UsageRequires::insideExecEnv>::check(
@@ -73,15 +73,16 @@ inline void parallel_scan_impl(const OptionalLabelRef<HasLabel> optional_label,
   using policy = Kokkos::RangePolicy<execution_space>;
 
   policy execution_policy(0, work_count);
-  ::Kokkos::Impl::parallel_scan_impl(optional_label, execution_policy, functor);
+  ::Kokkos::Impl::parallel_scan_dispatch(optional_label, execution_policy,
+                                         functor);
 }
 
 template <bool HasLabel, Kokkos::ExecutionPolicy ExecutionPolicy,
           class FunctorType, class ReturnType>
-inline void parallel_scan_impl(const OptionalLabelRef<HasLabel> optional_label,
-                               const ExecutionPolicy& policy,
-                               const FunctorType& functor,
-                               ReturnType& return_value) {
+inline void parallel_scan_dispatch(
+    const OptionalLabelRef<HasLabel> optional_label,
+    const ExecutionPolicy& policy, const FunctorType& functor,
+    ReturnType& return_value) {
   /** Enforce correct use **/
   if constexpr (HasLabel) {
     CheckUsage<UsageRequires::insideExecEnv>::check(
@@ -118,10 +119,9 @@ inline void parallel_scan_impl(const OptionalLabelRef<HasLabel> optional_label,
 }
 
 template <bool HasLabel, class FunctorType, class ReturnType>
-inline void parallel_scan_impl(const OptionalLabelRef<HasLabel> optional_label,
-                               const size_t work_count,
-                               const FunctorType& functor,
-                               ReturnType& return_value) {
+inline void parallel_scan_dispatch(
+    const OptionalLabelRef<HasLabel> optional_label, const size_t work_count,
+    const FunctorType& functor, ReturnType& return_value) {
   /** Enforce correct use **/
   if constexpr (HasLabel) {
     CheckUsage<UsageRequires::insideExecEnv>::check(
@@ -137,8 +137,8 @@ inline void parallel_scan_impl(const OptionalLabelRef<HasLabel> optional_label,
   using policy = Kokkos::RangePolicy<execution_space>;
 
   policy execution_policy(0, work_count);
-  ::Kokkos::Impl::parallel_scan_impl(optional_label, execution_policy, functor,
-                                     return_value);
+  ::Kokkos::Impl::parallel_scan_dispatch(optional_label, execution_policy,
+                                         functor, return_value);
 }
 }  // namespace Impl
 
@@ -310,24 +310,24 @@ inline void parallel_scan_impl(const OptionalLabelRef<HasLabel> optional_label,
 template <Kokkos::ExecutionPolicy ExecutionPolicy, class FunctorType>
 inline void parallel_scan(const std::string& str, const ExecutionPolicy& policy,
                           const FunctorType& functor) {
-  Impl::parallel_scan_impl(Impl::WithLabel{str}, policy, functor);
+  Impl::parallel_scan_dispatch(Impl::WithLabel{str}, policy, functor);
 }
 
 template <Kokkos::ExecutionPolicy ExecutionPolicy, class FunctorType>
 inline void parallel_scan(const ExecutionPolicy& policy,
                           const FunctorType& functor) {
-  Impl::parallel_scan_impl(Impl::NoLabel{}, policy, functor);
+  Impl::parallel_scan_dispatch(Impl::NoLabel{}, policy, functor);
 }
 
 template <class FunctorType>
 inline void parallel_scan(const std::string& str, const size_t work_count,
                           const FunctorType& functor) {
-  Impl::parallel_scan_impl(Impl::WithLabel{str}, work_count, functor);
+  Impl::parallel_scan_dispatch(Impl::WithLabel{str}, work_count, functor);
 }
 
 template <class FunctorType>
 inline void parallel_scan(const size_t work_count, const FunctorType& functor) {
-  Impl::parallel_scan_impl(Impl::NoLabel{}, work_count, functor);
+  Impl::parallel_scan_dispatch(Impl::NoLabel{}, work_count, functor);
 }
 
 template <Kokkos::ExecutionPolicy ExecutionPolicy, class FunctorType,
@@ -335,7 +335,8 @@ template <Kokkos::ExecutionPolicy ExecutionPolicy, class FunctorType,
 inline void parallel_scan(const std::string& str, const ExecutionPolicy& policy,
                           const FunctorType& functor,
                           ReturnType& return_value) {
-  Impl::parallel_scan_impl(Impl::WithLabel{str}, policy, functor, return_value);
+  Impl::parallel_scan_dispatch(Impl::WithLabel{str}, policy, functor,
+                               return_value);
 }
 
 template <Kokkos::ExecutionPolicy ExecutionPolicy, class FunctorType,
@@ -343,21 +344,22 @@ template <Kokkos::ExecutionPolicy ExecutionPolicy, class FunctorType,
 inline void parallel_scan(const ExecutionPolicy& policy,
                           const FunctorType& functor,
                           ReturnType& return_value) {
-  Impl::parallel_scan_impl(Impl::NoLabel{}, policy, functor, return_value);
+  Impl::parallel_scan_dispatch(Impl::NoLabel{}, policy, functor, return_value);
 }
 
 template <class FunctorType, class ReturnType>
 inline void parallel_scan(const std::string& str, const size_t work_count,
                           const FunctorType& functor,
                           ReturnType& return_value) {
-  Impl::parallel_scan_impl(Impl::WithLabel{str}, work_count, functor,
-                           return_value);
+  Impl::parallel_scan_dispatch(Impl::WithLabel{str}, work_count, functor,
+                               return_value);
 }
 
 template <class FunctorType, class ReturnType>
 inline void parallel_scan(const size_t work_count, const FunctorType& functor,
                           ReturnType& return_value) {
-  Impl::parallel_scan_impl(Impl::NoLabel{}, work_count, functor, return_value);
+  Impl::parallel_scan_dispatch(Impl::NoLabel{}, work_count, functor,
+                               return_value);
 }
 }  // namespace Kokkos
 #endif
