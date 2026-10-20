@@ -52,7 +52,9 @@ export {
   using ::Kokkos::Experimental::any_of;
   using ::Kokkos::Experimental::basic_simd;
   using ::Kokkos::Experimental::basic_simd_mask;
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
   using ::Kokkos::Experimental::condition;
+#endif
   using ::Kokkos::Experimental::none_of;
   using ::Kokkos::Experimental::partial_gather_from;
   using ::Kokkos::Experimental::partial_scatter_to;
@@ -60,6 +62,7 @@ export {
   using ::Kokkos::Experimental::reduce_max;
   using ::Kokkos::Experimental::reduce_min;
   using ::Kokkos::Experimental::round_half_to_nearest_even;
+  using ::Kokkos::Experimental::select;
   using ::Kokkos::Experimental::simd;
   using ::Kokkos::Experimental::simd_flag_aligned;
   using ::Kokkos::Experimental::simd_flag_default;
