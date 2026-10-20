@@ -230,6 +230,9 @@ void test_view_extent_precondition_violation(V v) {
 #endif
   }
 
+  // This check assumes that all dynamic extents come before static extents.
+  // This isn't necessarily true for Views constructed with mdspan-style
+  // template arguments.
   for (size_t r = 0; r < V::rank_dynamic(); ++r) {
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
     ASSERT_EQ(v.static_extent(r), 0);
