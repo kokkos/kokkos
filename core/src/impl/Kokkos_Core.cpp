@@ -160,6 +160,25 @@ bool is_valid_map_device_id_by(std::string const& x) {
   return x == "mpi_rank" || x == "random";
 }
 
+struct device_id_impl_result {
+  int device;
+  bool knowable;
+};
+
+device_id_impl_result device_id_impl() noexcept {
+#if defined(KOKKOS_ENABLE_CUDA)
+  return {Cuda().cuda_device(), true};
+#elif defined(KOKKOS_ENABLE_HIP)
+  return {HIP().hip_device(), true};
+#elif defined(KOKKOS_ENABLE_OPENACC)
+  return {Experimental::OpenACC().acc_device_number(), true};
+#elif defined(KOKKOS_ENABLE_SYCL)
+  return {Impl::SYCLInternal::m_syclDev, true};
+#else
+  return {-1, false};
+#endif
+}
+
 }  // namespace
 
 std::vector<int> const& Kokkos::Impl::get_visible_devices() {
@@ -169,21 +188,13 @@ std::vector<int> const& Kokkos::Impl::get_visible_devices() {
 
 // NOLINTNEXTLINE(bugprone-exception-escape)
 [[nodiscard]] int Kokkos::device_id() noexcept {
-#if defined(KOKKOS_ENABLE_CUDA)
-  int device = Cuda().cuda_device();
-#elif defined(KOKKOS_ENABLE_HIP)
-  int device = HIP().hip_device();
-#elif defined(KOKKOS_ENABLE_OPENACC)
-  int device = Experimental::OpenACC().acc_device_number();
-#elif defined(KOKKOS_ENABLE_SYCL)
-  int device = Impl::SYCLInternal::m_syclDev;
-#else
-  int device = -1;
-  return device;
-#endif
+  auto result = device_id_impl();
+  if (! result.knowable) {
+    return result.device;
+  }
   auto const& visible_devices = Impl::get_visible_devices();
   for (std::size_t i = 0; i < visible_devices.size(); ++i) {
-    if (visible_devices[i] == device) {
+    if (visible_devices[i] == result.device) {
       return i;
     }
   }
