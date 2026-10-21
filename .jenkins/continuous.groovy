@@ -41,6 +41,43 @@ pipeline {
         }
         stage('Build-1') {
             parallel {
+                stage('GCC-16-CXX26') {
+                    agent {
+                        docker {
+                            image 'gcc:16.2'
+                            label 'docker'
+                            registryCredentialsId 'dockerhub'
+                        }
+                    }
+                    steps {
+                        sh '''
+                          wget https://github.com/Kitware/CMake/releases/download/v3.30.0/cmake-3.30.0-linux-x86_64.sh && \
+                          chmod +x cmake-3.30.0-linux-x86_64.sh && ./cmake-3.30.0-linux-x86_64.sh --skip-license --prefix=/usr
+
+                          ulimit -c 0
+
+                          export CMAKE_BUILD_PARALLEL_LEVEL=8 && \
+                          export ENV_CMAKE_OPTIONS="" && \
+                          export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_BUILD_TYPE=Release" && \
+                          export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_CXX_STANDARD=26" && \
+                          export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_CXX_FLAGS=-Werror" && \
+                          export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ARCH_NATIVE=ON" && \
+                          export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_COMPILER_WARNINGS=ON" && \
+                          export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_BENCHMARKS=ON" && \
+                          export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_EXAMPLES=ON" && \
+                          export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_TESTS=ON" && \
+                          export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_DEPRECATED_CODE_5=ON" && \
+                          export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_SERIAL=ON" && \
+                          ctest -VV -D CDASH_MODEL="Nightly" -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}" -S scripts/CTestRun.cmake -D CTEST_SITE="ornl-jenkins" -D CTEST_BUILD_NAME="GCC-16-CXX26"
+                          '''
+                    }
+                    post {
+                        always {
+                            xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                            cleanWs()
+                        }
+                    }
+                }
                 stage('C++20-Modules-GCC-16') {
                     agent {
                          dockerfile {
