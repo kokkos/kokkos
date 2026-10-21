@@ -1102,6 +1102,13 @@ void do_test_math_ternary_function(Arg1 arg1, Arg2 arg2, Arg3 arg3) {
 #ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_1
 
 TEST(TEST_CATEGORY, mathematical_functions_trigonometric_functions) {
+  // FIXME_NEXTSILICON
+#ifdef KOKKOS_ENABLE_NEXTSILICON
+  if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::NextSilicon>) {
+    GTEST_SKIP() << "missing asinf libcall in 1.4.0-136";
+  }
+#endif
+
   TEST_MATH_FUNCTION(sin)({true, false});
   TEST_MATH_FUNCTION(sin)({-3, -2, -1, 0, 1});
   TEST_MATH_FUNCTION(sin)({-3l, -2l, -1l, 0l, 1l});
@@ -1357,6 +1364,11 @@ TEST(TEST_CATEGORY, mathematical_functions_fmax_fmin) {
 
 #ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_3
 TEST(TEST_CATEGORY, mathematical_functions_exponential_functions) {
+#ifdef KOKKOS_ENABLE_NEXTSILICON
+  if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::NextSilicon>) {
+    GTEST_SKIP() << "incorrect results on 1.4.0-136";
+  }
+#endif
   TEST_MATH_FUNCTION(exp)({-9, -8, -7, -6, -5, 4, 3, 2, 1, 0});
   TEST_MATH_FUNCTION(exp)({-9l, -8l, -7l, -6l, -5l, 4l, 3l, 2l, 1l, 0l});
   TEST_MATH_FUNCTION(exp)({-9ll, -8ll, -7ll, -6ll, -5ll, 4ll, 3ll, 2ll, 1ll});
