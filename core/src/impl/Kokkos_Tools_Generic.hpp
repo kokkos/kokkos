@@ -479,6 +479,47 @@ void report_policy_results(const size_t /**tuning_context*/,
 
 namespace Impl {
 
+#ifdef KOKKOS_ENABLE_TUNING
+template <class... Properties>
+KOKKOS_INLINE_FUNCTION int64_t
+get_policy_work_size(const Kokkos::RangePolicy<Properties...>& policy) {
+  return static_cast<int64_t>(policy.end() - policy.begin());
+}
+
+template <class... Properties>
+KOKKOS_INLINE_FUNCTION int64_t
+get_policy_work_size(const Kokkos::TeamPolicy<Properties...>& policy) {
+  return static_cast<int64_t>(policy.league_size());
+}
+
+template <class... Properties>
+KOKKOS_INLINE_FUNCTION int64_t
+get_policy_work_size(const Kokkos::MDRangePolicy<Properties...>& policy) {
+  int64_t total = 1;
+  for (int i = 0; i < (int)Kokkos::MDRangePolicy<Properties...>::rank; ++i) {
+    total *= static_cast<int64_t>(policy.m_upper[i] - policy.m_lower[i]);
+  }
+  return total;
+}
+
+template <class... Properties>
+KOKKOS_INLINE_FUNCTION int64_t
+get_policy_work_size(const Kokkos::WorkGraphPolicy<Properties...>& policy) {
+  return static_cast<int64_t>(0);
+}
+
+/* Generic implementation of helper function to support WorkGraphPolicy */
+template <typename T>
+KOKKOS_INLINE_FUNCTION int64_t get_policy_work_size(const T&) {
+  return static_cast<int64_t>(0);
+}
+#else
+template <typename T>
+KOKKOS_INLINE_FUNCTION int64_t get_policy_work_size(const T&) {
+  return static_cast<int64_t>(0);
+}
+#endif
+
 template <class ExecPolicy, class FunctorType>
 auto begin_parallel_for(const ExecPolicy& policy, FunctorType& functor,
                         const std::string& label, uint64_t& kpID) {
@@ -491,7 +532,7 @@ auto begin_parallel_for(const ExecPolicy& policy, FunctorType& functor,
         name(label);
     Kokkos::Tools::beginParallelFor(
         name.get(), Kokkos::Profiling::Experimental::device_id(policy.space()),
-        &kpID);
+        &kpID, get_policy_work_size(policy));
   }
 #ifdef KOKKOS_ENABLE_TUNING
   size_t context_id = Kokkos::Tools::Experimental::get_current_context_id();
@@ -536,7 +577,7 @@ auto begin_parallel_scan(const ExecPolicy& policy, FunctorType& functor,
         name(label);
     Kokkos::Tools::beginParallelScan(
         name.get(), Kokkos::Profiling::Experimental::device_id(policy.space()),
-        &kpID);
+        &kpID, get_policy_work_size(policy));
   }
 #ifdef KOKKOS_ENABLE_TUNING
   size_t context_id = Kokkos::Tools::Experimental::get_current_context_id();
@@ -580,7 +621,7 @@ auto begin_parallel_reduce(const ExecPolicy& policy, FunctorType& functor,
         name(label);
     Kokkos::Tools::beginParallelReduce(
         name.get(), Kokkos::Profiling::Experimental::device_id(policy.space()),
-        &kpID);
+        &kpID, get_policy_work_size(policy));
   }
 #ifdef KOKKOS_ENABLE_TUNING
   size_t context_id = Kokkos::Tools::Experimental::get_current_context_id();

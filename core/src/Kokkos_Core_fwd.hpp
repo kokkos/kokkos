@@ -58,6 +58,10 @@ struct Device;
 // forward declare here so that backend initializer calls can use it.
 class InitializationSettings;
 
+// forward declare WorkGraphPolicy so we can refer to it for tuning policies
+template <class... Properties>
+class WorkGraphPolicy;
+
 }  // namespace Kokkos
 
 // Include backend forward statements as determined by build options
