@@ -155,6 +155,8 @@ class BasicView {
     return extents_type::static_extent(r);
   }
   KOKKOS_FUNCTION constexpr index_type extent(rank_type r) const noexcept {
+    // Need to cast in order to avoid warning for rank zero about pointless
+    // comparison to zero
     KOKKOS_ASSERT(static_cast<int>(r) < static_cast<int>(rank()));
     return m_map.extents().extent(r);
   }
