@@ -161,8 +161,16 @@ static constexpr bool desul_impl_omp_on_host() { return false; }
   }
 #endif
 #define DESUL_IMPL_ACC_ROUTINE_DIRECTIVE _Pragma("acc routine seq")
+#ifdef __NVCOMPILER
+// Guard use of an GCC atomic built-in so it is only built for host code.
+// The macro must precede a single statement.
+#define DESUL_IMPL_IF_HOST_BUILTIN if (acc_on_device(acc_device_host))
+#endif
 #else
 #define DESUL_IMPL_ACC_ROUTINE_DIRECTIVE
+#endif
+#ifndef DESUL_IMPL_IF_HOST_BUILTIN
+#define DESUL_IMPL_IF_HOST_BUILTIN
 #endif
 
 #ifndef DESUL_IF_ON_HOST_INTEGRAL
