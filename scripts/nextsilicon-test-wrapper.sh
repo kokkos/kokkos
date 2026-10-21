@@ -117,7 +117,7 @@ EOF
 
     # wait for optimization/projection to finish, up to 1 hour
     SECONDS=0
-    while [ $SECONDS -lt 3600 ]; do
+    while [ $SECONDS -lt 7200 ]; do
         # check current state
         ret=0
         status="$(nextcli application status | grep 'Optimization state:')"
