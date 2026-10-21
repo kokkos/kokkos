@@ -30,19 +30,19 @@ template <class T, size_t Disambiguator>
 struct no_unique_address_emulation<
     T, Disambiguator,
     std::enable_if_t<MDSPAN_IMPL_TRAIT(std::is_empty, T) &&
-                // If the type isn't trivially destructible, its destructor
-                // won't be called at the right time, so don't use this
-                // specialization
-                MDSPAN_IMPL_TRAIT(std::is_trivially_destructible, T)>> :
+                     // If the type isn't trivially destructible, its destructor
+                     // won't be called at the right time, so don't use this
+                     // specialization
+                     MDSPAN_IMPL_TRAIT(std::is_trivially_destructible, T)>> :
 #ifdef MDSPAN_IMPL_COMPILER_MSVC
     // MSVC doesn't allow you to access public static member functions of a type
     // when you *happen* to privately inherit from that type.
     protected
 #else
-    // But we still want this to be private if possible so that we don't accidentally
-    // access members of T directly rather than calling ref() first, which wouldn't
-    // work if T happens to be stateful and thus we're using the unspecialized definition
-    // of no_unique_address_emulation above.
+    // But we still want this to be private if possible so that we don't
+    // accidentally access members of T directly rather than calling ref()
+    // first, which wouldn't work if T happens to be stateful and thus we're
+    // using the unspecialized definition of no_unique_address_emulation above.
     private
 #endif
     T {
@@ -63,23 +63,24 @@ struct no_unique_address_emulation<
   constexpr no_unique_address_emulation(
       no_unique_address_emulation &&) noexcept = default;
   MDSPAN_INLINE_FUNCTION_DEFAULTED
-  MDSPAN_IMPL_CONSTEXPR_14_DEFAULTED no_unique_address_emulation &
-  operator=(no_unique_address_emulation const &) noexcept = default;
+  MDSPAN_IMPL_CONSTEXPR_14_DEFAULTED no_unique_address_emulation &operator=(
+      no_unique_address_emulation const &) noexcept = default;
   MDSPAN_INLINE_FUNCTION_DEFAULTED
-  MDSPAN_IMPL_CONSTEXPR_14_DEFAULTED no_unique_address_emulation &
-  operator=(no_unique_address_emulation &&) noexcept = default;
+  MDSPAN_IMPL_CONSTEXPR_14_DEFAULTED no_unique_address_emulation &operator=(
+      no_unique_address_emulation &&) noexcept = default;
   MDSPAN_INLINE_FUNCTION_DEFAULTED
   ~no_unique_address_emulation() noexcept = default;
 
   // Explicitly make this not a reference so that the copy or move
   // constructor still gets called.
   MDSPAN_INLINE_FUNCTION
-  explicit constexpr no_unique_address_emulation(T const& v) noexcept : T(v) {}
+  explicit constexpr no_unique_address_emulation(T const &v) noexcept : T(v) {}
   MDSPAN_INLINE_FUNCTION
-  explicit constexpr no_unique_address_emulation(T&& v) noexcept : T(::std::move(v)) {}
+  explicit constexpr no_unique_address_emulation(T &&v) noexcept
+      : T(::std::move(v)) {}
 };
 
 //==============================================================================
 
-} // end namespace detail
-} // end namespace MDSPAN_IMPL_STANDARD_NAMESPACE
+}  // end namespace detail
+}  // end namespace MDSPAN_IMPL_STANDARD_NAMESPACE

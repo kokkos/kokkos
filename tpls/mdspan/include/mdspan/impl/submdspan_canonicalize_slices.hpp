@@ -5,7 +5,6 @@
 
 #include "constant_wrapper.hpp"
 #include "strided_slice.hpp"
-#include <complex>
 
 namespace MDSPAN_IMPL_STANDARD_NAMESPACE {
 
@@ -14,65 +13,50 @@ namespace MDSPAN_IMPL_STANDARD_NAMESPACE {
 namespace detail {
 
 // Helper for identifying extent_slice and range_slice
-template <class T> struct is_extent_slice : std::false_type {};
+template <class T>
+struct is_extent_slice : std::false_type {};
 
 template <class OffsetType, class ExtentType, class StrideType>
-struct is_extent_slice<
-    extent_slice<OffsetType, ExtentType, StrideType>> : std::true_type {};
+struct is_extent_slice<extent_slice<OffsetType, ExtentType, StrideType>>
+    : std::true_type {};
 
-template <class T> struct is_range_slice : std::false_type {};
+template <class T>
+struct is_range_slice : std::false_type {};
 
-template<class FirstType, class LastType, class StrideType>
-struct is_range_slice<
-  range_slice<FirstType, LastType, StrideType>> : std::true_type {};
+template <class FirstType, class LastType, class StrideType>
+struct is_range_slice<range_slice<FirstType, LastType, StrideType>>
+    : std::true_type {};
 
 // ============================================================
 // de_ice: extract the value of an integral-constant-like type
 // ============================================================
 
-MDSPAN_TEMPLATE_REQUIRES(
-  class T,
-  /* requires */ (std::is_integral_v<remove_cvref_t<T>>)
-)
+MDSPAN_TEMPLATE_REQUIRES(class T,
+                         /* requires */ (std::is_integral_v<remove_cvref_t<T>>))
 MDSPAN_INLINE_FUNCTION
-constexpr T de_ice(T val) {
-  return val;
-}
+constexpr T de_ice(T val) { return val; }
 
 MDSPAN_TEMPLATE_REQUIRES(
-  class T,
-  /* requires */ (is_integral_constant_like_v<remove_cvref_t<T>>)
-)
+    class T,
+    /* requires */ (is_integral_constant_like_v<remove_cvref_t<T>>))
 MDSPAN_INLINE_FUNCTION
-constexpr decltype(T::value) de_ice([[maybe_unused]] T) {
-  return T::value;
-}
+constexpr decltype(T::value) de_ice([[maybe_unused]] T) { return T::value; }
 
 // ============================================================
 // index_cast: cast to IndexType, preserving integral-constant nature
 // ============================================================
 
-MDSPAN_TEMPLATE_REQUIRES(
-  class IndexType,
-  class OtherIndexType,
-  /* requires */ (
-    std::is_signed_v<remove_cvref_t<OtherIndexType>> ||
-    std::is_unsigned_v<remove_cvref_t<OtherIndexType>>
-  )
-)
+MDSPAN_TEMPLATE_REQUIRES(class IndexType, class OtherIndexType,
+                         /* requires */
+                         (std::is_signed_v<remove_cvref_t<OtherIndexType>> ||
+                          std::is_unsigned_v<remove_cvref_t<OtherIndexType>>))
 MDSPAN_INLINE_FUNCTION
-constexpr auto index_cast(OtherIndexType&& i) noexcept {
-  return i;
-}
+constexpr auto index_cast(OtherIndexType&& i) noexcept { return i; }
 
-MDSPAN_TEMPLATE_REQUIRES(
-  class IndexType,
-  class OtherIndexType,
-  /* requires */ (
-    ! std::is_signed_v<remove_cvref_t<OtherIndexType>> &&
-    ! std::is_unsigned_v<remove_cvref_t<OtherIndexType>>
-  )
-)
+MDSPAN_TEMPLATE_REQUIRES(class IndexType, class OtherIndexType,
+                         /* requires */
+                         (!std::is_signed_v<remove_cvref_t<OtherIndexType>> &&
+                          !std::is_unsigned_v<remove_cvref_t<OtherIndexType>>))
 MDSPAN_INLINE_FUNCTION
 constexpr auto index_cast(OtherIndexType&& i) noexcept {
   return static_cast<IndexType>(std::forward<OtherIndexType>(i));
@@ -83,11 +67,8 @@ constexpr auto index_cast(OtherIndexType&& i) noexcept {
 //   preserving integral-constant nature when possible
 // ============================================================
 
-MDSPAN_TEMPLATE_REQUIRES(
-  class IndexType,
-  class S,
-  /* requires */ (std::is_convertible_v<S, IndexType>)
-)
+MDSPAN_TEMPLATE_REQUIRES(class IndexType, class S,
+                         /* requires */ (std::is_convertible_v<S, IndexType>))
 MDSPAN_INLINE_FUNCTION
 constexpr auto canonical_index([[maybe_unused]] S s) {
   // TODO: might move to public semi/public only to get error earlier, and
@@ -97,8 +78,7 @@ constexpr auto canonical_index([[maybe_unused]] S s) {
   static_assert(std::is_signed_v<IndexType> || std::is_unsigned_v<IndexType>);
   if constexpr (is_integral_constant_like_v<S>) {
     return cw<static_cast<IndexType>(index_cast<IndexType>(S::value))>;
-  }
-  else {
+  } else {
     return static_cast<IndexType>(index_cast<IndexType>(std::move(s)));
   }
 }
@@ -108,16 +88,14 @@ constexpr auto canonical_index([[maybe_unused]] S s) {
 //   nature when both inputs are integral-constant-like
 // ============================================================
 
-template<class IndexType, class X, class Y>
-MDSPAN_INLINE_FUNCTION
-constexpr auto subtract_ice([[maybe_unused]] X x, [[maybe_unused]] Y y) {
-  if constexpr (
-    is_integral_constant_like_v<remove_cvref_t<X>> &&
-    is_integral_constant_like_v<remove_cvref_t<Y>>)
-  {
-    return cw<IndexType(canonical_index<IndexType>(Y::value) - canonical_index<IndexType>(X::value))>;
-  }
-  else {
+template <class IndexType, class X, class Y>
+MDSPAN_INLINE_FUNCTION constexpr auto subtract_ice([[maybe_unused]] X x,
+                                                   [[maybe_unused]] Y y) {
+  if constexpr (is_integral_constant_like_v<remove_cvref_t<X>> &&
+                is_integral_constant_like_v<remove_cvref_t<Y>>) {
+    return cw<IndexType(canonical_index<IndexType>(Y::value) -
+                        canonical_index<IndexType>(X::value))>;
+  } else {
     return canonical_index<IndexType>(y) - canonical_index<IndexType>(x);
   }
 }
@@ -130,100 +108,82 @@ constexpr auto subtract_ice([[maybe_unused]] X x, [[maybe_unused]] Y y) {
 // This function is called only in static_assert contexts.
 // ============================================================
 
-template<class IndexType, size_t Exts_k, class S_k>
-constexpr bool check_static_bounds()
-{
+template <class IndexType, size_t Exts_k, class S_k>
+constexpr bool check_static_bounds() {
   if constexpr (std::is_convertible_v<S_k, full_extent_t>) {
     return true;
-  }
-  else if constexpr (std::is_convertible_v<S_k, IndexType>) {
+  } else if constexpr (std::is_convertible_v<S_k, IndexType>) {
     if constexpr (is_integral_constant_like_v<S_k>) {
       if constexpr (de_ice(S_k{}) < 0) {
         return false;
-      }
-      else if constexpr (
-        Exts_k != dynamic_extent &&
-        Exts_k <= static_cast<size_t>(de_ice(S_k{})))
-      {
+      } else if constexpr (Exts_k != dynamic_extent &&
+                           Exts_k <= static_cast<size_t>(de_ice(S_k{}))) {
         return false;
+      } else {
+        return true;
       }
-      else { return true; }
     } else {
       return true;
     }
-  }
-  else if constexpr (is_extent_slice<S_k>::value) {
+  } else if constexpr (is_extent_slice<S_k>::value) {
     using offset_type = typename S_k::offset_type;
 
     if constexpr (is_integral_constant_like_v<offset_type>) {
       if constexpr (de_ice(offset_type{}) < 0) {
         return false;
-      }
-      else if constexpr (
-        Exts_k != dynamic_extent &&
-        Exts_k < static_cast<size_t>(de_ice(offset_type{})))
-      {
+      } else if constexpr (Exts_k != dynamic_extent &&
+                           Exts_k <
+                               static_cast<size_t>(de_ice(offset_type{}))) {
         return false;
-      }
-      else if constexpr (is_integral_constant_like_v<typename S_k::extent_type>) {
+      } else if constexpr (is_integral_constant_like_v<
+                               typename S_k::extent_type>) {
         using extent_type = typename S_k::extent_type;
 
         if constexpr (de_ice(offset_type{}) + de_ice(extent_type{}) < 0) {
           return false;
-        }
-        else if constexpr (
-          Exts_k != dynamic_extent &&
-          Exts_k <
-            static_cast<size_t>(de_ice(offset_type{}) + de_ice(extent_type{})))
-        {
+        } else if constexpr (Exts_k != dynamic_extent &&
+                             Exts_k <
+                                 static_cast<size_t>(de_ice(offset_type{}) +
+                                                     de_ice(extent_type{}))) {
           return false;
-        }
-        else if constexpr (
-          Exts_k != dynamic_extent &&
-          0 <= de_ice(offset_type{}) &&
-          de_ice(offset_type{}) <=
-            de_ice(offset_type{}) + de_ice(extent_type{}) &&
-          static_cast<size_t>(
-            de_ice(offset_type{}) + de_ice(extent_type{})) <= Exts_k)
-        {
+        } else if constexpr (Exts_k != dynamic_extent &&
+                             0 <= de_ice(offset_type{}) &&
+                             de_ice(offset_type{}) <=
+                                 de_ice(offset_type{}) +
+                                     de_ice(extent_type{}) &&
+                             static_cast<size_t>(de_ice(offset_type{}) +
+                                                 de_ice(extent_type{})) <=
+                                 Exts_k) {
+          return true;
+        } else {
           return true;
         }
-        else {
-          return true;
-        }
-      }
-      else {
+      } else {
         return true;
       }
-    }
-    else {
+    } else {
       return true;
     }
   } else if constexpr (is_range_slice<S_k>::value) {
     using first_type = decltype(std::declval<S_k>().first);
-    using last_type = decltype(std::declval<S_k>().last);
+    using last_type  = decltype(std::declval<S_k>().last);
 
     if constexpr (is_integral_constant_like_v<first_type>) {
       if constexpr (de_ice(first_type{}) < 0) {
         return false;
-      }
-      else if constexpr (
-        Exts_k != dynamic_extent &&
-        Exts_k < static_cast<size_t>(de_ice(first_type{})))
-      {
+      } else if constexpr (Exts_k != dynamic_extent &&
+                           Exts_k < static_cast<size_t>(de_ice(first_type{}))) {
         return false;
       }
     }
 
     if constexpr (is_integral_constant_like_v<last_type>) {
-      if constexpr ((is_integral_constant_like_v<first_type> && (de_ice(first_type()) > de_ice(last_type{})))
-                      || de_ice(last_type{}) < 0) {
+      if constexpr ((is_integral_constant_like_v<first_type> &&
+                     (de_ice(first_type()) > de_ice(last_type{}))) ||
+                    de_ice(last_type{}) < 0) {
         return false;
-      }
-      else if constexpr (
-        Exts_k != dynamic_extent &&
-        Exts_k < static_cast<size_t>(de_ice(last_type{})))
-      {
+      } else if constexpr (Exts_k != dynamic_extent &&
+                           Exts_k < static_cast<size_t>(de_ice(last_type{}))) {
         return false;
       }
     }
@@ -235,11 +195,11 @@ constexpr bool check_static_bounds()
     // which implements the Mandates clause.
     // Doing this via these lambdas since we can do the declval only in a
     // non-evaluated context
-    auto get_first = [] (S_k s_k) {
+    auto get_first = [](S_k s_k) {
       auto [s_k0, _x] = s_k;
       return s_k0;
     };
-    auto get_second = [] (S_k s_k) {
+    auto get_second = [](S_k s_k) {
       auto [_x, s_k1] = s_k;
       return s_k1;
     };
@@ -249,40 +209,26 @@ constexpr bool check_static_bounds()
     if constexpr (is_integral_constant_like_v<S_k0>) {
       if constexpr (de_ice(S_k0{}) < 0) {
         return false;
-      }
-      else if constexpr (
-        Exts_k != dynamic_extent &&
-        Exts_k < static_cast<size_t>(de_ice(S_k0{})))
-      {
+      } else if constexpr (Exts_k != dynamic_extent &&
+                           Exts_k < static_cast<size_t>(de_ice(S_k0{}))) {
         return false;
-      }
-      else if constexpr (is_integral_constant_like_v<S_k1>) {
+      } else if constexpr (is_integral_constant_like_v<S_k1>) {
         if constexpr (de_ice(S_k1{}) < de_ice(S_k0{})) {
           return false;
-        }
-        else if constexpr (
-          Exts_k != dynamic_extent &&
-          Exts_k < static_cast<size_t>(de_ice(S_k1{})))
-        {
+        } else if constexpr (Exts_k != dynamic_extent &&
+                             Exts_k < static_cast<size_t>(de_ice(S_k1{}))) {
           return false;
-        }
-        else if constexpr (
-          Exts_k != dynamic_extent &&
-          0 <= de_ice(S_k0{}) &&
-          de_ice(S_k0{}) <= de_ice(S_k1{}) &&
-          static_cast<size_t>(de_ice(S_k1{})) <= Exts_k)
-        {
+        } else if constexpr (Exts_k != dynamic_extent && 0 <= de_ice(S_k0{}) &&
+                             de_ice(S_k0{}) <= de_ice(S_k1{}) &&
+                             static_cast<size_t>(de_ice(S_k1{})) <= Exts_k) {
+          return true;
+        } else {
           return true;
         }
-        else {
-          return true;
-        }
-      }
-      else {
+      } else {
         return true;
       }
-    }
-    else {
+    } else {
       return true;
     }
   }
@@ -296,86 +242,76 @@ constexpr bool check_static_bounds()
 // mandate checking and canonicalization are distinct concerns.
 // ============================================================
 
-template<class IndexType, size_t Extent, class Slice>
-MDSPAN_INLINE_FUNCTION
-constexpr bool check_submdspan_slice_mandate(
-  [[maybe_unused]] const Slice&)
-{
+template <class IndexType, size_t Extent, class Slice>
+MDSPAN_INLINE_FUNCTION constexpr bool check_submdspan_slice_mandate(
+    [[maybe_unused]] const Slice&) {
   static_assert(check_static_bounds<IndexType, Extent, Slice>());
   return true;
 }
 
-template<class Extents, size_t ... Idx, class ... Slices>
-MDSPAN_INLINE_FUNCTION
-constexpr bool check_submdspan_slice_mandates(
-  const std::index_sequence<Idx...>& ,
-  [[maybe_unused]] const Slices& ... slices)
-{
-  return (check_submdspan_slice_mandate<typename Extents::index_type, Extents::static_extent(Idx), Slices>(slices) && ... && true);
+template <class Extents, size_t... Idx, class... Slices>
+MDSPAN_INLINE_FUNCTION constexpr bool check_submdspan_slice_mandates(
+    const std::index_sequence<Idx...>&,
+    [[maybe_unused]] const Slices&... slices) {
+  return (check_submdspan_slice_mandate<typename Extents::index_type,
+                                        Extents::static_extent(Idx), Slices>(
+              slices) &&
+          ... && true);
 }
 
-
-template<class IndexType, class SpanType, class StrideType>
-struct calculate_extents
-{
-  static constexpr IndexType value(SpanType span, StrideType stride)
-  {
-    return static_cast<IndexType>(span != 0 ? 1 + divide<IndexType>(span - 1, stride) : 0);
+template <class IndexType, class SpanType, class StrideType>
+struct calculate_extents {
+  static constexpr IndexType value(SpanType span, StrideType stride) {
+    return static_cast<IndexType>(
+        span != 0 ? 1 + divide<IndexType>(span - 1, stride) : 0);
   }
 };
 
-template<class IndexType, auto Span, auto Stride>
-struct calculate_extents<IndexType, constant_wrapper<Span>, constant_wrapper<Stride>>
-{
-  static constexpr auto value(constant_wrapper<Span>, constant_wrapper<Stride>)
-  {
-    return cw<static_cast<IndexType>(Span != 0 ? 1 + divide<IndexType>(Span - 1, Stride) : 0)>;
+template <class IndexType, auto Span, auto Stride>
+struct calculate_extents<IndexType, constant_wrapper<Span>,
+                         constant_wrapper<Stride>> {
+  static constexpr auto value(constant_wrapper<Span>,
+                              constant_wrapper<Stride>) {
+    return cw<static_cast<IndexType>(
+        Span != 0 ? 1 + divide<IndexType>(Span - 1, Stride) : 0)>;
   }
 };
 
-
-template<class IndexType, class StrideType>
-struct calculate_stride
-{
-  template< class SpanType >
-  static constexpr auto value(SpanType span, StrideType stride)
-  {
+template <class IndexType, class StrideType>
+struct calculate_stride {
+  template <class SpanType>
+  static constexpr auto value(SpanType span, StrideType stride) {
     return span != 0 ? stride : IndexType(1);
   }
 };
 
-template<class IndexType, auto Stride>
-struct calculate_stride<IndexType, constant_wrapper<Stride>>
-{
-  template< class SpanType >
-  static constexpr auto value(SpanType, constant_wrapper<Stride>)
-  {
+template <class IndexType, auto Stride>
+struct calculate_stride<IndexType, constant_wrapper<Stride>> {
+  template <class SpanType>
+  static constexpr auto value(SpanType, constant_wrapper<Stride>) {
     return cw<Stride>;
   }
 };
 
-
 // Some compilers do not do ctad properly with canonical_range_slice
-template<class OffsetType, class ExtentType, class StrideType>
-constexpr extent_slice<OffsetType, ExtentType, StrideType>
-make_extent_slice(OffsetType offset, ExtentType extent, StrideType stride)
-{
-  return extent_slice<OffsetType, ExtentType, StrideType>{offset, extent, stride};
+template <class OffsetType, class ExtentType, class StrideType>
+constexpr extent_slice<OffsetType, ExtentType, StrideType> make_extent_slice(
+    OffsetType offset, ExtentType extent, StrideType stride) {
+  return extent_slice<OffsetType, ExtentType, StrideType>{offset, extent,
+                                                          stride};
 }
 
-template<class IndexType, class OffsetType, class SpanType, class StrideType>
-constexpr auto canonical_range_slice(OffsetType offset, SpanType span, StrideType stride)
-{
+template <class IndexType, class OffsetType, class SpanType, class StrideType>
+constexpr auto canonical_range_slice(OffsetType offset, SpanType span,
+                                     StrideType stride) {
   return make_extent_slice(
-    offset,
-    calculate_extents<IndexType, SpanType, StrideType>::value(span, stride),
-    calculate_stride<IndexType, StrideType>::value(span, stride)
-  );
+      offset,
+      calculate_extents<IndexType, SpanType, StrideType>::value(span, stride),
+      calculate_stride<IndexType, StrideType>::value(span, stride));
 }
 
-template<class IndexType, class OffsetType, class SpanType>
-constexpr auto canonical_range_slice(OffsetType offset, SpanType span)
-{
+template <class IndexType, class OffsetType, class SpanType>
+constexpr auto canonical_range_slice(OffsetType offset, SpanType span) {
   return canonical_range_slice<IndexType>(offset, span, cw<IndexType(1)>);
 }
 
@@ -390,40 +326,33 @@ constexpr auto canonical_range_slice(OffsetType offset, SpanType span)
 // Neither k nor the extents are needed for the actual conversion.
 // ============================================================
 
-template<class IndexType, class Slice>
-MDSPAN_INLINE_FUNCTION
-constexpr auto canonical_slice([[maybe_unused]] Slice s)
-{
+template <class IndexType, class Slice>
+MDSPAN_INLINE_FUNCTION constexpr auto canonical_slice(
+    [[maybe_unused]] Slice s) {
   if constexpr (std::is_convertible_v<Slice, full_extent_t>) {
-    return full_extent; // canonical full-extent slice
-  }
-  else if constexpr (std::is_convertible_v<Slice, IndexType>) {
-    return canonical_index<IndexType>(std::move(s)); // canonical integer index
-  }
-  else if constexpr (is_extent_slice<Slice>::value) {
+    return full_extent;  // canonical full-extent slice
+  } else if constexpr (std::is_convertible_v<Slice, IndexType>) {
+    return canonical_index<IndexType>(std::move(s));  // canonical integer index
+  } else if constexpr (is_extent_slice<Slice>::value) {
     // Canonicalize each component of the strided_slice
     auto offset = canonical_index<IndexType>(s.offset);
     auto extent = canonical_index<IndexType>(s.extent);
     auto stride = canonical_index<IndexType>(s.stride);
     return extent_slice<decltype(offset), decltype(extent), decltype(stride)>{
-      /* .offset = */ offset,
-      /* .extent = */ extent,
-      /* .stride = */ stride
-    };
-  }
-  else if constexpr (is_range_slice<Slice>::value) {
+        /* .offset = */ offset,
+        /* .extent = */ extent,
+        /* .stride = */ stride};
+  } else if constexpr (is_range_slice<Slice>::value) {
     auto c_first = canonical_index<IndexType>(std::move(s.first));
-    auto c_last = canonical_index<IndexType>(std::move(s.last));
+    auto c_last  = canonical_index<IndexType>(std::move(s.last));
     return canonical_range_slice<IndexType>(
-      c_first,
-      subtract_ice<IndexType>(c_first, c_last),
-      canonical_index<IndexType>(std::move(s.stride))
-    );
+        c_first, subtract_ice<IndexType>(c_first, c_last),
+        canonical_index<IndexType>(std::move(s.stride)));
   } else {
     // General pair-like case: structured binding into [first, last)
     auto [s_k0, s_k1] = std::move(s);
-    using S_k0 = decltype(s_k0);
-    using S_k1 = decltype(s_k1);
+    using S_k0        = decltype(s_k0);
+    using S_k1        = decltype(s_k1);
     static_assert(std::is_convertible_v<S_k0, IndexType>);
     static_assert(std::is_convertible_v<S_k1, IndexType>);
 
@@ -431,10 +360,9 @@ constexpr auto canonical_slice([[maybe_unused]] Slice s)
     auto extent = subtract_ice<IndexType>(s_k0, s_k1);
     auto stride = cw<IndexType(1)>;
     return extent_slice<decltype(offset), decltype(extent), decltype(stride)>{
-      /* .offset = */ offset,
-      /* .extent = */ extent,
-      /* .stride = */ stride
-    };
+        /* .offset = */ offset,
+        /* .extent = */ extent,
+        /* .stride = */ stride};
   }
 }
 
@@ -447,29 +375,23 @@ constexpr auto canonical_slice([[maybe_unused]] Slice s)
 // code compatibility (e.g., CUDA).
 // ============================================================
 
-MDSPAN_TEMPLATE_REQUIRES(
-  size_t... Inds,
-  class Extents,
-  class... Slices,
-  /* requires */ (sizeof...(Slices) == Extents::rank())
-)
+MDSPAN_TEMPLATE_REQUIRES(size_t... Inds, class Extents, class... Slices,
+                         /* requires */ (sizeof...(Slices) == Extents::rank()))
 MDSPAN_INLINE_FUNCTION
-constexpr auto canonical_slices_impl(
-  std::index_sequence<Inds...>,
-  const Extents&,
-  Slices... slices)
-{
+constexpr auto canonical_slices_impl(std::index_sequence<Inds...>,
+                                     const Extents&, Slices... slices) {
   // Mandate checks (static_asserts only, no computation).
   // Separated from canonicalization for clarity.
-  (void)(check_submdspan_slice_mandate<typename Extents::index_type, Extents::static_extent(Inds)>(slices) && ... && true);
+  (void)(check_submdspan_slice_mandate<typename Extents::index_type,
+                                       Extents::static_extent(Inds)>(slices) &&
+         ... && true);
 
   // Actual canonicalization: returns detail::tuple for device compatibility.
   return detail::tuple{
-    canonical_slice<typename Extents::index_type>(slices)...
-  };
+      canonical_slice<typename Extents::index_type>(slices)...};
 }
 
-} // namespace detail
+}  // namespace detail
 
 // ============================================================
 // canonicalize_slices: public API
@@ -483,20 +405,15 @@ constexpr auto canonical_slices_impl(
 // ============================================================
 
 MDSPAN_TEMPLATE_REQUIRES(
-  class IndexType,
-  size_t... Extents,
-  class... Slices,
-  /* requires */ (sizeof...(Slices) == sizeof...(Extents))
-)
+    class IndexType, size_t... Extents, class... Slices,
+    /* requires */ (sizeof...(Slices) == sizeof...(Extents)))
 MDSPAN_INLINE_FUNCTION
-constexpr auto canonical_slices(
-  const extents<IndexType, Extents...>& exts,
-  Slices... slices)
-{
+constexpr auto canonical_slices(const extents<IndexType, Extents...>& exts,
+                                Slices... slices) {
   return detail::canonical_slices_impl(
-    std::make_index_sequence<sizeof...(Slices)>(), exts, slices...);
+      std::make_index_sequence<sizeof...(Slices)>(), exts, slices...);
 }
 
-#endif // MDSPAN_HAS_CXX_17
+#endif  // MDSPAN_HAS_CXX_17
 
-} // namespace MDSPAN_IMPL_STANDARD_NAMESPACE
+}  // namespace MDSPAN_IMPL_STANDARD_NAMESPACE
