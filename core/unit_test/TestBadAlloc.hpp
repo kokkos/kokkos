@@ -68,13 +68,11 @@ TEST(TEST_CATEGORY, kokkos_malloc_bad_alloc_shared) {
     GTEST_SKIP()
         << "SharedSpace can only be tested with the default device execution "
            "space";
-  }
-
-  if constexpr (is_windows_cuda) {
+  } else if constexpr (is_windows_cuda) {
     GTEST_SKIP() << "MSVC/CUDA segfaults when allocating too much memory";
+  } else {
+    test_kokkos_malloc_bad_alloc<Kokkos::SharedSpace>();
   }
-
-  test_kokkos_malloc_bad_alloc<Kokkos::SharedSpace>();
 }
 #endif
 
@@ -84,22 +82,19 @@ TEST(TEST_CATEGORY, kokkos_malloc_bad_alloc_shared_host_pinned) {
   if constexpr (std::is_same_v<Kokkos::SharedHostPinnedSpace,
                                Kokkos::SharedSpace>) {
     GTEST_SKIP() << "SharedHostPinnedSpace is the same as SharedSpace";
-  }
+  } else
 #endif
-
-  if constexpr (!std::is_same_v<TEST_EXECSPACE,
-                                Kokkos::DefaultExecutionSpace> ||
-                std::is_same_v<Kokkos::DefaultExecutionSpace,
-                               Kokkos::DefaultHostExecutionSpace>) {
+      if constexpr (!std::is_same_v<TEST_EXECSPACE,
+                                    Kokkos::DefaultExecutionSpace> ||
+                    std::is_same_v<Kokkos::DefaultExecutionSpace,
+                                   Kokkos::DefaultHostExecutionSpace>) {
     GTEST_SKIP() << "SharedHostPinnedSpace can only be tested with the "
                     "default device execution space";
-  }
-
-  if constexpr (is_windows_cuda) {
+  } else if constexpr (is_windows_cuda) {
     GTEST_SKIP() << "MSVC/CUDA segfaults when allocating too much memory";
+  } else {
+    test_kokkos_malloc_bad_alloc<Kokkos::SharedHostPinnedSpace>();
   }
-
-  test_kokkos_malloc_bad_alloc<Kokkos::SharedHostPinnedSpace>();
 }
 #endif
 
