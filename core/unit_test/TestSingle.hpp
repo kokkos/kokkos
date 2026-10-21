@@ -128,6 +128,7 @@ void test_no_output() {
 
 // Test for the ParallelReduce based API with a return value
 void test_output() {
+#ifndef KOKKOS_ENABLE_OPENACC
   int val;
   ReductionFunctor f;
 
@@ -194,10 +195,15 @@ void test_output() {
   Kokkos::single(Kokkos::SinglePolicy(exec_space), f, val);
   exec_space.fence();
   EXPECT_EQ(val, 5);
+#else
+  GTEST_SKIP() << "Kokkos::single with return value is not supported with "
+                  "OpenACC backend";
+#endif
 }
 
 // Test for the ParallelReduce based API with a view as return value
 void test_output_view() {
+#ifndef KOKKOS_ENABLE_OPENACC
   TEST_EXECSPACE exec_space;
 
   Kokkos::View<int, TEST_EXECSPACE> val("val");
@@ -265,6 +271,10 @@ void test_output_view() {
   Kokkos::single(Kokkos::SinglePolicy(exec_space), f, val);
   exec_space.fence();
   EXPECT_TRUE(KokkosTest::contains(exec_space, val, 5));
+#else
+  GTEST_SKIP() << "Kokkos::single with return value is not supported with "
+                  "OpenACC backend";
+#endif
 }
 
 // Test that single can be used to return types non conforming with the
@@ -288,6 +298,7 @@ struct reduction_identity<Restrictive> {
 }  // namespace Kokkos
 
 void test_restrictive_return_type() {
+#ifndef KOKKOS_ENABLE_OPENACC
   Restrictive ret;
 
   Kokkos::single(
@@ -295,6 +306,10 @@ void test_restrictive_return_type() {
       KOKKOS_LAMBDA(Restrictive & r) { r.val = 5; }, ret);
 
   EXPECT_EQ(ret.val, 5);
+#else
+  GTEST_SKIP() << "Kokkos::single with return value is not supported with "
+                  "OpenACC backend";
+#endif
 }
 
 namespace Test {
