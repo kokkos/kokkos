@@ -541,6 +541,21 @@ endif()
 
 if(Kokkos_ENABLE_OPENMP)
   kokkos_add_executable_and_test(CoreUnitTest_OpenMP SOURCES UnitTestMainInit.cpp ${OpenMP_SOURCES})
+  set_property(
+    TEST Kokkos_CoreUnitTest_OpenMP APPEND PROPERTY ENVIRONMENT
+                                                    "GTEST_FILTER=-openmp.team_policy_launch_with_maximum_scratch_size"
+  )
+  kokkos_add_test(
+    NAME
+    CoreUnitTest_OpenMP_TeamPolicyMaxScratch
+    EXE
+    CoreUnitTest_OpenMP
+    FAIL_REGULAR_EXPRESSION
+    "  FAILED  "
+    NO_HWM_TRACKER
+    ARGS
+    --gtest_filter=openmp.team_policy_launch_with_maximum_scratch_size
+  )
   kokkos_add_executable_and_test(CoreUnitTest_OpenMPInterOp SOURCES UnitTestMain.cpp openmp/TestOpenMP_InterOp.cpp)
 endif()
 
