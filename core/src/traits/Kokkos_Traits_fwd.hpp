@@ -54,6 +54,7 @@ struct OccupancyControlTrait;
 struct GraphKernelTrait;
 struct StaticBatchSizeTrait;
 struct TeamHandleTrait;
+struct ThreadHandleTrait;
 struct WorkTagTrait;
 
 // Keep these sorted by frequency of use to reduce compilation time
@@ -71,6 +72,7 @@ using execution_policy_trait_specifications =
     GraphKernelTrait,
     StaticBatchSizeTrait,
     TeamHandleTrait,
+    ThreadHandleTrait,
     // This one has to be last, unfortunately:
     WorkTagTrait
   >;

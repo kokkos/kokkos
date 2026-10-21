@@ -36,9 +36,11 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
         m_result_ptr(result.data()) {}
 
   void execute() const {
-    NextSiliconParallelReduceImpl<CombinedFunctorReducerType, Traits...>{
-        m_functor_reducer, m_policy, m_result_ptr}
-        .execute();
+    // Copy the functor with tracking disabled, as Kokkos::parallel_reduce does
+    auto closure = construct_with_shared_allocation_tracking_disabled<
+        NextSiliconParallelReduceImpl<CombinedFunctorReducerType, Traits...>>(
+        m_functor_reducer, m_policy, m_result_ptr);
+    closure.execute();
   }
 };
 

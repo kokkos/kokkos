@@ -193,6 +193,7 @@ export {
   using ::Kokkos::Experimental::prefer;
   using ::Kokkos::Experimental::require;
   using ::Kokkos::Experimental::StaticBatchSize;
+  using ::Kokkos::Experimental::ThreadHandle;
   using ::Kokkos::Experimental::WorkItemProperty;
   }  // namespace Experimental
 
@@ -898,6 +899,7 @@ export {
   using ::Kokkos::dextents;
   using ::Kokkos::dims;
   using ::Kokkos::dynamic_extent;
+  using ::Kokkos::extent_slice;
   using ::Kokkos::extents;
   using ::Kokkos::full_extent;
   using ::Kokkos::full_extent_t;
@@ -909,7 +911,7 @@ export {
   using ::Kokkos::mdspan;
   using ::Kokkos::mdspan_non_standard;
   using ::Kokkos::mdspan_non_standard_tag;
-  using ::Kokkos::strided_slice;
+  using ::Kokkos::range_slice;
   using ::Kokkos::submdspan;
   using ::Kokkos::submdspan_extents;
   using ::Kokkos::submdspan_mapping_result;

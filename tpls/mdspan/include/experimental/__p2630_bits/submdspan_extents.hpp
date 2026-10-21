@@ -8,6 +8,7 @@
 #include "constant_wrapper.hpp"
 #include "strided_slice.hpp"
 #include "../__p0009_bits/utility.hpp"
+#include "submdspan_canonicalize_slices.hpp"
 
 namespace MDSPAN_IMPL_STANDARD_NAMESPACE {
 namespace detail {
@@ -35,13 +36,6 @@ constexpr auto inv_map_rank(std::integral_constant<size_t, Counter>, std::index_
                                      slices...);
 }
 
-// Helper for identifying strided_slice
-template <class T> struct is_strided_slice : std::false_type {};
-
-template <class OffsetType, class ExtentType, class StrideType>
-struct is_strided_slice<
-    strided_slice<OffsetType, ExtentType, StrideType>> : std::true_type {};
-
 // first_of(slice): getting begin of slice specifier range
 MDSPAN_TEMPLATE_REQUIRES(
   class Integral,
@@ -67,7 +61,7 @@ first_of(const ::MDSPAN_IMPL_STANDARD_NAMESPACE::full_extent_t &) {
 template <class OffsetType, class ExtentType, class StrideType>
 MDSPAN_INLINE_FUNCTION
 constexpr OffsetType
-first_of(const strided_slice<OffsetType, ExtentType, StrideType> &r) {
+first_of(const extent_slice<OffsetType, ExtentType, StrideType> &r) {
   return r.offset;
 }
 
@@ -135,7 +129,7 @@ template <size_t k, class Extents, class OffsetType, class ExtentType,
 MDSPAN_INLINE_FUNCTION
 constexpr OffsetType
 last_of(std::integral_constant<size_t, k>, const Extents &,
-        const strided_slice<OffsetType, ExtentType, StrideType> &r) {
+        const extent_slice<OffsetType, ExtentType, StrideType> &r) {
   return r.extent;
 }
 
@@ -149,7 +143,7 @@ constexpr auto stride_of(const T &) {
 template <class OffsetType, class ExtentType, class StrideType>
 MDSPAN_INLINE_FUNCTION
 constexpr auto
-stride_of(const strided_slice<OffsetType, ExtentType, StrideType> &r) {
+stride_of(const extent_slice<OffsetType, ExtentType, StrideType> &r) {
   return r.stride;
 }
 
@@ -172,20 +166,20 @@ struct StaticExtentFromRange<integral_constant<Integral0, val0>,
 
 // compute new static extent from strided_slice, preserving static
 // knowledge
-template <class Arg0, class Arg1> struct StaticExtentFromStridedRange {
+template <class ExtentType, class StrideType> struct StaticExtentFromStridedRange {
   constexpr static size_t value = dynamic_extent;
 };
 
-template <class Integral0, Integral0 val0, class Integral1, Integral1 val1>
-struct StaticExtentFromStridedRange<std::integral_constant<Integral0, val0>,
-                                    std::integral_constant<Integral1, val1>> {
-  constexpr static size_t value = val0 > 0 ? 1 + (val0 - 1) / val1 : 0;
+template <class ExtentType, ExtentType Extent, class StrideType, StrideType Stride>
+struct StaticExtentFromStridedRange<std::integral_constant<ExtentType, Extent>,
+                                    std::integral_constant<StrideType, Stride>> {
+  constexpr static size_t value = Extent;
 };
 
-template <class Integral0, Integral0 val0, class Integral1, Integral1 val1>
-struct StaticExtentFromStridedRange<integral_constant<Integral0, val0>,
-                                    integral_constant<Integral1, val1>> {
-  constexpr static size_t value = val0 > 0 ? 1 + (val0 - 1) / val1 : 0;
+template <class ExtentType, ExtentType Extent, class StrideType, StrideType Stride>
+struct StaticExtentFromStridedRange<integral_constant<ExtentType, Extent>,
+                                    integral_constant<StrideType, Stride>> {
+  constexpr static size_t value = Extent;
 };
 
 // creates new extents through recursive calls to next_extent member function
@@ -195,7 +189,7 @@ struct extents_constructor {
   MDSPAN_TEMPLATE_REQUIRES(
     class Slice, class... SlicesAndExtents,
     /* requires */(!std::is_convertible_v<Slice, size_t> &&
-                   !is_strided_slice<Slice>::value)
+                   !is_extent_slice<Slice>::value)
   )
   MDSPAN_INLINE_FUNCTION
   constexpr static auto next_extent(const Extents &ext, const Slice &sl,
@@ -232,7 +226,7 @@ struct extents_constructor {
   MDSPAN_INLINE_FUNCTION
   constexpr static auto
   next_extent(const Extents &ext,
-              const strided_slice<OffsetType, ExtentType, StrideType> &r,
+              const extent_slice<OffsetType, ExtentType, StrideType> &r,
               SlicesAndExtents... slices_and_extents) {
     using index_t = typename Extents::index_type;
     using new_static_extent_t =
@@ -242,7 +236,7 @@ struct extents_constructor {
           extents_constructor<K - 1, Extents, NewExtents..., dynamic_extent>;
       return next_t::next_extent(
           ext, slices_and_extents...,
-          r.extent > 0 ? 1 + divide<index_t>(r.extent - 1, r.stride) : 0);
+          r.extent);
     } else {
       constexpr size_t new_static_extent = new_static_extent_t::value;
       using next_t =
@@ -275,6 +269,6 @@ constexpr auto submdspan_extents(const extents<IndexType, Extents...> &src_exts,
 
   using ext_t = extents<IndexType, Extents...>;
   return detail::extents_constructor<ext_t::rank(), ext_t>::next_extent(
-      src_exts, slices...);
+      src_exts, detail::canonical_slice<IndexType>(slices)...);
 }
 } // namespace MDSPAN_IMPL_STANDARD_NAMESPACE

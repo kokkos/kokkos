@@ -37,6 +37,7 @@ struct OpenACCCollapse {};
 struct OpenACCTile {};
 using OpenACCIterateLeft  = std::integral_constant<Iterate, Iterate::Left>;
 using OpenACCIterateRight = std::integral_constant<Iterate, Iterate::Right>;
+
 template <int N,
           typename iType = Kokkos::Experimental::OpenACCSpace::index_type>
 using OpenACCMDRangeBegin = Kokkos::Array<iType, N>;
@@ -46,6 +47,7 @@ using OpenACCMDRangeEnd = Kokkos::Array<iType, N>;
 template <int N,
           typename iType = Kokkos::Experimental::OpenACCSpace::index_type>
 using OpenACCMDRangeTile = Kokkos::Array<iType, N>;
+
 }  // namespace Kokkos::Experimental::Impl
 
 #endif

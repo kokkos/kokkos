@@ -316,6 +316,12 @@ bool Test(int test) {
 
 namespace Test {
 TEST(TEST_CATEGORY, cxx11) {
+// FIXME_NEXTSILICON
+#ifdef KOKKOS_ENABLE_NEXTSILICON
+  if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::NextSilicon>) {
+    GTEST_SKIP() << "segfault on 1.3.0-120";
+  }
+#endif
   ASSERT_TRUE((TestCXX11::Test(1)));
   ASSERT_TRUE((TestCXX11::Test(2)));
   ASSERT_TRUE((TestCXX11::Test(3)));

@@ -281,8 +281,7 @@ class HPX {
 
   template <typename I>
   void impl_bulk_plain_erased(
-      [[maybe_unused]] bool force_synchronous, bool is_light_weight_policy,
-      std::function<void(I)> &&f, I const n,
+      bool is_light_weight_policy, std::function<void(I)> &&f, I const n,
       hpx::threads::thread_stacksize stacksize =
           hpx::threads::thread_stacksize::default_) const {
     Kokkos::Experimental::HPX::impl_increment_active_parallel_region_count();
@@ -313,21 +312,18 @@ class HPX {
       }
     }
 
-#if defined(KOKKOS_ENABLE_IMPL_HPX_ASYNC_DISPATCH)
-    if (force_synchronous)
+#if !defined(KOKKOS_ENABLE_IMPL_HPX_ASYNC_DISPATCH)
+    impl_instance_fence_locked(
+        "Kokkos::Experimental::HPX: fence due to forced synchronizations");
 #endif
-    {
-      impl_instance_fence_locked(
-          "Kokkos::Experimental::HPX: fence due to forced synchronizations");
-    }
   }
 
   template <typename Functor, typename Index>
-  void impl_bulk_plain(bool force_synchronous, bool is_light_weight_policy,
-                       Functor const &functor, Index const n,
+  void impl_bulk_plain(bool is_light_weight_policy, Functor const &functor,
+                       Index const n,
                        hpx::threads::thread_stacksize stacksize =
                            hpx::threads::thread_stacksize::default_) const {
-    impl_bulk_plain_erased(force_synchronous, is_light_weight_policy,
+    impl_bulk_plain_erased(is_light_weight_policy,
                            // NOLINTNEXTLINE(bugprone-exception-escape)
                            {[functor](Index i) { functor.execute_range(i); }},
                            n, stacksize);
@@ -335,9 +331,9 @@ class HPX {
 
   template <typename Index>
   void impl_bulk_setup_finalize_erased(
-      [[maybe_unused]] bool force_synchronous, bool is_light_weight_policy,
-      std::function<void(Index)> &&f, std::function<void()> &&f_setup,
-      std::function<void()> &&f_finalize, Index const n,
+      bool is_light_weight_policy, std::function<void(Index)> &&f,
+      std::function<void()> &&f_setup, std::function<void()> &&f_finalize,
+      Index const n,
       hpx::threads::thread_stacksize stacksize =
           hpx::threads::thread_stacksize::default_) const {
     Kokkos::Experimental::HPX::impl_increment_active_parallel_region_count();
@@ -372,23 +368,19 @@ class HPX {
       }
     }
 
-#if defined(KOKKOS_ENABLE_IMPL_HPX_ASYNC_DISPATCH)
-    if (force_synchronous)
+#if !defined(KOKKOS_ENABLE_IMPL_HPX_ASYNC_DISPATCH)
+    impl_instance_fence_locked(
+        "Kokkos::Experimental::HPX: fence due to forced synchronizations");
 #endif
-    {
-      impl_instance_fence_locked(
-          "Kokkos::Experimental::HPX: fence due to forced syncronizations");
-    }
   }
 
   template <typename Functor, typename Index>
   void impl_bulk_setup_finalize(
-      bool force_synchronous, bool is_light_weight_policy,
-      Functor const &functor, Index const n,
+      bool is_light_weight_policy, Functor const &functor, Index const n,
       hpx::threads::thread_stacksize stacksize =
           hpx::threads::thread_stacksize::default_) const {
     impl_bulk_setup_finalize_erased(
-        force_synchronous, is_light_weight_policy,
+        is_light_weight_policy,
         {[functor](Index i) { functor.execute_range(i); }},
         {[functor]() { functor.setup(); }},
         {[functor]() { functor.finalize(); }}, n, stacksize);
@@ -421,38 +413,38 @@ std::vector<HPX> impl_partition_space(const HPX &,
 }  // namespace Impl
 
 extern template void HPX::impl_bulk_plain_erased<int>(
-    bool, bool, std::function<void(int)> &&, int const,
+    bool, std::function<void(int)> &&, int const,
     hpx::threads::thread_stacksize stacksize) const;
 
 extern template void HPX::impl_bulk_plain_erased<unsigned int>(
-    bool, bool, std::function<void(unsigned int)> &&, unsigned int const,
+    bool, std::function<void(unsigned int)> &&, unsigned int const,
     hpx::threads::thread_stacksize stacksize) const;
 
 extern template void HPX::impl_bulk_plain_erased<long>(
-    bool, bool, std::function<void(long)> &&, long const,
+    bool, std::function<void(long)> &&, long const,
     hpx::threads::thread_stacksize stacksize) const;
 
 extern template void HPX::impl_bulk_plain_erased<std::size_t>(
-    bool, bool, std::function<void(std::size_t)> &&, std::size_t const,
+    bool, std::function<void(std::size_t)> &&, std::size_t const,
     hpx::threads::thread_stacksize stacksize) const;
 
 extern template void HPX::impl_bulk_setup_finalize_erased<int>(
-    bool, bool, std::function<void(int)> &&, std::function<void()> &&,
+    bool, std::function<void(int)> &&, std::function<void()> &&,
     std::function<void()> &&, int const,
     hpx::threads::thread_stacksize stacksize) const;
 
 extern template void HPX::impl_bulk_setup_finalize_erased<unsigned int>(
-    bool, bool, std::function<void(unsigned int)> &&, std::function<void()> &&,
+    bool, std::function<void(unsigned int)> &&, std::function<void()> &&,
     std::function<void()> &&, unsigned int const,
     hpx::threads::thread_stacksize stacksize) const;
 
 extern template void HPX::impl_bulk_setup_finalize_erased<long>(
-    bool, bool, std::function<void(long)> &&, std::function<void()> &&,
+    bool, std::function<void(long)> &&, std::function<void()> &&,
     std::function<void()> &&, long const,
     hpx::threads::thread_stacksize stacksize) const;
 
 extern template void HPX::impl_bulk_setup_finalize_erased<std::size_t>(
-    bool, bool, std::function<void(std::size_t)> &&, std::function<void()> &&,
+    bool, std::function<void(std::size_t)> &&, std::function<void()> &&,
     std::function<void()> &&, std::size_t const,
     hpx::threads::thread_stacksize stacksize) const;
 }  // namespace Experimental
@@ -585,7 +577,8 @@ struct HPXTeamMember {
   using execution_space = Kokkos::Experimental::HPX;
   using scratch_memory_space =
       Kokkos::ScratchMemorySpace<Kokkos::Experimental::HPX>;
-  using team_handle = HPXTeamMember;
+  using team_handle   = HPXTeamMember;
+  using thread_handle = ThreadHandleType<team_handle>;
 
  private:
   scratch_memory_space m_team_shared;
@@ -972,8 +965,8 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
   void execute() const {
     const Member num_chunks =
         get_num_chunks(m_policy.begin(), m_policy.chunk_size(), m_policy.end());
-    m_policy.space().impl_bulk_plain(false, is_light_weight_policy<Policy>(),
-                                     *this, num_chunks,
+    m_policy.space().impl_bulk_plain(is_light_weight_policy<Policy>(), *this,
+                                     num_chunks,
                                      hpx::threads::thread_stacksize::nostack);
   }
 
@@ -1008,14 +1001,15 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   void execute() const {
     const Member num_chunks =
         get_num_chunks(m_policy.begin(), m_policy.chunk_size(), m_policy.end());
-    m_iter.m_rp.space().impl_bulk_plain(
-        false, is_light_weight_policy<MDRangePolicy>(), *this, num_chunks,
-        hpx::threads::thread_stacksize::nostack);
+    m_policy.space().impl_bulk_plain(is_light_weight_policy<MDRangePolicy>(),
+                                     *this, num_chunks,
+                                     hpx::threads::thread_stacksize::nostack);
   }
 
   inline ParallelFor(const FunctorType &arg_functor, MDRangePolicy arg_policy)
       : m_iter(arg_policy, arg_functor),
-        m_policy(Policy(0, arg_policy.m_num_tiles).set_chunk_size(1)) {}
+        m_policy(Policy(arg_policy.space(), 0, arg_policy.impl_num_tiles())
+                     .set_chunk_size(1)) {}
   template <typename Policy, typename Functor>
   static int max_tile_size_product(const Policy &, const Functor &) {
     /**
@@ -1049,7 +1043,6 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
   const CombinedFunctorReducerType m_functor_reducer;
   const Policy m_policy;
   const pointer_type m_result_ptr;
-  const bool m_force_synchronous;
 
  public:
   void setup() const {
@@ -1117,8 +1110,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
     const Member num_chunks =
         get_num_chunks(m_policy.begin(), m_policy.chunk_size(), m_policy.end());
     m_policy.space().impl_bulk_setup_finalize(
-        m_force_synchronous, is_light_weight_policy<Policy>(), *this,
-        num_chunks, hpx::threads::thread_stacksize::nostack);
+        is_light_weight_policy<Policy>(), *this, num_chunks,
+        hpx::threads::thread_stacksize::nostack);
   }
 
   template <class ViewType>
@@ -1126,8 +1119,7 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
                         Policy arg_policy, const ViewType &arg_view)
       : m_functor_reducer(arg_functor_reducer),
         m_policy(arg_policy),
-        m_result_ptr(arg_view.data()),
-        m_force_synchronous(!arg_view.impl_track().has_record()) {
+        m_result_ptr(arg_view.data()) {
     static_assert(
         Kokkos::Impl::MemorySpaceAccess<
             Kokkos::HostSpace, typename ViewType::memory_space>::accessible,
@@ -1157,7 +1149,6 @@ class ParallelReduce<CombinedFunctorReducerType,
   const iterate_type m_iter;
   const Policy m_policy;
   const pointer_type m_result_ptr;
-  const bool m_force_synchronous;
 
  public:
   void setup() const {
@@ -1165,7 +1156,7 @@ class ParallelReduce<CombinedFunctorReducerType,
     const std::size_t value_size = reducer.value_size();
     const int num_worker_threads = m_policy.space().concurrency();
 
-    hpx_thread_buffer &buffer = m_iter.m_rp.space().impl_get_buffer();
+    hpx_thread_buffer &buffer = m_policy.space().impl_get_buffer();
     buffer.resize(num_worker_threads, value_size);
 
     for (int t = 0; t < num_worker_threads; ++t) {
@@ -1174,7 +1165,7 @@ class ParallelReduce<CombinedFunctorReducerType,
   }
 
   void execute_range(const Member i_chunk) const {
-    hpx_thread_buffer &buffer = m_iter.m_rp.space().impl_get_buffer();
+    hpx_thread_buffer &buffer = m_policy.space().impl_get_buffer();
     reference_type update =
         ReducerType::reference(reinterpret_cast<pointer_type>(
             buffer.get(Kokkos::Experimental::HPX::impl_hardware_thread_id())));
@@ -1186,7 +1177,7 @@ class ParallelReduce<CombinedFunctorReducerType,
   }
 
   void finalize() const {
-    hpx_thread_buffer &buffer    = m_iter.m_rp.space().impl_get_buffer();
+    hpx_thread_buffer &buffer    = m_policy.space().impl_get_buffer();
     ReducerType reducer          = m_iter.m_func.get_reducer();
     const int num_worker_threads = m_policy.space().concurrency();
     for (int i = 1; i < num_worker_threads; ++i) {
@@ -1211,18 +1202,18 @@ class ParallelReduce<CombinedFunctorReducerType,
   void execute() const {
     const Member num_chunks =
         get_num_chunks(m_policy.begin(), m_policy.chunk_size(), m_policy.end());
-    m_iter.m_rp.space().impl_bulk_setup_finalize(
-        m_force_synchronous, is_light_weight_policy<MDRangePolicy>(), *this,
-        num_chunks, hpx::threads::thread_stacksize::nostack);
+    m_policy.space().impl_bulk_setup_finalize(
+        is_light_weight_policy<MDRangePolicy>(), *this, num_chunks,
+        hpx::threads::thread_stacksize::nostack);
   }
 
   template <class ViewType>
   inline ParallelReduce(const CombinedFunctorReducerType &arg_functor_reducer,
                         MDRangePolicy arg_policy, const ViewType &arg_view)
       : m_iter(arg_policy, arg_functor_reducer),
-        m_policy(Policy(0, arg_policy.m_num_tiles).set_chunk_size(1)),
-        m_result_ptr(arg_view.data()),
-        m_force_synchronous(!arg_view.impl_track().has_record()) {
+        m_policy(Policy(arg_policy.space(), 0, arg_policy.impl_num_tiles())
+                     .set_chunk_size(1)),
+        m_result_ptr(arg_view.data()) {
     static_assert(
         Kokkos::Impl::MemorySpaceAccess<
             Kokkos::HostSpace, typename ViewType::memory_space>::accessible,
@@ -1339,7 +1330,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
   void execute() const {
     const int num_worker_threads = m_policy.space().concurrency();
     m_policy.space().impl_bulk_setup_finalize(
-        false, is_light_weight_policy<Policy>(), *this, num_worker_threads,
+        is_light_weight_policy<Policy>(), *this, num_worker_threads,
         hpx::threads::thread_stacksize::small_);
   }
 
@@ -1446,7 +1437,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   void execute() const {
     const int num_worker_threads = m_policy.space().concurrency();
     m_policy.space().impl_bulk_setup_finalize(
-        false, is_light_weight_policy<Policy>(), *this, num_worker_threads,
+        is_light_weight_policy<Policy>(), *this, num_worker_threads,
         hpx::threads::thread_stacksize::small_);
   }
 
@@ -1519,7 +1510,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     const int num_chunks =
         get_num_chunks(0, m_policy.chunk_size(), m_policy.league_size());
     m_policy.space().impl_bulk_setup_finalize(
-        false, is_light_weight_policy<Policy>(), *this, num_chunks,
+        is_light_weight_policy<Policy>(), *this, num_chunks,
         hpx::threads::thread_stacksize::nostack);
   }
 
@@ -1578,7 +1569,6 @@ class ParallelReduce<CombinedFunctorReducerType,
   const Policy m_policy;
   pointer_type m_result_ptr;
   const std::size_t m_shared;
-  const bool m_force_synchronous;
 
  public:
   void setup() const {
@@ -1663,8 +1653,8 @@ class ParallelReduce<CombinedFunctorReducerType,
     const int num_chunks =
         get_num_chunks(0, m_policy.chunk_size(), m_policy.league_size());
     m_policy.space().impl_bulk_setup_finalize(
-        m_force_synchronous, is_light_weight_policy<Policy>(), *this,
-        num_chunks, hpx::threads::thread_stacksize::nostack);
+        is_light_weight_policy<Policy>(), *this, num_chunks,
+        hpx::threads::thread_stacksize::nostack);
   }
 
   template <class ViewType>
@@ -1676,8 +1666,7 @@ class ParallelReduce<CombinedFunctorReducerType,
         m_result_ptr(arg_result.data()),
         m_shared(arg_policy.scratch_size(0) + arg_policy.scratch_size(1) +
                  FunctorTeamShmemSize<FunctorType>::value(
-                     m_functor_reducer.get_functor(), arg_policy.team_size())),
-        m_force_synchronous(!arg_result.impl_track().has_record()) {
+                     m_functor_reducer.get_functor(), arg_policy.team_size())) {
     static_assert(
         Kokkos::Impl::MemorySpaceAccess<
             Kokkos::HostSpace, typename ViewType::memory_space>::accessible,
@@ -1791,9 +1780,21 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
     const Impl::TeamThreadRangeBoundariesStruct<iType, Impl::HPXTeamMember>
         &loop_boundaries,
     const Lambda &lambda) {
+  using thread_handle_t = Impl::ThreadHandleType<Impl::HPXTeamMember>;
+
   for (iType i = loop_boundaries.start; i < loop_boundaries.end;
-       i += loop_boundaries.increment)
-    lambda(i);
+       i += loop_boundaries.increment) {
+    if constexpr (std::is_invocable_v<Lambda, iType>) {
+      lambda(i);
+    } else if constexpr (std::is_invocable_v<Lambda, thread_handle_t const &,
+                                             iType>) {
+      lambda(thread_handle_t(loop_boundaries.member), i);
+    } else {
+      static_assert(Kokkos::Impl::always_false<Lambda>::value,
+                    "Kokkos::parallel_for(TeamThreadRange) closure must be "
+                    "invocable with (iType) or (ThreadHandleType, iType)");
+    }
+  }
 }
 
 /** \brief  Inter-thread vector parallel_reduce. Executes lambda(iType i,

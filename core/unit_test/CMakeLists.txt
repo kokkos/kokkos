@@ -41,6 +41,7 @@ set(COMPILE_ONLY_SOURCES
     TestHalfCommonType.cpp
     TestInterOp.cpp
     TestRangePolicyCTAD.cpp
+    TestSharedSpaceCompileOnly.cpp
     TestStringManipulation.cpp
     TestVersionMacros.cpp
     TestViewRank.cpp
@@ -63,17 +64,9 @@ set(COMPILE_ONLY_SOURCES
     view/TestViewMDSpanTemplateArgumentTypeDefs.cpp
 )
 
-# FIXME_NEXTSILICON: TeamPolicy
+# FIXME_NEXTSILICON: static assertion failures
 if(Kokkos_ENABLE_NEXTSILICON)
-  list(
-    REMOVE_ITEM
-    COMPILE_ONLY_SOURCES
-    TestTeamPolicyCTAD.cpp
-    TestTeamPolicyCompileOnly.cpp
-    TestTeamMDRangePolicyCTAD.cpp
-    TestViewTypedefs.cpp
-    TestNestedReducerCTAD.cpp
-  )
+  list(REMOVE_ITEM COMPILE_ONLY_SOURCES TestViewTypedefs.cpp)
 endif()
 
 if(KOKKOS_CXX_COMPILER_ID STREQUAL "Intel")
@@ -224,13 +217,25 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;NextSilicon)
       list(APPEND ${Tag}_SOURCES1B ${file})
     endforeach()
 
-    # Add additional test(s) from subdirectory range_policy
-    set(file ${dir}/Test${Tag}_RangePolicyExecutionTypes.cpp)
-    file(WRITE ${dir}/dummy.cpp "#include <Test${Tag}_Category.hpp>\n"
-                                "#include <range_policy/TestRangePolicyExecutionTypes.hpp>\n"
-    )
-    configure_file(${dir}/dummy.cpp ${file})
-    list(APPEND ${Tag}_SOURCES1B ${file})
+    # Add additional test(s) from subdirectory range_policy.
+    # Cases that do not use ThreadHandle run for every category. ThreadHandle
+    # cases are compiled only when TEST_CATEGORY is cuda.
+    # FIXME_NEXTSILICON: requires TeamPolicy.
+    if(NOT Tag STREQUAL "NextSilicon")
+      set(file ${dir}/Test${Tag}_RangePolicyNestedInvocation.cpp)
+      file(WRITE ${dir}/dummy.cpp "#include <Test${Tag}_Category.hpp>\n"
+                                  "#include <range_policy/TestRangePolicyNestedInvocation.hpp>\n"
+      )
+      configure_file(${dir}/dummy.cpp ${file})
+      list(APPEND ${Tag}_SOURCES1B ${file})
+
+      set(file ${dir}/Test${Tag}_RangePolicyExecutionProperties.cpp)
+      file(WRITE ${dir}/dummy.cpp "#include <Test${Tag}_Category.hpp>\n"
+                                  "#include <range_policy/TestRangePolicyExecutionProperties.hpp>\n"
+      )
+      configure_file(${dir}/dummy.cpp ${file})
+      list(APPEND ${Tag}_SOURCES1B ${file})
+    endif()
 
     set(${Tag}_SOURCES2A)
     set(${Tag}_TESTNAMES2A
@@ -368,11 +373,6 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;NextSilicon)
         ViewMDSpanTemplateArgumentSubview
       )
     endif()
-    # FIXME_NEXTSILICON
-    if(Kokkos_ENABLE_NEXTSILICON)
-      list(REMOVE_ITEM BV_TestNames ViewCustomizationAccessorFromMapping # TeamPolicy
-      )
-    endif()
     set(${Tag}_VIEWSUPPORT)
     foreach(Name IN LISTS BV_TestNames)
       set(file ${dir}/Test${Tag}_View_${Name}.cpp)
@@ -412,27 +412,9 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;NextSilicon)
       list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_TeamMDRange.cpp)
       list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_TeamVectorRange.cpp)
     endif()
-    if((Tag STREQUAL "Serial") AND Kokkos_ENABLE_NEXTSILICON)
-      #FIXME_NEXTSILICON: requires TeamPolicy parallel_for on NextSilicon
-      list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_DeepCopy_Assignment.cpp)
-      list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_Graph.cpp)
-      #FIXME_NEXTSILICON: requires TeamPolicy parallel_reduce on NextSilicon
-      list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_CommonPolicyInterface.cpp)
-    endif()
     if(Tag STREQUAL "NextSilicon")
-      #FIXME_NEXTSILICON: requires TeamPolicy parallel_for
-      list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_BlockSizeDeduction.cpp)
-      #FIXME_NEXTSILICON: requires TeamPolicy parallel_for on NextSilicon
-      list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_DeepCopy_Assignment.cpp)
-      list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_TeamBasic.cpp)
-      list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_TeamMDRange.cpp)
-      list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_TeamVectorRange.cpp)
       #FIXME_NEXTSILICON: requires WorkGraphPolicy parallel_for on NextSilicon
       list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_WorkGraph.cpp)
-      #FIXME_NEXTSILICON: requires TeamPolicy on NextSilicon
-      list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_CommonPolicyInterface.cpp)
-      list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_Graph.cpp)
-      list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_MDRange_a.cpp)
     endif()
     kokkos_add_executable_and_test(CoreUnitTest_${Tag}_SmokeTest SOURCES UnitTestMainInit.cpp ${${Tag}_SOURCES_SMOKE})
   endif()
@@ -532,20 +514,12 @@ if(Kokkos_ENABLE_NEXTSILICON)
   list(
     REMOVE_ITEM
     Serial_SOURCES1
-    #FIXME_NEXTSILICON: requires TeamPolicy<NextSilicon>
-    ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_CommonPolicyConstructors.cpp
-    #FIXME_NEXTSILICON: requires TeamPolicy parallel_for on NextSilicon
-    ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_DeepCopy_Assignment.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_DeepCopy_Narrowing.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_Graph.cpp
     #FIXME_NEXTSILICON: requires long double support
     ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_MathematicalConstants.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_MathematicalFunctions1.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_MathematicalFunctions2.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_MathematicalFunctions3.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_NumericTraits.cpp
-    #FIXME_NEXTSILICON requires TeamPolicy parallel_for
-    ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_RangePolicyExecutionTypes.cpp
   )
 endif()
 
@@ -643,54 +617,6 @@ if(Kokkos_ENABLE_CUDA)
   kokkos_add_executable_and_test(
     CoreUnitTest_CudaInterOpGraphMultiGPU SOURCES UnitTestMainInit.cpp cuda/TestCuda_InterOp_GraphMultiGPU.cpp
   )
-
-  # This CUDA interop test is the only thing in the tree that needs CUPTI.
-  #
-  # FindCUDAToolkit already ran in cmake/Modules/FindTPLCUDA.cmake, and it has
-  # provided CUDA::cupti since CMake 3.17. The catch is the include path:
-  # cupti.h lives in extras/CUPTI/include, which is not on the normal CUDA
-  # include path, and CMake only started locating it (as
-  # CUDAToolkit_CUPTI_INCLUDE_DIR) and attaching it to the target in 3.24. We
-  # support CMake back to 3.22, so 3.22 and 3.23 need the manual search below,
-  # as does any toolkit layout CMake does not fully describe.
-  # https://cmake.org/cmake/help/latest/module/FindCUDAToolkit.html#cupti
-  set(KOKKOS_CUPTI_FOUND OFF)
-  if(TARGET CUDA::cupti AND CUDAToolkit_CUPTI_INCLUDE_DIR)
-    set(KOKKOS_CUPTI_FOUND ON)
-  else()
-    find_path(
-      KOKKOS_CUPTI_INCLUDE_DIR
-      NAMES cupti.h
-      HINTS "${CUDAToolkit_ROOT}" "${CUDAToolkit_LIBRARY_ROOT}" ENV CUDA_HOME ENV CUDA_PATH
-      PATH_SUFFIXES extras/CUPTI/include include
-    )
-    find_library(
-      KOKKOS_CUPTI_LIBRARY
-      NAMES cupti
-      HINTS "${CUDAToolkit_ROOT}" "${CUDAToolkit_LIBRARY_ROOT}" ENV CUDA_HOME ENV CUDA_PATH
-      PATH_SUFFIXES extras/CUPTI/lib64 lib64 lib
-    )
-
-    if(KOKKOS_CUPTI_INCLUDE_DIR AND KOKKOS_CUPTI_LIBRARY)
-      set(KOKKOS_CUPTI_FOUND ON)
-    endif()
-  endif()
-
-  if(KOKKOS_CUPTI_FOUND)
-    kokkos_add_executable_and_test(
-      CoreUnitTest_CudaCUPTILaunchRoute SOURCES UnitTestMainInit.cpp cuda/TestCuda_CUPTI_LaunchRoute.cpp
-    )
-
-    if(TARGET CUDA::cupti AND CUDAToolkit_CUPTI_INCLUDE_DIR)
-      target_link_libraries(Kokkos_CoreUnitTest_CudaCUPTILaunchRoute PRIVATE CUDA::cupti)
-    else()
-      target_include_directories(Kokkos_CoreUnitTest_CudaCUPTILaunchRoute PRIVATE "${KOKKOS_CUPTI_INCLUDE_DIR}")
-      target_link_libraries(Kokkos_CoreUnitTest_CudaCUPTILaunchRoute PRIVATE "${KOKKOS_CUPTI_LIBRARY}")
-    endif()
-  else()
-    message(STATUS "CUPTI not found; skipping CUDA launch-route test")
-  endif()
-  unset(KOKKOS_CUPTI_FOUND)
 endif()
 
 if(Kokkos_ENABLE_HIP)
@@ -779,32 +705,27 @@ if(Kokkos_ENABLE_NEXTSILICON)
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_AtomicOperations_int.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_AtomicOperations_longint.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_AtomicOperations_longlongint.cpp
-      # FIXME_NEXTSILICON: TeamPolicy parallel_for
-      # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_AtomicOperations_shared.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_AtomicOperations_shared.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_AtomicOperations_unsignedint.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_AtomicOperations_unsignedlongint.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_AtomicViews.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_BadAlloc.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_BitManipulationBuiltins.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_CheckedIntegerOps.cpp
-      # FIXME_NEXTSILICON: needs TeamPolicy
-      # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_Concepts.cpp
-      # FIXME_NEXTSILICON: needs TeamPolicy
-      # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_Crs.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_Concepts.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_Crs.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_DeepCopy_Narrowing.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_DeepCopy_SameArgument.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_DeepCopyAlignment.cpp
-      # FIXME_NEXTSILICON: needs TeamPolicy
-      # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_ExecSpacePartitioning.cpp
-      # FIXME_NEXTSILICON: needs single/PerTeam
-      # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_ExecSpaceThreadSafety.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_ExecSpacePartitioning.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_ExecSpaceThreadSafety.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_FunctionAnnotationMacros.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_FunctorAnalysis.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_GraphNodeCtorProps.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_HostSharedPtr.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_HostSharedPtrAccessOnDevice.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_JoinBackwardCompatibility.cpp
-      # FIXME_NEXTSILICON: needs TeamPolicy
+      # FIXME_NEXTSILICON 1.3.0-120: projection errors in rank 7
       # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_LocalDeepCopy.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_MathematicalConstants.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_MathematicalFunctions1.cpp
@@ -822,8 +743,6 @@ if(Kokkos_ENABLE_NEXTSILICON)
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_MDRange_g.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_MDRangePolicyConstructors.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_MDRangeReduce.cpp
-  )
-  set(NextSilicon_SOURCES1C
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_MDSpan.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_MDSpanAtomicAccessor.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_MDSpanConversion.cpp
@@ -831,12 +750,8 @@ if(Kokkos_ENABLE_NEXTSILICON)
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_NumericTraits.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_ParallelScanRangePolicy.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_CustomScalarParallelScan.cpp
-  )
-  set(NextSilicon_SOURCES1D
-      # FIXME_NEXTSILICON: Needs TeamPolicy
-      # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_OccupancyControlTrait.cpp
-      # FIXME_NEXTSILICON: Needs TeamPolicy
-      # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_Other.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_OccupancyControlTrait.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_Other.cpp
       # FIXME_NEXTSILICON: needs device printf
       # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_Printf.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_QuadPrecisionMath.cpp
@@ -849,21 +764,19 @@ if(Kokkos_ENABLE_NEXTSILICON)
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_Reducers_c.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_Reducers_d.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_Reducers_e.cpp
-      # FIXME_NEXTSILICON: TeamPolicy parallel_reduce
-      # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_Reductions_DeviceView.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_Reductions_DeviceView.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_SpaceAwareAccessorAccessViolation.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_SpaceAwareAccessor.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_Swap.cpp
   )
 
   set(NextSilicon_SOURCES2A
-      # FIXME_NEXTSILICON: needs TeamPolicy
-      # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_TeamCombinedReducers.cpp
-      # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_TeamPolicyConstructors.cpp
-      # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_TeamReductionScan.cpp
-      # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_TeamScan.cpp
-      # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_TeamScratch.cpp
-      # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_TeamTeamSize.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_TeamCombinedReducers.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_TeamPolicyConstructors.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_TeamReductionScan.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_TeamScan.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_TeamScratch.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_TeamTeamSize.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_Timer.cpp
       # FIXME_NEXTSILICON: sign on tokens.size()
       # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_UniqueToken.cpp
@@ -895,8 +808,6 @@ if(Kokkos_ENABLE_NEXTSILICON)
 
   kokkos_add_executable_and_test(CoreUnitTest_NextSilicon1A SOURCES UnitTestMainInit.cpp ${NextSilicon_SOURCES1A})
   kokkos_add_executable_and_test(CoreUnitTest_NextSilicon1B SOURCES UnitTestMainInit.cpp ${NextSilicon_SOURCES1B})
-  kokkos_add_executable_and_test(CoreUnitTest_NextSilicon1C SOURCES UnitTestMainInit.cpp ${NextSilicon_SOURCES1C})
-  kokkos_add_executable_and_test(CoreUnitTest_NextSilicon1D SOURCES UnitTestMainInit.cpp ${NextSilicon_SOURCES1D})
   kokkos_add_executable_and_test(CoreUnitTest_NextSilicon2A SOURCES UnitTestMainInit.cpp ${NextSilicon_SOURCES2A})
   kokkos_add_executable_and_test(
     CoreUnitTest_NextSiliconInitializationCallbacks SOURCES nextsilicon/TestNextSilicon_InitializationCallbacks.cpp
@@ -920,6 +831,7 @@ set(DEFAULT_DEVICE_SOURCES
     default/TestDefaultDeviceType_a3.cpp
     default/TestDefaultDeviceType_b3.cpp
     default/TestDefaultDeviceType_c3.cpp
+    default/TestDefaultDeviceType_KernelShape.cpp
     default/TestDefaultDeviceTypeResize.cpp
     default/TestDefaultDeviceTypeViewAPI.cpp
 )
@@ -949,6 +861,7 @@ if(KOKKOS_ENABLE_NEXTSILICON)
     default/TestDefaultDeviceType_a3.cpp
     default/TestDefaultDeviceType_b3.cpp
     default/TestDefaultDeviceType_c3.cpp
+    default/TestDefaultDeviceType_KernelShape.cpp
   )
 endif()
 
@@ -1029,6 +942,11 @@ if(KOKKOS_ENABLE_LIBDL)
   kokkos_add_test_executable(ToolsInitialization UnitTestMain.cpp tools/TestToolsInitialization.cpp)
 
   kokkos_add_test_executable(EmptyProfilingLibraryDeathTest UnitTestMain.cpp tools/TestEmptyProfilingLibrary.cpp)
+
+  if(NOT KOKKOS_ENABLE_LARGE_MEM_TESTS)
+    kokkos_add_test_library(kokkoshwmtracker-tool SHARED SOURCES tools/memory-hwm-tool.cpp)
+    kokkos_add_executable_and_test(ExcessMemoryAllocationDeathTest SOURCES tools/TestExcessMemoryAllocation.cpp)
+  endif()
 
   set(ADDRESS_REGEX "0x[0-9a-f]*")
   set(MEMSPACE_REGEX "[HC][ou][sd][ta][a-zA-Z]*")
