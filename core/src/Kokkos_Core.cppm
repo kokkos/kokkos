@@ -155,6 +155,7 @@ export {
   using ::Kokkos::default_outer_direction;
   using ::Kokkos::Dynamic;
   using ::Kokkos::ExecutionPolicy;
+  using ::Kokkos::ExecutionSpacePolicy;
   using ::Kokkos::IndexType;
   using ::Kokkos::is_execution_policy;
   using ::Kokkos::is_execution_policy_v;

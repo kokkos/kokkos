@@ -70,6 +70,20 @@ static_assert(Kokkos::ExecutionPolicy<
               Kokkos::MDRangePolicy<ExecutionSpace, Kokkos::Rank<2>>>);
 static_assert(Kokkos::ExecutionPolicy<Kokkos::TeamPolicy<ExecutionSpace>>);
 
+// A launching policy provides execution_space and not execution_type.
+struct LaunchingExecutionPolicy {
+  using execution_policy = LaunchingExecutionPolicy;
+  using execution_space  = ExecutionSpace;
+};
+struct NonLaunchingExecutionPolicy {
+  using execution_policy = NonLaunchingExecutionPolicy;
+};
+static_assert(
+    Kokkos::ExecutionSpacePolicy<Kokkos::RangePolicy<ExecutionSpace>>);
+static_assert(Kokkos::ExecutionSpacePolicy<Kokkos::TeamPolicy<ExecutionSpace>>);
+static_assert(Kokkos::ExecutionSpacePolicy<LaunchingExecutionPolicy>);
+static_assert(!Kokkos::ExecutionSpacePolicy<NonLaunchingExecutionPolicy>);
+
 static_assert(Kokkos::is_reducer_v<Kokkos::Sum<int, Kokkos::HostSpace>>);
 static_assert(!Kokkos::is_reducer_v<int>);
 static_assert(Kokkos::Reducer<Kokkos::Sum<int, Kokkos::HostSpace>>);

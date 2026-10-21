@@ -46,9 +46,9 @@ namespace Kokkos {
  * This compares to a single iteration \c iwork of a \c for loop.
  * If \c execution_space is not defined DefaultExecutionSpace will be used.
  */
-template <class Label, Kokkos::ExecutionPolicy ExecPolicy, class FunctorType>
-  requires(std::is_constructible_v<std::string, const Label&> &&
-           Kokkos::ExecutionSpace<typename ExecPolicy::execution_type>)
+template <class Label, Kokkos::ExecutionSpacePolicy ExecPolicy,
+          class FunctorType>
+  requires(std::is_constructible_v<std::string, const Label&>)
 inline void parallel_for([[maybe_unused]] const Label& label,
                          const ExecPolicy& policy, const FunctorType& functor) {
   // Work around unsuppressable warning of calling host (constexpr) function
@@ -77,8 +77,7 @@ inline void parallel_for([[maybe_unused]] const Label& label,
   Kokkos::Tools::Impl::end_parallel_for(inner_policy, functor, str, kpID);
 }
 
-template <Kokkos::ExecutionPolicy ExecPolicy, class FunctorType>
-  requires Kokkos::ExecutionSpace<typename ExecPolicy::execution_type>
+template <Kokkos::ExecutionSpacePolicy ExecPolicy, class FunctorType>
 KOKKOS_INLINE_FUNCTION void parallel_for(const ExecPolicy& policy,
                                          const FunctorType& functor) {
   KOKKOS_IF_ON_DEVICE(

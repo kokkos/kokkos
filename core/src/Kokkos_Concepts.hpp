@@ -146,6 +146,14 @@ KOKKOS_IMPL_DEFINE_CONCEPT_AND_TRAIT_FROM_TYPEDEF(execution_space,
                                                   ExecutionSpace)
 KOKKOS_IMPL_DEFINE_CONCEPT_AND_TRAIT_FROM_TYPEDEF(execution_policy,
                                                   ExecutionPolicy)
+
+// Execution policy type with execution_space member such as
+// RangePolicy<ExecutionSpace>. RangePolicy<TeamHandle> and
+// RangePolicy<ThreadHandle> do not provide it.
+template <class Policy>
+concept ExecutionSpacePolicy =
+    ExecutionPolicy<Policy> && ExecutionSpace<typename Policy::execution_space>;
+
 KOKKOS_IMPL_DEFINE_TRAIT_FROM_TYPEDEF(array_layout)
 KOKKOS_IMPL_DEFINE_CONCEPT_AND_TRAIT_FROM_TYPEDEF(reducer, Reducer)
 KOKKOS_IMPL_DEFINE_CONCEPT_AND_TRAIT_FROM_TYPEDEF(team_handle, TeamHandle)
