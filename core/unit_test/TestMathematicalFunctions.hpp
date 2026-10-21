@@ -2515,6 +2515,12 @@ TEST(TEST_CATEGORY, mathematical_functions_fpclassify) {
   // FIXME_OPENACC: Test is known to fail if 24.5 < NVHPC version <= 26.5.
   GTEST_SKIP() << "skipping since the OpenACC backend test fails if 24.5 < "
                   "NVHPC version <= 26.5";
+#elif defined(KOKKOS_ENABLE_NEXTSILICON)
+  // FIXME_NEXTSILICON
+  if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::NextSilicon>) {
+    GTEST_SKIP() << "projection failure in 1.4.0-136";
+  }
+  TestFpClassify<TEST_EXECSPACE>();
 #else
   TestFpClassify<TEST_EXECSPACE>();
 #endif
