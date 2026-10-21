@@ -210,6 +210,7 @@ struct CombinedReducerImpl<std::integer_sequence<size_t, Idxs...>, Space,
     (write_one_value_back<ExecutionSpace, Idxs>(
          exec_space, reducers_that_reference_original_values.view(),
          value.template get<Idxs, typename Reducers::value_type>()),
+
      ...);
   }
 

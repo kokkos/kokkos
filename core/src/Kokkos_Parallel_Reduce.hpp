@@ -20,7 +20,6 @@ static_assert(false,
 #include <impl/Kokkos_CheckUsage.hpp>
 #include <impl/Kokkos_FunctorAnalysis.hpp>
 #include <impl/Kokkos_Tools_Generic.hpp>
-#include <impl/Kokkos_Single_Default_Impl.hpp>
 
 #include <type_traits>
 #include <string>
@@ -201,6 +200,10 @@ struct ParallelReduceAdaptor {
         functor, typename Analysis::Reducer(
                      forwarding_switch<passed_reducer_type_is_invalid>(
                          functor, return_value)));
+    const auto& response = Kokkos::Tools::Impl::begin_parallel_reduce<
+        typename return_value_adapter::reducer_type>(policy, functor_reducer,
+                                                     label, kpID);
+    const auto& inner_policy = response.policy;
 
     if constexpr (Kokkos::is_view_v<ReturnType>) {
       if constexpr (is_array_reduction)
@@ -216,12 +219,6 @@ struct ParallelReduceAdaptor {
             "Reductions with a View result type must use a View with "
             "contiguous memory!");
     }
-
-    const auto& response = Kokkos::Tools::Impl::begin_parallel_reduce<
-        typename return_value_adapter::reducer_type>(policy, functor_reducer,
-                                                     label, kpID);
-
-    const auto& inner_policy = response.policy;
 
     auto closure = construct_with_shared_allocation_tracking_disabled<
         Impl::ParallelReduce<CombinedFunctorReducerType, PolicyType,
