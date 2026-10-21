@@ -107,16 +107,15 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
     const Impl::TeamVectorRangeBoundariesStruct<iType, Impl::OpenACCTeamMember>&
         loop_boundaries,
     const Lambda& lambda) {
-  iType j_start = loop_boundaries.member.team_rank() %
-                  loop_boundaries.member.vector_length();
-  iType j_end  = loop_boundaries.end;
-  iType j_step = loop_boundaries.member.vector_length();
-  if (j_start >= loop_boundaries.start) {
+  iType const j_start =
+      loop_boundaries.start + loop_boundaries.member.team_rank();
+  iType const j_end = loop_boundaries.end;
+  iType const j_step = loop_boundaries.member.team_size() *
+                       loop_boundaries.member.vector_length();
 #pragma acc loop seq
     for (iType j = j_start; j < j_end; j += j_step) {
       lambda(j);
     }
-  }
 }
 
 }  // namespace Kokkos
