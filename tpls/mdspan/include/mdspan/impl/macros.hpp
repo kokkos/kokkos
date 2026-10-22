@@ -7,52 +7,55 @@
 
 #include <cstdio>
 #include <cstdlib>
-#include <type_traits> // std::is_void
+#include <type_traits>  // std::is_void
 #if defined(MDSPAN_IMPL_HAS_SYCL)
-#include <sycl/sycl.hpp> // sycl::ext::oneapi::experimental::printf
+#include <sycl/sycl.hpp>  // sycl::ext::oneapi::experimental::printf
 #endif
-#if defined(MDSPAN_IMPL_HAS_CUDA) || defined(MDSPAN_IMPL_HAS_HIP) || defined(MDSPAN_IMPL_HAS_SYCL) || defined(MDSPAN_IMPL_HAS_OPENACC)
+#if defined(MDSPAN_IMPL_HAS_CUDA) || defined(MDSPAN_IMPL_HAS_HIP) || \
+    defined(MDSPAN_IMPL_HAS_SYCL) || defined(MDSPAN_IMPL_HAS_OPENACC)
 #include "assert.h"
 #endif
 
 #ifndef MDSPAN_IMPL_HOST_DEVICE
-#  if defined(MDSPAN_IMPL_HAS_CUDA) || defined(MDSPAN_IMPL_HAS_HIP)
-#    define MDSPAN_IMPL_HOST_DEVICE __host__ __device__
-#  else
-#    define MDSPAN_IMPL_HOST_DEVICE
-#  endif
+#if defined(MDSPAN_IMPL_HAS_CUDA) || defined(MDSPAN_IMPL_HAS_HIP)
+#define MDSPAN_IMPL_HOST_DEVICE __host__ __device__
+#else
+#define MDSPAN_IMPL_HOST_DEVICE
+#endif
 #endif
 
 #ifndef MDSPAN_FORCE_INLINE_FUNCTION
-#  ifdef MDSPAN_IMPL_COMPILER_MSVC // Microsoft compilers
-#    define MDSPAN_FORCE_INLINE_FUNCTION __forceinline MDSPAN_IMPL_HOST_DEVICE
-#  else
-#    define MDSPAN_FORCE_INLINE_FUNCTION __attribute__((always_inline)) MDSPAN_IMPL_HOST_DEVICE
-#  endif
+#ifdef MDSPAN_IMPL_COMPILER_MSVC  // Microsoft compilers
+#define MDSPAN_FORCE_INLINE_FUNCTION __forceinline MDSPAN_IMPL_HOST_DEVICE
+#else
+#define MDSPAN_FORCE_INLINE_FUNCTION \
+  __attribute__((always_inline)) MDSPAN_IMPL_HOST_DEVICE
+#endif
 #endif
 
 #ifndef MDSPAN_INLINE_FUNCTION
-#  define MDSPAN_INLINE_FUNCTION inline MDSPAN_IMPL_HOST_DEVICE
+#define MDSPAN_INLINE_FUNCTION inline MDSPAN_IMPL_HOST_DEVICE
 #endif
 
 #ifndef MDSPAN_FUNCTION
-#  define MDSPAN_FUNCTION MDSPAN_IMPL_HOST_DEVICE
+#define MDSPAN_FUNCTION MDSPAN_IMPL_HOST_DEVICE
 #endif
 
 #ifdef MDSPAN_IMPL_HAS_HIP
-#  define MDSPAN_DEDUCTION_GUIDE MDSPAN_IMPL_HOST_DEVICE
+#define MDSPAN_DEDUCTION_GUIDE MDSPAN_IMPL_HOST_DEVICE
 #else
-#  define MDSPAN_DEDUCTION_GUIDE
+#define MDSPAN_DEDUCTION_GUIDE
 #endif
 
 // In CUDA defaulted functions do not need host device markup
 #ifndef MDSPAN_INLINE_FUNCTION_DEFAULTED
-#  define MDSPAN_INLINE_FUNCTION_DEFAULTED
+#define MDSPAN_INLINE_FUNCTION_DEFAULTED
 #endif
 
 //==============================================================================
 // <editor-fold desc="Preprocessor helpers"> {{{1
 
+// clang-format off
 #define MDSPAN_PP_COUNT(...) \
   MDSPAN_IMPL_PP_INTERNAL_EXPAND_ARGS( \
     MDSPAN_IMPL_PP_INTERNAL_ARGS_AUGMENTER(__VA_ARGS__) \
@@ -95,79 +98,85 @@
 
 #define MDSPAN_IMPL_STANDARD_NAMESPACE_STRING MDSPAN_PP_STRINGIFY(MDSPAN_IMPL_STANDARD_NAMESPACE)
 #define MDSPAN_IMPL_PROPOSED_NAMESPACE_STRING MDSPAN_PP_STRINGIFY(MDSPAN_IMPL_STANDARD_NAMESPACE) "::" MDSPAN_PP_STRINGIFY(MDSPAN_IMPL_PROPOSED_NAMESPACE)
+// clang-format on
 
 namespace MDSPAN_IMPL_STANDARD_NAMESPACE {
 namespace detail {
 
 #if defined(MDSPAN_IMPL_HAS_CUDA) || defined(MDSPAN_IMPL_HAS_HIP)
-MDSPAN_FUNCTION inline void default_precondition_violation_handler(const char* cond, const char* file, unsigned line)
-{
+MDSPAN_FUNCTION inline void default_precondition_violation_handler(
+    const char* cond, const char* file, unsigned line) {
   ::printf("%s:%u: precondition failure: `%s`\n", file, line, cond);
   assert(0);
 }
 #elif defined(MDSPAN_IMPL_HAS_SYCL)
-MDSPAN_FUNCTION inline void default_precondition_violation_handler(const char* cond, const char* file, unsigned line)
-{
+MDSPAN_FUNCTION inline void default_precondition_violation_handler(
+    const char* cond, const char* file, unsigned line) {
 #ifdef __INTEL_LLVM_COMPILER
-  sycl::ext::oneapi::experimental::printf("%s:%u: precondition failure: `%s`\n", file, line, cond);
+  sycl::ext::oneapi::experimental::printf("%s:%u: precondition failure: `%s`\n",
+                                          file, line, cond);
 #else
-  (void) cond;
-  (void) file;
-  (void) line;
+  (void)cond;
+  (void)file;
+  (void)line;
 #endif
   assert(0);
 }
 #elif defined(MDSPAN_IMPL_HAS_OPENACC)
-MDSPAN_FUNCTION inline void default_precondition_violation_handler(const char* /* cond */, const char* /* file */, unsigned /* line */)
-{
+MDSPAN_FUNCTION inline void default_precondition_violation_handler(
+    const char* /* cond */, const char* /* file */, unsigned /* line */) {
   assert(false);
 }
 #else
-MDSPAN_FUNCTION inline void default_precondition_violation_handler(const char* cond, const char* file, unsigned line)
-{
+MDSPAN_FUNCTION inline void default_precondition_violation_handler(
+    const char* cond, const char* file, unsigned line) {
   std::fprintf(stderr, "%s:%u: precondition failure: `%s`\n", file, line, cond);
   std::abort();
 }
 #endif
 
-} // namespace detail
-} // namespace MDSPAN_IMPL_STANDARD_NAMESPACE
+}  // namespace detail
+}  // namespace MDSPAN_IMPL_STANDARD_NAMESPACE
 
 #ifndef MDSPAN_IMPL_PRECONDITION_VIOLATION_HANDLER
 #define MDSPAN_IMPL_PRECONDITION_VIOLATION_HANDLER(cond, file, line) \
-  MDSPAN_IMPL_STANDARD_NAMESPACE::detail::default_precondition_violation_handler(cond, file, line)
+  MDSPAN_IMPL_STANDARD_NAMESPACE::detail::                           \
+      default_precondition_violation_handler(cond, file, line)
 #endif
 
 #ifndef MDSPAN_IMPL_CHECK_PRECONDITION
-  #ifdef NDEBUG
-    #define MDSPAN_IMPL_CHECK_PRECONDITION 0
-  #else
-    #define MDSPAN_IMPL_CHECK_PRECONDITION 1
-  #endif
+#ifdef NDEBUG
+#define MDSPAN_IMPL_CHECK_PRECONDITION 0
+#else
+#define MDSPAN_IMPL_CHECK_PRECONDITION 1
+#endif
 #endif
 
 namespace MDSPAN_IMPL_STANDARD_NAMESPACE {
 namespace detail {
 
 template <bool check = MDSPAN_IMPL_CHECK_PRECONDITION>
-MDSPAN_FUNCTION constexpr void precondition(const char* cond, const char* file, unsigned line)
-{
-  if (!check) { return; }
+MDSPAN_FUNCTION constexpr void precondition(const char* cond, const char* file,
+                                            unsigned line) {
+  if (!check) {
+    return;
+  }
   // in case the macro doesn't use the arguments for custom macros
-  (void) cond;
-  (void) file;
-  (void) line;
+  (void)cond;
+  (void)file;
+  (void)line;
   MDSPAN_IMPL_PRECONDITION_VIOLATION_HANDLER(cond, file, line);
 }
 
-} // namespace detail
-} // namespace MDSPAN_IMPL_STANDARD_NAMESPACE
+}  // namespace detail
+}  // namespace MDSPAN_IMPL_STANDARD_NAMESPACE
 
-#define MDSPAN_IMPL_PRECONDITION(...) \
-  do { \
-    if (!(__VA_ARGS__)) { \
-      MDSPAN_IMPL_STANDARD_NAMESPACE::detail::precondition(#__VA_ARGS__, __FILE__, __LINE__); \
-    } \
+#define MDSPAN_IMPL_PRECONDITION(...)                       \
+  do {                                                      \
+    if (!(__VA_ARGS__)) {                                   \
+      MDSPAN_IMPL_STANDARD_NAMESPACE::detail::precondition( \
+          #__VA_ARGS__, __FILE__, __LINE__);                \
+    }                                                       \
   } while (0)
 
 // </editor-fold> end Preprocessor helpers }}}1
@@ -176,6 +185,7 @@ MDSPAN_FUNCTION constexpr void precondition(const char* cond, const char* file, 
 //==============================================================================
 // <editor-fold desc="Concept emulation"> {{{1
 
+// clang-format off
 // These compatibility macros don't help with partial ordering, but they should do the trick
 // for what we need to do with concepts in mdspan
 #ifdef MDSPAN_IMPL_USE_CONCEPTS
@@ -347,83 +357,85 @@ struct enable_fold_comma { };
 #  define MDSPAN_IMPL_FOLD_COMMA(...) ((__VA_ARGS__), ...)
 #else
 
+// clang-format on
+
 namespace MDSPAN_IMPL_STANDARD_NAMESPACE {
 
 namespace fold_compatibility_impl {
 
-// We could probably be more clever here, but at the (small) risk of losing some compiler understanding.  For the
-// few operations we need, it's not worth generalizing over the operation
+// We could probably be more clever here, but at the (small) risk of losing some
+// compiler understanding.  For the few operations we need, it's not worth
+// generalizing over the operation
 
 #if MDSPAN_IMPL_USE_RETURN_TYPE_DEDUCTION
 
 MDSPAN_FORCE_INLINE_FUNCTION
-constexpr decltype(auto) fold_right_and_impl() {
-  return true;
-}
+constexpr decltype(auto) fold_right_and_impl() { return true; }
 
 template <class Arg, class... Args>
-MDSPAN_FORCE_INLINE_FUNCTION
-constexpr decltype(auto) fold_right_and_impl(Arg&& arg, Args&&... args) {
-  return ((Arg&&)arg) && fold_compatibility_impl::fold_right_and_impl((Args&&)args...);
+MDSPAN_FORCE_INLINE_FUNCTION constexpr decltype(auto) fold_right_and_impl(
+    Arg&& arg, Args&&... args) {
+  return ((Arg&&)arg) &&
+         fold_compatibility_impl::fold_right_and_impl((Args&&)args...);
 }
 
 MDSPAN_FORCE_INLINE_FUNCTION
-constexpr decltype(auto) fold_right_or_impl() {
-  return false;
-}
+constexpr decltype(auto) fold_right_or_impl() { return false; }
 
 template <class Arg, class... Args>
-MDSPAN_FORCE_INLINE_FUNCTION
-constexpr auto fold_right_or_impl(Arg&& arg, Args&&... args) {
-  return ((Arg&&)arg) || fold_compatibility_impl::fold_right_or_impl((Args&&)args...);
+MDSPAN_FORCE_INLINE_FUNCTION constexpr auto fold_right_or_impl(Arg&& arg,
+                                                               Args&&... args) {
+  return ((Arg&&)arg) ||
+         fold_compatibility_impl::fold_right_or_impl((Args&&)args...);
 }
 
 template <class Arg1>
-MDSPAN_FORCE_INLINE_FUNCTION
-constexpr auto fold_left_assign_impl(Arg1&& arg1) {
+MDSPAN_FORCE_INLINE_FUNCTION constexpr auto fold_left_assign_impl(Arg1&& arg1) {
   return (Arg1&&)arg1;
 }
 
 template <class Arg1, class Arg2, class... Args>
-MDSPAN_FORCE_INLINE_FUNCTION
-constexpr auto fold_left_assign_impl(Arg1&& arg1, Arg2&& arg2, Args&&... args) {
-  return fold_compatibility_impl::fold_left_assign_impl((((Arg1&&)arg1) = ((Arg2&&)arg2)), (Args&&)args...);
+MDSPAN_FORCE_INLINE_FUNCTION constexpr auto fold_left_assign_impl(
+    Arg1&& arg1, Arg2&& arg2, Args&&... args) {
+  return fold_compatibility_impl::fold_left_assign_impl(
+      (((Arg1&&)arg1) = ((Arg2&&)arg2)), (Args&&)args...);
 }
 
 template <class Arg1>
-MDSPAN_FORCE_INLINE_FUNCTION
-constexpr auto fold_right_assign_impl(Arg1&& arg1) {
+MDSPAN_FORCE_INLINE_FUNCTION constexpr auto fold_right_assign_impl(
+    Arg1&& arg1) {
   return (Arg1&&)arg1;
 }
 
 template <class Arg1, class Arg2, class... Args>
-MDSPAN_FORCE_INLINE_FUNCTION
-constexpr auto fold_right_assign_impl(Arg1&& arg1, Arg2&& arg2,  Args&&... args) {
-  return ((Arg1&&)arg1) = fold_compatibility_impl::fold_right_assign_impl((Arg2&&)arg2, (Args&&)args...);
+MDSPAN_FORCE_INLINE_FUNCTION constexpr auto fold_right_assign_impl(
+    Arg1&& arg1, Arg2&& arg2, Args&&... args) {
+  return ((Arg1&&)arg1) = fold_compatibility_impl::fold_right_assign_impl(
+             (Arg2&&)arg2, (Args&&)args...);
 }
 
 template <class Arg1>
-MDSPAN_FORCE_INLINE_FUNCTION
-constexpr auto fold_right_plus_impl(Arg1&& arg1) {
+MDSPAN_FORCE_INLINE_FUNCTION constexpr auto fold_right_plus_impl(Arg1&& arg1) {
   return (Arg1&&)arg1;
 }
 
 template <class Arg1, class Arg2, class... Args>
-MDSPAN_FORCE_INLINE_FUNCTION
-constexpr auto fold_right_plus_impl(Arg1&& arg1, Arg2&& arg2, Args&&... args) {
-  return ((Arg1&&)arg1) + fold_compatibility_impl::fold_right_plus_impl((Arg2&&)arg2, (Args&&)args...);
+MDSPAN_FORCE_INLINE_FUNCTION constexpr auto fold_right_plus_impl(
+    Arg1&& arg1, Arg2&& arg2, Args&&... args) {
+  return ((Arg1&&)arg1) + fold_compatibility_impl::fold_right_plus_impl(
+                              (Arg2&&)arg2, (Args&&)args...);
 }
 
 template <class Arg1>
-MDSPAN_FORCE_INLINE_FUNCTION
-constexpr auto fold_right_times_impl(Arg1&& arg1) {
+MDSPAN_FORCE_INLINE_FUNCTION constexpr auto fold_right_times_impl(Arg1&& arg1) {
   return (Arg1&&)arg1;
 }
 
 template <class Arg1, class Arg2, class... Args>
-MDSPAN_FORCE_INLINE_FUNCTION
-constexpr auto fold_right_times_impl(Arg1&& arg1, Arg2&& arg2, Args&&... args) {
-  return ((Arg1&&)arg1) * fold_compatibility_impl::fold_right_times_impl((Arg2&&)arg2, (Args&&)args...);
+MDSPAN_FORCE_INLINE_FUNCTION constexpr auto fold_right_times_impl(
+    Arg1&& arg1, Arg2&& arg2, Args&&... args) {
+  return ((Arg1&&)arg1) * fold_compatibility_impl::fold_right_times_impl(
+                              (Arg2&&)arg2, (Args&&)args...);
 }
 
 #else
@@ -437,26 +449,23 @@ template <>
 struct fold_right_and_impl_<> {
   using rv = bool;
   MDSPAN_FORCE_INLINE_FUNCTION
-  static constexpr rv
-  impl() noexcept {
-    return true;
-  }
+  static constexpr rv impl() noexcept { return true; }
 };
 template <class Arg, class... Args>
 struct fold_right_and_impl_<Arg, Args...> {
   using next_t = fold_right_and_impl_<Args...>;
-  using rv = decltype(std::declval<Arg>() && std::declval<typename next_t::rv>());
+  using rv =
+      decltype(std::declval<Arg>() && std::declval<typename next_t::rv>());
   MDSPAN_FORCE_INLINE_FUNCTION
-  static constexpr rv
-  impl(Arg&& arg, Args&&... args) noexcept {
+  static constexpr rv impl(Arg&& arg, Args&&... args) noexcept {
     return ((Arg&&)arg) && next_t::impl((Args&&)args...);
   }
 };
 
 template <class... Args>
-MDSPAN_FORCE_INLINE_FUNCTION
-constexpr typename fold_right_and_impl_<Args...>::rv
-fold_right_and_impl(Args&&... args) {
+MDSPAN_FORCE_INLINE_FUNCTION constexpr
+    typename fold_right_and_impl_<Args...>::rv
+    fold_right_and_impl(Args&&... args) {
   return fold_right_and_impl_<Args...>::impl((Args&&)args...);
 }
 
@@ -472,25 +481,21 @@ template <>
 struct fold_right_or_impl_<> {
   using rv = bool;
   MDSPAN_FORCE_INLINE_FUNCTION
-  static constexpr rv
-  impl() noexcept {
-    return false;
-  }
+  static constexpr rv impl() noexcept { return false; }
 };
 template <class Arg, class... Args>
 struct fold_right_or_impl_<Arg, Args...> {
   using next_t = fold_right_or_impl_<Args...>;
-  using rv = decltype(std::declval<Arg>() || std::declval<typename next_t::rv>());
+  using rv =
+      decltype(std::declval<Arg>() || std::declval<typename next_t::rv>());
   MDSPAN_FORCE_INLINE_FUNCTION
-  static constexpr rv
-  impl(Arg&& arg, Args&&... args) noexcept {
+  static constexpr rv impl(Arg&& arg, Args&&... args) noexcept {
     return ((Arg&&)arg) || next_t::impl((Args&&)args...);
   }
 };
 
 template <class... Args>
-MDSPAN_FORCE_INLINE_FUNCTION
-constexpr typename fold_right_or_impl_<Args...>::rv
+MDSPAN_FORCE_INLINE_FUNCTION constexpr typename fold_right_or_impl_<Args...>::rv
 fold_right_or_impl(Args&&... args) {
   return fold_right_or_impl_<Args...>::impl((Args&&)args...);
 }
@@ -507,26 +512,23 @@ template <class Arg>
 struct fold_right_plus_impl_<Arg> {
   using rv = Arg&&;
   MDSPAN_FORCE_INLINE_FUNCTION
-  static constexpr rv
-  impl(Arg&& arg) noexcept {
-    return (Arg&&)arg;
-  }
+  static constexpr rv impl(Arg&& arg) noexcept { return (Arg&&)arg; }
 };
 template <class Arg1, class Arg2, class... Args>
 struct fold_right_plus_impl_<Arg1, Arg2, Args...> {
   using next_t = fold_right_plus_impl_<Arg2, Args...>;
-  using rv = decltype(std::declval<Arg1>() + std::declval<typename next_t::rv>());
+  using rv =
+      decltype(std::declval<Arg1>() + std::declval<typename next_t::rv>());
   MDSPAN_FORCE_INLINE_FUNCTION
-  static constexpr rv
-  impl(Arg1&& arg, Arg2&& arg2, Args&&... args) noexcept {
+  static constexpr rv impl(Arg1&& arg, Arg2&& arg2, Args&&... args) noexcept {
     return ((Arg1&&)arg) + next_t::impl((Arg2&&)arg2, (Args&&)args...);
   }
 };
 
 template <class... Args>
-MDSPAN_FORCE_INLINE_FUNCTION
-constexpr typename fold_right_plus_impl_<Args...>::rv
-fold_right_plus_impl(Args&&... args) {
+MDSPAN_FORCE_INLINE_FUNCTION constexpr
+    typename fold_right_plus_impl_<Args...>::rv
+    fold_right_plus_impl(Args&&... args) {
   return fold_right_plus_impl_<Args...>::impl((Args&&)args...);
 }
 
@@ -542,26 +544,23 @@ template <class Arg>
 struct fold_right_times_impl_<Arg> {
   using rv = Arg&&;
   MDSPAN_FORCE_INLINE_FUNCTION
-  static constexpr rv
-  impl(Arg&& arg) noexcept {
-    return (Arg&&)arg;
-  }
+  static constexpr rv impl(Arg&& arg) noexcept { return (Arg&&)arg; }
 };
 template <class Arg1, class Arg2, class... Args>
 struct fold_right_times_impl_<Arg1, Arg2, Args...> {
   using next_t = fold_right_times_impl_<Arg2, Args...>;
-  using rv = decltype(std::declval<Arg1>() * std::declval<typename next_t::rv>());
+  using rv =
+      decltype(std::declval<Arg1>() * std::declval<typename next_t::rv>());
   MDSPAN_FORCE_INLINE_FUNCTION
-  static constexpr rv
-  impl(Arg1&& arg, Arg2&& arg2, Args&&... args) noexcept {
+  static constexpr rv impl(Arg1&& arg, Arg2&& arg2, Args&&... args) noexcept {
     return ((Arg1&&)arg) * next_t::impl((Arg2&&)arg2, (Args&&)args...);
   }
 };
 
 template <class... Args>
-MDSPAN_FORCE_INLINE_FUNCTION
-constexpr typename fold_right_times_impl_<Args...>::rv
-fold_right_times_impl(Args&&... args) {
+MDSPAN_FORCE_INLINE_FUNCTION constexpr
+    typename fold_right_times_impl_<Args...>::rv
+    fold_right_times_impl(Args&&... args) {
   return fold_right_times_impl_<Args...>::impl((Args&&)args...);
 }
 
@@ -577,26 +576,23 @@ template <class Arg>
 struct fold_right_assign_impl_<Arg> {
   using rv = Arg&&;
   MDSPAN_FORCE_INLINE_FUNCTION
-  static constexpr rv
-  impl(Arg&& arg) noexcept {
-    return (Arg&&)arg;
-  }
+  static constexpr rv impl(Arg&& arg) noexcept { return (Arg&&)arg; }
 };
 template <class Arg1, class Arg2, class... Args>
 struct fold_right_assign_impl_<Arg1, Arg2, Args...> {
   using next_t = fold_right_assign_impl_<Arg2, Args...>;
-  using rv = decltype(std::declval<Arg1>() = std::declval<typename next_t::rv>());
+  using rv =
+      decltype(std::declval<Arg1>() = std::declval<typename next_t::rv>());
   MDSPAN_FORCE_INLINE_FUNCTION
-  static constexpr rv
-  impl(Arg1&& arg, Arg2&& arg2, Args&&... args) noexcept {
+  static constexpr rv impl(Arg1&& arg, Arg2&& arg2, Args&&... args) noexcept {
     return ((Arg1&&)arg) = next_t::impl((Arg2&&)arg2, (Args&&)args...);
   }
 };
 
 template <class... Args>
-MDSPAN_FORCE_INLINE_FUNCTION
-constexpr typename fold_right_assign_impl_<Args...>::rv
-fold_right_assign_impl(Args&&... args) {
+MDSPAN_FORCE_INLINE_FUNCTION constexpr
+    typename fold_right_assign_impl_<Args...>::rv
+    fold_right_assign_impl(Args&&... args) {
   return fold_right_assign_impl_<Args...>::impl((Args&&)args...);
 }
 
@@ -612,27 +608,23 @@ template <class Arg>
 struct fold_left_assign_impl_<Arg> {
   using rv = Arg&&;
   MDSPAN_FORCE_INLINE_FUNCTION
-  static constexpr rv
-  impl(Arg&& arg) noexcept {
-    return (Arg&&)arg;
-  }
+  static constexpr rv impl(Arg&& arg) noexcept { return (Arg&&)arg; }
 };
 template <class Arg1, class Arg2, class... Args>
 struct fold_left_assign_impl_<Arg1, Arg2, Args...> {
   using assign_result_t = decltype(std::declval<Arg1>() = std::declval<Arg2>());
-  using next_t = fold_left_assign_impl_<assign_result_t, Args...>;
-  using rv = typename next_t::rv;
+  using next_t          = fold_left_assign_impl_<assign_result_t, Args...>;
+  using rv              = typename next_t::rv;
   MDSPAN_FORCE_INLINE_FUNCTION
-  static constexpr rv
-  impl(Arg1&& arg, Arg2&& arg2, Args&&... args) noexcept {
+  static constexpr rv impl(Arg1&& arg, Arg2&& arg2, Args&&... args) noexcept {
     return next_t::impl(((Arg1&&)arg) = (Arg2&&)arg2, (Args&&)args...);
   }
 };
 
 template <class... Args>
-MDSPAN_FORCE_INLINE_FUNCTION
-constexpr typename fold_left_assign_impl_<Args...>::rv
-fold_left_assign_impl(Args&&... args) {
+MDSPAN_FORCE_INLINE_FUNCTION constexpr
+    typename fold_left_assign_impl_<Args...>::rv
+    fold_left_assign_impl(Args&&... args) {
   return fold_left_assign_impl_<Args...>::impl((Args&&)args...);
 }
 
@@ -641,27 +633,45 @@ fold_left_assign_impl(Args&&... args) {
 
 #endif
 
-
 template <class... Args>
-constexpr enable_fold_comma fold_comma_impl(Args&&...) noexcept { return { }; }
+constexpr enable_fold_comma fold_comma_impl(Args&&...) noexcept {
+  return {};
+}
 
 template <bool... Bs>
 struct fold_bools;
 
-} // fold_compatibility_impl
+}  // namespace fold_compatibility_impl
 
-} // end namespace MDSPAN_IMPL_STANDARD_NAMESPACE
+}  // end namespace MDSPAN_IMPL_STANDARD_NAMESPACE
 
-#  define MDSPAN_IMPL_FOLD_AND(...) MDSPAN_IMPL_STANDARD_NAMESPACE::fold_compatibility_impl::fold_right_and_impl((__VA_ARGS__)...)
-#  define MDSPAN_IMPL_FOLD_OR(...) MDSPAN_IMPL_STANDARD_NAMESPACE::fold_compatibility_impl::fold_right_or_impl((__VA_ARGS__)...)
-#  define MDSPAN_IMPL_FOLD_ASSIGN_LEFT(INIT, ...) MDSPAN_IMPL_STANDARD_NAMESPACE::fold_compatibility_impl::fold_left_assign_impl(INIT, (__VA_ARGS__)...)
-#  define MDSPAN_IMPL_FOLD_ASSIGN_RIGHT(PACK, ...) MDSPAN_IMPL_STANDARD_NAMESPACE::fold_compatibility_impl::fold_right_assign_impl((PACK)..., __VA_ARGS__)
-#  define MDSPAN_IMPL_FOLD_TIMES_RIGHT(PACK, ...) MDSPAN_IMPL_STANDARD_NAMESPACE::fold_compatibility_impl::fold_right_times_impl((PACK)..., __VA_ARGS__)
-#  define MDSPAN_IMPL_FOLD_PLUS_RIGHT(PACK, ...) MDSPAN_IMPL_STANDARD_NAMESPACE::fold_compatibility_impl::fold_right_plus_impl((PACK)..., __VA_ARGS__)
-#  define MDSPAN_IMPL_FOLD_COMMA(...) MDSPAN_IMPL_STANDARD_NAMESPACE::fold_compatibility_impl::fold_comma_impl((__VA_ARGS__)...)
+#define MDSPAN_IMPL_FOLD_AND(...)                           \
+  MDSPAN_IMPL_STANDARD_NAMESPACE::fold_compatibility_impl:: \
+      fold_right_and_impl((__VA_ARGS__)...)
+#define MDSPAN_IMPL_FOLD_OR(...)                                               \
+  MDSPAN_IMPL_STANDARD_NAMESPACE::fold_compatibility_impl::fold_right_or_impl( \
+      (__VA_ARGS__)...)
+#define MDSPAN_IMPL_FOLD_ASSIGN_LEFT(INIT, ...)             \
+  MDSPAN_IMPL_STANDARD_NAMESPACE::fold_compatibility_impl:: \
+      fold_left_assign_impl(INIT, (__VA_ARGS__)...)
+#define MDSPAN_IMPL_FOLD_ASSIGN_RIGHT(PACK, ...)            \
+  MDSPAN_IMPL_STANDARD_NAMESPACE::fold_compatibility_impl:: \
+      fold_right_assign_impl((PACK)..., __VA_ARGS__)
+#define MDSPAN_IMPL_FOLD_TIMES_RIGHT(PACK, ...)             \
+  MDSPAN_IMPL_STANDARD_NAMESPACE::fold_compatibility_impl:: \
+      fold_right_times_impl((PACK)..., __VA_ARGS__)
+#define MDSPAN_IMPL_FOLD_PLUS_RIGHT(PACK, ...)              \
+  MDSPAN_IMPL_STANDARD_NAMESPACE::fold_compatibility_impl:: \
+      fold_right_plus_impl((PACK)..., __VA_ARGS__)
+#define MDSPAN_IMPL_FOLD_COMMA(...)                                         \
+  MDSPAN_IMPL_STANDARD_NAMESPACE::fold_compatibility_impl::fold_comma_impl( \
+      (__VA_ARGS__)...)
 
-#  define MDSPAN_IMPL_FOLD_AND_TEMPLATE(...) \
-  MDSPAN_IMPL_TRAIT(std::is_same, fold_compatibility_impl::fold_bools<(__VA_ARGS__)..., true>, fold_compatibility_impl::fold_bools<true, (__VA_ARGS__)...>)
+#define MDSPAN_IMPL_FOLD_AND_TEMPLATE(...)                         \
+  MDSPAN_IMPL_TRAIT(                                               \
+      std::is_same,                                                \
+      fold_compatibility_impl::fold_bools<(__VA_ARGS__)..., true>, \
+      fold_compatibility_impl::fold_bools<true, (__VA_ARGS__)...>)
 
 #endif
 
@@ -672,9 +682,9 @@ struct fold_bools;
 // <editor-fold desc="Variable template compatibility"> {{{1
 
 #if MDSPAN_IMPL_USE_VARIABLE_TEMPLATES
-#  define MDSPAN_IMPL_TRAIT(TRAIT, ...) TRAIT##_v<__VA_ARGS__>
+#define MDSPAN_IMPL_TRAIT(TRAIT, ...) TRAIT##_v<__VA_ARGS__>
 #else
-#  define MDSPAN_IMPL_TRAIT(TRAIT, ...) TRAIT<__VA_ARGS__>::value
+#define MDSPAN_IMPL_TRAIT(TRAIT, ...) TRAIT<__VA_ARGS__>::value
 #endif
 
 // </editor-fold> end Variable template compatibility }}}1
@@ -684,23 +694,23 @@ struct fold_bools;
 // <editor-fold desc="Pre-C++14 constexpr"> {{{1
 
 #if MDSPAN_IMPL_USE_CONSTEXPR_14
-#  define MDSPAN_IMPL_CONSTEXPR_14 constexpr
+#define MDSPAN_IMPL_CONSTEXPR_14 constexpr
 // Workaround for a bug (I think?) in EDG frontends
-#  ifdef __EDG__
-#    define MDSPAN_IMPL_CONSTEXPR_14_DEFAULTED
-#  else
-#    define MDSPAN_IMPL_CONSTEXPR_14_DEFAULTED constexpr
-#  endif
+#ifdef __EDG__
+#define MDSPAN_IMPL_CONSTEXPR_14_DEFAULTED
 #else
-#  define MDSPAN_IMPL_CONSTEXPR_14
-#  define MDSPAN_IMPL_CONSTEXPR_14_DEFAULTED
+#define MDSPAN_IMPL_CONSTEXPR_14_DEFAULTED constexpr
+#endif
+#else
+#define MDSPAN_IMPL_CONSTEXPR_14
+#define MDSPAN_IMPL_CONSTEXPR_14_DEFAULTED
 #endif
 
 // </editor-fold> end Pre-C++14 constexpr }}}1
 //==============================================================================
 
 #if MDSPAN_IMPL_USE_IF_CONSTEXPR_17
-#  define MDSPAN_IMPL_IF_CONSTEXPR_17 constexpr
+#define MDSPAN_IMPL_IF_CONSTEXPR_17 constexpr
 #else
-#  define MDSPAN_IMPL_IF_CONSTEXPR_17
+#define MDSPAN_IMPL_IF_CONSTEXPR_17
 #endif

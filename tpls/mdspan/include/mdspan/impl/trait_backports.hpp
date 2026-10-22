@@ -8,7 +8,7 @@
 #include "config.hpp"
 
 #include <type_traits>
-#include <utility> // integer_sequence
+#include <utility>  // integer_sequence
 
 //==============================================================================
 // <editor-fold desc="Variable template trait backports (e.g., is_void_v)"> {{{1
@@ -18,8 +18,10 @@
 #if MDSPAN_IMPL_USE_VARIABLE_TEMPLATES
 namespace MDSPAN_IMPL_STANDARD_NAMESPACE {
 
-#define MDSPAN_IMPL_BACKPORT_TRAIT(TRAIT) \
-  template <class... Args> MDSPAN_IMPL_INLINE_VARIABLE constexpr auto TRAIT##_v = TRAIT<Args...>::value;
+#define MDSPAN_IMPL_BACKPORT_TRAIT(TRAIT)                \
+  template <class... Args>                               \
+  MDSPAN_IMPL_INLINE_VARIABLE constexpr auto TRAIT##_v = \
+      TRAIT<Args...>::value;
 
 MDSPAN_IMPL_BACKPORT_TRAIT(is_assignable)
 MDSPAN_IMPL_BACKPORT_TRAIT(is_constructible)
@@ -32,11 +34,11 @@ MDSPAN_IMPL_BACKPORT_TRAIT(is_void)
 
 #undef MDSPAN_IMPL_BACKPORT_TRAIT
 
-} // end namespace MDSPAN_IMPL_STANDARD_NAMESPACE
+}  // end namespace MDSPAN_IMPL_STANDARD_NAMESPACE
 
-#endif // MDSPAN_IMPL_USE_VARIABLE_TEMPLATES
+#endif  // MDSPAN_IMPL_USE_VARIABLE_TEMPLATES
 
-#endif // MDSPAN_IMPL_NEEDS_TRAIT_VARIABLE_TEMPLATE_BACKPORTS
+#endif  // MDSPAN_IMPL_NEEDS_TRAIT_VARIABLE_TEMPLATE_BACKPORTS
 
 // </editor-fold> end Variable template trait backports (e.g., is_void_v) }}}1
 //==============================================================================
@@ -44,7 +46,8 @@ MDSPAN_IMPL_BACKPORT_TRAIT(is_void)
 //==============================================================================
 // <editor-fold desc="integer sequence (ugh...)"> {{{1
 
-#if !defined(MDSPAN_IMPL_USE_INTEGER_SEQUENCE_14) || !MDSPAN_IMPL_USE_INTEGER_SEQUENCE_14
+#if !defined(MDSPAN_IMPL_USE_INTEGER_SEQUENCE_14) || \
+    !MDSPAN_IMPL_USE_INTEGER_SEQUENCE_14
 
 namespace MDSPAN_IMPL_STANDARD_NAMESPACE {
 
@@ -63,29 +66,29 @@ template <class T, T N, T I, class Result>
 struct __make_int_seq_impl;
 
 template <class T, T N, T... Vals>
-struct __make_int_seq_impl<T, N, N, integer_sequence<T, Vals...>>
-{
+struct __make_int_seq_impl<T, N, N, integer_sequence<T, Vals...>> {
   using type = integer_sequence<T, Vals...>;
 };
 
 template <class T, T N, T I, T... Vals>
-struct __make_int_seq_impl<
-  T, N, I, integer_sequence<T, Vals...>
-> : __make_int_seq_impl<T, N, I+1, integer_sequence<T, Vals..., I>>
-{ };
+struct __make_int_seq_impl<T, N, I, integer_sequence<T, Vals...>>
+    : __make_int_seq_impl<T, N, I + 1, integer_sequence<T, Vals..., I>> {};
 
-} // end namespace __detail
+}  // end namespace __detail
 
 template <class T, T N>
-using make_integer_sequence = typename __detail::__make_int_seq_impl<T, N, 0, integer_sequence<T>>::type;
+using make_integer_sequence =
+    typename __detail::__make_int_seq_impl<T, N, 0, integer_sequence<T>>::type;
 
 template <size_t N>
-using make_index_sequence = typename __detail::__make_int_seq_impl<size_t, N, 0, integer_sequence<size_t>>::type;
+using make_index_sequence =
+    typename __detail::__make_int_seq_impl<size_t, N, 0,
+                                           integer_sequence<size_t>>::type;
 
 template <class... T>
 using index_sequence_for = make_index_sequence<sizeof...(T)>;
 
-} // end namespace MDSPAN_IMPL_STANDARD_NAMESPACE
+}  // end namespace MDSPAN_IMPL_STANDARD_NAMESPACE
 
 #endif
 
@@ -95,26 +98,28 @@ using index_sequence_for = make_index_sequence<sizeof...(T)>;
 //==============================================================================
 // <editor-fold desc="standard trait aliases"> {{{1
 
-#if !defined(MDSPAN_IMPL_USE_STANDARD_TRAIT_ALIASES) || !MDSPAN_IMPL_USE_STANDARD_TRAIT_ALIASES
+#if !defined(MDSPAN_IMPL_USE_STANDARD_TRAIT_ALIASES) || \
+    !MDSPAN_IMPL_USE_STANDARD_TRAIT_ALIASES
 
 namespace MDSPAN_IMPL_STANDARD_NAMESPACE {
 
 #define MDSPAN_IMPL_BACKPORT_TRAIT_ALIAS(TRAIT) \
-  template <class... Args> using TRAIT##_t = typename TRAIT<Args...>::type;
+  template <class... Args>                      \
+  using TRAIT##_t = typename TRAIT<Args...>::type;
 
 MDSPAN_IMPL_BACKPORT_TRAIT_ALIAS(remove_cv)
 MDSPAN_IMPL_BACKPORT_TRAIT_ALIAS(remove_reference)
 
-template <bool _B, class T=void>
+template <bool _B, class T = void>
 using enable_if_t = typename enable_if<_B, T>::type;
 
 #undef MDSPAN_IMPL_BACKPORT_TRAIT_ALIAS
 
-} // end namespace MDSPAN_IMPL_STANDARD_NAMESPACE
+}  // end namespace MDSPAN_IMPL_STANDARD_NAMESPACE
 
 #endif
 
 // </editor-fold> end standard trait aliases }}}1
 //==============================================================================
 
-#endif //MDSPAN_INCLUDE_EXPERIMENTAL_BITS_TRAIT_BACKPORTS_HPP_
+#endif  // MDSPAN_INCLUDE_EXPERIMENTAL_BITS_TRAIT_BACKPORTS_HPP_

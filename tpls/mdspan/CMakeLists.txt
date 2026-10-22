@@ -182,9 +182,6 @@ endif()
 install(DIRECTORY include/mdspan DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 if (MDSPAN_INSTALL_STDMODE_HEADERS)
   install(DIRECTORY include/experimental DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-else()
-  install(DIRECTORY include/experimental DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-          REGEX "/mdspan$|/mdarray$" EXCLUDE)
 endif()
 
 include(CMakePackageConfigHelpers)
