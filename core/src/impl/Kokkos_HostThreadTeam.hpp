@@ -720,6 +720,25 @@ ThreadVectorRange(
       member, iType(arg_begin), iType(arg_end));
 }
 
+KOKKOS_DEPRECATED_WITH_COMMENT("Do not take indices by non-const reference")
+KOKKOS_INLINE_FUNCTION
+void warn_deprecated_non_const_ref_index() { printf("Invalid\n"); }
+
+template <typename iType, class Closure, class Handle>
+concept invocable_handle_functor =
+    requires(const Handle& handle, const Closure& closure, iType i) {
+      !std::is_invocable_v<Closure, Handle const&, const iType&>;
+      !std::is_invocable_v<Closure, Handle const&, iType>;
+      closure(handle, i);
+    };
+
+template <typename iType, class Closure>
+concept invocable_functor = requires(const Closure& closure, iType i) {
+  !std::is_invocable_v<Closure, const iType&>;
+  !std::is_invocable_v<Closure, iType>;
+  closure(i);
+};
+
 //----------------------------------------------------------------------------
 /** \brief  Inter-thread parallel_for.
  *
@@ -742,6 +761,14 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
     } else if constexpr (std::is_invocable_v<Closure, thread_handle_t const&,
                                              iType>) {
       closure(thread_handle_t(loop_boundaries.member), i);
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
+    } else if constexpr (invocable_functor<iType, Closure>) {
+      warn_deprecated_non_const_ref_index();
+      closure(i);
+    } else if constexpr (invocable_handle_functor<iType, Closure,
+                                                  thread_handle_t>) {
+      closure(thread_handle_t(loop_boundaries.member), i);
+#endif
     } else {
       static_assert(Kokkos::Impl::always_false<Closure>::value,
                     "Kokkos::parallel_for(TeamThreadRange) closure must be "
