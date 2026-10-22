@@ -7,7 +7,13 @@ import kokkos.core;
 #else
 #include <Kokkos_Core.hpp>
 #endif
+#ifdef KOKKOS_IMPL_HAVE_CXX20_GRAPH_MODULES
+import kokkos.graph;
+import kokkos.graph_impl;
+#else
 #include <Kokkos_Graph.hpp>
+#endif
+#include <Kokkos_Assert.hpp>
 
 #include <gtest/gtest.h>
 

@@ -153,22 +153,19 @@ using DefaultHostExecutionSpace KOKKOS_IMPL_DEFAULT_HOST_EXEC_SPACE_ANNOTATION =
 using DefaultHostMemorySpace = HostSpace;
 
 // check for devices that support SharedSpace
+// KOKKOS_HAS_SHARED_SPACE and KOKKOS_HAS_SHARED_HOST_PINNED_SPACE are defined
+// in Kokkos_Macros.hpp so that these macros can be used in C++20 modules builds
 #if defined(KOKKOS_ENABLE_CUDA)
 using SharedSpace = CudaUVMSpace;
-#define KOKKOS_HAS_SHARED_SPACE
 #elif defined(KOKKOS_ENABLE_HIP)
 using SharedSpace = HIPManagedSpace;
-#define KOKKOS_HAS_SHARED_SPACE
 #elif defined(KOKKOS_ENABLE_SYCL)
 using SharedSpace               = SYCLSharedUSMSpace;
-#define KOKKOS_HAS_SHARED_SPACE
 #elif defined(KOKKOS_ENABLE_NEXTSILICON)
 using SharedSpace = Experimental::NextSiliconSharedSpace;
-#define KOKKOS_HAS_SHARED_SPACE
 // if only host compile point to HostSpace
 #elif !defined(KOKKOS_ENABLE_OPENACC)
 using SharedSpace = HostSpace;
-#define KOKKOS_HAS_SHARED_SPACE
 #endif
 
 inline constexpr bool has_shared_space =
@@ -180,16 +177,12 @@ inline constexpr bool has_shared_space =
 
 #if defined(KOKKOS_ENABLE_CUDA)
 using SharedHostPinnedSpace = CudaHostPinnedSpace;
-#define KOKKOS_HAS_SHARED_HOST_PINNED_SPACE
 #elif defined(KOKKOS_ENABLE_HIP)
 using SharedHostPinnedSpace = HIPHostPinnedSpace;
-#define KOKKOS_HAS_SHARED_HOST_PINNED_SPACE
 #elif defined(KOKKOS_ENABLE_SYCL)
     using SharedHostPinnedSpace = SYCLHostUSMSpace;
-#define KOKKOS_HAS_SHARED_HOST_PINNED_SPACE
 #elif !defined(KOKKOS_ENABLE_OPENACC) && !defined(KOKKOS_ENABLE_NEXTSILICON)
     using SharedHostPinnedSpace = HostSpace;
-#define KOKKOS_HAS_SHARED_HOST_PINNED_SPACE
 #endif
 
 inline constexpr bool has_shared_host_pinned_space =

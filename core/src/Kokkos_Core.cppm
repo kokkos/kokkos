@@ -193,6 +193,7 @@ export {
   using ::Kokkos::Experimental::prefer;
   using ::Kokkos::Experimental::require;
   using ::Kokkos::Experimental::StaticBatchSize;
+  using ::Kokkos::Experimental::ThreadHandle;
   using ::Kokkos::Experimental::WorkItemProperty;
   }  // namespace Experimental
 
@@ -911,8 +912,8 @@ export {
   using ::Kokkos::mdspan_non_standard;
   using ::Kokkos::mdspan_non_standard_tag;
   using ::Kokkos::range_slice;
+  using ::Kokkos::subextents;
   using ::Kokkos::submdspan;
-  using ::Kokkos::submdspan_extents;
   using ::Kokkos::submdspan_mapping_result;
 
   // UniqueToken
