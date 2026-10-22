@@ -745,7 +745,249 @@ TEST(TEST_CATEGORY, int_combined_reduce_mixed) {
     Kokkos::deep_copy(result3, result3_v);
     ASSERT_EQ(int64_t(nsum), result3);
   }
+#ifdef KOKKOS_HAS_SHARED_SPACE
+  {
+    auto result1_v  = Kokkos::View<int64_t, Kokkos::SharedSpace>{"result1_v"};
+    int64_t result2 = 0;
+    auto result3_v  = Kokkos::View<int64_t, Kokkos::SharedSpace>{"result3_v"};
+    Kokkos::parallel_reduce(
+        "int_combined-reduce_mixed", Kokkos::RangePolicy<TEST_EXECSPACE>(0, nw),
+        functor_type(nw), result1_v, result2,
+        Kokkos::Sum<int64_t, Kokkos::SharedSpace>{result3_v});
+    Kokkos::fence();
+    ASSERT_EQ(int64_t(nw), result1_v());
+    ASSERT_EQ(int64_t(nsum), result2);
+    ASSERT_EQ(int64_t(nsum), result3_v());
+  }
+#endif
 }
+#endif
+
+#if defined(KOKKOS_HAS_SHARED_SPACE) || \
+    defined(KOKKOS_HAS_SHARED_HOST_PINNED_SPACE)
+// Results are views in a space accessible from both host and device.
+struct SumIndicesFunctor {
+  KOKKOS_FUNCTION void operator()(const int i, int64_t& update) const {
+    update += i;
+  }
+};
+
+struct MaxIndexFunctor {
+  KOKKOS_FUNCTION void operator()(const int i, int64_t& update) const {
+    if (i > update) update = i;
+  }
+};
+
+struct SumIndices2DFunctor {
+  KOKKOS_FUNCTION void operator()(const int i, const int j,
+                                  int64_t& update) const {
+    update += i + j;
+  }
+};
+
+struct SumLeagueRanksFunctor {
+  using team_member = typename Kokkos::TeamPolicy<TEST_EXECSPACE>::member_type;
+  KOKKOS_FUNCTION void operator()(const team_member& team,
+                                  int64_t& update) const {
+    update += team.league_rank();
+  }
+};
+
+template <class MemorySpace>
+void test_reduce_into_view_range_policy() {
+  constexpr int N              = 1000;
+  constexpr int64_t sum_of_all = int64_t(N) * (N - 1) / 2;
+
+  Kokkos::View<int64_t, MemorySpace> result("result");
+
+  // The reduction must overwrite the previous content of the result.
+  result() = -1;
+  Kokkos::parallel_reduce("range_policy",
+                          Kokkos::RangePolicy<TEST_EXECSPACE>(0, N),
+                          SumIndicesFunctor{}, result);
+  Kokkos::fence();
+  ASSERT_EQ(result(), sum_of_all);
+
+  // Empty range yields the identity.
+  result() = -1;
+  Kokkos::parallel_reduce("range_policy_empty",
+                          Kokkos::RangePolicy<TEST_EXECSPACE>(0, 0),
+                          SumIndicesFunctor{}, result);
+  Kokkos::fence();
+  ASSERT_EQ(result(), 0);
+
+  // Unmanaged view of the same allocation.
+  Kokkos::View<int64_t, MemorySpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+      result_um(result.data());
+  result() = -1;
+  Kokkos::parallel_reduce("range_policy_unmanaged",
+                          Kokkos::RangePolicy<TEST_EXECSPACE>(0, N),
+                          SumIndicesFunctor{}, result_um);
+  Kokkos::fence();
+  ASSERT_EQ(result(), sum_of_all);
+
+  // Execution space instance overload.
+  TEST_EXECSPACE exec;
+  result() = -1;
+  Kokkos::parallel_reduce("range_policy_instance",
+                          Kokkos::RangePolicy(exec, 0, N), SumIndicesFunctor{},
+                          result);
+  exec.fence();
+  ASSERT_EQ(result(), sum_of_all);
+}
+
+template <class MemorySpace>
+void test_reduce_into_view_reducers() {
+  constexpr int N              = 1000;
+  constexpr int64_t sum_of_all = int64_t(N) * (N - 1) / 2;
+
+  Kokkos::View<int64_t, MemorySpace> result("result");
+
+  result() = -1;
+  Kokkos::parallel_reduce("sum_reducer",
+                          Kokkos::RangePolicy<TEST_EXECSPACE>(0, N),
+                          SumIndicesFunctor{},
+                          Kokkos::Sum<int64_t, MemorySpace>(result));
+  Kokkos::fence();
+  ASSERT_EQ(result(), sum_of_all);
+
+  result() = -1;
+  Kokkos::parallel_reduce("max_reducer",
+                          Kokkos::RangePolicy<TEST_EXECSPACE>(0, N),
+                          MaxIndexFunctor{},
+                          Kokkos::Max<int64_t, MemorySpace>(result));
+  Kokkos::fence();
+  ASSERT_EQ(result(), N - 1);
+}
+
+template <class MemorySpace>
+void test_reduce_into_view_mdrange_policy() {
+  constexpr int N0 = 40;
+  constexpr int N1 = 25;
+  constexpr int64_t expected =
+      int64_t(N1) * (N0 * (N0 - 1) / 2) + int64_t(N0) * (N1 * (N1 - 1) / 2);
+
+  Kokkos::View<int64_t, MemorySpace> result("result");
+  result() = -1;
+  Kokkos::parallel_reduce(
+      "mdrange_policy",
+      Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>({0, 0}, {N0, N1}),
+      SumIndices2DFunctor{}, result);
+  Kokkos::fence();
+  ASSERT_EQ(result(), expected);
+}
+
+template <class MemorySpace>
+void test_reduce_into_view_team_policy() {
+  constexpr int league_size = 100;
+  constexpr int64_t expected = int64_t(league_size) * (league_size - 1) / 2;
+
+  Kokkos::View<int64_t, MemorySpace> result("result");
+  result() = -1;
+  Kokkos::parallel_reduce(
+      "team_policy", Kokkos::TeamPolicy<TEST_EXECSPACE>(league_size, 1),
+      SumLeagueRanksFunctor{}, result);
+  Kokkos::fence();
+  ASSERT_EQ(result(), expected);
+}
+
+// FIXME_OPENACC: Not yet implemented.
+#ifndef KOKKOS_ENABLE_OPENACC
+template <class MemorySpace>
+void test_reduce_into_view_runtime_array() {
+  using functor_type = Test::RuntimeReduceFunctor<int64_t, TEST_EXECSPACE>;
+
+  constexpr uint64_t nw   = 1000;
+  constexpr uint64_t nsum = (nw / 2) * (nw + 1);
+
+  for (unsigned count = 1; count < 8; ++count) {
+    Kokkos::View<int64_t*, MemorySpace> result("result", count);
+    for (unsigned j = 0; j < count; ++j) result(j) = -1;
+
+    Kokkos::parallel_reduce("runtime_array", nw, functor_type(nw, count),
+                            result);
+    Kokkos::fence();
+
+    for (unsigned j = 0; j < count; ++j) {
+      const uint64_t correct = 0 == j % 3 ? nw : nsum;
+      ASSERT_EQ(result(j), int64_t(correct)) << "count: " << count;
+    }
+  }
+}
+
+template <class MemorySpace>
+void test_reduce_into_view_with_final() {
+  using functor_type = Test::ReduceFunctorFinal<TEST_EXECSPACE>;
+  using value_type   = typename functor_type::value_type;
+
+  constexpr uint64_t nw   = 1000;
+  constexpr uint64_t nsum = (nw / 2) * (nw + 1);
+
+  Kokkos::View<value_type, MemorySpace> result("result");
+  Kokkos::parallel_reduce("with_final", nw, functor_type(nw), result);
+  Kokkos::fence();
+
+  ASSERT_EQ(-result().value[0], int64_t(nw));
+  ASSERT_EQ(-result().value[1], int64_t(nsum));
+  ASSERT_EQ(-result().value[2], int64_t(nsum));
+}
+#endif
+#endif
+
+#ifdef KOKKOS_HAS_SHARED_SPACE
+TEST(TEST_CATEGORY, reduce_into_shared_space_view_range_policy) {
+  test_reduce_into_view_range_policy<Kokkos::SharedSpace>();
+}
+
+TEST(TEST_CATEGORY, reduce_into_shared_space_view_reducers) {
+  test_reduce_into_view_reducers<Kokkos::SharedSpace>();
+}
+
+TEST(TEST_CATEGORY, reduce_into_shared_space_view_mdrange_policy) {
+  test_reduce_into_view_mdrange_policy<Kokkos::SharedSpace>();
+}
+
+TEST(TEST_CATEGORY, reduce_into_shared_space_view_team_policy) {
+  test_reduce_into_view_team_policy<Kokkos::SharedSpace>();
+}
+
+#ifndef KOKKOS_ENABLE_OPENACC
+TEST(TEST_CATEGORY, reduce_into_shared_space_view_runtime_array) {
+  test_reduce_into_view_runtime_array<Kokkos::SharedSpace>();
+}
+
+TEST(TEST_CATEGORY, reduce_into_shared_space_view_with_final) {
+  test_reduce_into_view_with_final<Kokkos::SharedSpace>();
+}
+#endif
+#endif
+
+#ifdef KOKKOS_HAS_SHARED_HOST_PINNED_SPACE
+TEST(TEST_CATEGORY, reduce_into_shared_host_pinned_space_view_range_policy) {
+  test_reduce_into_view_range_policy<Kokkos::SharedHostPinnedSpace>();
+}
+
+TEST(TEST_CATEGORY, reduce_into_shared_host_pinned_space_view_reducers) {
+  test_reduce_into_view_reducers<Kokkos::SharedHostPinnedSpace>();
+}
+
+TEST(TEST_CATEGORY, reduce_into_shared_host_pinned_space_view_mdrange_policy) {
+  test_reduce_into_view_mdrange_policy<Kokkos::SharedHostPinnedSpace>();
+}
+
+TEST(TEST_CATEGORY, reduce_into_shared_host_pinned_space_view_team_policy) {
+  test_reduce_into_view_team_policy<Kokkos::SharedHostPinnedSpace>();
+}
+
+#ifndef KOKKOS_ENABLE_OPENACC
+TEST(TEST_CATEGORY, reduce_into_shared_host_pinned_space_view_runtime_array) {
+  test_reduce_into_view_runtime_array<Kokkos::SharedHostPinnedSpace>();
+}
+
+TEST(TEST_CATEGORY, reduce_into_shared_host_pinned_space_view_with_final) {
+  test_reduce_into_view_with_final<Kokkos::SharedHostPinnedSpace>();
+}
+#endif
 #endif
 
 #if defined(NDEBUG)
