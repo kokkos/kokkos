@@ -74,7 +74,7 @@ void HIP::impl_initialize(InitializationSettings const& settings) {
   if (Kokkos::show_warnings() &&
       (Impl::HIPInternal::m_deviceProp.integrated == 1) &&
       !Kokkos::Impl::xnack_environment_enabled()) {
-      std::cerr << R"warning(
+    std::cerr << R"warning(
 Kokkos::HIP::initialize WARNING: Could not determine that xnack is enabled.
                                  Integrated AMD GPUs may require HSA_XNACK=1
                                  to access host allocations from the device.
