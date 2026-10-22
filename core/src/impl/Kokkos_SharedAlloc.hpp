@@ -546,7 +546,7 @@ union SharedAllocationTracker {
   enum : uintptr_t { DO_NOT_DEREF_FLAG = 0x01ul };
 
   // The allocation record resides in Host memory space
-  uintptr_t m_record_bits = DO_NOT_DEREF_FLAG;
+  uintptr_t m_record_bits;
   Record* m_record;
 
  public:
@@ -631,9 +631,22 @@ union SharedAllocationTracker {
   // NOLINTNEXTLINE(bugprone-exception-escape)
   ~SharedAllocationTracker(){KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT}
 
-  SharedAllocationTracker() = default;
+  KOKKOS_FORCEINLINE_FUNCTION
+#if defined(KOKKOS_COMPILER_NVCC) || !defined(KOKKOS_COMPILER_GNU) || \
+    (KOKKOS_COMPILER_GNU < 1220) || (KOKKOS_COMPILER_GNU > 1250)
+      // FIXME_GCC: The ViewSupport test fails with gcc 12.2-12.5
+      // because this constructor is optimized out, which leads to a nullptr
+      // dereference. Removing the constexpr fixes the issue but nvcc complains,
+      // so we keep the constexpr but only when using anything other than those
+      // four faulty gcc versions.
+      constexpr
+#endif
+      SharedAllocationTracker()
+      : m_record_bits(DO_NOT_DEREF_FLAG) {
+  }
 
   // Move:
+
   KOKKOS_FORCEINLINE_FUNCTION
   SharedAllocationTracker(SharedAllocationTracker&& rhs) noexcept
       : m_record_bits(rhs.m_record_bits) {
