@@ -36,8 +36,10 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
   using reducer_type   = ReducerType;
   using size_type      = Kokkos::HIP::size_type;
   using index_type     = typename Policy::index_type;
-  // Conditionally set word_size_type to uint16_t or uint8_t if value_type is
+  // Conditionally set word_size_type to int16_t or int8_t if value_type is
   // smaller than 32 bits (width of Kokkos::HIP::size_type)
+  // so signed small-integral reductions preserve their sign semantics when
+  // values are copied/joined through scratch/global reduction buffers.
   // word_size_type is used to determine the word count, shared memory buffer
   // size, and global memory buffer size before the scan is performed.
   // Within the scan, the word count is recomputed based on word_size_type
@@ -50,7 +52,7 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
   // bytes.
   using word_size_type = std::conditional_t<
       sizeof(value_type) < sizeof(size_type),
-      std::conditional_t<sizeof(value_type) == 2, uint16_t, uint8_t>,
+      std::conditional_t<sizeof(value_type) == 2, int16_t, int8_t>,
       size_type>;
 
   // Algorithmic constraints: blockSize is a power of two AND blockDim.y ==
@@ -93,7 +95,7 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
   __device__ inline void run(SHMEMReductionTag) const {
     const ReducerType& reducer = m_functor_reducer.get_reducer();
     const integral_nonzero_constant<
-        size_type, ReducerType::static_value_size() / sizeof(word_size_type)>
+        word_size_type, ReducerType::static_value_size() / sizeof(word_size_type)>
         word_count(reducer.value_size() / sizeof(word_size_type));
 
     {
@@ -226,7 +228,7 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
                                  !m_result_ptr_host_accessible ||
                                  !std::is_same<ReducerType, InvalidType>::value;
     if ((nwork > 0) || need_device_set) {
-      const int block_size = local_block_size(m_functor_reducer.get_functor());
+      int block_size = local_block_size(m_functor_reducer.get_functor());
       if (block_size == 0) {
         const unsigned int shared_memory_required =
             hip_single_inter_block_reduce_scan_shmem<false, WorkTag,
@@ -243,6 +245,10 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
                         " bytes of shared memory per block but only " +
                         std::to_string(shared_memory_available) +
                         " bytes per block are available."));
+      }
+      if constexpr (std::is_integral_v<value_type> &&
+                    sizeof(value_type) == 1) {
+        block_size = 1;
       }
 
       // REQUIRED ( 1 , N , 1 )
@@ -292,6 +298,13 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
       // atomics in Kokkos_HIP_ReduceScan.hpp
       m_scratch_flags = ::Kokkos::Impl::hip_internal_scratch_flags(
           m_policy.space(), sizeof(size_type));
+      // Clear inter-block completion flags before launch because the scratch
+      // allocation is reused across kernels.
+      KOKKOS_IMPL_HIP_SAFE_CALL(
+          m_policy.space()
+              .impl_internal_space_instance()
+              ->hip_memset_async_wrapper(m_scratch_flags, 0,
+                                         sizeof(size_type)));
       dim3 grid(nblocks, 1, 1);
 
       if (nwork == 0) {

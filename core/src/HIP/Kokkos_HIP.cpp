@@ -72,8 +72,9 @@ void HIP::impl_initialize(InitializationSettings const& settings) {
   }
 #endif
 
-    if ((Impl::HIPInternal::m_deviceProp.integrated == 1) &&
-        !Kokkos::Impl::xnack_environment_enabled()) {
+  if (Kokkos::show_warnings() &&
+      (Impl::HIPInternal::m_deviceProp.integrated == 1) &&
+      !Kokkos::Impl::xnack_environment_enabled()) {
       std::cerr << R"warning(
 Kokkos::HIP::initialize WARNING: Could not determine that xnack is enabled.
                                  Integrated AMD GPUs may require HSA_XNACK=1
@@ -84,7 +85,6 @@ Kokkos::HIP::initialize WARNING: Could not determine that xnack is enabled.
                                  KOKKOS_PRINT_CONFIGURATION=1 in your
                                  environment.
 )warning";
-    }
   }
 
   // theoretically on GFX 9XX GPUs, we can get 40 WF's / CU, but only can
@@ -95,7 +95,7 @@ Kokkos::HIP::initialize WARNING: Could not determine that xnack is enabled.
   Impl::HIPInternal::m_maxThreadsPerSM =
       maxWavesPerCU * Impl::HIPTraits::WarpSize();
 
-  // Init the array for used for arbitrarily sized atomics
+  // Init the arrays used for arbitrarily sized atomics
   desul::Impl::init_lock_arrays();  // FIXME
 
   // Create the default instance.

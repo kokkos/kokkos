@@ -176,6 +176,30 @@ struct HIPReductionsFunctor<FunctorType, false> {
   __device__ static inline void scalar_intra_block_reduction(
       FunctorType const& functor, Scalar value, bool const skip, Scalar* result,
       int const /*shared_elements*/, Scalar* shared_team_buffer_element) {
+#if defined(KOKKOS_ARCH_AMD_GCNSPIRV)
+    // GCNSPIRV + bool: use a conservative shared-memory tree reduction.
+    // This avoids warp-structured bool combine behavior that has produced
+    // incorrect results on this target while keeping other scalar types on
+    // the existing fast path.
+    if constexpr (std::is_same_v<Scalar, bool>) {
+      const unsigned int idx         = threadIdx.y * blockDim.x + threadIdx.x;
+      const unsigned int num_threads = blockDim.x * blockDim.y;
+      Scalar* const scratch          = shared_team_buffer_element;
+      scratch[idx]                   = value;
+      __syncthreads();
+      for (unsigned int stride = num_threads / 2; stride > 0; stride >>= 1) {
+        if (idx < stride) {
+          functor.join(scratch + idx, scratch + idx + stride);
+        }
+        __syncthreads();
+      }
+      if (idx == 0u) {
+        *result = scratch[0];
+        if (skip) __threadfence();
+      }
+      return;
+    }
+#endif
     const unsigned int warp_size   = Impl::HIPTraits::WarpSize();
     unsigned int const warp_id     = (threadIdx.y * blockDim.x) / warp_size;
     const unsigned int num_threads = blockDim.x * blockDim.y;

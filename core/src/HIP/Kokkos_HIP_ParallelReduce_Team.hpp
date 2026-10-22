@@ -33,8 +33,10 @@ class ParallelReduce<CombinedFunctorReducerType,
 
  public:
   using functor_type = FunctorType;
-  // Conditionally set word_size_type to uint16_t or uint8_t if value_type is
+  // Conditionally set word_size_type to int16_t or int8_t if value_type is
   // smaller than 32 bits (width of Kokkos::HIP::size_type)
+  // so signed small-integral reductions preserve their sign semantics when
+  // values are copied/joined through scratch/global reduction buffers.
   // word_size_type is used to determine the word count, shared memory buffer
   // size, and global memory buffer size before the reduction is performed.
   // Within the reduction, the word count is recomputed based on word_size_type
@@ -47,7 +49,7 @@ class ParallelReduce<CombinedFunctorReducerType,
   // bytes.
   using word_size_type = std::conditional_t<
       sizeof(value_type) < sizeof(Kokkos::HIP::size_type),
-      std::conditional_t<sizeof(value_type) == 2, uint16_t, uint8_t>,
+      std::conditional_t<sizeof(value_type) == 2, int16_t, int8_t>,
       Kokkos::HIP::size_type>;
   using reducer_type = ReducerType;
   using size_type    = HIP::size_type;
@@ -265,6 +267,13 @@ class ParallelReduce<CombinedFunctorReducerType,
               m_policy.space(), reducer.value_size() * block_count));
       m_scratch_flags =
           hip_internal_scratch_flags(m_policy.space(), sizeof(size_type));
+      // Clear inter-block completion flags before launch because the scratch
+      // allocation is reused across kernels.
+      KOKKOS_IMPL_HIP_SAFE_CALL(
+          m_policy.space()
+              .impl_internal_space_instance()
+              ->hip_memset_async_wrapper(m_scratch_flags, 0,
+                                         sizeof(size_type)));
 
       dim3 block(m_vector_size, m_team_size, 1);
       dim3 grid(block_count, 1, 1);

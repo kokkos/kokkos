@@ -208,9 +208,16 @@ class ParallelScanHIPBase {
                 reinterpret_cast<pointer_type>(shared_prefix)),
             true);
       }
-      if (iwork + 1 == m_policy.end() && m_policy.end() == range.end() &&
-          m_result_ptr_device_accessible)
-        *m_result_ptr = *reinterpret_cast<pointer_type>(shared_prefix);
+      if (iwork + 1 == m_policy.end() && m_policy.end() == range.end()) {
+        auto const result =
+            *reinterpret_cast<pointer_type>(shared_prefix);
+        if (m_result_ptr_device_accessible) {
+          *m_result_ptr = result;
+        } else {
+          *reinterpret_cast<pointer_type>(
+              m_scratch_space + word_count.value * (gridDim.x - 1)) = result;
+        }
+      }
       // FIXME_HIP below __syncthreads() is moved from the beginning of this
       // loop to here to handle issues on MI300A. Likely compiler bug.
       __syncthreads();
@@ -229,10 +236,12 @@ class ParallelScanHIPBase {
   }
 
   inline void impl_execute(int block_size) {
-    // Use at least one work item for calculating launch parameters to handle
-    // empty ranges correctly.
-    const auto nwork =
-        std::max<index_type>(1, m_policy.end() - m_policy.begin());
+    const auto nwork = m_policy.end() - m_policy.begin();
+    // Empty range: skip launch entirely. This avoids constructing artificial
+    // launch geometry/work and touching shared scratch state for a no-op.
+    if (nwork == 0) {
+      return;
+    }
     // FIXME_HIP we cannot choose it larger for large work sizes to work
     // correctly, the unit tests fail with wrong results
     const int gridMaxComputeCapability_2x = 0x01fff;
@@ -258,6 +267,12 @@ class ParallelScanHIPBase {
             m_policy.space(), final_reducer.value_size() * m_grid_x));
     m_scratch_flags = Impl::hip_internal_scratch_flags(m_policy.space(),
                                                        sizeof(size_type) * 1);
+    // Clear inter-block completion flags before launch because the scratch
+    // allocation is reused across kernels.
+    KOKKOS_IMPL_HIP_SAFE_CALL(
+        m_policy.space()
+            .impl_internal_space_instance()
+            ->hip_memset_async_wrapper(m_scratch_flags, 0, sizeof(size_type)));
 
     dim3 grid(m_grid_x, 1, 1);
     dim3 block(1, block_size, 1);  // REQUIRED DIMENSIONS ( 1 , N , 1 )
@@ -301,6 +316,11 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, HIP>
       Kokkos::Impl::throw_runtime_exception(
           std::string("Kokkos::Impl::ParallelScan< HIP > could not find a "
                       "valid execution configuration."));
+    }
+
+    if (Base::m_policy.end() == Base::m_policy.begin()) {
+      // Empty range scan has no side effects and no total to publish.
+      return;
     }
 
     // Only let one instance at a time resize the instance's scratch memory
@@ -350,6 +370,21 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
       Kokkos::Impl::throw_runtime_exception(
           std::string("Kokkos::Impl::ParallelScan< HIP > could not find a "
                       "valid execution configuration."));
+    }
+
+    const auto nwork = Base::m_policy.end() - Base::m_policy.begin();
+    if (nwork == 0) {
+      // Empty range scan-with-total must still write a well-defined total.
+      // Use value-initialized identity and publish to host/device result.
+      typename Base::value_type result{};
+      if (Base::m_result_ptr_device_accessible) {
+        DeepCopy<HIPSpace, HostSpace, HIP>(Base::m_policy.space(),
+                                           Base::m_result_ptr, &result,
+                                           sizeof(typename Base::value_type));
+      } else {
+        *Base::m_result_ptr = result;
+      }
+      return;
     }
 
     // Only let one instance at a time resize the instance's scratch memory
