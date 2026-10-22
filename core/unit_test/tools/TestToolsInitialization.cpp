@@ -172,9 +172,17 @@ void test_tools_initialization_with_callbacks() {
             hold_result += i;
           }
         });
+#ifndef KOKKOS_ENABLE_OPENACC
     Kokkos::single(
         "single", Kokkos::SinglePolicy<Kokkos::DefaultExecutionSpace>(),
         KOKKOS_LAMBDA(int& res) { res *= 2; }, result);
+#else
+    // single returning a value is not available with the OpenACC backend
+    Kokkos::single("single",
+                   Kokkos::SinglePolicy<Kokkos::DefaultExecutionSpace>(),
+                   KOKKOS_LAMBDA(){});
+#endif
+
     Kokkos::Profiling::pushRegion("push_region");
     Kokkos::Profiling::popRegion();
     uint32_t sectionId;
