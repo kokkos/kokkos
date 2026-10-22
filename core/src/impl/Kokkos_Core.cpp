@@ -167,13 +167,13 @@ struct device_id_impl_result {
 
 device_id_impl_result device_id_impl() noexcept {
 #if defined(KOKKOS_ENABLE_CUDA)
-  return {Cuda().cuda_device(), true};
+  return {Kokkos::Cuda().cuda_device(), true};
 #elif defined(KOKKOS_ENABLE_HIP)
-  return {HIP().hip_device(), true};
+  return {Kokkos::HIP().hip_device(), true};
 #elif defined(KOKKOS_ENABLE_OPENACC)
-  return {Experimental::OpenACC().acc_device_number(), true};
+  return {Kokkos::Experimental::OpenACC().acc_device_number(), true};
 #elif defined(KOKKOS_ENABLE_SYCL)
-  return {Impl::SYCLInternal::m_syclDev, true};
+  return {Kokkos::Impl::SYCLInternal::m_syclDev, true};
 #else
   return {-1, false};
 #endif
@@ -189,7 +189,7 @@ std::vector<int> const& Kokkos::Impl::get_visible_devices() {
 // NOLINTNEXTLINE(bugprone-exception-escape)
 [[nodiscard]] int Kokkos::device_id() noexcept {
   auto result = device_id_impl();
-  if (! result.knowable) {
+  if (!result.knowable) {
     return result.device;
   }
   auto const& visible_devices = Impl::get_visible_devices();
