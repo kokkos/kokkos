@@ -844,18 +844,16 @@ void test_reduce_into_view_reducers() {
   Kokkos::View<int64_t, MemorySpace> result("result");
 
   result() = -1;
-  Kokkos::parallel_reduce("sum_reducer",
-                          Kokkos::RangePolicy<TEST_EXECSPACE>(0, N),
-                          SumIndicesFunctor{},
-                          Kokkos::Sum<int64_t, MemorySpace>(result));
+  Kokkos::parallel_reduce(
+      "sum_reducer", Kokkos::RangePolicy<TEST_EXECSPACE>(0, N),
+      SumIndicesFunctor{}, Kokkos::Sum<int64_t, MemorySpace>(result));
   Kokkos::fence();
   ASSERT_EQ(result(), sum_of_all);
 
   result() = -1;
-  Kokkos::parallel_reduce("max_reducer",
-                          Kokkos::RangePolicy<TEST_EXECSPACE>(0, N),
-                          MaxIndexFunctor{},
-                          Kokkos::Max<int64_t, MemorySpace>(result));
+  Kokkos::parallel_reduce(
+      "max_reducer", Kokkos::RangePolicy<TEST_EXECSPACE>(0, N),
+      MaxIndexFunctor{}, Kokkos::Max<int64_t, MemorySpace>(result));
   Kokkos::fence();
   ASSERT_EQ(result(), N - 1);
 }
@@ -879,14 +877,14 @@ void test_reduce_into_view_mdrange_policy() {
 
 template <class MemorySpace>
 void test_reduce_into_view_team_policy() {
-  constexpr int league_size = 100;
+  constexpr int league_size  = 100;
   constexpr int64_t expected = int64_t(league_size) * (league_size - 1) / 2;
 
   Kokkos::View<int64_t, MemorySpace> result("result");
   result() = -1;
-  Kokkos::parallel_reduce(
-      "team_policy", Kokkos::TeamPolicy<TEST_EXECSPACE>(league_size, 1),
-      SumLeagueRanksFunctor{}, result);
+  Kokkos::parallel_reduce("team_policy",
+                          Kokkos::TeamPolicy<TEST_EXECSPACE>(league_size, 1),
+                          SumLeagueRanksFunctor{}, result);
   Kokkos::fence();
   ASSERT_EQ(result(), expected);
 }
