@@ -752,11 +752,6 @@ struct simd_native_ops<double, simd_abi::avx2_fixed_size<4>, simd_device_tag> {
                                                 vector_type{})
   KOKKOS_SIMD_IMPL_DEFINE_MASKED_GATHER_FROM_FN_DEVICE(vector_type, unchecked,
                                                        vector_type{})
-
-  KOKKOS_SIMD_IMPL_DEFINE_GATHER_FROM_FN_DEVICE(
-      vector_type, partial, unchecked_gather_from(in, indices, flag))
-  KOKKOS_SIMD_IMPL_DEFINE_MASKED_GATHER_FROM_FN_DEVICE(
-      vector_type, partial, unchecked_gather_from(in, indices, mmask, flag))
 };
 
 template <>
@@ -827,11 +822,6 @@ struct simd_native_ops<float, simd_abi::avx2_fixed_size<4>, simd_device_tag> {
                                                 vector_type{})
   KOKKOS_SIMD_IMPL_DEFINE_MASKED_GATHER_FROM_FN_DEVICE(vector_type, unchecked,
                                                        vector_type{})
-
-  KOKKOS_SIMD_IMPL_DEFINE_GATHER_FROM_FN_DEVICE(
-      vector_type, partial, unchecked_gather_from(in, indices, flag))
-  KOKKOS_SIMD_IMPL_DEFINE_MASKED_GATHER_FROM_FN_DEVICE(
-      vector_type, partial, unchecked_gather_from(in, indices, mmask, flag))
 };
 
 template <>
@@ -902,11 +892,6 @@ struct simd_native_ops<float, simd_abi::avx2_fixed_size<8>, simd_device_tag> {
                                                 vector_type{})
   KOKKOS_SIMD_IMPL_DEFINE_MASKED_GATHER_FROM_FN_DEVICE(vector_type, unchecked,
                                                        vector_type{})
-
-  KOKKOS_SIMD_IMPL_DEFINE_GATHER_FROM_FN_DEVICE(
-      vector_type, partial, unchecked_gather_from(in, indices, flag))
-  KOKKOS_SIMD_IMPL_DEFINE_MASKED_GATHER_FROM_FN_DEVICE(
-      vector_type, partial, unchecked_gather_from(in, indices, mmask, flag))
 };
 
 template <>
@@ -983,11 +968,6 @@ struct simd_native_ops<std::int32_t, simd_abi::avx2_fixed_size<4>,
                                                 vector_type{})
   KOKKOS_SIMD_IMPL_DEFINE_MASKED_GATHER_FROM_FN_DEVICE(vector_type, unchecked,
                                                        vector_type{})
-
-  KOKKOS_SIMD_IMPL_DEFINE_GATHER_FROM_FN_DEVICE(
-      vector_type, partial, unchecked_gather_from(in, indices, flag))
-  KOKKOS_SIMD_IMPL_DEFINE_MASKED_GATHER_FROM_FN_DEVICE(
-      vector_type, partial, unchecked_gather_from(in, indices, mmask, flag))
 };
 
 template <>
@@ -1064,11 +1044,6 @@ struct simd_native_ops<std::int32_t, simd_abi::avx2_fixed_size<8>,
                                                 vector_type{})
   KOKKOS_SIMD_IMPL_DEFINE_MASKED_GATHER_FROM_FN_DEVICE(vector_type, unchecked,
                                                        vector_type{})
-
-  KOKKOS_SIMD_IMPL_DEFINE_GATHER_FROM_FN_DEVICE(
-      vector_type, partial, unchecked_gather_from(in, indices, flag))
-  KOKKOS_SIMD_IMPL_DEFINE_MASKED_GATHER_FROM_FN_DEVICE(
-      vector_type, partial, unchecked_gather_from(in, indices, mmask, flag))
 };
 
 template <>
@@ -1145,11 +1120,6 @@ struct simd_native_ops<std::int64_t, simd_abi::avx2_fixed_size<4>,
                                                 vector_type{})
   KOKKOS_SIMD_IMPL_DEFINE_MASKED_GATHER_FROM_FN_DEVICE(vector_type, unchecked,
                                                        vector_type{})
-
-  KOKKOS_SIMD_IMPL_DEFINE_GATHER_FROM_FN_DEVICE(
-      vector_type, partial, unchecked_gather_from(in, indices, flag))
-  KOKKOS_SIMD_IMPL_DEFINE_MASKED_GATHER_FROM_FN_DEVICE(
-      vector_type, partial, unchecked_gather_from(in, indices, mmask, flag))
 };
 
 template <>
@@ -1227,11 +1197,6 @@ struct simd_native_ops<std::uint64_t, simd_abi::avx2_fixed_size<4>,
                                                 vector_type{})
   KOKKOS_SIMD_IMPL_DEFINE_MASKED_GATHER_FROM_FN_DEVICE(vector_type, unchecked,
                                                        vector_type{})
-
-  KOKKOS_SIMD_IMPL_DEFINE_GATHER_FROM_FN_DEVICE(
-      vector_type, partial, unchecked_gather_from(in, indices, flag))
-  KOKKOS_SIMD_IMPL_DEFINE_MASKED_GATHER_FROM_FN_DEVICE(
-      vector_type, partial, unchecked_gather_from(in, indices, mmask, flag))
 };
 
 KOKKOS_SIMD_IMPL_DEFINE_CONVERSION_FALLBACK_DEFN_DEVICE(
@@ -1372,12 +1337,6 @@ struct simd_native_ops<double, simd_abi::avx2_fixed_size<4>, simd_host_tag> {
       vector_type, unchecked,
       _mm256_mask_i32gather_pd(_mm256_set1_pd(value_type{}), Ranges::data(in),
                                indices, mmask, 8))
-
-  KOKKOS_SIMD_IMPL_DEFINE_GATHER_FROM_FN_HOST(vector_type, partial,
-                                              unchecked_gather_from(in, indices,
-                                                                    flag))
-  KOKKOS_SIMD_IMPL_DEFINE_MASKED_GATHER_FROM_FN_HOST(
-      vector_type, partial, unchecked_gather_from(in, indices, mmask, flag))
 };
 
 template <>
@@ -1500,12 +1459,6 @@ struct simd_native_ops<float, simd_abi::avx2_fixed_size<4>, simd_host_tag> {
       vector_type, unchecked,
       _mm_mask_i32gather_ps(_mm_set1_ps(value_type{}), Ranges::data(in),
                             indices, mmask, 4))
-
-  KOKKOS_SIMD_IMPL_DEFINE_GATHER_FROM_FN_HOST(vector_type, partial,
-                                              unchecked_gather_from(in, indices,
-                                                                    flag))
-  KOKKOS_SIMD_IMPL_DEFINE_MASKED_GATHER_FROM_FN_HOST(
-      vector_type, partial, unchecked_gather_from(in, indices, mmask, flag))
 };
 
 template <>
@@ -1631,12 +1584,6 @@ struct simd_native_ops<float, simd_abi::avx2_fixed_size<8>, simd_host_tag> {
       vector_type, unchecked,
       _mm256_mask_i32gather_ps(_mm256_set1_ps(value_type{}), Ranges::data(in),
                                indices, mmask, 4))
-
-  KOKKOS_SIMD_IMPL_DEFINE_GATHER_FROM_FN_HOST(vector_type, partial,
-                                              unchecked_gather_from(in, indices,
-                                                                    flag))
-  KOKKOS_SIMD_IMPL_DEFINE_MASKED_GATHER_FROM_FN_HOST(
-      vector_type, partial, unchecked_gather_from(in, indices, mmask, flag))
 };
 
 template <>
@@ -1778,12 +1725,6 @@ struct simd_native_ops<std::int32_t, simd_abi::avx2_fixed_size<4>,
       vector_type, unchecked,
       _mm_mask_i32gather_epi32(_mm_set1_epi32(value_type{}), Ranges::data(in),
                                indices, mmask, 4))
-
-  KOKKOS_SIMD_IMPL_DEFINE_GATHER_FROM_FN_HOST(vector_type, partial,
-                                              unchecked_gather_from(in, indices,
-                                                                    flag))
-  KOKKOS_SIMD_IMPL_DEFINE_MASKED_GATHER_FROM_FN_HOST(
-      vector_type, partial, unchecked_gather_from(in, indices, mmask, flag))
 };
 
 template <>
@@ -1927,12 +1868,6 @@ struct simd_native_ops<std::int32_t, simd_abi::avx2_fixed_size<8>,
       vector_type, unchecked,
       _mm256_mask_i32gather_epi32(_mm256_set1_epi32(value_type{}),
                                   Ranges::data(in), indices, mmask, 4))
-
-  KOKKOS_SIMD_IMPL_DEFINE_GATHER_FROM_FN_HOST(vector_type, partial,
-                                              unchecked_gather_from(in, indices,
-                                                                    flag))
-  KOKKOS_SIMD_IMPL_DEFINE_MASKED_GATHER_FROM_FN_HOST(
-      vector_type, partial, unchecked_gather_from(in, indices, mmask, flag))
 };
 
 template <>
@@ -2115,12 +2050,6 @@ struct simd_native_ops<std::int64_t, simd_abi::avx2_fixed_size<4>,
           _mm256_set1_epi64x(value_type{}),
           reinterpret_cast<long long const*>(Ranges::data(in)), indices, mmask,
           8))
-
-  KOKKOS_SIMD_IMPL_DEFINE_GATHER_FROM_FN_HOST(vector_type, partial,
-                                              unchecked_gather_from(in, indices,
-                                                                    flag))
-  KOKKOS_SIMD_IMPL_DEFINE_MASKED_GATHER_FROM_FN_HOST(
-      vector_type, partial, unchecked_gather_from(in, indices, mmask, flag))
 };
 
 template <>
@@ -2306,12 +2235,6 @@ struct simd_native_ops<std::uint64_t, simd_abi::avx2_fixed_size<4>,
           _mm256_set1_epi64x(value_type{}),
           reinterpret_cast<long long const*>(Ranges::data(in)), indices, mmask,
           8))
-
-  KOKKOS_SIMD_IMPL_DEFINE_GATHER_FROM_FN_HOST(vector_type, partial,
-                                              unchecked_gather_from(in, indices,
-                                                                    flag))
-  KOKKOS_SIMD_IMPL_DEFINE_MASKED_GATHER_FROM_FN_HOST(
-      vector_type, partial, unchecked_gather_from(in, indices, mmask, flag))
 };
 
 KOKKOS_SIMD_IMPL_DEFINE_CONVERSION_FALLBACK_DEFN_HOST(
