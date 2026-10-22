@@ -12,8 +12,6 @@ static_assert(false,
 #include <Kokkos_Macros.hpp>
 #include <desul/atomics.hpp>
 
-#include <impl/Kokkos_Volatile_Load.hpp>
-
 #include <type_traits>
 
 namespace Kokkos {
