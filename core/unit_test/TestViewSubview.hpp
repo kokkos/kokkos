@@ -1224,6 +1224,8 @@ void test_1d_assign_impl() {
     // Kokkos::View< int[N1] > afail2( a1 );
   }
 
+// FIXME_GCC Kokkos::Impl::SharedAllocationTracker::m_record_bits may be used
+// uninitialized
 #if defined(KOKKOS_COMPILER_GNU) && KOKKOS_COMPILER_GNU >= 1600
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
