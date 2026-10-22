@@ -14,7 +14,6 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #include <desul/atomics/Common.hpp>
 #include <desul/atomics/Lock_Free_Types_OpenACC.hpp>
 #include <desul/atomics/Thread_Fence_OpenACC.hpp>
-#include <type_traits>
 
 namespace desul {
 namespace Impl {
