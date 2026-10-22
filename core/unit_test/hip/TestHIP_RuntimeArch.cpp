@@ -11,12 +11,12 @@ import kokkos.core;
 
 #include <HIP/Kokkos_HIP_Instance.hpp>
 
-namespace Test {
+namespace {
 
 TEST(hip, runtime_arch_traits) {
   auto const wavefront_size = Kokkos::HIP::hip_device_prop().warpSize;
   ASSERT_TRUE(wavefront_size == 32 || wavefront_size == 64);
-  ASSERT_EQ(Kokkos::Impl::HIPTraits::host_warp_size(), wavefront_size);
+  ASSERT_EQ(Kokkos::Impl::HIPTraits::WarpSize(), wavefront_size);
 }
 
-}  // namespace Test
+}  // namespace

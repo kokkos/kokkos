@@ -85,12 +85,17 @@ bool gpu_arch_can_access_system_allocations(int device_id) {
   hipDeviceProp_t props;
   KOKKOS_IMPL_HIP_SAFE_CALL(hipGetDeviceProperties(&props, device_id));
 
+  // Prefer HIP runtime capability properties when available.
+  if (props.pageableMemoryAccess != 0) return true;
+  if (props.managedMemory == 0) return false;
+
   std::string_view const arch_name = props.gcnArchName;
   auto has_prefix                  = [&](std::string_view const prefix) {
     return arch_name.starts_with(prefix);
   };
 
-  // Supported per ROCm/HIP documentation.
+  // Fallback to architecture-based checks for runtimes where the capability
+  // properties are not sufficient for this decision.
   if (has_prefix("gfx908") || has_prefix("gfx90a") || has_prefix("gfx942") ||
       has_prefix("gfx950"))
     return true;

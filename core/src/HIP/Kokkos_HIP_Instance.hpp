@@ -20,12 +20,14 @@
 namespace Kokkos {
 namespace Impl {
 
+int hip_warp_size_host();
+
 struct HIPTraits {
   KOKKOS_FUNCTION static int WarpSize() {
 #ifdef __HIP_DEVICE_COMPILE__
     return warpSize;
 #else
-    return m_host_warp_size;
+    return hip_warp_size_host();
 #endif
   }
 
@@ -35,14 +37,6 @@ struct HIPTraits {
     return static_cast<int>(
         Kokkos::countr_zero(static_cast<unsigned int>(WarpSize())));
   }
-
-  static int host_warp_size() { return m_host_warp_size; }
-  static void set_host_warp_size(int size) {
-    KOKKOS_EXPECTS(size == 32 || size == 64);
-    m_host_warp_size = size;
-  }
-
-  static int m_host_warp_size;
   static constexpr int ConservativeThreadsPerBlock =
       256;  // conservative fallback blocksize in case of spills
   static constexpr int MaxThreadsPerBlock =

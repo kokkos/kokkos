@@ -34,9 +34,7 @@ if(Kokkos_ENABLE_HIP)
   set(Kokkos_HIP_ARCHITECTURES @KOKKOS_HIP_ARCHITECTURES@)
   # check if GPU_TARGETS are compatible with architectures enabled in Kokkos
   foreach(arch IN LISTS GPU_TARGETS)
-    # GPU Arch can be multiple values
-    list(FIND Kokkos_HIP_ARCHITECTURES ${arch} _kokkos_gpu_target_match_index)
-    if(_kokkos_gpu_target_match_index EQUAL -1)
+    if(NOT arch IN_LIST Kokkos_HIP_ARCHITECTURES)
       if(@KOKKOS_ENABLE_DEPRECATED_CODE_5@)
         set(MESSAGE_TYPE WARNING)
       else()

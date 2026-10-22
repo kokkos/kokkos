@@ -44,7 +44,6 @@ void HIP::impl_initialize(InitializationSettings const& settings) {
   KOKKOS_IMPL_HIP_SAFE_CALL(
       hipGetDeviceProperties(&Impl::HIPInternal::m_deviceProp, hip_device_id));
   KOKKOS_IMPL_HIP_SAFE_CALL(hipSetDevice(hip_device_id));
-  Impl::HIPTraits::set_host_warp_size(Impl::HIPInternal::m_deviceProp.warpSize);
 
   // Check that we are running on the expected architecture. We print a warning
   // instead of erroring out because AMD does not guarantee that gcnArchName
