@@ -386,6 +386,7 @@ inline void parallel_reduce_dispatch(
 // ReturnValue is scalar or array: take by reference
 template <Kokkos::ExecutionPolicy PolicyType, class FunctorType,
           class ReturnType>
+  requires Kokkos::ExecutionSpace<typename PolicyType::execution_type>
 inline std::enable_if_t<!(Kokkos::is_view<ReturnType>::value ||
                           Kokkos::is_reducer<ReturnType>::value ||
                           std::is_pointer_v<ReturnType>)>
@@ -399,6 +400,7 @@ parallel_reduce(const std::string& label, const PolicyType& policy,
 
 template <Kokkos::ExecutionPolicy PolicyType, class FunctorType,
           class ReturnType>
+  requires Kokkos::ExecutionSpace<typename PolicyType::execution_type>
 inline std::enable_if_t<!(Kokkos::is_view<ReturnType>::value ||
                           Kokkos::is_reducer<ReturnType>::value ||
                           std::is_pointer_v<ReturnType>)>
@@ -443,6 +445,7 @@ parallel_reduce(const size_t& work_count, const FunctorType& functor,
 // ReturnValue as View or Reducer: take by copy to allow for inline construction
 template <Kokkos::ExecutionPolicy PolicyType, class FunctorType,
           class ReturnType>
+  requires Kokkos::ExecutionSpace<typename PolicyType::execution_type>
 inline std::enable_if_t<Kokkos::is_view<ReturnType>::value ||
                         Kokkos::is_reducer<ReturnType>::value ||
                         std::is_pointer_v<ReturnType>>
@@ -456,6 +459,7 @@ parallel_reduce(const std::string& label, const PolicyType& policy,
 
 template <Kokkos::ExecutionPolicy PolicyType, class FunctorType,
           class ReturnType>
+  requires Kokkos::ExecutionSpace<typename PolicyType::execution_type>
 inline std::enable_if_t<Kokkos::is_view<ReturnType>::value ||
                         Kokkos::is_reducer<ReturnType>::value ||
                         std::is_pointer_v<ReturnType>>
@@ -499,6 +503,7 @@ parallel_reduce(const size_t& work_count, const FunctorType& functor,
 
 // No Return Argument
 template <Kokkos::ExecutionPolicy PolicyType, class FunctorType>
+  requires Kokkos::ExecutionSpace<typename PolicyType::execution_type>
 inline void parallel_reduce(const std::string& label, const PolicyType& policy,
                             const FunctorType& functor) {
   Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check(
@@ -507,6 +512,7 @@ inline void parallel_reduce(const std::string& label, const PolicyType& policy,
 }
 
 template <Kokkos::ExecutionPolicy PolicyType, class FunctorType>
+  requires Kokkos::ExecutionSpace<typename PolicyType::execution_type>
 inline void parallel_reduce(const PolicyType& policy,
                             const FunctorType& functor) {
   Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check("parallel_reduce",
