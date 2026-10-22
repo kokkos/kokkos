@@ -21,6 +21,8 @@ static_assert(false,
 #include <typeinfo>
 #endif
 #include <impl/Kokkos_CheckedIntegerOps.hpp>
+
+#include <algorithm>
 #include <type_traits>
 #include <array>
 #include <cmath>
@@ -178,7 +180,7 @@ auto TileSizeRecommended<ExecutionSpace>::get(Policy const& policy) {
       rank_tile_size = std::max<int>(inner_work_range, 1);
     }
     prod_tile_size *= rank_tile_size;
-    recommended_tile_sizes[i] = rank_tile_size;
+    recommended_tile_sizes[i] = static_cast<index_type>(rank_tile_size);
   }
   return recommended_tile_sizes;
 }
@@ -257,9 +259,9 @@ class MDRangePolicy<P, Properties...>
   tile_type m_tile                            = {};
   point_type m_tile_end                       = {};
   index_type m_num_tiles                      = 1;
-  int m_prod_tile_dims                        = 1;
+  index_type m_prod_tile_dims                 = 1;
   bool m_tune_tile_size                       = false;
-  int m_max_total_tile_size                   = 1;
+  index_type m_max_total_tile_size            = 1;
   std::array<int, 3> m_max_threads_dimensions = {1, 1, 1};
 
  public:
@@ -413,7 +415,7 @@ class MDRangePolicy<P, Properties...>
     return m_num_tiles;
   }
 
-  KOKKOS_INLINE_FUNCTION int impl_prod_tile_dims() const {
+  KOKKOS_INLINE_FUNCTION auto impl_prod_tile_dims() const {
     return m_prod_tile_dims;
   }
 
@@ -427,7 +429,7 @@ class MDRangePolicy<P, Properties...>
     return Kokkos::Impl::TileSizeRecommended<execution_space>::get(*this);
   }
 
-  int max_total_tile_size() const { return m_max_total_tile_size; }
+  auto max_total_tile_size() const { return m_max_total_tile_size; }
 
  private:
   void check_bounds_and_flat_extent(int inner_rank, int outer_bound,
@@ -492,9 +494,13 @@ class MDRangePolicy<P, Properties...>
     this->m_max_total_tile_size    = properties.max_total_tile_size;
     this->m_max_threads_dimensions = properties.max_threads_dimensions;
 
+    using tile_size_type = decltype(this->m_max_total_tile_size);
+
     // Effective cap on the product of tile sizes: starts at the device limit,
     // then tightened below by LaunchBounds when applicable
-    int effective_max_tile_size = this->m_max_total_tile_size;
+    auto effective_max_tile_size = static_cast<tile_size_type>(
+        std::min(this->m_max_total_tile_size,
+                 std::numeric_limits<tile_size_type>::max()));
     constexpr bool enforce_launch_bounds =
 #if defined(KOKKOS_ENABLE_CUDA)
         std::is_same_v<execution_space, Kokkos::Cuda>;
@@ -505,8 +511,9 @@ class MDRangePolicy<P, Properties...>
 #endif
 
     if constexpr (enforce_launch_bounds && launch_bounds::maxTperB != 0) {
-      effective_max_tile_size = std::min(
-          effective_max_tile_size, static_cast<int>(launch_bounds::maxTperB));
+      effective_max_tile_size =
+          std::min(effective_max_tile_size,
+                   static_cast<tile_size_type>(launch_bounds::maxTperB));
     }
 
     int inner_rank  = (inner_direction == Iterate::Right) ? rank - 1 : 0;
@@ -547,7 +554,8 @@ class MDRangePolicy<P, Properties...>
     }
 
     if constexpr (enforce_launch_bounds && launch_bounds::maxTperB != 0) {
-      if (static_cast<int>(launch_bounds::maxTperB) < this->m_prod_tile_dims) {
+      if (static_cast<tile_size_type>(launch_bounds::maxTperB) <
+          this->m_prod_tile_dims) {
         std::string msg =
             "Kokkos::MDRangePolicy tile dimensions error: Product of tile "
             "dimensions (" +
