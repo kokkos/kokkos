@@ -155,8 +155,7 @@ auto TileSizeRecommended<ExecutionSpace>::get(Policy const& policy) {
   constexpr auto InnerDirection = Policy::inner_direction;
   constexpr int Rank            = Policy::rank;
 
-  using index_type = typename Policy::index_type;
-  using tile_type  = Kokkos::Array<index_type, Rank>;
+  using tile_type = typename Policy::tile_type;
 
   tile_type recommended_tile_sizes{};
   int default_tile_size   = 2;
@@ -180,7 +179,8 @@ auto TileSizeRecommended<ExecutionSpace>::get(Policy const& policy) {
       rank_tile_size = std::max<int>(inner_work_range, 1);
     }
     prod_tile_size *= rank_tile_size;
-    recommended_tile_sizes[i] = static_cast<index_type>(rank_tile_size);
+    recommended_tile_sizes[i] =
+        static_cast<typename tile_type::value_type>(rank_tile_size);
   }
   return recommended_tile_sizes;
 }
