@@ -40,7 +40,8 @@ struct NoOpReducer : BaseReducer<typename ReturnViewType::value_type,
   NoOpReducer(const ReturnViewType& value_in) : parent_type(value_in) {}
 
   KOKKOS_FUNCTION
-#if !defined(KOKKOS_ENABLE_OPENMP) && !defined(KOKKOS_ENABLE_HPX) // FIXME_OPENMP
+#if !defined(KOKKOS_ENABLE_OPENMP) && \
+    !defined(KOKKOS_ENABLE_HPX)  // FIXME_OPENMP
   void join(value_type& dest, const value_type& src) const { dest = src; }
 #else
   // OpenMP call join with inactive threads, causing dest to be erased by
@@ -57,7 +58,7 @@ struct SingleReductionWrapper {
   FunctorType m_functor;
   template <class WorkTag, class Index, class ReturnType>
   KOKKOS_FUNCTION void operator()(WorkTag worktag, Index,
-                                         ReturnType& ret) const {
+                                  ReturnType& ret) const {
     static_assert(std::is_empty_v<WorkTag>);
     m_functor(worktag, ret);
   }
