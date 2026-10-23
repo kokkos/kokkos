@@ -273,21 +273,7 @@ void test_output_view() {
 // requirements for parallel_reduce
 struct Restrictive {
   int val;
-
- private:
-  Restrictive& operator+=(const Restrictive& rhs) {
-    val += rhs.val;
-    return *this;
-  }
 };
-
-namespace Kokkos {
-template <>
-struct reduction_identity<Restrictive> {
- private:
-  KOKKOS_FORCEINLINE_FUNCTION static Restrictive sum() { return Restrictive{}; }
-};
-}  // namespace Kokkos
 
 void test_restrictive_return_type() {
 #ifndef KOKKOS_ENABLE_OPENACC
