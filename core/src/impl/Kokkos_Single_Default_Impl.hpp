@@ -73,11 +73,12 @@ struct Single {
   template <class FunctorType, class SinglePolicy>
   static void execute(const FunctorType& functor,
                       const SinglePolicy& single_policy) {
-    using base_class = typename std::remove_cvref_t<SinglePolicy>::range_policy;
-    const base_class& range_policy = single_policy.impl_get_range_policy();
+    using RangePolicy =
+        std::remove_cvref_t<decltype(single_policy.impl_get_range_policy())>;
     auto closure =
         Kokkos::Impl::construct_with_shared_allocation_tracking_disabled<
-            Impl::ParallelFor<FunctorType, base_class>>(functor, range_policy);
+            Impl::ParallelFor<FunctorType, RangePolicy>>(
+            functor, single_policy.impl_get_range_policy());
     closure.execute();
   }
 
@@ -98,10 +99,12 @@ struct Single {
     using ReducerType =
         typename Impl::NoOpReducer<InternalReturn, ExecutionSpace>;
 
+    using RangePolicy =
+        std::remove_cvref_t<decltype(policy.impl_get_range_policy())>;
+
     using Analysis =
         Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
-                              typename PolicyType::range_policy, ReducerType,
-                              InternalReturn>;
+                              RangePolicy, ReducerType, InternalReturn>;
 
     using CombinedFunctorReducerType =
         Kokkos::Impl::CombinedFunctorReducer<FunctorWrapper,
@@ -110,9 +113,8 @@ struct Single {
     CombinedFunctorReducerType functor_reducer(
         functor_wrapper, typename Analysis::Reducer(return_value));
 
-    using ParallelReducer =
-        Impl::ParallelReduce<CombinedFunctorReducerType,
-                             typename PolicyType::range_policy, ExecutionSpace>;
+    using ParallelReducer = Impl::ParallelReduce<CombinedFunctorReducerType,
+                                                 RangePolicy, ExecutionSpace>;
 
     auto closure =
         construct_with_shared_allocation_tracking_disabled<ParallelReducer>(

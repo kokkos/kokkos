@@ -38,8 +38,9 @@ inline void single(const std::string& label,
                                     FunctorType>(single_policy, label, kpID);
 
   using execution_space = typename Impl::FunctorPolicyExecutionSpace<
-      FunctorWrapper, typename std::remove_cvref_t<decltype(single_policy)>::
-                          range_policy>::execution_space;
+      FunctorWrapper,
+      typename std::remove_cvref_t<
+          decltype(single_policy.impl_get_range_policy())>>::execution_space;
 
   // Dispatch execution to either the default implementation or an
   // execution_space specific implementation if one is available
@@ -74,8 +75,9 @@ inline void single(const std::string& label,
                    const SinglePolicy<PolicyProperties...>& single_policy,
                    const FunctorType& functor, ReturnType& return_value) {
   using execution_space = typename Impl::FunctorPolicyExecutionSpace<
-      FunctorType, typename std::remove_cvref_t<
-                       decltype(single_policy)>::range_policy>::execution_space;
+      FunctorType,
+      typename std::remove_cvref_t<
+          decltype(single_policy.impl_get_range_policy())>>::execution_space;
 
   uint64_t kpID = 0;
   Kokkos::Tools::Impl::begin_single<SinglePolicy<PolicyProperties...>,
