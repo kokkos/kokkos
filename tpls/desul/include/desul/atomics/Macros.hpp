@@ -130,6 +130,7 @@ static constexpr bool desul_impl_omp_on_host() { return false; }
 
 #if defined(DESUL_HAVE_OPENACC_ATOMICS)
 #include <openacc.h>
+#include <type_traits>
 #ifdef __NVCOMPILER
 // FIXME_OPENACC We cannot determine in a constant expresion whether we are on host or
 // on device with NVHPC.  We use the device implementation on both sides.
@@ -137,6 +138,18 @@ static constexpr bool desul_impl_omp_on_host() { return false; }
   { DESUL_IMPL_STRIP_PARENS(CODE) }
 #define DESUL_IF_ON_HOST(CODE) \
   {}
+// The device implementation is not atomic on the host.  For 32- and 64-bit integers,
+// the host implementation (GCC built-ins) lowers fine in device code.  Test using
+// the OpenACC intrinsic acc_on_device(acc_device_host) (which does NOT work in
+// `if constexpr`) whether we are on the host.  If so, use the GCC built-in.
+//
+// Use of this macro must precede use of DESUL_IF_ON_DEVICE, and CODE must return.
+#define DESUL_IF_ON_HOST_INTEGRAL(T, CODE)                                      \
+  if constexpr (std::is_integral_v<T> && (sizeof(T) == 4 || sizeof(T) == 8)) { \
+    if (acc_on_device(acc_device_host)) {                                       \
+      DESUL_IMPL_STRIP_PARENS(CODE)                                             \
+    }                                                                           \
+  }
 #else
 #define DESUL_IF_ON_DEVICE(CODE)                      \
   if constexpr (acc_on_device(acc_device_not_host)) { \
@@ -148,8 +161,20 @@ static constexpr bool desul_impl_omp_on_host() { return false; }
   }
 #endif
 #define DESUL_IMPL_ACC_ROUTINE_DIRECTIVE _Pragma("acc routine seq")
+#ifdef __NVCOMPILER
+// Guard use of an GCC atomic built-in so it is only built for host code.
+// The macro must precede a single statement.
+#define DESUL_IMPL_IF_HOST_BUILTIN if (acc_on_device(acc_device_host))
+#endif
 #else
 #define DESUL_IMPL_ACC_ROUTINE_DIRECTIVE
+#endif
+#ifndef DESUL_IMPL_IF_HOST_BUILTIN
+#define DESUL_IMPL_IF_HOST_BUILTIN
+#endif
+
+#ifndef DESUL_IF_ON_HOST_INTEGRAL
+#define DESUL_IF_ON_HOST_INTEGRAL(T, CODE)
 #endif
 
 #if !defined(DESUL_IF_ON_HOST) && !defined(DESUL_IF_ON_DEVICE)
