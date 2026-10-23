@@ -30,79 +30,56 @@ struct StreamsAndDevices {
   }
 };
 
-std::array<TEST_EXECSPACE, 2> get_execution_spaces(
-    const StreamsAndDevices &streams_and_devices) {
-  TEST_EXECSPACE exec0(streams_and_devices.streams[0]);
-  TEST_EXECSPACE exec1(streams_and_devices.streams[1]);
-
-  // Must return void to use ASSERT_EQ
-  [&]() {
-    ASSERT_EQ(exec0.cuda_device(), streams_and_devices.devices[0]);
-    ASSERT_EQ(exec1.cuda_device(), streams_and_devices.devices[1]);
-  }();
-
-  return {exec0, exec1};
-}
-
 struct TEST_CATEGORY_FIXTURE(multi_gpu) : public ::testing::Test {
-  StreamsAndDevices sd;
-
   void SetUp() override {
-    if (sd.devices[0] == sd.devices[1])
+    auto execs = Kokkos::create_device_space();
+    if (execs.size() <= 1) {
       GTEST_SKIP() << "Skipping Cuda multi-gpu testing since current machine "
                       "only contains a single GPU.\n";
+    }
+
+    ASSERT_GE(execs.size(), 2);
+    ASSERT_NE(execs[0].cuda_device(), execs[1].cuda_device());
   }
 };
 
 TEST_F(TEST_CATEGORY_FIXTURE(multi_gpu), managed_views) {
-  StreamsAndDevices streams_and_devices;
-  {
-    std::array<TEST_EXECSPACE, 2> execs =
-        get_execution_spaces(streams_and_devices);
+  auto execs = Kokkos::create_device_space();
 
-    Kokkos::View<int *, TEST_EXECSPACE> view0(
-        Kokkos::view_alloc("v0", execs[0]), 100);
-    Kokkos::View<int *, TEST_EXECSPACE> view(Kokkos::view_alloc("v", execs[1]),
-                                             100);
+  Kokkos::View<int *, TEST_EXECSPACE> view0(Kokkos::view_alloc("v0", execs[0]),
+                                            100);
+  Kokkos::View<int *, TEST_EXECSPACE> view1(Kokkos::view_alloc("v1", execs[1]),
+                                            100);
 
-    test_policies(execs[0], view0, execs[1], view);
-  }
+  test_policies(execs[0], view0, execs[1], view1);
 }
 
 TEST_F(TEST_CATEGORY_FIXTURE(multi_gpu), unmanaged_views) {
-  StreamsAndDevices streams_and_devices;
-  {
-    std::array<TEST_EXECSPACE, 2> execs =
-        get_execution_spaces(streams_and_devices);
+  auto execs = Kokkos::create_device_space();
 
-    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(execs[0].cuda_device()));
-    int *p0;
-    void *p0_void_ptr = nullptr;
-    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaMalloc(&p0_void_ptr, sizeof(int) * 100));
-    p0 = static_cast<int *>(p0_void_ptr);
-    Kokkos::View<int *, TEST_EXECSPACE> view0(p0, 100);
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(execs[0].cuda_device()));
+  int *p0;
+  void *p0_void_ptr = nullptr;
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaMalloc(&p0_void_ptr, sizeof(int) * 100));
+  p0 = static_cast<int *>(p0_void_ptr);
+  Kokkos::View<int *, TEST_EXECSPACE> view0(p0, 100);
 
-    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(execs[1].cuda_device()));
-    int *p;
-    void *p_void_ptr = nullptr;
-    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaMalloc(&p_void_ptr, sizeof(int) * 100));
-    p = static_cast<int *>(p_void_ptr);
-    Kokkos::View<int *, TEST_EXECSPACE> view(p, 100);
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(execs[1].cuda_device()));
+  int *p;
+  void *p_void_ptr = nullptr;
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaMalloc(&p_void_ptr, sizeof(int) * 100));
+  p = static_cast<int *>(p_void_ptr);
+  Kokkos::View<int *, TEST_EXECSPACE> view(p, 100);
 
-    test_policies(execs[0], view0, execs[1], view);
-    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFree(p0));
-    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFree(p));
-  }
+  test_policies(execs[0], view0, execs[1], view);
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFree(p0));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFree(p));
 }
 
 TEST_F(TEST_CATEGORY_FIXTURE(multi_gpu), scratch_space) {
-  StreamsAndDevices streams_and_devices;
-  {
-    std::array<TEST_EXECSPACE, 2> execs =
-        get_execution_spaces(streams_and_devices);
+  auto execs = Kokkos::create_device_space();
 
-    test_scratch(execs[0], execs[1]);
-  }
+  test_scratch(execs[0], execs[1]);
 }
 
 TEST_F(TEST_CATEGORY_FIXTURE(multi_gpu), stream_sync_semantics_raw_cuda) {
