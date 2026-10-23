@@ -7,7 +7,6 @@
 #include <NextSilicon/Kokkos_NextSilicon.hpp>
 #include <NextSilicon/Kokkos_NextSilicon_MDRangePolicy.hpp>
 #include <NextSilicon/Kokkos_NextSilicon_ParallelReduce.hpp>
-#include <Kokkos_Array.hpp>
 #include <Kokkos_Parallel_Reduce.hpp>
 #include <Kokkos_Parallel.hpp>
 #include <impl/Kokkos_CheckedIntegerOps.hpp>
