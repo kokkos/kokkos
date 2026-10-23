@@ -209,8 +209,7 @@ class ParallelScanHIPBase {
             true);
       }
       if (iwork + 1 == m_policy.end() && m_policy.end() == range.end()) {
-        auto const result =
-            *reinterpret_cast<pointer_type>(shared_prefix);
+        auto const result = *reinterpret_cast<pointer_type>(shared_prefix);
         if (m_result_ptr_device_accessible) {
           *m_result_ptr = result;
         } else {

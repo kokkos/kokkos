@@ -375,9 +375,9 @@ class TeamPolicyInternal<HIP, Properties...>
       // (block size == vector length, i.e. one team member). Keep this only as
       // an edge-case fallback: the normal tuned path remains unchanged.
       auto* const instance = space().impl_internal_space_instance();
-      auto const attr = get_hip_func_attributes_impl<
-          ClosureType, typename traits::launch_bounds,
-          BlockSize>(instance->m_hipDev);
+      auto const attr      = get_hip_func_attributes_impl<
+          ClosureType, typename traits::launch_bounds, BlockSize>(
+          instance->m_hipDev);
       const int candidate_block_size = impl_vector_length();
       if (candidate_block_size > 0 &&
           static_cast<unsigned>(functor(attr, candidate_block_size)) <=

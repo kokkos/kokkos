@@ -52,8 +52,7 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
   // bytes.
   using word_size_type = std::conditional_t<
       sizeof(value_type) < sizeof(size_type),
-      std::conditional_t<sizeof(value_type) == 2, int16_t, int8_t>,
-      size_type>;
+      std::conditional_t<sizeof(value_type) == 2, int16_t, int8_t>, size_type>;
 
   // Algorithmic constraints: blockSize is a power of two AND blockDim.y ==
   // blockDim.z == 1
@@ -94,8 +93,9 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
 
   __device__ inline void run(SHMEMReductionTag) const {
     const ReducerType& reducer = m_functor_reducer.get_reducer();
-    const integral_nonzero_constant<
-        word_size_type, ReducerType::static_value_size() / sizeof(word_size_type)>
+    const integral_nonzero_constant<word_size_type,
+                                    ReducerType::static_value_size() /
+                                        sizeof(word_size_type)>
         word_count(reducer.value_size() / sizeof(word_size_type));
 
     {
@@ -246,8 +246,7 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
                         std::to_string(shared_memory_available) +
                         " bytes per block are available."));
       }
-      if constexpr (std::is_integral_v<value_type> &&
-                    sizeof(value_type) == 1) {
+      if constexpr (std::is_integral_v<value_type> && sizeof(value_type) == 1) {
         block_size = 1;
       }
 
@@ -300,11 +299,10 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
           m_policy.space(), sizeof(size_type));
       // Clear inter-block completion flags before launch because the scratch
       // allocation is reused across kernels.
-      KOKKOS_IMPL_HIP_SAFE_CALL(
-          m_policy.space()
-              .impl_internal_space_instance()
-              ->hip_memset_async_wrapper(m_scratch_flags, 0,
-                                         sizeof(size_type)));
+      KOKKOS_IMPL_HIP_SAFE_CALL(m_policy.space()
+                                    .impl_internal_space_instance()
+                                    ->hip_memset_async_wrapper(
+                                        m_scratch_flags, 0, sizeof(size_type)));
       dim3 grid(nblocks, 1, 1);
 
       if (nwork == 0) {

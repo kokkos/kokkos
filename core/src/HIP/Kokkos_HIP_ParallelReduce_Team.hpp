@@ -269,11 +269,10 @@ class ParallelReduce<CombinedFunctorReducerType,
           hip_internal_scratch_flags(m_policy.space(), sizeof(size_type));
       // Clear inter-block completion flags before launch because the scratch
       // allocation is reused across kernels.
-      KOKKOS_IMPL_HIP_SAFE_CALL(
-          m_policy.space()
-              .impl_internal_space_instance()
-              ->hip_memset_async_wrapper(m_scratch_flags, 0,
-                                         sizeof(size_type)));
+      KOKKOS_IMPL_HIP_SAFE_CALL(m_policy.space()
+                                    .impl_internal_space_instance()
+                                    ->hip_memset_async_wrapper(
+                                        m_scratch_flags, 0, sizeof(size_type)));
 
       dim3 block(m_vector_size, m_team_size, 1);
       dim3 grid(block_count, 1, 1);
