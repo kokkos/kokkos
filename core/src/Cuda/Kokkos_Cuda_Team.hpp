@@ -454,6 +454,9 @@ Impl::VectorSingleStruct<Impl::CudaTeamMember> PerThread(
  * so the body can use the vector lanes.
  */
 template <typename iType, class Closure>
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
+  requires Impl::is_invocable_functor<iType, Closure, Impl::CudaTeamMember>
+#endif
 KOKKOS_INLINE_FUNCTION void parallel_for(
     const Impl::TeamThreadRangeBoundariesStruct<iType, Impl::CudaTeamMember>&
         loop_boundaries,
@@ -477,6 +480,35 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
         }
       }))
 }
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
+template <typename iType, class Closure>
+  requires(!Impl::is_invocable_functor<iType, Closure, Impl::CudaTeamMember>)
+KOKKOS_DEPRECATED_WITH_COMMENT("Do not take indices by non-const reference")
+    KOKKOS_INLINE_FUNCTION
+    void parallel_for(const Impl::TeamThreadRangeBoundariesStruct<
+                          iType, Impl::CudaTeamMember>& loop_boundaries,
+                      const Closure& closure) {
+  (void)loop_boundaries;
+  (void)closure;
+  KOKKOS_IF_ON_DEVICE((
+      using thread_handle_t = Impl::ThreadHandleType<Impl::CudaTeamMember>;
+
+      for (iType i = loop_boundaries.start + threadIdx.y;
+           i < loop_boundaries.end; i += blockDim.y) {
+        if constexpr (std::is_invocable_v<Closure, iType&>) {
+          closure(i);
+        } else if constexpr (std::is_invocable_v<
+                                 Closure, thread_handle_t const&, iType&>) {
+          closure(thread_handle_t(loop_boundaries.member), i);
+        } else {
+          static_assert(Kokkos::Impl::always_false<Closure>::value,
+                        "Kokkos::parallel_for(TeamThreadRange) closure must be "
+                        "invocable with (iType) or (ThreadHandleType, iType)");
+        }
+      }))
+}
+#endif
 
 //----------------------------------------------------------------------------
 
