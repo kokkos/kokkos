@@ -1499,6 +1499,30 @@ if(KOKKOS_ARCH_AMD_GPU_LIST)
   list(JOIN KOKKOS_ARCH_AMD_GPU_LIST "," KOKKOS_ARCH_AMD_GPU)
 endif()
 
+if(Kokkos_ENABLE_HIP)
+  if(KOKKOS_ARCH_AMD_GFX942_APU)
+    foreach(arch IN LISTS SUPPORTED_HIP_ARCHS)
+      if(KOKKOS_ARCH_${arch} AND NOT arch STREQUAL "AMD_GFX942_APU")
+        message(
+          FATAL_ERROR
+            "Kokkos_ARCH_AMD_GFX942_APU cannot be enabled with other HIP architectures. Found ${arch}."
+        )
+      endif()
+    endforeach()
+  endif()
+
+  list(LENGTH KOKKOS_HIP_ARCHITECTURES KOKKOS_HIP_ARCH_COUNT)
+  if(KOKKOS_HIP_ARCH_COUNT GREATER 1)
+    list(FIND KOKKOS_HIP_ARCHITECTURES amdgcnspirv KOKKOS_HIP_GCNSPIRV_INDEX)
+    if(NOT KOKKOS_HIP_GCNSPIRV_INDEX EQUAL -1)
+      message(
+        FATAL_ERROR
+          "Kokkos_ARCH_AMD_GCNSPIRV cannot be enabled with other HIP architectures. Got ${KOKKOS_HIP_ARCHITECTURES}."
+      )
+    endif()
+  endif()
+endif()
+
 #FIXME_HIP right now we only check if the arch autodetected by hip is the same as the one enabled in Kokkos. If not we warn/error
 if(Kokkos_ENABLE_HIP)
   foreach(arch IN LISTS GPU_TARGETS)

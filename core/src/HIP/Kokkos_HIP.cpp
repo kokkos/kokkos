@@ -50,23 +50,25 @@ void HIP::impl_initialize(InitializationSettings const& settings) {
   // will always contain the gfx flag.
 #ifdef KOKKOS_ARCH_AMD_GPU
   if (Kokkos::show_warnings()) {
-    bool found_matching_arch         = false;
     std::string const enabled_arches = KOKKOS_ARCH_AMD_GPU;
-    std::stringstream enabled_arch_stream(enabled_arches);
-    std::string enabled_arch;
-    std::string_view const arch_name =
-        Impl::HIPInternal::m_deviceProp.gcnArchName;
-    while (std::getline(enabled_arch_stream, enabled_arch, ',')) {
-      if (!enabled_arch.empty() && (arch_name.starts_with(enabled_arch) ||
-                                    enabled_arch == "amdgcnspirv")) {
-        found_matching_arch = true;
-        break;
+    // GCNSPIRV is intentionally architecture-agnostic at runtime.
+    if (enabled_arches != "amdgcnspirv") {
+      bool found_matching_arch = false;
+      std::stringstream enabled_arch_stream(enabled_arches);
+      std::string enabled_arch;
+      std::string_view const arch_name =
+          Impl::HIPInternal::m_deviceProp.gcnArchName;
+      while (std::getline(enabled_arch_stream, enabled_arch, ',')) {
+        if (!enabled_arch.empty() && arch_name.starts_with(enabled_arch)) {
+          found_matching_arch = true;
+          break;
+        }
       }
-    }
-    if (!found_matching_arch) {
-      std::cerr
-          << "Kokkos::HIP::initialize WARNING: running kernels compiled for "
-          << KOKKOS_ARCH_AMD_GPU << " on " << arch_name << " device.\n";
+      if (!found_matching_arch) {
+        std::cerr
+            << "Kokkos::HIP::initialize WARNING: running kernels compiled for "
+            << KOKKOS_ARCH_AMD_GPU << " on " << arch_name << " device.\n";
+      }
     }
   }
 #endif

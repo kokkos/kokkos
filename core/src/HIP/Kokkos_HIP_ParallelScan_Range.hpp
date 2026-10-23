@@ -266,12 +266,6 @@ class ParallelScanHIPBase {
             m_policy.space(), final_reducer.value_size() * m_grid_x));
     m_scratch_flags = Impl::hip_internal_scratch_flags(m_policy.space(),
                                                        sizeof(size_type) * 1);
-    // Clear inter-block completion flags before launch because the scratch
-    // allocation is reused across kernels.
-    KOKKOS_IMPL_HIP_SAFE_CALL(
-        m_policy.space()
-            .impl_internal_space_instance()
-            ->hip_memset_async_wrapper(m_scratch_flags, 0, sizeof(size_type)));
 
     dim3 grid(m_grid_x, 1, 1);
     dim3 block(1, block_size, 1);  // REQUIRED DIMENSIONS ( 1 , N , 1 )
