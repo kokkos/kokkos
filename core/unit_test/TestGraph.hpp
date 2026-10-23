@@ -1671,4 +1671,25 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), property_by_const_lvalue) {
       NoOpReduceFunctor<TEST_EXECSPACE, int>{}, count);
 }
 
+TEST(TEST_CATEGORY, graph_access_get_node_ptr) {
+  using graph_t = Kokkos::Experimental::Graph<TEST_EXECSPACE>;
+
+  graph_t graph{};
+
+  const auto node = graph.root_node().then(NoOp{});
+
+  auto node_ptr = Kokkos::Impl::GraphAccess::get_node_ptr(node);
+
+  static_assert(
+      std::same_as<
+          decltype(node_ptr),
+          std::shared_ptr<Kokkos::Impl::GraphNodeImpl<
+              TEST_EXECSPACE,
+              Kokkos::Impl::GraphNodeThenImpl<
+                  TEST_EXECSPACE, Kokkos::Experimental::ThenPolicy<>, NoOp>,
+              typename graph_t::root_t>>>);
+
+  ASSERT_NE(node_ptr, nullptr);
+}
+
 }  // end namespace Test
