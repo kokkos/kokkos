@@ -139,7 +139,7 @@ class TeamPolicyInternal<HIP, Properties...>
 
   inline bool impl_auto_vector_length() const { return m_tune_vector_length; }
   inline bool impl_auto_team_size() const { return m_tune_team_size; }
-  static int vector_length_max() { return HIPTraits::WarpSize; }
+  static int vector_length_max() { return HIPTraits::WarpSize(); }
 
   static int impl_determine_vector_length(int requested) {
     // restrict requested between 1 and max
@@ -198,7 +198,7 @@ class TeamPolicyInternal<HIP, Properties...>
         m_vector_length(0),
         m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
-        m_chunk_size(HIPTraits::WarpSize),
+        m_chunk_size(HIPTraits::WarpSize()),
         m_tune_team_size(false),
         m_tune_vector_length(false) {}
 
@@ -211,7 +211,7 @@ class TeamPolicyInternal<HIP, Properties...>
         m_vector_length(impl_determine_vector_length(vector_length_request)),
         m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
-        m_chunk_size(HIPTraits::WarpSize),
+        m_chunk_size(HIPTraits::WarpSize()),
         m_tune_team_size(bool(team_size_request <= 0)),
         m_tune_vector_length(bool(vector_length_request <= 0)) {
     // Make sure league size is permissible
@@ -369,9 +369,25 @@ class TeamPolicyInternal<HIP, Properties...>
     }
 
     if (block_size == 0) {
-      Kokkos::Impl::throw_runtime_exception(std::string(
-          "Kokkos::Impl::ParallelFor/Reduce< HIP > could not find a valid "
-          "team size."));
+      // If tuning rejects all warp-sized candidates, this is often caused by
+      // large per-thread scratch pushing required shared memory over limits.
+      // Before failing, try the minimal legal team shape
+      // (block size == vector length, i.e. one team member). Keep this only as
+      // an edge-case fallback: the normal tuned path remains unchanged.
+      auto* const instance = space().impl_internal_space_instance();
+      auto const attr      = get_hip_func_attributes_impl<
+          ClosureType, typename traits::launch_bounds, BlockSize>(
+          instance->m_hipDev);
+      const int candidate_block_size = impl_vector_length();
+      if (candidate_block_size > 0 &&
+          static_cast<unsigned>(functor(attr, candidate_block_size)) <=
+              instance->m_deviceProp.maxSharedMemoryPerMultiProcessor) {
+        block_size = candidate_block_size;
+      } else {
+        Kokkos::Impl::throw_runtime_exception(
+            "Kokkos::Impl::ParallelFor/Reduce< HIP > could not find a valid "
+            "team size.");
+      }
     }
     if constexpr (std::is_same_v<Tag, ParallelForTag>) {
       return block_size / impl_vector_length();
