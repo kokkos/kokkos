@@ -22,8 +22,6 @@ struct dummy {
   void f() const {}
 };
 
-// This test makes sure the independent HPX instances don't hold on to captured
-// data after destruction.
 TEST(hpx, independent_instances_reference_counting) {
   ASSERT_EQ(0, dummy_count);
 
@@ -45,6 +43,25 @@ TEST(hpx, independent_instances_reference_counting) {
   }
 
   ASSERT_EQ(0, dummy_count);
+}
+
+TEST(hpx, independent_instances_dispatch_use_count) {
+  Kokkos::Experimental::HPX hpx(
+      Kokkos::Experimental::HPX::instance_mode::independent);
+  ASSERT_EQ(1, hpx.impl_instance_data_use_count());
+
+  Kokkos::View<int, Kokkos::Experimental::HPX> out("out");
+  out() = 0;
+
+  Kokkos::parallel_for(
+      "Test::hpx::reference_counting::dispatch_use_count",
+      Kokkos::RangePolicy<Kokkos::Experimental::HPX>(hpx, 0, 1),
+      KOKKOS_LAMBDA(int) { out() = 1; });
+
+  ASSERT_EQ(1, hpx.impl_instance_data_use_count());
+  hpx.fence();
+  ASSERT_EQ(1, out());
+  ASSERT_EQ(1, hpx.impl_instance_data_use_count());
 }
 
 }  // namespace
