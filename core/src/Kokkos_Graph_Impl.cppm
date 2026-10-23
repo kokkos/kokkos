@@ -13,6 +13,7 @@ export {
   using ::Kokkos::Impl::is_graph_capture_v;
   using ::Kokkos::Impl::is_graph_kernel_v;
   using ::Kokkos::Impl::is_graph_then_host_v;
+  using ::Kokkos::Impl::is_node_props_v;
 
   using ::Kokkos::Impl::get_properties_or;
   using ::Kokkos::Impl::get_property;
@@ -26,7 +27,9 @@ export {
   using ::Kokkos::Impl::GraphNodeThenHostImpl;
   using ::Kokkos::Impl::GraphNodeThenImpl;
   using ::Kokkos::Impl::IsGraphKernelTag;
+  using ::Kokkos::Impl::NodeCtorProp;
   using ::Kokkos::Impl::NodeCtorProps;
+  using ::Kokkos::Impl::ValidNodeProperty;
   }  // namespace Impl
   }  // namespace Kokkos
 }
