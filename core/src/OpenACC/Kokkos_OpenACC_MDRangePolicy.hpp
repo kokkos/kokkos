@@ -4,7 +4,9 @@
 #ifndef KOKKOS_OPENACC_MDRANGE_POLICY_HPP_
 #define KOKKOS_OPENACC_MDRANGE_POLICY_HPP_
 
+#include <Kokkos_Array.hpp>
 #include <KokkosExp_MDRangePolicy.hpp>
+#include <OpenACC/Kokkos_OpenACC.hpp>
 
 template <>
 struct Kokkos::default_outer_direction<Kokkos::Experimental::OpenACC> {
@@ -35,13 +37,13 @@ struct OpenACCCollapse {};
 struct OpenACCTile {};
 using OpenACCIterateLeft  = std::integral_constant<Iterate, Iterate::Left>;
 using OpenACCIterateRight = std::integral_constant<Iterate, Iterate::Right>;
-template <int N>
-using OpenACCMDRangeBegin =
-    typename MDRangePolicy<OpenACC, Rank<N>>::point_type;
-template <int N>
-using OpenACCMDRangeEnd = typename MDRangePolicy<OpenACC, Rank<N>>::point_type;
-template <int N>
-using OpenACCMDRangeTile = typename MDRangePolicy<OpenACC, Rank<N>>::tile_type;
+
+template <int N, typename iType = Kokkos::Experimental::OpenACC::index_type>
+using OpenACCMDRangeBegin = Kokkos::Array<iType, N>;
+template <int N, typename iType = Kokkos::Experimental::OpenACC::index_type>
+using OpenACCMDRangeEnd = Kokkos::Array<iType, N>;
+template <int N, typename iType = Kokkos::Experimental::OpenACC::index_type>
+using OpenACCMDRangeTile = Kokkos::Array<iType, N>;
 
 }  // namespace Kokkos::Experimental::Impl
 
