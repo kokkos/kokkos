@@ -1,0 +1,32 @@
+name: AI Tool Policy Check
+
+on:
+  pull_request:
+    # 'edited' fires on retargeting, which changes the checked base..head range.
+    types: [opened, synchronize, reopened, edited]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  check-trailers:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        # Check out the PR head itself (not the synthetic merge commit) with
+        # full history so that base..head is resolvable.
+        ref: ${{ github.event.pull_request.head.sha }}
+        fetch-depth: 0
+        persist-credentials: false
+
+    - name: Validate commit authorship and trailers
+      env:
+        # Passed via env, never interpolated into the script (injection safety).
+        BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      run: scripts/check_ai_attribution.sh "${BASE_SHA}..${HEAD_SHA}"
