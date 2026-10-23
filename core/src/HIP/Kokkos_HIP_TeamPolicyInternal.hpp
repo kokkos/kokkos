@@ -384,9 +384,9 @@ class TeamPolicyInternal<HIP, Properties...>
               instance->m_deviceProp.maxSharedMemoryPerMultiProcessor) {
         block_size = candidate_block_size;
       } else {
-        Kokkos::Impl::throw_runtime_exception(std::string(
+        Kokkos::Impl::throw_runtime_exception(
             "Kokkos::Impl::ParallelFor/Reduce< HIP > could not find a valid "
-            "team size."));
+            "team size.");
       }
     }
     if constexpr (std::is_same_v<Tag, ParallelForTag>) {
