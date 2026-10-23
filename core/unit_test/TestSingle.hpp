@@ -32,8 +32,7 @@ void test_single_policy() {
       std::is_same_v<TEST_EXECSPACE, Kokkos::DefaultExecutionSpace>,
       Kokkos::DefaultHostExecutionSpace, Kokkos::DefaultExecutionSpace>;
 
-  static_assert(std::is_same_v<Kokkos::SinglePolicy<>::execution_policy,
-                               Kokkos::SinglePolicy<>>);
+  static_assert(Kokkos::ExecutionPolicy<Kokkos::SinglePolicy<>>);
 
   auto check_inner_policy = [](const auto& policy) {
     EXPECT_EQ(policy.impl_get_range_policy().begin(), 0);

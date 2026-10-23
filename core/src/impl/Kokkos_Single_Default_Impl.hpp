@@ -45,7 +45,7 @@ struct NoOpReducer : BaseReducer<typename ReturnViewType::value_type,
   NoOpReducer(const ReturnViewType& value_in) : parent_type(value_in) {}
 
   KOKKOS_INLINE_FUNCTION
-#ifndef KOKKOS_ENABLE_OPENMP
+#ifndef KOKKOS_ENABLE_OPENMP // FIXME_OPENMP
   void join(value_type& dest, const value_type& src) const { dest = src; }
 #else
   // OpenMP call join with inactive threads, causing dest to be erased by
@@ -61,14 +61,14 @@ template <class FunctorType>
 struct SingleReductionWrapper {
   FunctorType m_functor;
   template <class WorkTag, class Index, class ReturnType>
-  KOKKOS_INLINE_FUNCTION void operator()(WorkTag&& worktag, Index&&,
+  KOKKOS_INLINE_FUNCTION void operator()(WorkTag worktag, Index,
                                          ReturnType& ret) const {
-    static_assert(std::is_empty_v<std::remove_cvref_t<WorkTag>>);
+    static_assert(std::is_empty_v<WorkTag>);
     m_functor(worktag, ret);
   }
 
   template <class Index, class ReturnType>
-  KOKKOS_INLINE_FUNCTION void operator()(Index&&, ReturnType& ret) const {
+  KOKKOS_INLINE_FUNCTION void operator()(Index, ReturnType& ret) const {
     m_functor(ret);
   }
 };

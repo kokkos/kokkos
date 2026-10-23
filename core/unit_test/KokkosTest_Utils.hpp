@@ -124,8 +124,7 @@ template <typename Exec, typename ViewType>
     return ::testing::AssertionFailure()
            << expected << " is not in " << view.label() << ", got " << value;
   else
-    return ::testing::AssertionSuccess()
-           << expected << " is in " << view.label() << ", got " << value;
+    return ::testing::AssertionSuccess();
 }
 
 }  // namespace KokkosTest
