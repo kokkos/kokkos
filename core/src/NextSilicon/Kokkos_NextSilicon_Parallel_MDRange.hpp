@@ -7,6 +7,7 @@
 #include <NextSilicon/Kokkos_NextSilicon.hpp>
 #include <NextSilicon/Kokkos_NextSilicon_MDRangePolicy.hpp>
 #include <NextSilicon/Kokkos_NextSilicon_ParallelReduce.hpp>
+#include <Kokkos_Array.hpp>
 #include <Kokkos_Parallel_Reduce.hpp>
 #include <Kokkos_Parallel.hpp>
 #include <impl/Kokkos_CheckedIntegerOps.hpp>
@@ -16,24 +17,24 @@
 
 namespace Kokkos::Experimental::Impl {
 
-template <int N>
-using NextSiliconMDRangeBegin =
-    typename MDRangePolicy<NextSilicon, Rank<N>>::point_type;
-template <int N>
-using NextSiliconMDRangeEnd =
-    typename MDRangePolicy<NextSilicon, Rank<N>>::point_type;
-template <int N>
-using NextSiliconMDRangeTile =
-    typename MDRangePolicy<NextSilicon, Rank<N>>::tile_type;
+template <int N,
+          typename IndexType = Kokkos::Experimental::NextSilicon::index_type>
+using NextSiliconMDRangeBegin = Kokkos::Array<IndexType, N>;
+template <int N,
+          typename IndexType = Kokkos::Experimental::NextSilicon::index_type>
+using NextSiliconMDRangeEnd = Kokkos::Array<IndexType, N>;
+template <int N,
+          typename IndexType = Kokkos::Experimental::NextSilicon::index_type>
+using NextSiliconMDRangeTile = Kokkos::Array<IndexType, N>;
 
-template <typename WorkTag, typename Direction, typename Functor, int Dim>
+template <typename WorkTag, typename Direction, typename Functor, int Dim,
+          typename IndexType>
 class NextSiliconParallelMDRangePolicyFunctor {
  public:
-  using IndexType = typename NextSiliconMDRangeEnd<Dim>::value_type;
-
   NextSiliconParallelMDRangePolicyFunctor(
-      Functor const& functor, NextSiliconMDRangeBegin<Dim> const& begin,
-      NextSiliconMDRangeEnd<Dim> const& end)
+      Functor const& functor,
+      NextSiliconMDRangeBegin<Dim, IndexType> const& begin,
+      NextSiliconMDRangeEnd<Dim, IndexType> const& end)
       : functor_(functor), begin_(begin) {
     for (int i = 0; i < Dim; ++i) {
       ext_[i] = end[i] - begin[i];
@@ -131,15 +132,16 @@ class NextSiliconParallelMDRangePolicyFunctor {
   }
 
   Functor functor_;
-  NextSiliconMDRangeBegin<Dim> begin_;
-  NextSiliconMDRangeEnd<Dim> ext_;  // end - begin
+  NextSiliconMDRangeBegin<Dim, IndexType> begin_;
+  NextSiliconMDRangeEnd<Dim, IndexType> ext_;  // end - begin
 };
 
 using FlatIndexType = uint64_t;
 
-template <int Dim>
-FlatIndexType getFlatRange(NextSiliconMDRangeBegin<Dim> const& begin,
-                           NextSiliconMDRangeEnd<Dim> const& end) {
+template <int Dim,
+          typename IndexType = Kokkos::Experimental::NextSilicon::index_type>
+FlatIndexType getFlatRange(NextSiliconMDRangeBegin<Dim, IndexType> const& begin,
+                           NextSiliconMDRangeEnd<Dim, IndexType> const& end) {
   FlatIndexType flat = end[0] - begin[0];
   for (int i = 1; i < Dim; ++i) {
     const FlatIndexType factor = end[i] - begin[i];
@@ -184,12 +186,14 @@ class ParallelFor<Functor, Kokkos::MDRangePolicy<Traits...>,
     }
 
     // FIXME_NEXTSILICON: throw away requested tiling
-    using Direction = std::integral_constant<Iterate, Policy::inner_direction>;
+    using Direction  = std::integral_constant<Iterate, Policy::inner_direction>;
+    using index_type = typename Policy::index_type;
 
-    auto total_range = Kokkos::Experimental::Impl::getFlatRange<rank>(lb, ub);
+    auto total_range =
+        Kokkos::Experimental::Impl::getFlatRange<rank, index_type>(lb, ub);
     auto wrapped_functor =
         Kokkos::Experimental::Impl::NextSiliconParallelMDRangePolicyFunctor<
-            WorkTag, Direction, Functor, rank>(m_functor, lb, ub);
+            WorkTag, Direction, Functor, rank, index_type>(m_functor, lb, ub);
 
     auto flat_policy = Kokkos::RangePolicy<Experimental::NextSilicon>(
         m_policy.space(), 0, total_range);
@@ -237,9 +241,10 @@ class ParallelReduce<CombinedFunctorReducerType, MDRangePolicy<Traits...>,
 
     using Direction =
         std::integral_constant<Iterate, MDRangePolicy::inner_direction>;
+    using index_type = MDRangePolicy::index_type;
     using WrappedFunctorType =
         Experimental::Impl::NextSiliconParallelMDRangePolicyFunctor<
-            WorkTag, Direction, FunctorType, rank>;
+            WorkTag, Direction, FunctorType, rank, index_type>;
     using CombinedWrappedFunctorReducerType =
         CombinedFunctorReducer<WrappedFunctorType, ReducerType>;
     using RangePolicyType = RangePolicy<Experimental::NextSilicon>;
@@ -248,7 +253,8 @@ class ParallelReduce<CombinedFunctorReducerType, MDRangePolicy<Traits...>,
     const auto ub = m_policy.upper();
 
     // FIXME_NEXTSILICON: throw away requested tiling
-    auto total_range     = Experimental::Impl::getFlatRange<rank>(lb, ub);
+    auto total_range =
+        Experimental::Impl::getFlatRange<rank, index_type>(lb, ub);
     auto wrapped_functor = WrappedFunctorType(functor, lb, ub);
 
     auto policy = RangePolicyType(m_policy.space(), 0, total_range);
