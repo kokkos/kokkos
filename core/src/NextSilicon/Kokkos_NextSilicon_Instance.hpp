@@ -44,12 +44,15 @@ class NextSiliconInternal {
     // prevents the stack from getting migrated into device.
     size_t functor_size = sizeof(Driver);
     std::byte* buffer   = resize_functor_buffer(functor_size);
-    auto deleter        = [](Driver* const p) {
-      if (p) p->~Driver();
-    };
     // Copy the functor with tracking disabled, as Kokkos::parallel_* do
     [[maybe_unused]] auto guard =
         Kokkos::Impl::SharedAllocationDisableTrackingGuard{};
+    auto deleter = [](Driver* const p) {
+      // Call the destructor with tracking disabled, symmetric with constructor
+      [[maybe_unused]] auto guard =
+          Kokkos::Impl::SharedAllocationDisableTrackingGuard{};
+      if (p) p->~Driver();
+    };
     return std::unique_ptr<Driver, decltype(deleter)>(
         new (buffer) Driver(driver), deleter);
   }
