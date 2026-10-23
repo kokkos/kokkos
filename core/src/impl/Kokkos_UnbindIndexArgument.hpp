@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
-#ifndef KOKKOS_IMPL_UNBIND_INDEX_ARGUMENT
-#define KOKKOS_IMPL_UNBIND_INDEX_ARGUMENT
+#ifndef KOKKOS_IMPL_UNBIND_INDEX_ARGUMENT_HPP
+#define KOKKOS_IMPL_UNBIND_INDEX_ARGUMENT_HPP
 
 #include <type_traits>
 
@@ -17,13 +17,13 @@ struct UnbindIndexArgument {
   // One of WorkTagOrIndex or MaybeIndex contains the index, the other can be
   // the worktag. We try to determine which is which and discard the index.
   template <typename WorkTagOrIndex, typename... MaybeIndex>
-  KOKKOS_FUNCTION void operator()(WorkTagOrIndex&& wtOrIdx,
+  KOKKOS_FUNCTION void operator()(WorkTagOrIndex wtOrIdx,
                                   MaybeIndex...) const {
     static_assert(sizeof...(MaybeIndex) <= 1);
     if constexpr (sizeof...(MaybeIndex) == 0) {
       m_functor();
     } else {
-      static_assert(std::is_empty_v<std::remove_cvref_t<WorkTagOrIndex>>);
+      static_assert(std::is_empty_v<WorkTagOrIndex>);
       m_functor(wtOrIdx);
     }
   }
@@ -39,14 +39,14 @@ struct UnbindReductionIndexArgument {
   // be the worktag or the first return type. We try to determine which is
   // which and discard the index.
   template <class WorkTagOrIndex, class IndexOrFirstRet, class... ReturnTypes>
-  KOKKOS_INLINE_FUNCTION void operator()(WorkTagOrIndex&& wtOrIdx,
+  KOKKOS_FUNCTION void operator()(WorkTagOrIndex wtOrIdx,
                                          IndexOrFirstRet&& idxOrFirstRet,
                                          ReturnTypes&&... rets) const {
     if constexpr (std::is_void_v<WorkTag>) {
       m_functor(std::forward<IndexOrFirstRet>(idxOrFirstRet),
                 std::forward<ReturnTypes>(rets)...);
     } else {
-      static_assert(std::is_empty_v<std::remove_cvref_t<WorkTagOrIndex>>);
+      static_assert(std::is_empty_v<WorkTagOrIndex>);
       m_functor(wtOrIdx, std::forward<ReturnTypes>(rets)...);
     }
   }
@@ -54,4 +54,4 @@ struct UnbindReductionIndexArgument {
 
 }  //  namespace Kokkos::Impl
 
-#endif  // KOKKOS_IMPL_UNBIND_INDEX_ARGUMENT
+#endif  // KOKKOS_IMPL_UNBIND_INDEX_ARGUMENT_HPP
