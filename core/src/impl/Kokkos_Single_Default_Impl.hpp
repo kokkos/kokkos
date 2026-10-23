@@ -18,6 +18,7 @@ static_assert(false,
 #include <Kokkos_ExecPolicy.hpp>
 #include <Kokkos_Parallel_Reduce.hpp>
 
+#include <impl/Kokkos_Single_fwd.hpp>
 #include <impl/Kokkos_BuiltinReducers.hpp>
 #include <impl/Kokkos_UnbindIndexArgument.hpp>
 
@@ -25,17 +26,23 @@ namespace Kokkos::Impl {
 
 // Reducer performing no operation used within single to return a value without
 // imposing the value's type to have any operation defined.
-template <class Scalar, class Space>
-struct NoOpReducer : Impl::BaseReducer<Scalar, Space> {
+template <class ReturnViewType>
+struct NoOpReducer : BaseReducer<typename ReturnViewType::value_type,
+                                 typename ReturnViewType::memory_space> {
  private:
-  using parent_type = Impl::BaseReducer<Scalar, Space>;
+  using parent_type = BaseReducer<typename ReturnViewType::value_type,
+                                  typename ReturnViewType::memory_space>;
 
  public:
-  using reducer    = NoOpReducer<Scalar, Space>;
+  using reducer    = NoOpReducer;
   using value_type = typename parent_type::value_type;
 
   // Inherit constructors
   using parent_type::parent_type;
+
+  // Not quite sure why I need this, but without it didn't
+  // find the ctor.
+  NoOpReducer(const ReturnViewType& value_in) : parent_type(value_in) {}
 
   KOKKOS_INLINE_FUNCTION
 #ifndef KOKKOS_ENABLE_OPENMP
@@ -67,45 +74,63 @@ struct SingleReductionWrapper {
 };
 
 // Default implementation for execution spaces that don't provide a definition
-template <typename ExecutionSpace>
-struct Single {
-  // Single without return value
-  template <class FunctorType, class SinglePolicy>
-  static void execute(const FunctorType& functor,
-                      const SinglePolicy& single_policy) {
-    using RangePolicy =
-        std::remove_cvref_t<decltype(single_policy.impl_get_range_policy())>;
-    auto closure =
-        Kokkos::Impl::construct_with_shared_allocation_tracking_disabled<
-            Impl::ParallelFor<FunctorType, RangePolicy>>(
-            functor, single_policy.impl_get_range_policy());
+
+// This is the version for a single call without return value
+// It forwards to ParallelFor with a RangePolicy
+template <class FunctorType, class ExecutionSpace, class... Traits>
+struct Single<FunctorType, SinglePolicy<Traits...>, ExecutionSpace> {
+  FunctorType functor;
+  SinglePolicy<Traits...> policy;
+
+  void execute() const {
+    // wrap the functor into one which accepts an index
+    using FunctorWrapper = Kokkos::Impl::UnbindIndexArgument<FunctorType>;
+    FunctorWrapper functor_wrapper{functor};
+
+    using InnerPolicy =
+        std::remove_cvref_t<decltype(policy.impl_get_range_policy())>;
+    auto closure = Impl::ParallelFor<FunctorWrapper, InnerPolicy>(
+        functor_wrapper, policy.impl_get_range_policy());
     closure.execute();
   }
+};
 
-  // Single with return value
-  template <class FunctorType, class PolicyType, class ReturnType>
-  static inline void execute(const std::string&, const PolicyType& policy,
-                             const FunctorType& functor,
-                             ReturnType& return_value) {
-    Impl::SingleReductionWrapper<FunctorType> functor_wrapper{functor};
-    using FunctorWrapper = decltype(functor_wrapper);
+// This is the version for a single call with a return value.
+template <class FunctorType, class ReturnViewType, class ExecutionSpace,
+          class... Traits>
+struct SingleWithReturn<FunctorType, SinglePolicy<Traits...>, ReturnViewType,
+                        ExecutionSpace> {
+  FunctorType functor;
+  SinglePolicy<Traits...> policy;
+  ReturnViewType return_value;
 
-    using ReturnValueAdapter =
-        typename Kokkos::Impl::ParallelReduceReturnValue<void, ReturnType,
-                                                         FunctorWrapper>;
+  static_assert(Kokkos::is_view_v<ReturnViewType>);
 
-    using InternalReturn = typename ReturnValueAdapter::value_type;
+  void execute() const {
+    // We are using the implementation detail ParallelReduce here
+    // In order to do this we need to wrap the functor multipl times
 
-    using ReducerType =
-        typename Impl::NoOpReducer<InternalReturn, ExecutionSpace>;
+    // First Wrap is to make the user functor in a reduction one,
+    // that takes an index
+    using FunctorWrapper = Impl::SingleReductionWrapper<FunctorType>;
+    FunctorWrapper functor_wrapper{functor};
 
+    // Now we need a no-op reducer that doesn't make any requirements
+    // on the value_type (i.e. no += etc. which the default reduction
+    // expects).
+    using ReducerType = typename Impl::NoOpReducer<ReturnViewType>;
+
+    // Get the execution policy we are mapping to (RangePolicy with 1 iteration)
     using RangePolicy =
         std::remove_cvref_t<decltype(policy.impl_get_range_policy())>;
 
+    // This is our canonical reduction analysis
     using Analysis =
         Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
-                              RangePolicy, ReducerType, InternalReturn>;
+                              RangePolicy, ReducerType, ReturnViewType>;
 
+    // This thing adds all kinds of extra info for the reduction backend
+    // information, like does it have init, does it have join, value size
     using CombinedFunctorReducerType =
         Kokkos::Impl::CombinedFunctorReducer<FunctorWrapper,
                                              typename Analysis::Reducer>;
@@ -113,13 +138,14 @@ struct Single {
     CombinedFunctorReducerType functor_reducer(
         functor_wrapper, typename Analysis::Reducer(return_value));
 
+    // The actual implementation for ParallelReduce
     using ParallelReducer = Impl::ParallelReduce<CombinedFunctorReducerType,
                                                  RangePolicy, ExecutionSpace>;
 
-    auto closure =
-        construct_with_shared_allocation_tracking_disabled<ParallelReducer>(
-            functor_reducer, policy.impl_get_range_policy(),
-            ReturnValueAdapter::return_value(return_value, functor_wrapper));
+    // Create the closure and call it. No need to turn ref count off, since
+    // we did that already.
+    auto closure = ParallelReducer(
+        functor_reducer, policy.impl_get_range_policy(), return_value);
 
     closure.execute();
   }

@@ -76,7 +76,8 @@ struct ParallelReduceReturnValue<
 
   using value_type = typename return_type::value_type;
 
-  static return_type& return_value(ReturnType& return_val, const FunctorType&) {
+  static const return_type& return_value(const ReturnType& return_val,
+                                         const FunctorType&) {
     return return_val;  // NOLINT(bugprone-return-const-ref-from-parameter)
   }
 };

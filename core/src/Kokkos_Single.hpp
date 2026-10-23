@@ -15,6 +15,7 @@ static_assert(false,
 #include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_ExecPolicy.hpp>
 
+#include <impl/Kokkos_Single_fwd.hpp>
 #include <impl/Kokkos_Single_Default_Impl.hpp>
 #include <impl/Kokkos_Tools_Generic.hpp>
 
@@ -28,24 +29,16 @@ template <class FunctorType, class... PolicyProperties>
 inline void single(const std::string& label,
                    const SinglePolicy<PolicyProperties...>& single_policy,
                    const FunctorType& functor) {
-  // Single takes an indexless functor but we will use the default parallel_for
-  // implementation so we wrap the functor in an other functor with an index.
-  ::Kokkos::Impl::UnbindIndexArgument<FunctorType> functor_wrapper{functor};
-  using FunctorWrapper = decltype(functor_wrapper);
+  using ExecPolicy = SinglePolicy<PolicyProperties...>;
 
   uint64_t kpID = 0;
-  Kokkos::Tools::Impl::begin_single<SinglePolicy<PolicyProperties...>,
-                                    FunctorType>(single_policy, label, kpID);
+  Kokkos::Tools::Impl::begin_single<ExecPolicy, FunctorType>(single_policy,
+                                                             label, kpID);
 
-  using execution_space = typename Impl::FunctorPolicyExecutionSpace<
-      FunctorWrapper,
-      typename std::remove_cvref_t<
-          decltype(single_policy.impl_get_range_policy())>>::execution_space;
+  auto closure = Impl::construct_with_shared_allocation_tracking_disabled<
+      Impl::Single<FunctorType, ExecPolicy>>(functor, single_policy);
 
-  // Dispatch execution to either the default implementation or an
-  // execution_space specific implementation if one is available
-  Kokkos::Impl::Single<execution_space>::template execute<>(functor_wrapper,
-                                                            single_policy);
+  closure.execute();
 
   Kokkos::Tools::Impl::end_single<FunctorType>(kpID);
 }
@@ -74,22 +67,45 @@ template <class FunctorType, class ReturnType, class... PolicyProperties>
 inline void single(const std::string& label,
                    const SinglePolicy<PolicyProperties...>& single_policy,
                    const FunctorType& functor, ReturnType& return_value) {
-  using execution_space = typename Impl::FunctorPolicyExecutionSpace<
-      FunctorType,
-      typename std::remove_cvref_t<
-          decltype(single_policy.impl_get_range_policy())>>::execution_space;
+  using ExecPolicy = SinglePolicy<PolicyProperties...>;
+
+  // We always pass a View to the implementation, wrap scalar values
+  // into a Host View.
+  using ReturnViewType =
+      std::conditional_t<Kokkos::is_view_v<ReturnType>, ReturnType,
+                         Kokkos::View<ReturnType, Kokkos::HostSpace,
+                                      Kokkos::MemoryTraits<Kokkos::Unmanaged>>>;
+
+  ReturnViewType return_view;
+  if constexpr (Kokkos::is_view_v<ReturnType>) {
+    return_view = return_value;
+  } else {
+    return_view = ReturnViewType(&return_value);
+  }
 
   uint64_t kpID = 0;
-  Kokkos::Tools::Impl::begin_single<SinglePolicy<PolicyProperties...>,
-                                    FunctorType>(single_policy, label, kpID);
+  Kokkos::Tools::Impl::begin_single<ExecPolicy, FunctorType>(single_policy,
+                                                             label, kpID);
 
   // Dispatch execution to either the default implementation or an
   // execution_space specific implementation if one is available
-  Kokkos::Impl::Single<execution_space>::template execute<
-      FunctorType, SinglePolicy<PolicyProperties...>, ReturnType>(
-      label, single_policy, functor, return_value);
+  auto closure =
+      Kokkos::Impl::construct_with_shared_allocation_tracking_disabled<
+          Impl::SingleWithReturn<FunctorType, ExecPolicy, ReturnViewType>>(
+          functor, single_policy, return_view);
+
+  closure.execute();
 
   Kokkos::Tools::Impl::end_single<FunctorType>(kpID);
+
+  // if output is not a View we need to fence like with parallel_reduce
+  // Note the tools call comes before: if a tool fences the time for the
+  // single op is associated with the single op, otherwise with its
+  // associated fence - this is consistent with parallel_reduce
+  if constexpr (!Kokkos::is_view_v<ReturnType>) {
+    single_policy.space().fence(
+        "Kokkos::single: fence due to scalar value output");
+  }
 }
 
 template <class FunctorType, class ReturnType, class... PolicyProperties>
