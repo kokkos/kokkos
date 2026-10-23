@@ -11,10 +11,12 @@ static_assert(false,
 #define KOKKOS_SINGLE_FWD_HPP
 
 namespace Kokkos::Impl {
-  template<class FunctorType, class ExecutionPolicy, class ExecutionSpace = typename ExecutionPolicy::execution_space>
-  struct Single;
-  template<class FunctorType, class ExecutionPolicy, class ReturnViewType, class ExecutionSpace = typename ExecutionPolicy::execution_space>
-  struct SingleWithReturn;
-}
+template <class FunctorType, class ExecutionPolicy,
+          class ExecutionSpace = typename ExecutionPolicy::execution_space>
+struct Single;
+template <class FunctorType, class ExecutionPolicy, class ReturnViewType,
+          class ExecutionSpace = typename ExecutionPolicy::execution_space>
+struct SingleWithReturn;
+}  // namespace Kokkos::Impl
 
-#endif // KOKKOS_SINGLE_FWD_HPP
+#endif  // KOKKOS_SINGLE_FWD_HPP

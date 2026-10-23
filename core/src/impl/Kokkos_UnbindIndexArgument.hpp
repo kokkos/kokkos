@@ -17,8 +17,7 @@ struct UnbindIndexArgument {
   // One of WorkTagOrIndex or MaybeIndex contains the index, the other can be
   // the worktag. We try to determine which is which and discard the index.
   template <typename WorkTagOrIndex, typename... MaybeIndex>
-  KOKKOS_FUNCTION void operator()(WorkTagOrIndex wtOrIdx,
-                                  MaybeIndex...) const {
+  KOKKOS_FUNCTION void operator()(WorkTagOrIndex wtOrIdx, MaybeIndex...) const {
     static_assert(sizeof...(MaybeIndex) <= 1);
     if constexpr (sizeof...(MaybeIndex) == 0) {
       m_functor();
@@ -40,8 +39,8 @@ struct UnbindReductionIndexArgument {
   // which and discard the index.
   template <class WorkTagOrIndex, class IndexOrFirstRet, class... ReturnTypes>
   KOKKOS_FUNCTION void operator()(WorkTagOrIndex wtOrIdx,
-                                         IndexOrFirstRet&& idxOrFirstRet,
-                                         ReturnTypes&&... rets) const {
+                                  IndexOrFirstRet&& idxOrFirstRet,
+                                  ReturnTypes&&... rets) const {
     if constexpr (std::is_void_v<WorkTag>) {
       m_functor(std::forward<IndexOrFirstRet>(idxOrFirstRet),
                 std::forward<ReturnTypes>(rets)...);

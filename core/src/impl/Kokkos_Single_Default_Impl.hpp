@@ -45,7 +45,7 @@ struct NoOpReducer : BaseReducer<typename ReturnViewType::value_type,
   NoOpReducer(const ReturnViewType& value_in) : parent_type(value_in) {}
 
   KOKKOS_INLINE_FUNCTION
-#ifndef KOKKOS_ENABLE_OPENMP // FIXME_OPENMP
+#ifndef KOKKOS_ENABLE_OPENMP  // FIXME_OPENMP
   void join(value_type& dest, const value_type& src) const { dest = src; }
 #else
   // OpenMP call join with inactive threads, causing dest to be erased by
