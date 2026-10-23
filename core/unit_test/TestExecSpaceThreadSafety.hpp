@@ -26,6 +26,14 @@ namespace {
 #define KOKKOS_TEST_SKIP_IF_OPENACC()
 #endif
 
+#ifdef KOKKOS_ENABLE_NEXTSILICON  // FIXME_NEXTSILICON
+#define KOKKOS_TEST_SKIP_IF_NEXTSILICON()          \
+  GTEST_SKIP() << "incorrect result on 1.4.0-136"; \
+  KOKKOS_IMPL_UNREACHABLE();
+#else
+#define KOKKOS_TEST_SKIP_IF_NEXTSILICON()
+#endif
+
 #ifdef KOKKOS_ENABLE_IMPL_SYCL_OUT_OF_ORDER_QUEUES  // FIXME_SYCL
 #define KOKKOS_TEST_SKIP_IF_SYCL_OUT_OF_ORDER_QUEUES() \
   GTEST_SKIP()                                         \
@@ -45,6 +53,7 @@ namespace {
   KOKKOS_TEST_SKIP_IF_OPENACC()                  \
   KOKKOS_TEST_SKIP_IF_SYCL_OUT_OF_ORDER_QUEUES() \
   KOKKOS_TEST_SKIP_IF_ATOMICS_BYPASS()           \
+  KOKKOS_TEST_SKIP_IF_NEXTSILICON()              \
   static_assert(true, "no-op to require trailing semicolon")
 
 // FIXME_NEXTSILICON: NextSilicon can offload OpenMP code. When OpenMP +

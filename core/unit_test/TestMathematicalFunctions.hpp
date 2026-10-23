@@ -1102,6 +1102,13 @@ void do_test_math_ternary_function(Arg1 arg1, Arg2 arg2, Arg3 arg3) {
 #ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_1
 
 TEST(TEST_CATEGORY, mathematical_functions_trigonometric_functions) {
+  // FIXME_NEXTSILICON
+#ifdef KOKKOS_ENABLE_NEXTSILICON
+  if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::NextSilicon>) {
+    GTEST_SKIP() << "missing asinf libcall in 1.4.0-136";
+  }
+#endif
+
   TEST_MATH_FUNCTION(sin)({true, false});
   TEST_MATH_FUNCTION(sin)({-3, -2, -1, 0, 1});
   TEST_MATH_FUNCTION(sin)({-3l, -2l, -1l, 0l, 1l});
@@ -1357,6 +1364,11 @@ TEST(TEST_CATEGORY, mathematical_functions_fmax_fmin) {
 
 #ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_3
 TEST(TEST_CATEGORY, mathematical_functions_exponential_functions) {
+#ifdef KOKKOS_ENABLE_NEXTSILICON
+  if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::NextSilicon>) {
+    GTEST_SKIP() << "incorrect results on 1.4.0-136";
+  }
+#endif
   TEST_MATH_FUNCTION(exp)({-9, -8, -7, -6, -5, 4, 3, 2, 1, 0});
   TEST_MATH_FUNCTION(exp)({-9l, -8l, -7l, -6l, -5l, 4l, 3l, 2l, 1l, 0l});
   TEST_MATH_FUNCTION(exp)({-9ll, -8ll, -7ll, -6ll, -5ll, 4ll, 3ll, 2ll, 1ll});
@@ -1614,18 +1626,27 @@ TEST(TEST_CATEGORY, mathematical_functions_error_and_gamma_functions) {
   TEST_MATH_FUNCTION(erfc)({.7l, .8l, .9l});
 #endif
 
-  TEST_MATH_FUNCTION(tgamma)({1, 2, 3, 4, 56, 78});
-  TEST_MATH_FUNCTION(tgamma)({1l, 2l, 3l, 4l, 56l, 78l});
-  TEST_MATH_FUNCTION(tgamma)({1ll, 2ll, 3ll, 4ll, 56ll, 78ll});
-  TEST_MATH_FUNCTION(tgamma)({1u, 2u, 3u, 4u, 56u, 78u});
-  TEST_MATH_FUNCTION(tgamma)({1ul, 2ul, 3ul, 4ul, 56ul, 78ul});
-  TEST_MATH_FUNCTION(tgamma)({1ull, 2ull, 3ull, 4ull, 56ull, 78ull});
-  TEST_HALF_MATH_FUNCTION(tgamma, KE::half_t)({.1f, -2.2f, 3.f});
-  TEST_HALF_MATH_FUNCTION(tgamma, KE::bhalf_t)({.1f, -2.2f, 3.f});
-  TEST_MATH_FUNCTION(tgamma)({.1f, -2.2f, 3.f});
-  TEST_MATH_FUNCTION(tgamma)({-4.4, .5, -.6});
+// FIXME_NEXTSILICON: 1.4.0-136: fails in handoff
+#ifdef KOKKOS_ENABLE_NEXTSILICON
+  if (!std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::NextSilicon>) {
+#endif
+    TEST_MATH_FUNCTION(tgamma)({1, 2, 3, 4, 56, 78});
+    TEST_MATH_FUNCTION(tgamma)({1l, 2l, 3l, 4l, 56l, 78l});
+    TEST_MATH_FUNCTION(tgamma)({1ll, 2ll, 3ll, 4ll, 56ll, 78ll});
+    TEST_MATH_FUNCTION(tgamma)({1u, 2u, 3u, 4u, 56u, 78u});
+    TEST_MATH_FUNCTION(tgamma)({1ul, 2ul, 3ul, 4ul, 56ul, 78ul});
+    TEST_MATH_FUNCTION(tgamma)({1ull, 2ull, 3ull, 4ull, 56ull, 78ull});
+    TEST_HALF_MATH_FUNCTION(tgamma, KE::half_t)({.1f, -2.2f, 3.f});
+    TEST_HALF_MATH_FUNCTION(tgamma, KE::bhalf_t)({.1f, -2.2f, 3.f});
+    TEST_MATH_FUNCTION(tgamma)({.1f, -2.2f, 3.f});
+    TEST_MATH_FUNCTION(tgamma)({-4.4, .5, -.6});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
-  TEST_MATH_FUNCTION(tgamma)({.7l, .8l, .9l});
+    TEST_MATH_FUNCTION(tgamma)({.7l, .8l, .9l});
+#endif
+#ifdef KOKKOS_ENABLE_NEXTSILICON
+  } else {
+    std::cerr << "tgamma misprojected (?) in 1.4.0-136";
+  }
 #endif
 
 // FIXME_NEXTSILICON: projection failure on 1.3.0-84
@@ -2503,6 +2524,12 @@ TEST(TEST_CATEGORY, mathematical_functions_fpclassify) {
   // FIXME_OPENACC: Test is known to fail if 24.5 < NVHPC version <= 26.5.
   GTEST_SKIP() << "skipping since the OpenACC backend test fails if 24.5 < "
                   "NVHPC version <= 26.5";
+#elif defined(KOKKOS_ENABLE_NEXTSILICON)
+  // FIXME_NEXTSILICON
+  if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::NextSilicon>) {
+    GTEST_SKIP() << "projection failure in 1.4.0-136";
+  }
+  TestFpClassify<TEST_EXECSPACE>();
 #else
   TestFpClassify<TEST_EXECSPACE>();
 #endif
