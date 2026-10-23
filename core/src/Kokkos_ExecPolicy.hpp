@@ -41,6 +41,9 @@ class RangePolicy;
 
 namespace Impl {
 
+template <class ThreadHandle>
+struct InlineHandleType;
+
 /** \brief Handle for thread-level parallelism within a team.
  *
  *  Use with RangePolicy to parallelize within a thread using vector resources
@@ -53,6 +56,7 @@ struct ThreadHandleType {
   using member_type     = TeamMemberType;
   using execution_space = typename TeamMemberType::execution_space;
   using thread_handle   = ThreadHandleType;
+  using inline_handle   = InlineHandleType<ThreadHandleType>;
 
   KOKKOS_INLINE_FUNCTION
   constexpr ThreadHandleType(TeamMemberType const& m) : team_member(m) {}
@@ -62,6 +66,33 @@ struct ThreadHandleType {
 
   KOKKOS_INLINE_FUNCTION
   int team_size() const { return team_member.team_size(); }
+};
+
+/** \brief Handle for serial iteration nested under a thread handle.
+ *
+ *  Use with RangePolicy to run a range serially (no vector parallelism).
+ *  This is the innermost self-similar nesting level after ThreadHandle.
+ *  The concept is Kokkos::Experimental::InlineHandle.
+ */
+template <class ThreadHandle>
+struct InlineHandleType {
+  static_assert(Kokkos::Experimental::ThreadHandle<ThreadHandle>,
+                "InlineHandle requires a Kokkos::Experimental::ThreadHandle.");
+
+  ThreadHandle const& thread;
+  using thread_handle   = ThreadHandle;
+  using member_type     = typename ThreadHandle::member_type;
+  using execution_space = typename ThreadHandle::execution_space;
+  using inline_handle   = InlineHandleType;
+
+  KOKKOS_INLINE_FUNCTION
+  constexpr InlineHandleType(ThreadHandle const& th) : thread(th) {}
+
+  KOKKOS_INLINE_FUNCTION
+  int team_rank() const { return thread.team_rank(); }
+
+  KOKKOS_INLINE_FUNCTION
+  int team_size() const { return thread.team_size(); }
 };
 
 // Private tag that can be used to make a copy of another execution policy
@@ -900,6 +931,29 @@ struct ThreadVectorRangeBoundariesStruct {
       : start(static_cast<index_type>(arg_begin)), end(arg_end) {}
 };
 
+/** Boundaries for serial iteration under a thread handle (inline range). */
+template <typename iType, class TeamMemberType>
+struct InlineRangeBoundariesStruct {
+  using index_type = iType;
+  const TeamMemberType& member;
+  const index_type start;
+  const index_type end;
+  enum { increment = 1 };
+
+  KOKKOS_INLINE_FUNCTION
+  constexpr InlineRangeBoundariesStruct(const TeamMemberType& arg_thread,
+                                        const index_type& arg_count) noexcept
+      : member(arg_thread), start(static_cast<index_type>(0)), end(arg_count) {}
+
+  KOKKOS_INLINE_FUNCTION
+  constexpr InlineRangeBoundariesStruct(const TeamMemberType& arg_thread,
+                                        const index_type& arg_begin,
+                                        const index_type& arg_end) noexcept
+      : member(arg_thread),
+        start(static_cast<index_type>(arg_begin)),
+        end(arg_end) {}
+};
+
 template <class TeamMemberType>
 struct ThreadSingleStruct {
   const TeamMemberType& team_member;
@@ -1415,14 +1469,65 @@ class ImplRangePolicy<Handle, Properties...>
     return 1;
   }
 };
+
+template <Kokkos::Experimental::InlineHandle Handle, class... Properties>
+class ImplRangePolicy<Handle, Properties...>
+    : public Impl::InlineRangeBoundariesStruct<
+          typename Impl::PolicyTraits<Properties...>::index_type,
+          typename Handle::member_type> {
+  using base_t = typename Impl::InlineRangeBoundariesStruct<
+      typename Impl::PolicyTraits<Properties...>::index_type,
+      typename Handle::member_type>;
+
+ public:
+  using traits = typename Impl::PolicyTraits<Properties...>;
+  static_assert(std::same_as<typename traits::execution_type, Handle>);
+
+  using execution_policy = Kokkos::RangePolicy<Properties...>;
+  using work_tag         = typename traits::work_tag;
+  using member_type      = typename traits::index_type;
+  using index_type       = typename traits::index_type;
+
+ private:
+  Handle m_handle;
+
+ public:
+  template <typename IndexType1, typename IndexType2>
+  KOKKOS_INLINE_FUNCTION ImplRangePolicy(Handle const& handle,
+                                         IndexType1 work_begin,
+                                         IndexType2 work_end)
+      : base_t(handle.thread.team_member, static_cast<index_type>(work_begin),
+               static_cast<index_type>(work_end)),
+        m_handle(handle) {}
+
+  template <typename IndexType>
+  KOKKOS_INLINE_FUNCTION ImplRangePolicy(Handle const& handle,
+                                         IndexType work_count)
+      : base_t(handle.thread.team_member, static_cast<index_type>(work_count)),
+        m_handle(handle) {}
+
+  KOKKOS_INLINE_FUNCTION Handle const& space() const { return m_handle; }
+
+  KOKKOS_INLINE_FUNCTION member_type begin() const {
+    return static_cast<const base_t*>(this)->start;
+  }
+  KOKKOS_INLINE_FUNCTION member_type end() const {
+    return static_cast<const base_t*>(this)->end;
+  }
+
+  KOKKOS_INLINE_FUNCTION member_type chunk_size() const {
+    // Same rationale as ImplRangePolicy<TeamHandle, ...>::chunk_size().
+    return 1;
+  }
+};
 }  // namespace Impl
 
 /** \brief  Execution policy for work over a range of an integral type.
  *
  * RangePolicy has partial specializations for an execution space, a team
- * handle, and a thread handle: they parallelize over an execution space, over
- * a thread team (TeamVectorRange), and within a team thread
- * (ThreadVectorRange), respectively.
+ * handle, a thread handle, and an inline handle: they parallelize over an
+ * execution space, over a thread team (TeamVectorRange), within a team thread
+ * (ThreadVectorRange), and serially under a thread, respectively.
  *
  * Valid template argument options:
  *
@@ -1457,7 +1562,7 @@ class RangePolicy
   using base_t = Impl::ImplRangePolicy<execution_type, Properties...>;
   using base_t::base_t;
 
-  // Set chunk size and return the policy. For team handle specialization, this
+  // Set chunk size and return the policy. For handle specializations, this
   // is a no-op.
   KOKKOS_INLINE_FUNCTION RangePolicy& set_chunk_size(
       [[maybe_unused]] int chunk_size) {
@@ -1474,7 +1579,8 @@ namespace Impl {
 template <class ExecType>
 concept ExecutionTypeConcept =
     ExecutionSpace<ExecType> || TeamHandle<ExecType> ||
-    Kokkos::Experimental::ThreadHandle<ExecType>;
+    Kokkos::Experimental::ThreadHandle<ExecType> ||
+    Kokkos::Experimental::InlineHandle<ExecType>;
 }  // namespace Impl
 
 // Deduction guide
