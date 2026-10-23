@@ -37,15 +37,10 @@ struct NoOpReducer : BaseReducer<typename ReturnViewType::value_type,
   using reducer    = NoOpReducer;
   using value_type = typename parent_type::value_type;
 
-  // Inherit constructors
-  using parent_type::parent_type;
-
-  // Not quite sure why I need this, but without it didn't
-  // find the ctor.
   NoOpReducer(const ReturnViewType& value_in) : parent_type(value_in) {}
 
-  KOKKOS_INLINE_FUNCTION
-#ifndef KOKKOS_ENABLE_OPENMP  // FIXME_OPENMP
+  KOKKOS_FUNCTION
+#if !defined(KOKKOS_ENABLE_OPENMP) && !defined(KOKKOS_ENABLE_HPX) // FIXME_OPENMP
   void join(value_type& dest, const value_type& src) const { dest = src; }
 #else
   // OpenMP call join with inactive threads, causing dest to be erased by
@@ -53,7 +48,7 @@ struct NoOpReducer : BaseReducer<typename ReturnViewType::value_type,
   void join(value_type&, const value_type&) const {}
 #endif
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void init(value_type&) const {}
 };
 
@@ -61,14 +56,14 @@ template <class FunctorType>
 struct SingleReductionWrapper {
   FunctorType m_functor;
   template <class WorkTag, class Index, class ReturnType>
-  KOKKOS_INLINE_FUNCTION void operator()(WorkTag worktag, Index,
+  KOKKOS_FUNCTION void operator()(WorkTag worktag, Index,
                                          ReturnType& ret) const {
     static_assert(std::is_empty_v<WorkTag>);
     m_functor(worktag, ret);
   }
 
   template <class Index, class ReturnType>
-  KOKKOS_INLINE_FUNCTION void operator()(Index, ReturnType& ret) const {
+  KOKKOS_FUNCTION void operator()(Index, ReturnType& ret) const {
     m_functor(ret);
   }
 };
@@ -89,6 +84,9 @@ struct Single<FunctorType, SinglePolicy<Traits...>, ExecutionSpace> {
 
     using InnerPolicy =
         std::remove_cvref_t<decltype(policy.impl_get_range_policy())>;
+
+    // Create the closure and call it. No need to turn ref count off, since
+    // we did that already.
     auto closure = Impl::ParallelFor<FunctorWrapper, InnerPolicy>(
         functor_wrapper, policy.impl_get_range_policy());
     closure.execute();
@@ -108,29 +106,29 @@ struct SingleWithReturn<FunctorType, SinglePolicy<Traits...>, ReturnViewType,
 
   void execute() const {
     // We are using the implementation detail ParallelReduce here
-    // In order to do this we need to wrap the functor multipl times
+    // In order to do this, we need to wrap the functor multiple times
 
-    // First Wrap is to make the user functor in a reduction one,
+    // The first Wrap is to make the user functor in a reduction one,
     // that takes an index
     using FunctorWrapper = Impl::SingleReductionWrapper<FunctorType>;
     FunctorWrapper functor_wrapper{functor};
 
-    // Now we need a no-op reducer that doesn't make any requirements
+    // Now we need a no-op reducer that doesn't have any requirements
     // on the value_type (i.e. no += etc. which the default reduction
     // expects).
     using ReducerType = typename Impl::NoOpReducer<ReturnViewType>;
 
     // Get the execution policy we are mapping to (RangePolicy with 1 iteration)
-    using RangePolicy =
+    using InnerPolicy =
         std::remove_cvref_t<decltype(policy.impl_get_range_policy())>;
 
     // This is our canonical reduction analysis
     using Analysis =
         Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
-                              RangePolicy, ReducerType, ReturnViewType>;
+                              InnerPolicy, ReducerType, ReturnViewType>;
 
-    // This thing adds all kinds of extra info for the reduction backend
-    // information, like does it have init, does it have join, value size
+    // Analysis::Reducer adds all kinds of extra info for the reduction backend
+    // like does it have init, does it have join, value size
     using CombinedFunctorReducerType =
         Kokkos::Impl::CombinedFunctorReducer<FunctorWrapper,
                                              typename Analysis::Reducer>;
@@ -140,7 +138,7 @@ struct SingleWithReturn<FunctorType, SinglePolicy<Traits...>, ReturnViewType,
 
     // The actual implementation for ParallelReduce
     using ParallelReducer = Impl::ParallelReduce<CombinedFunctorReducerType,
-                                                 RangePolicy, ExecutionSpace>;
+                                                 InnerPolicy, ExecutionSpace>;
 
     // Create the closure and call it. No need to turn ref count off, since
     // we did that already.

@@ -306,9 +306,6 @@ template <typename FunctorType, typename FunctorAnalysisReducerType,
           typename Enable = void>
 class CombinedFunctorReducer;
 
-template <class T, class ReturnType, class ValueTraits>
-struct ParallelReduceReturnValue;
-
 /// \class ParallelScan
 /// \brief Implementation detail of parallel_scan.
 ///

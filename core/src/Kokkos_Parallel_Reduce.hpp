@@ -67,6 +67,10 @@ class CombinedFunctorReducer<
   FunctorAnalysisReducerType m_reducer;
 };
 
+template <class T, class ReturnType, class ValueTraits>
+struct ParallelReduceReturnValue;
+
+
 template <class ReturnType, class FunctorType>
 struct ParallelReduceReturnValue<
     std::enable_if_t<Kokkos::is_view<ReturnType>::value>, ReturnType,

@@ -28,29 +28,6 @@ struct UnbindIndexArgument {
   }
 };
 
-// Helper to allow passing an indexless functor to the parallel_reduce backend
-// through special interface such as Kokkos::GraphNodeThen and Kokkos::Single.
-template <class FunctorType, class WorkTag>
-struct UnbindReductionIndexArgument {
-  FunctorType m_functor;
-
-  // One of WorkTagOrIndex or IndexOrFirstRet contains the index, the other can
-  // be the worktag or the first return type. We try to determine which is
-  // which and discard the index.
-  template <class WorkTagOrIndex, class IndexOrFirstRet, class... ReturnTypes>
-  KOKKOS_FUNCTION void operator()(WorkTagOrIndex wtOrIdx,
-                                  IndexOrFirstRet&& idxOrFirstRet,
-                                  ReturnTypes&&... rets) const {
-    if constexpr (std::is_void_v<WorkTag>) {
-      m_functor(std::forward<IndexOrFirstRet>(idxOrFirstRet),
-                std::forward<ReturnTypes>(rets)...);
-    } else {
-      static_assert(std::is_empty_v<WorkTagOrIndex>);
-      m_functor(wtOrIdx, std::forward<ReturnTypes>(rets)...);
-    }
-  }
-};
-
 }  //  namespace Kokkos::Impl
 
 #endif  // KOKKOS_IMPL_UNBIND_INDEX_ARGUMENT_HPP
