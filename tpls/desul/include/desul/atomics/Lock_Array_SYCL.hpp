@@ -177,6 +177,34 @@ inline static
   (void)once;
 }
 
+#ifndef DESUL_ATOMICS_ENABLE_SYCL_SEPARABLE_COMPILATION
+/// \brief Each translation unit registers a function that copies the host lock
+///        array pointers into its own (static) device globals.
+///
+/// init_lock_arrays_sycl() invokes all registered copiers, so every translation
+/// unit's instance is valid regardless of which translation unit submits the
+/// kernel.  This matters when user code is compiled with relocatable device code
+/// while desul is not: a SYCL_EXTERNAL function using a lock-based atomic may be
+/// defined in a translation unit that never submits a kernel itself.
+///
+/// Translation units must be registered before init_lock_arrays_sycl() is
+/// called and must not be unloaded before finalization, i.e. loading shared
+/// libraries (dlopen) after initialization or unloading them (dlclose) before
+/// finalization is not supported.  The copiers are not invoked again by
+/// finalize, since initializing again after finalization is not supported
+/// either.
+DESUL_IMPL_EXPORT void register_sycl_lock_arrays_copier(void (*copier)(sycl::queue));
+
+namespace {
+struct SyclLockArraysCopierRegistrar {
+  SyclLockArraysCopierRegistrar() {
+    register_sycl_lock_arrays_copier(&copy_sycl_lock_arrays_to_device);
+  }
+};
+SyclLockArraysCopierRegistrar sycl_lock_arrays_copier_registrar;
+}  // namespace
+#endif
+
 #else  // not supported
 
 template <typename /*AlwaysInt*/ = int>
