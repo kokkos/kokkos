@@ -24,6 +24,124 @@ static_assert(false,
 #include <string>
 
 namespace Kokkos {
+namespace Impl {
+
+template <bool HasLabel, Kokkos::ExecutionPolicy ExecutionPolicy,
+          class FunctorType>
+inline void parallel_scan_dispatch(
+    const OptionalLabelRef<HasLabel> optional_label,
+    const ExecutionPolicy& policy, const FunctorType& functor) {
+  /** Enforce correct use **/
+  if constexpr (HasLabel) {
+    CheckUsage<UsageRequires::insideExecEnv>::check(
+        "parallel_scan", policy, optional_label.get().c_str());
+  } else {
+    CheckUsage<UsageRequires::insideExecEnv>::check("parallel_scan", policy);
+  }
+
+  uint64_t kpID = 0;
+  /** Request a tuned policy from the tools subsystem */
+  const auto& response = Kokkos::Tools::Impl::begin_parallel_scan(
+      policy, functor, optional_label, kpID);
+  const auto& inner_policy = response.policy;
+
+  auto closure = construct_with_shared_allocation_tracking_disabled<
+      ParallelScan<FunctorType, ExecutionPolicy>>(functor, inner_policy);
+
+  closure.execute();
+
+  Kokkos::Tools::Impl::end_parallel_scan(inner_policy, functor, optional_label,
+                                         kpID);
+}
+
+template <bool HasLabel, class FunctorType>
+inline void parallel_scan_dispatch(
+    const OptionalLabelRef<HasLabel> optional_label, const size_t work_count,
+    const FunctorType& functor) {
+  /** Enforce correct use **/
+  if constexpr (HasLabel) {
+    CheckUsage<UsageRequires::insideExecEnv>::check(
+        "parallel_scan", work_count, optional_label.get().c_str());
+  } else {
+    CheckUsage<UsageRequires::insideExecEnv>::check("parallel_scan",
+                                                    work_count);
+  }
+
+  using execution_space =
+      typename FunctorPolicyExecutionSpace<FunctorType, void>::execution_space;
+
+  using policy = Kokkos::RangePolicy<execution_space>;
+
+  policy execution_policy(0, work_count);
+  ::Kokkos::Impl::parallel_scan_dispatch(optional_label, execution_policy,
+                                         functor);
+}
+
+template <bool HasLabel, Kokkos::ExecutionPolicy ExecutionPolicy,
+          class FunctorType, class ReturnType>
+inline void parallel_scan_dispatch(
+    const OptionalLabelRef<HasLabel> optional_label,
+    const ExecutionPolicy& policy, const FunctorType& functor,
+    ReturnType& return_value) {
+  /** Enforce correct use **/
+  if constexpr (HasLabel) {
+    CheckUsage<UsageRequires::insideExecEnv>::check(
+        "parallel_scan", policy, optional_label.get().c_str());
+  } else {
+    CheckUsage<UsageRequires::insideExecEnv>::check("parallel_scan", policy);
+  }
+
+  uint64_t kpID                = 0;
+  ExecutionPolicy inner_policy = policy;
+  Kokkos::Tools::Impl::begin_parallel_scan(inner_policy, functor,
+                                           optional_label, kpID);
+
+  if constexpr (Kokkos::is_view<ReturnType>::value) {
+    auto closure = construct_with_shared_allocation_tracking_disabled<
+        ParallelScanWithTotal<FunctorType, ExecutionPolicy,
+                              typename ReturnType::value_type>>(
+        functor, inner_policy, return_value);
+    closure.execute();
+  } else {
+    Kokkos::View<ReturnType, Kokkos::HostSpace> view(&return_value);
+    auto closure = construct_with_shared_allocation_tracking_disabled<
+        ParallelScanWithTotal<FunctorType, ExecutionPolicy, ReturnType>>(
+        functor, inner_policy, view);
+    closure.execute();
+  }
+
+  Kokkos::Tools::Impl::end_parallel_scan(inner_policy, functor, optional_label,
+                                         kpID);
+
+  if (!Kokkos::is_view<ReturnType>::value)
+    policy.space().fence(
+        "Kokkos::parallel_scan: fence due to result being a value, not a view");
+}
+
+template <bool HasLabel, class FunctorType, class ReturnType>
+inline void parallel_scan_dispatch(
+    const OptionalLabelRef<HasLabel> optional_label, const size_t work_count,
+    const FunctorType& functor, ReturnType& return_value) {
+  /** Enforce correct use **/
+  if constexpr (HasLabel) {
+    CheckUsage<UsageRequires::insideExecEnv>::check(
+        "parallel_scan", work_count, optional_label.get().c_str());
+  } else {
+    CheckUsage<UsageRequires::insideExecEnv>::check("parallel_scan",
+                                                    work_count);
+  }
+
+  using execution_space =
+      typename FunctorPolicyExecutionSpace<FunctorType, void>::execution_space;
+
+  using policy = Kokkos::RangePolicy<execution_space>;
+
+  policy execution_policy(0, work_count);
+  ::Kokkos::Impl::parallel_scan_dispatch(optional_label, execution_policy,
+                                         functor, return_value);
+}
+}  // namespace Impl
+
 /// \fn parallel_scan
 /// \tparam ExecutionPolicy The execution policy type.
 /// \tparam FunctorType     The scan functor type.
@@ -192,60 +310,24 @@ namespace Kokkos {
 template <Kokkos::ExecutionPolicy ExecutionPolicy, class FunctorType>
 inline void parallel_scan(const std::string& str, const ExecutionPolicy& policy,
                           const FunctorType& functor) {
-  /** Enforce correct use **/
-  Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check(
-      "parallel_scan", policy, str.c_str());
-
-  uint64_t kpID = 0;
-  /** Request a tuned policy from the tools subsystem */
-  const auto& response =
-      Kokkos::Tools::Impl::begin_parallel_scan(policy, functor, str, kpID);
-  const auto& inner_policy = response.policy;
-
-  auto closure =
-      Kokkos::Impl::construct_with_shared_allocation_tracking_disabled<
-          Impl::ParallelScan<FunctorType, ExecutionPolicy>>(functor,
-                                                            inner_policy);
-
-  closure.execute();
-
-  Kokkos::Tools::Impl::end_parallel_scan(inner_policy, functor, str, kpID);
+  Impl::parallel_scan_dispatch(Impl::WithLabel{str}, policy, functor);
 }
 
 template <Kokkos::ExecutionPolicy ExecutionPolicy, class FunctorType>
 inline void parallel_scan(const ExecutionPolicy& policy,
                           const FunctorType& functor) {
-  /** Enforce correct use **/
-  Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check("parallel_scan",
-                                                              policy);
-
-  ::Kokkos::parallel_scan("", policy, functor);
+  Impl::parallel_scan_dispatch(Impl::NoLabel{}, policy, functor);
 }
 
 template <class FunctorType>
 inline void parallel_scan(const std::string& str, const size_t work_count,
                           const FunctorType& functor) {
-  /** Enforce correct use **/
-  Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check(
-      "parallel_scan", work_count, str.c_str());
-
-  using execution_space =
-      typename Kokkos::Impl::FunctorPolicyExecutionSpace<FunctorType,
-                                                         void>::execution_space;
-
-  using policy = Kokkos::RangePolicy<execution_space>;
-
-  policy execution_policy(0, work_count);
-  parallel_scan(str, execution_policy, functor);
+  Impl::parallel_scan_dispatch(Impl::WithLabel{str}, work_count, functor);
 }
 
 template <class FunctorType>
 inline void parallel_scan(const size_t work_count, const FunctorType& functor) {
-  /** Enforce correct use **/
-  Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check("parallel_scan",
-                                                              work_count);
-
-  ::Kokkos::parallel_scan("", work_count, functor);
+  Impl::parallel_scan_dispatch(Impl::NoLabel{}, work_count, functor);
 }
 
 template <Kokkos::ExecutionPolicy ExecutionPolicy, class FunctorType,
@@ -253,36 +335,8 @@ template <Kokkos::ExecutionPolicy ExecutionPolicy, class FunctorType,
 inline void parallel_scan(const std::string& str, const ExecutionPolicy& policy,
                           const FunctorType& functor,
                           ReturnType& return_value) {
-  /** Enforce correct use **/
-  Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check(
-      "parallel_scan", policy, str.c_str());
-
-  uint64_t kpID                = 0;
-  ExecutionPolicy inner_policy = policy;
-  Kokkos::Tools::Impl::begin_parallel_scan(inner_policy, functor, str, kpID);
-
-  if constexpr (Kokkos::is_view<ReturnType>::value) {
-    auto closure =
-        Kokkos::Impl::construct_with_shared_allocation_tracking_disabled<
-            Impl::ParallelScanWithTotal<FunctorType, ExecutionPolicy,
-                                        typename ReturnType::value_type>>(
-            functor, inner_policy, return_value);
-    closure.execute();
-  } else {
-    Kokkos::View<ReturnType, Kokkos::HostSpace> view(&return_value);
-    auto closure =
-        Kokkos::Impl::construct_with_shared_allocation_tracking_disabled<
-            Impl::ParallelScanWithTotal<FunctorType, ExecutionPolicy,
-                                        ReturnType>>(functor, inner_policy,
-                                                     view);
-    closure.execute();
-  }
-
-  Kokkos::Tools::Impl::end_parallel_scan(inner_policy, functor, str, kpID);
-
-  if (!Kokkos::is_view<ReturnType>::value)
-    policy.space().fence(
-        "Kokkos::parallel_scan: fence due to result being a value, not a view");
+  Impl::parallel_scan_dispatch(Impl::WithLabel{str}, policy, functor,
+                               return_value);
 }
 
 template <Kokkos::ExecutionPolicy ExecutionPolicy, class FunctorType,
@@ -290,39 +344,22 @@ template <Kokkos::ExecutionPolicy ExecutionPolicy, class FunctorType,
 inline void parallel_scan(const ExecutionPolicy& policy,
                           const FunctorType& functor,
                           ReturnType& return_value) {
-  /** Enforce correct use **/
-  Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check("parallel_scan",
-                                                              policy);
-
-  ::Kokkos::parallel_scan("", policy, functor, return_value);
+  Impl::parallel_scan_dispatch(Impl::NoLabel{}, policy, functor, return_value);
 }
 
 template <class FunctorType, class ReturnType>
 inline void parallel_scan(const std::string& str, const size_t work_count,
                           const FunctorType& functor,
                           ReturnType& return_value) {
-  /** Enforce correct use **/
-  Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check(
-      "parallel_scan", work_count, str.c_str());
-
-  using execution_space =
-      typename Kokkos::Impl::FunctorPolicyExecutionSpace<FunctorType,
-                                                         void>::execution_space;
-
-  using policy = Kokkos::RangePolicy<execution_space>;
-
-  policy execution_policy(0, work_count);
-  parallel_scan(str, execution_policy, functor, return_value);
+  Impl::parallel_scan_dispatch(Impl::WithLabel{str}, work_count, functor,
+                               return_value);
 }
 
 template <class FunctorType, class ReturnType>
 inline void parallel_scan(const size_t work_count, const FunctorType& functor,
                           ReturnType& return_value) {
-  /** Enforce correct use **/
-  Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check("parallel_scan",
-                                                              work_count);
-
-  ::Kokkos::parallel_scan("", work_count, functor, return_value);
+  Impl::parallel_scan_dispatch(Impl::NoLabel{}, work_count, functor,
+                               return_value);
 }
 }  // namespace Kokkos
 #endif

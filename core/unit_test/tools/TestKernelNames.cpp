@@ -63,6 +63,10 @@ void test_kernel_name_parallel_for() {
                          my_lambda);
     ASSERT_EQ(last_parallel_for, my_label);
 
+    Kokkos::parallel_for(std::string{},
+                         Kokkos::RangePolicy<ExecutionSpace>(0, 1), my_lambda);
+    ASSERT_TRUE(last_parallel_for.empty());
+
     Kokkos::parallel_for(Kokkos::RangePolicy<ExecutionSpace>(0, 1), my_lambda);
     ASSERT_EQ(last_parallel_for, typeid_name(my_lambda));
     ASSERT_FALSE(last_parallel_for.starts_with("const "))
@@ -99,6 +103,11 @@ void test_kernel_name_parallel_reduce() {
     Kokkos::parallel_reduce(my_label, Kokkos::RangePolicy<ExecutionSpace>(0, 1),
                             my_lambda, my_result);
     ASSERT_EQ(last_parallel_reduce, my_label);
+
+    Kokkos::parallel_reduce(std::string{},
+                            Kokkos::RangePolicy<ExecutionSpace>(0, 1),
+                            my_lambda, my_result);
+    ASSERT_TRUE(last_parallel_reduce.empty());
 
     Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecutionSpace>(0, 1),
                             my_lambda, my_result);
@@ -146,6 +155,10 @@ void test_kernel_name_parallel_scan() {
                           my_lambda);
     ASSERT_EQ(last_parallel_scan, my_label);
 
+    Kokkos::parallel_scan(std::string{},
+                          Kokkos::RangePolicy<ExecutionSpace>(0, 1), my_lambda);
+    ASSERT_TRUE(last_parallel_scan.empty());
+
     Kokkos::parallel_scan(Kokkos::RangePolicy<ExecutionSpace>(0, 1), my_lambda);
     ASSERT_EQ(last_parallel_scan, typeid_name(my_lambda));
     ASSERT_FALSE(last_parallel_scan.starts_with("const "))
@@ -180,19 +193,20 @@ TEST(kokkosp, kernel_name_internal) {
   struct ThisType {};
   {
     std::string const label("my_label");
-    Kokkos::Impl::ParallelConstructName<ThisType, void> pcn(label);
+    Kokkos::Impl::ParallelConstructName<ThisType, void, true> pcn(
+        Kokkos::Impl::WithLabel{label});
     ASSERT_EQ(pcn.get(), label);
-    std::string const empty_label("");
-    Kokkos::Impl::ParallelConstructName<ThisType, void> empty_pcn(empty_label);
+    Kokkos::Impl::ParallelConstructName<ThisType, void, false> empty_pcn(
+        Kokkos::Impl::NoLabel{});
     ASSERT_EQ(empty_pcn.get(), typeid_name(ThisType{}));
   }
   {
     std::string const label("my_label");
-    Kokkos::Impl::ParallelConstructName<ThisType, WorkTag> pcn(label);
+    Kokkos::Impl::ParallelConstructName<ThisType, WorkTag, true> pcn(
+        Kokkos::Impl::WithLabel{label});
     ASSERT_EQ(pcn.get(), label);
-    std::string const empty_label("");
-    Kokkos::Impl::ParallelConstructName<ThisType, WorkTag> empty_pcn(
-        empty_label);
+    Kokkos::Impl::ParallelConstructName<ThisType, WorkTag, false> empty_pcn(
+        Kokkos::Impl::NoLabel{});
     ASSERT_EQ(empty_pcn.get(),
               typeid_name(ThisType{}) + "/" + typeid_name(WorkTag{}));
   }
