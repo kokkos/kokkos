@@ -18,11 +18,8 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION static uint64x2_t svget_neonq_u64(
     svuint64_t z) {
   uint64x2_t res;
 
-  svbool_t pg0 = svpfirst(svptrue_b64(), svpfalse());
-  svbool_t pg1 = svpnext_b64(svptrue_b64(), pg0);
-
-  res[0] = svlastb(pg0, z);
-  res[1] = svlastb(pg1, z);
+  res[0] = svlastb(svptrue_pat_b64(SV_VL1), z);
+  res[1] = svlastb(svptrue_pat_b64(SV_VL2), z);
 
   return res;
 }
@@ -31,15 +28,10 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION static int32x4_t svget_neonq_s32(
     svint32_t z) {
   int32x4_t res;
 
-  svbool_t pg0 = svpfirst(svptrue_b32(), svpfalse());
-  svbool_t pg1 = svpnext_b32(svptrue_b32(), pg0);
-  svbool_t pg2 = svpnext_b32(svptrue_b32(), pg1);
-  svbool_t pg3 = svpnext_b32(svptrue_b32(), pg2);
-
-  res[0] = svlastb(pg0, z);
-  res[1] = svlastb(pg1, z);
-  res[2] = svlastb(pg2, z);
-  res[3] = svlastb(pg3, z);
+  res[0] = svlastb(svptrue_pat_b32(SV_VL1), z);
+  res[1] = svlastb(svptrue_pat_b32(SV_VL2), z);
+  res[2] = svlastb(svptrue_pat_b32(SV_VL3), z);
+  res[3] = svlastb(svptrue_pat_b32(SV_VL4), z);
 
   return res;
 }
