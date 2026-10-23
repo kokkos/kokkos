@@ -362,9 +362,9 @@ class SinglePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
       "SinglePolicy can't be declared with a LaunchBounds");
   using execution_policy = Kokkos::SinglePolicy<Properties...>;
   using execution_space  = typename traits::execution_space;
-  using range_policy = RangePolicy<Kokkos::LaunchBounds<1, 1>, Properties...>;
 
  private:
+  using range_policy = RangePolicy<Kokkos::LaunchBounds<1, 1>, Properties...>;
   range_policy m_range_policy;
 
  public:
