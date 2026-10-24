@@ -916,7 +916,8 @@ bool has_all_zero_bits(const T& value) {
     // conservatively use the fill path for those types.
     if constexpr (std::is_same_v<T, float> || std::is_same_v<T, double>) {
       constexpr std::byte all_zeroes[sizeof(T)] = {};
-      return std::memcmp(&value, all_zeroes, sizeof(T)) == 0;
+      const auto* bytes = reinterpret_cast<const std::byte*>(&value);
+      return std::memcmp(bytes, all_zeroes, sizeof(T)) == 0;
     }
     return false;
   } else if constexpr (std::is_scalar_v<T>) {

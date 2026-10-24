@@ -11,6 +11,13 @@ namespace {
 struct DeepCopyFloatingPointEnvironment {
   std::fenv_t saved;
   DeepCopyFloatingPointEnvironment() { std::feholdexcept(&saved); }
+  DeepCopyFloatingPointEnvironment(const DeepCopyFloatingPointEnvironment&) =
+      delete;
+  DeepCopyFloatingPointEnvironment& operator=(
+      const DeepCopyFloatingPointEnvironment&)                         = delete;
+  DeepCopyFloatingPointEnvironment(DeepCopyFloatingPointEnvironment&&) = delete;
+  DeepCopyFloatingPointEnvironment& operator=(
+      DeepCopyFloatingPointEnvironment&&) = delete;
   ~DeepCopyFloatingPointEnvironment() { std::fesetenv(&saved); }
 };
 
@@ -35,7 +42,9 @@ void test_deep_copy_scalar_representation() {
       EXPECT_EQ(std::fetestexcept(FE_INVALID), 0);
       Kokkos::deep_copy(host, view);
       for (int i = 0; i < 5; ++i) {
-        EXPECT_EQ(std::memcmp(&host(i), &value, sizeof(T)), 0);
+        const auto* result_bytes = reinterpret_cast<const std::byte*>(&host(i));
+        const auto* value_bytes  = reinterpret_cast<const std::byte*>(&value);
+        EXPECT_EQ(std::memcmp(result_bytes, value_bytes, sizeof(T)), 0);
       }
     }
   }
