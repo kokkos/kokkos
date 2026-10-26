@@ -33,8 +33,8 @@ endmacro()
 
 function(KOKKOS_ADD_TEST)
   cmake_parse_arguments(
-    TEST "WILL_FAIL;SKIP_TRIBITS" "FAIL_REGULAR_EXPRESSION;PASS_REGULAR_EXPRESSION;EXE;NAME;TOOL" "CATEGORIES;ARGS"
-    ${ARGN}
+    TEST "WILL_FAIL;SKIP_TRIBITS;NO_HWM_TRACKER" "FAIL_REGULAR_EXPRESSION;PASS_REGULAR_EXPRESSION;EXE;NAME;TOOL"
+    "CATEGORIES;ARGS" ${ARGN}
   )
   # To match Tribits, we should always be receiving
   # the root names of exes/libs
@@ -96,6 +96,7 @@ function(KOKKOS_ADD_TEST)
   if(NOT WIN32)
     string(FIND "${TEST_NAME}" "DefaultInstance" index)
     if((NOT TEST_TOOL)
+       AND (NOT TEST_NO_HWM_TRACKER)
        AND (${index} LESS 0)
        AND (KOKKOS_ENABLE_LIBDL)
        AND (NOT KOKKOS_ENABLE_LARGE_MEM_TESTS)
