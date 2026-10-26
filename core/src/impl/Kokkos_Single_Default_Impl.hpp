@@ -40,19 +40,13 @@ struct NoOpReducer : BaseReducer<typename ReturnViewType::value_type,
   NoOpReducer(const ReturnViewType& value_in) : parent_type(value_in) {}
 
   KOKKOS_FUNCTION
-#if !defined(KOKKOS_ENABLE_OPENMP) && \
-    !defined(KOKKOS_ENABLE_HPX)  // FIXME_OPENMP
   void join(value_type& dest, const value_type& src) const { dest = src; }
-#else
-  // OpenMP call join with inactive threads, causing dest to be erased by
-  // uninitialized values
-  void join(value_type&, const value_type&) const {}
-#endif
 
   KOKKOS_FUNCTION
   void init(value_type&) const {}
 };
 
+// Functor to be used with the above Reducer
 template <class FunctorType>
 struct SingleReductionWrapper {
   FunctorType m_functor;
@@ -66,6 +60,26 @@ struct SingleReductionWrapper {
   template <class Index, class ReturnType>
   KOKKOS_FUNCTION void operator()(Index, ReturnType& ret) const {
     m_functor(ret);
+  }
+};
+
+// Functor to be used if the execution space can
+// access the return view type directly
+template <class FunctorType, class ReturnViewType>
+struct SingleWithReturnFunctor {
+  FunctorType m_functor;
+  ReturnViewType m_return_view;
+  static_assert(ReturnViewType::rank() == 0);
+
+  template <class WorkTag, class Index>
+  KOKKOS_FUNCTION void operator()(WorkTag worktag, Index) const {
+    static_assert(std::is_empty_v<WorkTag>);
+    m_functor(worktag, m_return_view());
+  }
+
+  template <class Index>
+  KOKKOS_FUNCTION void operator()(Index) const {
+    m_functor(m_return_view());
   }
 };
 
@@ -106,47 +120,80 @@ struct SingleWithReturn<FunctorType, SinglePolicy<Traits...>, ReturnViewType,
   static_assert(Kokkos::is_view_v<ReturnViewType>);
 
   void execute() const {
-    // We are using the implementation detail ParallelReduce here
-    // In order to do this, we need to wrap the functor multiple times
+    // If the return View is accessile by the ExecutionSpace simply
+    // directly write to it from a ParallelFor.
+    // Otherwise run a reduction to deal with the extra required scratch.
+    if constexpr (Kokkos::SpaceAccessibility<
+                      ExecutionSpace,
+                      typename ReturnViewType::memory_space>::accessible) {
+      using FunctorWrapper =
+          SingleWithReturnFunctor<FunctorType, ReturnViewType>;
+      FunctorWrapper functor_wrapper(functor, return_value);
 
-    // The first Wrap is to make the user functor in a reduction one,
-    // that takes an index
-    using FunctorWrapper = Impl::SingleReductionWrapper<FunctorType>;
-    FunctorWrapper functor_wrapper{functor};
+      using InnerPolicy =
+          std::remove_cvref_t<decltype(policy.impl_get_range_policy())>;
 
-    // Now we need a no-op reducer that doesn't have any requirements
-    // on the value_type (i.e. no += etc. which the default reduction
-    // expects).
-    using ReducerType = typename Impl::NoOpReducer<ReturnViewType>;
+      // Create the closure and call it. No need to turn ref count off, since
+      // we did that already.
+      auto closure = Impl::ParallelFor<FunctorWrapper, InnerPolicy>(
+          functor_wrapper, policy.impl_get_range_policy());
+      closure.execute();
+    } else {
+      // We are using the implementation detail ParallelReduce here
+      // In order to do this, we need to wrap the functor multiple times
 
-    // Get the execution policy we are mapping to (RangePolicy with 1 iteration)
-    using InnerPolicy =
-        std::remove_cvref_t<decltype(policy.impl_get_range_policy())>;
+      // This path is not supported by OpenMP or HPX because it relies
+      // on ParallelReduce behaving a certain way with respect to
+      // non-participating threads. Specifically, initializing all values for
+      // each thread and then combining will not work.
 
-    // This is our canonical reduction analysis
-    using Analysis =
-        Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
-                              InnerPolicy, ReducerType, ReturnViewType>;
+#ifdef KOKKOS_ENABLE_OPENMP
+      static_assert(!std::is_same_v<ExecutionSpace, OpenMP>);
+#endif
+#ifdef KOKKOS_ENABLE_HPX
+      static_assert(!std::is_same_v<ExecutionSpace, Experimental::HPX>);
+#endif
 
-    // Analysis::Reducer adds all kinds of extra info for the reduction backend
-    // like does it have init, does it have join, value size
-    using CombinedFunctorReducerType =
-        Kokkos::Impl::CombinedFunctorReducer<FunctorWrapper,
-                                             typename Analysis::Reducer>;
+      // The first Wrap is to make the user functor in a reduction one,
+      // that takes an index
+      using FunctorWrapper = Impl::SingleReductionWrapper<FunctorType>;
+      FunctorWrapper functor_wrapper{functor};
 
-    CombinedFunctorReducerType functor_reducer(
-        functor_wrapper, typename Analysis::Reducer(return_value));
+      // Now we need a no-op reducer that doesn't have any requirements
+      // on the value_type (i.e. no += etc. which the default reduction
+      // expects).
+      using ReducerType = typename Impl::NoOpReducer<ReturnViewType>;
 
-    // The actual implementation for ParallelReduce
-    using ParallelReducer = Impl::ParallelReduce<CombinedFunctorReducerType,
-                                                 InnerPolicy, ExecutionSpace>;
+      // Get the execution policy we are mapping to (RangePolicy with 1
+      // iteration)
+      using InnerPolicy =
+          std::remove_cvref_t<decltype(policy.impl_get_range_policy())>;
 
-    // Create the closure and call it. No need to turn ref count off, since
-    // we did that already.
-    auto closure = ParallelReducer(
-        functor_reducer, policy.impl_get_range_policy(), return_value);
+      // This is our canonical reduction analysis
+      using Analysis =
+          Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
+                                InnerPolicy, ReducerType, ReturnViewType>;
 
-    closure.execute();
+      // Analysis::Reducer adds all kinds of extra info for the reduction
+      // backend like does it have init, does it have join, value size
+      using CombinedFunctorReducerType =
+          Kokkos::Impl::CombinedFunctorReducer<FunctorWrapper,
+                                               typename Analysis::Reducer>;
+
+      CombinedFunctorReducerType functor_reducer(
+          functor_wrapper, typename Analysis::Reducer(return_value));
+
+      // The actual implementation for ParallelReduce
+      using ParallelReducer = Impl::ParallelReduce<CombinedFunctorReducerType,
+                                                   InnerPolicy, ExecutionSpace>;
+
+      // Create the closure and call it. No need to turn ref count off, since
+      // we did that already.
+      auto closure = ParallelReducer(
+          functor_reducer, policy.impl_get_range_policy(), return_value);
+
+      closure.execute();
+    }
   }
 };
 
