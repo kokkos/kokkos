@@ -11,7 +11,7 @@
 
 namespace Kokkos::Experimental::Impl {
 
-template <class Direction, class Functor, class IType>
+template <class Direction, class Functor, class IndexType>
 void OpenACCParallelForMDRangePolicy(OpenACCCollapse, Direction,
                                      Functor const& functor,
                                      OpenACCMDRangeBegin<1, IType> const& begin,
@@ -29,7 +29,7 @@ void OpenACCParallelForMDRangePolicy(OpenACCCollapse, Direction,
   }
 }
 
-template <class Functor, class IType>
+template <class Functor, class IndexType>
 void OpenACCParallelForMDRangePolicy(OpenACCCollapse, OpenACCIterateLeft,
                                      Functor const& functor,
                                      OpenACCMDRangeBegin<2, IType> const& begin,
@@ -63,7 +63,7 @@ void OpenACCParallelForMDRangePolicy(OpenACCCollapse, OpenACCIterateLeft,
 #endif
 }
 
-template <class Functor, class IType>
+template <class Functor, class IndexType>
 void OpenACCParallelForMDRangePolicy(OpenACCCollapse, OpenACCIterateRight,
                                      Functor const& functor,
                                      OpenACCMDRangeBegin<2, IType> const& begin,
@@ -97,7 +97,7 @@ void OpenACCParallelForMDRangePolicy(OpenACCCollapse, OpenACCIterateRight,
 #endif
 }
 
-template <class Functor, class IType>
+template <class Functor, class IndexType>
 void OpenACCParallelForMDRangePolicy(OpenACCTile, OpenACCIterateLeft,
                                      Functor const& functor,
                                      OpenACCMDRangeBegin<2, IType> const& begin,
@@ -120,7 +120,7 @@ void OpenACCParallelForMDRangePolicy(OpenACCTile, OpenACCIterateLeft,
   }
 }
 
-template <class Functor, class IType>
+template <class Functor, class IndexType>
 void OpenACCParallelForMDRangePolicy(OpenACCTile, OpenACCIterateRight,
                                      Functor const& functor,
                                      OpenACCMDRangeBegin<2, IType> const& begin,

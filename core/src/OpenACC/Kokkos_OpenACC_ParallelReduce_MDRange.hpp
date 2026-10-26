@@ -108,7 +108,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
 #define KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_DISPATCH_ITERATE(REDUCER,     \
                                                              OPERATOR)    \
   namespace Kokkos::Experimental::Impl {                                  \
-  template <class Direction, class ValueType, class Functor, class IType> \
+  template <class Direction, class ValueType, class Functor, class IndexType> \
   void OpenACCParallelReduce##REDUCER(                                    \
       Direction, ValueType& aval, Functor const& afunctor,                \
       OpenACCMDRangeBegin<1, IType> const& begin,                         \
@@ -129,7 +129,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
     aval = val;                                                           \
   }                                                                       \
                                                                           \
-  template <class ValueType, class Functor, class IType>                  \
+  template <class ValueType, class Functor, class IndexType>                  \
   void OpenACCParallelReduce##REDUCER(                                    \
       OpenACCIterateLeft, ValueType& aval, Functor const& afunctor,       \
       OpenACCMDRangeBegin<2, IType> const& begin,                         \
