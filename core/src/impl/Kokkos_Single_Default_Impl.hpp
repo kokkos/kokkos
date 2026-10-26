@@ -128,7 +128,7 @@ struct SingleWithReturn<FunctorType, SinglePolicy<Traits...>, ReturnViewType,
                       typename ReturnViewType::memory_space>::accessible) {
       using FunctorWrapper =
           SingleWithReturnFunctor<FunctorType, ReturnViewType>;
-      FunctorWrapper functor_wrapper(functor, return_value);
+      FunctorWrapper functor_wrapper{functor, return_value};
 
       using InnerPolicy =
           std::remove_cvref_t<decltype(policy.impl_get_range_policy())>;
