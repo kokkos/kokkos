@@ -39,11 +39,11 @@ using OpenACCIterateLeft  = std::integral_constant<Iterate, Iterate::Left>;
 using OpenACCIterateRight = std::integral_constant<Iterate, Iterate::Right>;
 
 template <int N, typename IndexType = Kokkos::Experimental::OpenACC::index_type>
-using OpenACCMDRangeBegin = Kokkos::Array<iType, N>;
-template <int N, typename iType = Kokkos::Experimental::OpenACC::index_type>
-using OpenACCMDRangeEnd = Kokkos::Array<iType, N>;
-template <int N, typename iType = Kokkos::Experimental::OpenACC::index_type>
-using OpenACCMDRangeTile = Kokkos::Array<iType, N>;
+using OpenACCMDRangeBegin = Kokkos::Array<IndexType, N>;
+template <int N, typename IndexType = Kokkos::Experimental::OpenACC::index_type>
+using OpenACCMDRangeEnd = Kokkos::Array<IndexType, N>;
+template <int N, typename IndexType = Kokkos::Experimental::OpenACC::index_type>
+using OpenACCMDRangeTile = Kokkos::Array<IndexType, N>;
 
 }  // namespace Kokkos::Experimental::Impl
 

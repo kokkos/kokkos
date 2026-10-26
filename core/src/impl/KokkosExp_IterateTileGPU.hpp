@@ -174,8 +174,8 @@ auto compute_device_launch_params(
 // Check if the grid covers the full iteration space (no grid stride needed)
 template <size_t Rank, typename ArrayIndexType, typename IndexType>
 bool need_grid_stride_loop(
-    const Kokkos::Array<array_index_type, 3>& max_grid_size, const dim3& block,
-    const Kokkos::Array<index_type, Rank>& m_extent) {
+    const Kokkos::Array<ArrayIndexType, 3>& max_grid_size, const dim3& block,
+    const Kokkos::Array<IndexType, Rank>& m_extent) {
   bool need_grid_stride = true;
   if constexpr (Rank == 1) {
     if ((max_grid_size[0] * block.x) >= m_extent[0]) {
