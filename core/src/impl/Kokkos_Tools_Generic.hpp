@@ -16,6 +16,23 @@ namespace Kokkos {
 
 namespace Tools {
 
+namespace Impl {
+
+// Only instantiate ParallelConstructName (and thus TypeInfo) without a label
+template <class Functor, class WorkTag, bool HasLabel>
+std::string construct_name(
+    const Kokkos::Impl::OptionalLabelRef<HasLabel> optional_label) {
+  if constexpr (HasLabel) {
+    return optional_label.get();
+  } else {
+    const std::string no_label;
+    return Kokkos::Impl::ParallelConstructName<Functor, WorkTag>(no_label)
+        .get();
+  }
+}
+
+}  // namespace Impl
+
 namespace Experimental {
 
 namespace Impl {
@@ -195,9 +212,8 @@ auto generic_tune_policy(
   if (should_tune(policy)) {
     using policy_type = std::remove_reference_t<decltype(policy)>;
     using work_tag    = typename policy_type::work_tag;
-    Kokkos::Impl::ParallelConstructName<Functor, work_tag, HasLabel> name(
-        optional_label);
-    std::string label = name.get();
+    std::string label =
+        Kokkos::Tools::Impl::construct_name<Functor, work_tag>(optional_label);
 
     auto tuner_iter = [&]() {
       auto my_tuner = map.find(label);
@@ -221,9 +237,8 @@ auto generic_tune_policy(
   if (should_tune(policy)) {
     using policy_type = std::remove_reference_t<decltype(policy)>;
     using work_tag    = typename policy_type::work_tag;
-    Kokkos::Impl::ParallelConstructName<Functor, work_tag, HasLabel> name(
-        optional_label);
-    std::string label = name.get();
+    std::string label =
+        Kokkos::Tools::Impl::construct_name<Functor, work_tag>(optional_label);
 
     auto tuner_iter = [&]() {
       auto my_tuner = map.find(label);
@@ -430,10 +445,9 @@ void generic_report_results(
   if (should_tune(policy)) {
     using policy_type = std::remove_reference_t<decltype(policy)>;
     using work_tag    = typename policy_type::work_tag;
-    Kokkos::Impl::ParallelConstructName<Functor, work_tag, HasLabel> name(
-        optional_label);
-    std::string label = name.get();
-    auto tuner_iter   = map.find(label);
+    std::string label =
+        Kokkos::Tools::Impl::construct_name<Functor, work_tag>(optional_label);
+    auto tuner_iter = map.find(label);
     if (tuner_iter != map.end()) {
       tuner_iter->second.end();
     }
@@ -508,11 +522,10 @@ auto begin_parallel_for(
       Kokkos::Tools::Impl::ToolResponse<ExecPolicy, FunctorType>;
   response_type response{policy};
   if (Kokkos::Tools::profileLibraryLoaded()) {
-    Kokkos::Impl::ParallelConstructName<FunctorType,
-                                        typename ExecPolicy::work_tag, HasLabel>
-        name(optional_label);
+    const std::string name = Kokkos::Tools::Impl::construct_name<
+        FunctorType, typename ExecPolicy::work_tag>(optional_label);
     Kokkos::Tools::beginParallelFor(
-        name.get(), Kokkos::Profiling::Experimental::device_id(policy.space()),
+        name, Kokkos::Profiling::Experimental::device_id(policy.space()),
         &kpID);
   }
 
@@ -558,11 +571,10 @@ auto begin_parallel_scan(
       Kokkos::Tools::Impl::ToolResponse<ExecPolicy, FunctorType>;
   response_type response{policy};
   if (Kokkos::Tools::profileLibraryLoaded()) {
-    Kokkos::Impl::ParallelConstructName<FunctorType,
-                                        typename ExecPolicy::work_tag, HasLabel>
-        name(optional_label);
+    const std::string name = Kokkos::Tools::Impl::construct_name<
+        FunctorType, typename ExecPolicy::work_tag>(optional_label);
     Kokkos::Tools::beginParallelScan(
-        name.get(), Kokkos::Profiling::Experimental::device_id(policy.space()),
+        name, Kokkos::Profiling::Experimental::device_id(policy.space()),
         &kpID);
   }
 #ifdef KOKKOS_ENABLE_TUNING
@@ -607,11 +619,10 @@ auto begin_parallel_reduce(
   using response_type = ToolResponse<ExecPolicy, FunctorType>;
   response_type response{policy};
   if (Kokkos::Tools::profileLibraryLoaded()) {
-    Kokkos::Impl::ParallelConstructName<FunctorType,
-                                        typename ExecPolicy::work_tag, HasLabel>
-        name(optional_label);
+    const std::string name = Kokkos::Tools::Impl::construct_name<
+        FunctorType, typename ExecPolicy::work_tag>(optional_label);
     Kokkos::Tools::beginParallelReduce(
-        name.get(), Kokkos::Profiling::Experimental::device_id(policy.space()),
+        name, Kokkos::Profiling::Experimental::device_id(policy.space()),
         &kpID);
   }
 #ifdef KOKKOS_ENABLE_TUNING
