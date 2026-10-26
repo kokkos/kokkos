@@ -124,15 +124,13 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
         internal_instance->resize_league_scratch_buffer(league_size *
                                                         (L0_size + L1_size));
 
-    // Copy the functor with tracking disabled, as Kokkos::parallel_for does
-    auto op = construct_with_shared_allocation_tracking_disabled<
-        Experimental::Impl::NextSiliconParallelForTeamPolicyFunctor<
-            Member, FunctorType>>(m_functor, league_size, team_size,
-                                  league_scratch_buffer, L0_size, L1_size);
+    auto op = Experimental::Impl::NextSiliconParallelForTeamPolicyFunctor<
+        Member, FunctorType>(m_functor, league_size, team_size,
+                             league_scratch_buffer, L0_size, L1_size);
     // FIXME_NEXTSILICON: team size is always 1
-    auto policy  = RangePolicy<Properties...>(m_policy.space(), 0, league_size);
-    auto closure = construct_with_shared_allocation_tracking_disabled<
-        Kokkos::Impl::ParallelFor<decltype(op), decltype(policy)>>(op, policy);
+    auto policy = RangePolicy<Properties...>(m_policy.space(), 0, league_size);
+    auto closure =
+        Kokkos::Impl::ParallelFor<decltype(op), decltype(policy)>(op, policy);
     closure.execute();
   }
 

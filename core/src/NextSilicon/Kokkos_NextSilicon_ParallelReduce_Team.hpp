@@ -133,28 +133,24 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
         internal_instance->resize_league_scratch_buffer(league_size *
                                                         (L0_size + L1_size));
 
-    // Copy the functor with tracking disabled, as Kokkos::parallel_reduce does
     using WrappedFunctorType =
         Experimental::Impl::NextSiliconParallelReduceTeamPolicyFunctor<
             Member, FunctorType>;
     auto wrapped_functor =
-        construct_with_shared_allocation_tracking_disabled<WrappedFunctorType>(
-            functor, league_size, team_size, league_scratch_buffer, L0_size,
-            L1_size);
+        WrappedFunctorType(functor, league_size, team_size,
+                           league_scratch_buffer, L0_size, L1_size);
 
     using WrappedFunctorReducerType =
         CombinedFunctorReducer<WrappedFunctorType, ReducerType>;
     auto wrapped_functor_reducer =
-        construct_with_shared_allocation_tracking_disabled<
-            WrappedFunctorReducerType>(wrapped_functor, reducer);
+        WrappedFunctorReducerType(wrapped_functor, reducer);
 
     // FIXME_NEXTSILICON: team size is always 1
     auto policy = RangePolicy<Properties...>(m_policy.space(), 0, league_size);
 
-    auto closure = construct_with_shared_allocation_tracking_disabled<
-        NextSiliconParallelReduceImpl<WrappedFunctorReducerType,
-                                      Properties...>>(wrapped_functor_reducer,
-                                                      policy, m_result_ptr);
+    auto closure =
+        NextSiliconParallelReduceImpl<WrappedFunctorReducerType, Properties...>(
+            wrapped_functor_reducer, policy, m_result_ptr);
     closure.execute();
   }
 };
