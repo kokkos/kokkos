@@ -553,11 +553,10 @@ std::enable_if_t<Kokkos::is_reducer<ReducerType>::value> parallel_reduce(
                                              iType, value_type&>) {
       closure(thread_handle_t(loop_boundaries.member), i, value);
     } else {
-      static_assert(
-          Kokkos::Impl::always_false<Closure>::value,
-          "Kokkos::parallel_reduce(TeamThreadRange) closure must be "
-          "invocable with (iType, ValueType&) or "
-          "(ThreadHandleType, iType, ValueType&)");
+      static_assert(Kokkos::Impl::always_false<Closure>::value,
+                    "Kokkos::parallel_reduce(TeamThreadRange) closure must be "
+                    "invocable with (iType, ValueType&) or "
+                    "(ThreadHandleType, iType, ValueType&)");
     }
   }
 
@@ -601,11 +600,10 @@ std::enable_if_t<!Kokkos::is_reducer<ValueType>::value> parallel_reduce(
                                              iType, value_type&>) {
       closure(thread_handle_t(loop_boundaries.member), i, value);
     } else {
-      static_assert(
-          Kokkos::Impl::always_false<Closure>::value,
-          "Kokkos::parallel_reduce(TeamThreadRange) closure must be "
-          "invocable with (iType, ValueType&) or "
-          "(ThreadHandleType, iType, ValueType&)");
+      static_assert(Kokkos::Impl::always_false<Closure>::value,
+                    "Kokkos::parallel_reduce(TeamThreadRange) closure must be "
+                    "invocable with (iType, ValueType&) or "
+                    "(ThreadHandleType, iType, ValueType&)");
     }
   }
 

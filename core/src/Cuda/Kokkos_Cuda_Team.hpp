@@ -511,9 +511,9 @@ parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
             i < loop_boundaries.end; i += blockDim.y) {
          if constexpr (std::is_invocable_v<Closure, iType, value_type&>) {
            closure(i, value);
-         } else if constexpr (std::is_invocable_v<
-                                  Closure, thread_handle_t const&, iType,
-                                  value_type&>) {
+         } else if constexpr (std::is_invocable_v<Closure,
+                                                  thread_handle_t const&, iType,
+                                                  value_type&>) {
            closure(thread_handle_t(loop_boundaries.member), i, value);
          } else {
            static_assert(
@@ -568,9 +568,9 @@ parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
             i < loop_boundaries.end; i += blockDim.y) {
          if constexpr (std::is_invocable_v<Closure, iType, value_type&>) {
            closure(i, value);
-         } else if constexpr (std::is_invocable_v<
-                                  Closure, thread_handle_t const&, iType,
-                                  value_type&>) {
+         } else if constexpr (std::is_invocable_v<Closure,
+                                                  thread_handle_t const&, iType,
+                                                  value_type&>) {
            closure(thread_handle_t(loop_boundaries.member), i, value);
          } else {
            static_assert(

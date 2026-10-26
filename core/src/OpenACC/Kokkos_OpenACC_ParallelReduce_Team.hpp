@@ -198,7 +198,7 @@ parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
       TeamPolicy<typename Impl::OpenACCTeamMember::execution_space>,
       ReducerType, value_type>;
   using wrapped_reducer_type = typename functor_analysis_type::Reducer;
-  using thread_handle_t = Impl::ThreadHandleType<Impl::OpenACCTeamMember>;
+  using thread_handle_t      = Impl::ThreadHandleType<Impl::OpenACCTeamMember>;
 
   wrapped_reducer_type wrapped_reducer(reducer);
   value_type tmp;
