@@ -5,14 +5,14 @@
 #define MDARRAY_HPP_
 
 #ifndef MDSPAN_IMPL_STANDARD_NAMESPACE
-  #define MDSPAN_IMPL_STANDARD_NAMESPACE Kokkos
+#define MDSPAN_IMPL_STANDARD_NAMESPACE Kokkos
 #endif
 
 #ifndef MDSPAN_IMPL_PROPOSED_NAMESPACE
-  #define MDSPAN_IMPL_PROPOSED_NAMESPACE Experimental
+#define MDSPAN_IMPL_PROPOSED_NAMESPACE Experimental
 #endif
 
 #include "mdspan.hpp"
-#include "../experimental/__p1684_bits/mdarray.hpp"
+#include "impl/mdarray.hpp"
 
-#endif // MDARRAY_HPP_
+#endif  // MDARRAY_HPP_

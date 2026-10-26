@@ -16,8 +16,9 @@ namespace MDSPAN_IMPL_STANDARD_NAMESPACE {
 #if defined(__cpp_lib_span)
 using std::dynamic_extent;
 #else
-MDSPAN_IMPL_INLINE_VARIABLE constexpr auto dynamic_extent = std::numeric_limits<size_t>::max();
+MDSPAN_IMPL_INLINE_VARIABLE constexpr auto dynamic_extent =
+    std::numeric_limits<size_t>::max();
 #endif
-} // namespace MDSPAN_IMPL_STANDARD_NAMESPACE
+}  // namespace MDSPAN_IMPL_STANDARD_NAMESPACE
 
 //==============================================================================================================

@@ -22,12 +22,14 @@ jobs:
         path: kokkos-mdspan
     - run: |
         diff --unified=3 --recursive \
+          --exclude=.clang-format \
           --exclude=.clang-tidy \
           --exclude=.git \
           --exclude=.github \
           --exclude=.gitignore \
           --exclude=.pre-commit-config.yaml \
           --exclude=benchmarks \
+          --exclude=COPYRIGHT.md \
           --exclude=comp_bench \
           --exclude=compilation_tests \
           --exclude=examples \

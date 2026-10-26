@@ -912,8 +912,8 @@ export {
   using ::Kokkos::mdspan_non_standard;
   using ::Kokkos::mdspan_non_standard_tag;
   using ::Kokkos::range_slice;
+  using ::Kokkos::subextents;
   using ::Kokkos::submdspan;
-  using ::Kokkos::submdspan_extents;
   using ::Kokkos::submdspan_mapping_result;
 
   // UniqueToken

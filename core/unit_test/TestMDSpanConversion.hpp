@@ -11,7 +11,6 @@ import kokkos.core_impl;
 #else
 #include <Kokkos_Core.hpp>
 #endif
-#include "experimental/__p0009_bits/layout_stride.hpp"
 
 namespace {
 
