@@ -119,6 +119,10 @@ struct SingleWithReturn<FunctorType, SinglePolicy<Traits...>, ReturnViewType,
 
   static_assert(Kokkos::is_view_v<ReturnViewType>);
 
+  // Get the execution policy we are mapping to (RangePolicy with 1 iteration)
+  using InnerPolicy =
+      std::remove_cvref_t<decltype(policy.impl_get_range_policy())>;
+
   void execute() const {
     // If the return View is accessile by the ExecutionSpace simply
     // directly write to it from a ParallelFor.
@@ -129,9 +133,6 @@ struct SingleWithReturn<FunctorType, SinglePolicy<Traits...>, ReturnViewType,
       using FunctorWrapper =
           SingleWithReturnFunctor<FunctorType, ReturnViewType>;
       FunctorWrapper functor_wrapper{functor, return_value};
-
-      using InnerPolicy =
-          std::remove_cvref_t<decltype(policy.impl_get_range_policy())>;
 
       // Create the closure and call it. No need to turn ref count off, since
       // we did that already.
@@ -164,11 +165,6 @@ struct SingleWithReturn<FunctorType, SinglePolicy<Traits...>, ReturnViewType,
       // expects).
       using ReducerType = typename Impl::NoOpReducer<ReturnViewType>;
 
-      // Get the execution policy we are mapping to (RangePolicy with 1
-      // iteration)
-      using InnerPolicy =
-          std::remove_cvref_t<decltype(policy.impl_get_range_policy())>;
-
       // This is our canonical reduction analysis
       using Analysis =
           Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
@@ -180,8 +176,8 @@ struct SingleWithReturn<FunctorType, SinglePolicy<Traits...>, ReturnViewType,
           Kokkos::Impl::CombinedFunctorReducer<FunctorWrapper,
                                                typename Analysis::Reducer>;
 
-      CombinedFunctorReducerType functor_reducer(
-          functor_wrapper, typename Analysis::Reducer(return_value));
+      CombinedFunctorReducerType functor_reducer{
+          functor_wrapper, typename Analysis::Reducer(return_value)};
 
       // The actual implementation for ParallelReduce
       using ParallelReducer = Impl::ParallelReduce<CombinedFunctorReducerType,
