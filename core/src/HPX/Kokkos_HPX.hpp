@@ -1830,11 +1830,10 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
                                              iType, value_type &>) {
       lambda(thread_handle_t(loop_boundaries.member), i, value);
     } else {
-      static_assert(
-          Kokkos::Impl::always_false<Lambda>::value,
-          "Kokkos::parallel_reduce(TeamThreadRange) closure must be "
-          "invocable with (iType, ValueType&) or "
-          "(ThreadHandleType, iType, ValueType&)");
+      static_assert(Kokkos::Impl::always_false<Lambda>::value,
+                    "Kokkos::parallel_reduce(TeamThreadRange) closure must be "
+                    "invocable with (iType, ValueType&) or "
+                    "(ThreadHandleType, iType, ValueType&)");
     }
   }
 

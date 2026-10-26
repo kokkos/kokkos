@@ -510,11 +510,10 @@ parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
                                              iType, value_type&>) {
       closure(thread_handle_t(loop_boundaries.member), i, value);
     } else {
-      static_assert(
-          Kokkos::Impl::always_false<Closure>::value,
-          "Kokkos::parallel_reduce(TeamThreadRange) closure must be "
-          "invocable with (iType, ValueType&) or "
-          "(ThreadHandleType, iType, ValueType&)");
+      static_assert(Kokkos::Impl::always_false<Closure>::value,
+                    "Kokkos::parallel_reduce(TeamThreadRange) closure must be "
+                    "invocable with (iType, ValueType&) or "
+                    "(ThreadHandleType, iType, ValueType&)");
     }
   }
 
@@ -549,7 +548,7 @@ parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
            ValueType>;
        using wrapped_reducer_type = typename functor_analysis_type::Reducer;
        using value_type           = typename wrapped_reducer_type::value_type;
-       using thread_handle_t = Impl::ThreadHandleType<Impl::HIPTeamMember>;
+       using thread_handle_t      = Impl::ThreadHandleType<Impl::HIPTeamMember>;
 
        wrapped_reducer_type wrapped_reducer(closure); value_type value;
        wrapped_reducer.init(&value);
@@ -558,9 +557,9 @@ parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
             i < loop_boundaries.end; i += blockDim.y) {
          if constexpr (std::is_invocable_v<Closure, iType, value_type&>) {
            closure(i, value);
-         } else if constexpr (std::is_invocable_v<
-                                  Closure, thread_handle_t const&, iType,
-                                  value_type&>) {
+         } else if constexpr (std::is_invocable_v<Closure,
+                                                  thread_handle_t const&, iType,
+                                                  value_type&>) {
            closure(thread_handle_t(loop_boundaries.member), i, value);
          } else {
            static_assert(
