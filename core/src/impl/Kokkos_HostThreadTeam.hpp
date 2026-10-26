@@ -795,11 +795,10 @@ KOKKOS_INLINE_FUNCTION
                                              iType, value_type&>) {
       closure(thread_handle_t(loop_boundaries.member), i, value);
     } else {
-      static_assert(
-          Kokkos::Impl::always_false<Closure>::value,
-          "Kokkos::parallel_reduce(TeamThreadRange) closure must be "
-          "invocable with (iType, ValueType&) or "
-          "(ThreadHandleType, iType, ValueType&)");
+      static_assert(Kokkos::Impl::always_false<Closure>::value,
+                    "Kokkos::parallel_reduce(TeamThreadRange) closure must be "
+                    "invocable with (iType, ValueType&) or "
+                    "(ThreadHandleType, iType, ValueType&)");
     }
   }
 
@@ -835,11 +834,10 @@ KOKKOS_INLINE_FUNCTION
                                              iType, value_type&>) {
       closure(thread_handle_t(loop_boundaries.member), i, value);
     } else {
-      static_assert(
-          Kokkos::Impl::always_false<Closure>::value,
-          "Kokkos::parallel_reduce(TeamThreadRange) closure must be "
-          "invocable with (iType, ValueType&) or "
-          "(ThreadHandleType, iType, ValueType&)");
+      static_assert(Kokkos::Impl::always_false<Closure>::value,
+                    "Kokkos::parallel_reduce(TeamThreadRange) closure must be "
+                    "invocable with (iType, ValueType&) or "
+                    "(ThreadHandleType, iType, ValueType&)");
     }
   }
 

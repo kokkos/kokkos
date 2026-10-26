@@ -225,8 +225,8 @@ struct CheckRangePolicyWithConstructedThreadHandle {
           });
         });
 
-    verify_sum<ExecSpace>(
-        M, 4.f, "check_range_policy_with_constructed_thread_handle");
+    verify_sum<ExecSpace>(M, 4.f,
+                          "check_range_policy_with_constructed_thread_handle");
   }
 };
 
@@ -245,9 +245,8 @@ struct CheckRangePolicyWithConstructedThreadHandleInSingle {
         KOKKOS_LAMBDA(const team_t& team) {
           auto M_sub = Kokkos::subview(M, team.league_rank(), Kokkos::ALL(),
                                        Kokkos::ALL(), Kokkos::ALL());
-          Kokkos::single(Kokkos::PerTeam(team), [&]() {
-            sum_views(thread_handle(team), M_sub, 5.f);
-          });
+          Kokkos::single(Kokkos::PerTeam(team),
+                         [&]() { sum_views(thread_handle(team), M_sub, 5.f); });
         });
 
     verify_sum<ExecSpace>(
@@ -361,8 +360,8 @@ struct CheckReduceViewsWithConstructedThreadHandle {
         "check_reduce_views_with_constructed_thread_handle",
         Kokkos::TeamPolicy<ExecSpace>(num_leagues, Kokkos::AUTO()),
         KOKKOS_LAMBDA(const team_t& team, float& update) {
-          auto M_sub = Kokkos::subview(M, team.league_rank(), Kokkos::ALL(),
-                                       Kokkos::ALL(), Kokkos::ALL());
+          auto M_sub  = Kokkos::subview(M, team.league_rank(), Kokkos::ALL(),
+                                        Kokkos::ALL(), Kokkos::ALL());
           float local = 0.f;
           Kokkos::parallel_for(Kokkos::TeamThreadRange(team, 1), [&](int) {
             reduce_views(thread_handle(team), M_sub, local);
@@ -413,4 +412,3 @@ TEST(TEST_CATEGORY, self_similar_reduce_views_with_thread_handle) {
 TEST(TEST_CATEGORY, self_similar_reduce_views_with_constructed_thread_handle) {
   CheckReduceViewsWithConstructedThreadHandle<TEST_EXECSPACE>{}();
 }
-
