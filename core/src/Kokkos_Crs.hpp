@@ -10,6 +10,7 @@ static_assert(false,
 #define KOKKOS_CRS_HPP
 
 #include <Kokkos_View.hpp>
+#include <Kokkos_CopyViews.hpp>  // FIXME remove when 9706 resolved
 #include <Kokkos_Parallel.hpp>
 
 namespace Kokkos {
