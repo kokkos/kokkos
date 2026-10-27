@@ -3,7 +3,8 @@ name: publish-release
 on:
   workflow_call:
 
-permissions: read-all
+permissions:
+  contents: read
 
 env:
   RELEASE_NAME: "${{ github.event.repository.name }}-${{ github.ref_name }}"
