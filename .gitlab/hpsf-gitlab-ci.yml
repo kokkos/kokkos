@@ -45,12 +45,12 @@ NVIDIA-HOPPER-OPENACC:
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_OPENACC=ON"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_COMPILER_WARNINGS=ON"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_TESTS=ON"
-    - export CTEST_BUILD_NAME="NVIDIA-H100-OPENACC"
+    - export CTEST_BUILD_NAME="NVIDIA-HOPPER-OPENACC"
     - ctest -VV
         -D CDASH_MODEL=${CDASH_MODEL}
         -D GITHUB_PR_ID="${GITHUB_PR_ID}"
         -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}"
-        -D OUTPUT_JUNIT_FILE=result_h100_openacc.xml
+        -D OUTPUT_JUNIT_FILE=result_hopper_openacc.xml
         -S scripts/CTestRun.cmake
         -D CTEST_SITE="gitlab.spack.io"
         -D CTEST_BUILD_NAME="${CTEST_BUILD_NAME}"
@@ -59,9 +59,9 @@ NVIDIA-HOPPER-OPENACC:
   artifacts:
     when: always
     paths:
-      - build/result_h100_openacc.xml
+      - build/result_hopper_openacc.xml
     reports:
-      junit: build/result_h100_openacc.xml
+      junit: build/result_hopper_openacc.xml
 
 
 NVIDIA-RTX5080:
