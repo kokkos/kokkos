@@ -180,7 +180,7 @@ class SharedAllocationRecord<void, void> {
   /* User's memory begins at the end of the header */
   size_t size() const { return m_alloc_size - sizeof(SharedAllocationHeader); }
 
-  constexpr int use_count() const { return Kokkos::atomic_load(&m_count); }
+  int use_count() const { return Kokkos::atomic_load(&m_count); }
 
   /* Increment use count */
   static void increment(SharedAllocationRecord*);
