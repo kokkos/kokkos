@@ -16,9 +16,17 @@ static_assert(false,
 #include <Kokkos_Array.hpp>
 #include <impl/KokkosExp_Host_IterateTile.hpp>
 #include <Kokkos_ExecPolicy.hpp>
+#include <Kokkos_TypeInfo.hpp>
+#ifndef KOKKOS_ENABLE_IMPL_TYPEINFO
+#include <typeinfo>
+#endif
+#include <impl/Kokkos_CheckedIntegerOps.hpp>
+
+#include <algorithm>
 #include <type_traits>
 #include <array>
 #include <cmath>
+#include <limits>
 
 namespace Kokkos {
 
@@ -147,7 +155,7 @@ auto TileSizeRecommended<ExecutionSpace>::get(Policy const& policy) {
   constexpr auto InnerDirection = Policy::inner_direction;
   constexpr int Rank            = Policy::rank;
 
-  using tile_type = Kokkos::Array<std::int64_t, Rank>;
+  using tile_type = typename Policy::tile_type;
 
   tile_type recommended_tile_sizes{};
   int default_tile_size   = 2;
@@ -171,7 +179,8 @@ auto TileSizeRecommended<ExecutionSpace>::get(Policy const& policy) {
       rank_tile_size = std::max<int>(inner_work_range, 1);
     }
     prod_tile_size *= rank_tile_size;
-    recommended_tile_sizes[i] = rank_tile_size;
+    recommended_tile_sizes[i] =
+        static_cast<typename tile_type::value_type>(rank_tile_size);
   }
   return recommended_tile_sizes;
 }
@@ -221,8 +230,8 @@ class MDRangePolicy<P, Properties...>
 
   using index_type       = typename traits::index_type;
   using array_index_type = std::int64_t;
-  using point_type = Kokkos::Array<array_index_type, rank>;  // was index_type
-  using tile_type  = Kokkos::Array<array_index_type, rank>;
+  using point_type       = Kokkos::Array<index_type, rank>;
+  using tile_type        = Kokkos::Array<index_type, rank>;
   // If point_type or tile_type is not templated on a signed integral type (if
   // it is unsigned), then if user passes in intializer_list of
   // runtime-determined values of signed integral type that are not const will
@@ -230,9 +239,12 @@ class MDRangePolicy<P, Properties...>
   // "conversion from integer or unscoped enumeration type to integer type that
   // cannot represent all values of the original, except where source is a
   // constant expression whose value can be stored exactly in the target type"
-  // This would require the user to either pass a matching index_type parameter
+  // Until Kokkos 5.2, index_type was an unsigned integer by default. Thus,
+  // using index_type as the value_type for point_type and tile_type would
+  // have required the user to either pass a matching index_type parameter
   // as template parameter to the MDRangePolicy or static_cast the individual
-  // values
+  // values. Instead, array_index_type was used as the value_type of
+  // point_type and tile_type.
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
  public:
@@ -279,7 +291,7 @@ class MDRangePolicy<P, Properties...>
   MDRangePolicy() = default;
 
   template <typename LT, std::size_t LN, typename UT, std::size_t UN,
-            typename TT = array_index_type, std::size_t TN = rank,
+            typename TT = index_type, std::size_t TN = rank,
             typename = std::enable_if_t<std::is_integral_v<LT> &&
                                         std::is_integral_v<UT> &&
                                         std::is_integral_v<TT>>>
@@ -298,7 +310,7 @@ class MDRangePolicy<P, Properties...>
   }
 
   template <typename LT, std::size_t LN, typename UT, std::size_t UN,
-            typename TT = array_index_type, std::size_t TN = rank,
+            typename TT = index_type, std::size_t TN = rank,
             typename = std::enable_if_t<std::is_integral_v<LT> &&
                                         std::is_integral_v<UT> &&
                                         std::is_integral_v<TT>>>
@@ -370,15 +382,29 @@ class MDRangePolicy<P, Properties...>
   MDRangePolicy(const MDRangePolicy<OtherProperties...> p)
       : traits(p),  // base class may contain data such as desired occupancy
         m_space(p.m_space),
-        m_lower(p.m_lower),
-        m_upper(p.m_upper),
-        m_tile(p.m_tile),
-        m_tile_end(p.m_tile_end),
-        m_num_tiles(p.m_num_tiles),
+        m_lower(
+            Impl::to_array_potentially_narrowing<index_type, decltype(m_lower)>(
+                p.m_lower)),
+        m_upper(
+            Impl::to_array_potentially_narrowing<index_type, decltype(m_upper)>(
+                p.m_upper)),
+        m_tile(
+            Impl::to_array_potentially_narrowing<index_type, decltype(m_tile)>(
+                p.m_tile)),
+        m_tile_end(Impl::to_array_potentially_narrowing<index_type,
+                                                        decltype(m_tile_end)>(
+            p.m_tile_end)),
+        m_num_tiles(p.m_num_tiles),  // FIXME: narrowing check missing
         m_prod_tile_dims(p.m_prod_tile_dims),
         m_tune_tile_size(p.m_tune_tile_size),
         m_max_total_tile_size(p.m_max_total_tile_size),
-        m_max_threads_dimensions(p.m_max_threads_dimensions) {}
+        m_max_threads_dimensions(p.m_max_threads_dimensions) {
+    int inner_rank  = (inner_direction == Iterate::Right) ? rank - 1 : 0;
+    int outer_bound = (inner_direction == Iterate::Right) ? -1 : rank;
+    int iter_step   = (inner_direction == Iterate::Right) ? -1 : 1;
+
+    check_bounds_and_flat_extent(inner_rank, outer_bound, iter_step);
+  }
 
   void impl_change_tile_size(const point_type& tile) {
     this->m_tile = tile;
@@ -408,35 +434,14 @@ class MDRangePolicy<P, Properties...>
   int max_total_tile_size() const { return m_max_total_tile_size; }
 
  private:
-  void update_tiling_properties() {
-    auto properties                = Impl::get_tile_size_properties(m_space);
-    this->m_num_tiles              = 1;
-    this->m_prod_tile_dims         = 1;
-    this->m_max_total_tile_size    = properties.max_total_tile_size;
-    this->m_max_threads_dimensions = properties.max_threads_dimensions;
+  void check_bounds_and_flat_extent(int inner_rank, int outer_bound,
+                                    int iter_step) const {
+    // widest possible unsigned integer type
+    using flat_extent_type = std::size_t;
 
-    // Effective cap on the product of tile sizes: starts at the device limit,
-    // then tightened below by LaunchBounds when applicable
-    int effective_max_tile_size = this->m_max_total_tile_size;
-    constexpr bool enforce_launch_bounds =
-#if defined(KOKKOS_ENABLE_CUDA)
-        std::is_same_v<execution_space, Kokkos::Cuda>;
-#elif defined(KOKKOS_ENABLE_HIP)
-        std::is_same_v<execution_space, Kokkos::HIP>;
-#else
-        false;
-#endif
+    flat_extent_type total_flat_extent = 1;
 
-    if constexpr (enforce_launch_bounds && launch_bounds::maxTperB != 0) {
-      effective_max_tile_size = std::min(
-          effective_max_tile_size, static_cast<int>(launch_bounds::maxTperB));
-    }
-
-    int inner_rank  = (inner_direction == Iterate::Right) ? rank - 1 : 0;
-    int outer_bound = (inner_direction == Iterate::Right) ? -1 : rank;
-    int iter_step   = (inner_direction == Iterate::Right) ? -1 : 1;
-
-    // Validate bounds before invoking backend-specific tile recommendations.
+    // Validate bounds
     for (int i = inner_rank; i != outer_bound; i += iter_step) {
       if (this->m_upper[i] < this->m_lower[i]) {
         std::string msg =
@@ -447,7 +452,85 @@ class MDRangePolicy<P, Properties...>
             std::to_string(i) + ".\n";
         Kokkos::abort(msg.c_str());
       }
+
+      flat_extent_type cur_range =
+          static_cast<flat_extent_type>(this->m_upper[i]) -
+          static_cast<flat_extent_type>(this->m_lower[i]);
+
+      bool overflow_happened = Impl::multiply_overflow(
+          total_flat_extent, cur_range, total_flat_extent);
+
+      // check if total flat extent exceeds numeric_limits<index_type>::max()
+      // and check for overflow during the computation
+      if ((total_flat_extent > static_cast<flat_extent_type>(
+                                   std::numeric_limits<index_type>::max())) ||
+          overflow_happened) {
+        std::string msg =
+            "Kokkos::MDRangePolicy bounds error: The product of the ranges ";
+
+        int j = inner_rank;
+        for (; j != outer_bound - iter_step; j += iter_step) {
+          msg += "(" + std::to_string(this->m_lower[j]) + ", " +
+                 std::to_string(this->m_upper[j]) + "), ";
+        }
+        msg += "(" + std::to_string(this->m_lower[j]) + ", " +
+               std::to_string(this->m_upper[j]) + ")";
+
+        msg += " exceeds the largest value representable by ";
+#ifdef KOKKOS_ENABLE_IMPL_TYPEINFO
+        msg += Impl::TypeInfo<std::remove_const_t<index_type>>::name();
+#else
+        msg += typeid(index_type).name();
+#endif
+        msg += ".\n";
+
+        Kokkos::abort(msg.c_str());
+      }
     }
+  }
+
+  void update_tiling_properties() {
+    // FIXME: some assumptions are being made to make m_prod_tile_dims,
+    // m_max_total_tile_size and m_tile work together. Refer to FIXMEs below.
+    // Maybe get_tile_size_properties could be parameterized on the value_type
+    // of m_tile. Then all three can have same underlying type.
+
+    auto properties                = Impl::get_tile_size_properties(m_space);
+    this->m_num_tiles              = 1;
+    this->m_prod_tile_dims         = 1;
+    this->m_max_total_tile_size    = properties.max_total_tile_size;
+    this->m_max_threads_dimensions = properties.max_threads_dimensions;
+
+    using tile_size_type = typename tile_type::value_type;
+
+    // Effective cap on the product of tile sizes: starts at the device limit,
+    // then tightened below by LaunchBounds when applicable
+    auto effective_max_tile_size = static_cast<tile_size_type>(
+        std::min<std::common_type_t<int, tile_size_type>>(
+            this->m_max_total_tile_size,
+            std::numeric_limits<tile_size_type>::max()));
+    constexpr bool enforce_launch_bounds =
+#if defined(KOKKOS_ENABLE_CUDA)
+        std::is_same_v<execution_space, Kokkos::Cuda>;
+#elif defined(KOKKOS_ENABLE_HIP)
+        std::is_same_v<execution_space, Kokkos::HIP>;
+#else
+        false;
+#endif
+
+    if constexpr (enforce_launch_bounds && launch_bounds::maxTperB != 0) {
+      effective_max_tile_size =
+          std::min(effective_max_tile_size,
+                   static_cast<tile_size_type>(launch_bounds::maxTperB));
+    }
+
+    int inner_rank  = (inner_direction == Iterate::Right) ? rank - 1 : 0;
+    int outer_bound = (inner_direction == Iterate::Right) ? -1 : rank;
+    int iter_step   = (inner_direction == Iterate::Right) ? -1 : 1;
+
+    // Validate bounds and flat extent before invoking backend-specific tile
+    // recommendations.
+    check_bounds_and_flat_extent(inner_rank, outer_bound, iter_step);
 
     tile_type default_tile = this->tile_size_recommended();
 
@@ -457,14 +540,18 @@ class MDRangePolicy<P, Properties...>
       // If tile size is not specified or <= 0 set to recommended tile size
       if (this->m_tile[i] <= 0) {
         this->m_tune_tile_size = true;
+        // FIXME: m_prod_tile_dims may take a value that won't fit in
+        // tile_size_type, though not in practice
         // Set to recommended tile size if it fits within effective limit
-        if (this->m_prod_tile_dims * default_tile[i] <=
+        if (static_cast<tile_size_type>(this->m_prod_tile_dims) *
+                default_tile[i] <=
             effective_max_tile_size) {
           this->m_tile[i] = default_tile[i];
         } else {
           // Try to fit within effective limit by reducing tile size
           while (default_tile[i] > 1 &&
-                 this->m_prod_tile_dims * default_tile[i] >
+                 static_cast<tile_size_type>(this->m_prod_tile_dims) *
+                         default_tile[i] >
                      effective_max_tile_size) {
             default_tile[i] >>= 1;
           }
@@ -475,11 +562,14 @@ class MDRangePolicy<P, Properties...>
       this->m_tile_end[i] = static_cast<index_type>(
           (length + this->m_tile[i] - 1) / this->m_tile[i]);
       this->m_num_tiles *= this->m_tile_end[i];
-      this->m_prod_tile_dims *= this->m_tile[i];
+      // FIXME: m_tile could be of a type wider than int and have a value
+      // that won't fit in int, though not in practice
+      this->m_prod_tile_dims *= static_cast<int>(this->m_tile[i]);
     }
 
     if constexpr (enforce_launch_bounds && launch_bounds::maxTperB != 0) {
-      if (static_cast<int>(launch_bounds::maxTperB) < this->m_prod_tile_dims) {
+      if (static_cast<tile_size_type>(launch_bounds::maxTperB) <
+          this->m_prod_tile_dims) {
         std::string msg =
             "Kokkos::MDRangePolicy tile dimensions error: Product of tile "
             "dimensions (" +
@@ -491,6 +581,9 @@ class MDRangePolicy<P, Properties...>
       }
     }
 
+    // FIXME: in practice, m_prod_tile_dims and m_max_total_tiles_size are of
+    // the same type and m_max_total_tile_size = max. value of that type.
+    // Better to check this condition without getting into UB.
     if (this->m_prod_tile_dims > this->m_max_total_tile_size) {
       std::string msg =
           "Kokkos::MDRangePolicy tile dimensions error: Product of tile "
