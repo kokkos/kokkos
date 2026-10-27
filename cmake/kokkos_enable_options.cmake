@@ -78,7 +78,7 @@ if((Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE OR Kokkos_ENABLE_MULTIPLE_CMAKE_LANG
     message(FATAL_ERROR "Building Kokkos with CUDA as language and c++20 requires CMake version 3.25.2 or higher.")
   endif()
 endif()
-if(Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE AND Kokkos_ENABLE_SYCL)
+if((Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE OR Kokkos_ENABLE_MULTIPLE_CMAKE_LANGUAGES) AND Kokkos_ENABLE_SYCL)
   if(CMAKE_VERSION VERSION_LESS "4.5")
     message(FATAL_ERROR "Building Kokkos with SYCL as a CMake language requires CMake version 4.5 or higher.")
   endif()
