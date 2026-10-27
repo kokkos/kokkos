@@ -108,6 +108,12 @@ if(Kokkos_ENABLE_OPENMP)
       global_append(KOKKOS_CUDA_OPTIONS ${OpenMP_CXX_FLAGS})
     endif()
   endif()
+  if(Kokkos_ENABLE_SYCL AND KOKKOS_COMPILE_LANGUAGE STREQUAL SYCL)
+    # OpenMP::OpenMP_CXX only applies its INTERFACE_COMPILE_OPTIONS to CXX-tagged
+    # sources, so when compiling as the native CMake SYCL language we need to
+    # forward the OpenMP flags to the sources compiled as SYCL ourselves.
+    global_append(KOKKOS_COMPILE_OPTIONS ${OpenMP_CXX_FLAGS})
+  endif()
 endif()
 
 #Convert list to newlines (which CMake doesn't always like in cache variables)
