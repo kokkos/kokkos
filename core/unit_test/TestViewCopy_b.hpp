@@ -263,7 +263,7 @@ TEST(TEST_CATEGORY, view_copy_unmanaged_atomic) {
   check_value(y, 0.0);
 
   Kokkos::deep_copy(y, 1.0);
-  Kokkos::deep_copy(TEST_EXECSPACE(), y, z_ua);
+  Kokkos::deep_copy(typename TEST_EXECSPACE::execution_space(), y, z_ua);
   check_value(y, 0.0);
 }
 }  // namespace Test
