@@ -69,6 +69,10 @@ void test_kernel_name_parallel_for() {
                          my_lambda);
     ASSERT_EQ(last_parallel_for, my_label);
 
+    Kokkos::parallel_for(std::string{},
+                         Kokkos::RangePolicy<ExecutionSpace>(0, 1), my_lambda);
+    ASSERT_TRUE(last_parallel_for.empty());
+
     Kokkos::parallel_for(Kokkos::RangePolicy<ExecutionSpace>(0, 1), my_lambda);
     ASSERT_EQ(last_parallel_for, typeid_name(my_lambda));
     ASSERT_FALSE(last_parallel_for.starts_with("const "))
@@ -105,6 +109,11 @@ void test_kernel_name_parallel_reduce() {
     Kokkos::parallel_reduce(my_label, Kokkos::RangePolicy<ExecutionSpace>(0, 1),
                             my_lambda, my_result);
     ASSERT_EQ(last_parallel_reduce, my_label);
+
+    Kokkos::parallel_reduce(std::string{},
+                            Kokkos::RangePolicy<ExecutionSpace>(0, 1),
+                            my_lambda, my_result);
+    ASSERT_TRUE(last_parallel_reduce.empty());
 
     Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecutionSpace>(0, 1),
                             my_lambda, my_result);
@@ -151,6 +160,10 @@ void test_kernel_name_parallel_scan() {
     Kokkos::parallel_scan(my_label, Kokkos::RangePolicy<ExecutionSpace>(0, 1),
                           my_lambda);
     ASSERT_EQ(last_parallel_scan, my_label);
+
+    Kokkos::parallel_scan(std::string{},
+                          Kokkos::RangePolicy<ExecutionSpace>(0, 1), my_lambda);
+    ASSERT_TRUE(last_parallel_scan.empty());
 
     Kokkos::parallel_scan(Kokkos::RangePolicy<ExecutionSpace>(0, 1), my_lambda);
     ASSERT_EQ(last_parallel_scan, typeid_name(my_lambda));
