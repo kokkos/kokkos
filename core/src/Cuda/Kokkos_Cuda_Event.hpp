@@ -26,28 +26,27 @@ static_assert(false,
 namespace Kokkos {
 namespace Impl {
 
-template <>
-struct EventResource<Kokkos::Cuda> {
+struct CudaEventResource {
   std::string m_label = "unknown";
   cudaEvent_t m_event = nullptr;
   int m_cudaDev       = -1;
 
-  explicit EventResource(const std::string& label,
-                         const Kokkos::Cuda& exec_space)
+  explicit CudaEventResource(const std::string& label,
+                             const Kokkos::Cuda& exec_space)
       : m_label(label), m_cudaDev(exec_space.cuda_device()) {
     KOKKOS_IMPL_CUDA_SAFE_CALL(exec_space.impl_internal_space_instance()
                                    ->cuda_event_create_with_flags_wrapper(
                                        &m_event, cudaEventDisableTiming));
   }
 
-  ~EventResource() {
+  ~CudaEventResource() {
     if (m_event != nullptr) {
       KOKKOS_IMPL_CUDA_SAFE_CALL(cudaEventDestroy(m_event));
     }
   }
 
-  EventResource(const EventResource&)            = delete;
-  EventResource& operator=(const EventResource&) = delete;
+  CudaEventResource(const CudaEventResource&)            = delete;
+  CudaEventResource& operator=(const CudaEventResource&) = delete;
 };
 
 }  // namespace Impl
@@ -70,11 +69,11 @@ template <>
 class Event<Kokkos::Cuda> {
  public:
   explicit Event(const std::string& label)
-      : m_handle(std::make_shared<Kokkos::Impl::EventResource<Kokkos::Cuda>>(
+      : m_handle(std::make_shared<Kokkos::Impl::CudaEventResource>(
             label, Kokkos::Cuda())) {}
 
   Event(const std::string& label, const Kokkos::Cuda& exec_space)
-      : m_handle(std::make_shared<Kokkos::Impl::EventResource<Kokkos::Cuda>>(
+      : m_handle(std::make_shared<Kokkos::Impl::CudaEventResource>(
             label, exec_space)) {
     record(exec_space);
   }
@@ -111,7 +110,7 @@ class Event<Kokkos::Cuda> {
   }
 
  private:
-  std::shared_ptr<Kokkos::Impl::EventResource<Kokkos::Cuda>> m_handle;
+  std::shared_ptr<Kokkos::Impl::CudaEventResource> m_handle;
 };
 
 /// CUDA: insert a stream wait for the recorded event (non-blocking on host).
