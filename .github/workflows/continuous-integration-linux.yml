@@ -1,6 +1,7 @@
 name: github-Linux
 
 on:
+  push:
   workflow_call:
 
 concurrency:
