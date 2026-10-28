@@ -7,7 +7,7 @@
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_Core_fwd.hpp>
 #include <impl/Kokkos_Error.hpp>  // Impl::throw_runtime_exception
-#include <Kokkos_Atomics_Desul_Wrapper.hpp>
+#include <Kokkos_Atomic.hpp>
 
 #include <cstdint>
 #include <string>
