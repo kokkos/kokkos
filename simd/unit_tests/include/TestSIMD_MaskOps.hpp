@@ -13,6 +13,8 @@ import kokkos.simd_impl;
 #endif
 #include <SIMDTesting_Utilities.hpp>
 
+namespace {
+
 template <typename Abi, typename DataType>
 inline void host_check_mask_ops() {
   if constexpr (is_simd_avail_v<DataType, Abi>) {
@@ -99,18 +101,19 @@ KOKKOS_INLINE_FUNCTION void device_check_mask_ops_all_abis(
 class simd_device_mask_ops_functor {
  public:
   KOKKOS_INLINE_FUNCTION void operator()(int) const {
-    device_check_mask_ops_all_abis(
-        Kokkos::Experimental::Impl::device_abi_set());
+    device_check_mask_ops_all_abis(test_device_abi_set());
   }
 };
 
-TEST(simd, host_mask_ops) {
-  host_check_mask_ops_all_abis(Kokkos::Experimental::Impl::host_abi_set());
+TEST(KOKKOS_SIMD_TEST_SUITE, host_mask_ops) {
+  host_check_mask_ops_all_abis(test_host_abi_set());
 }
 
-TEST(simd, device_mask_ops) {
+KOKKOS_SIMD_DEVICE_TEST(KOKKOS_SIMD_TEST_SUITE, device_mask_ops) {
   Kokkos::parallel_for(1, simd_device_mask_ops_functor());
   Kokkos::fence();
 }
+
+}  // namespace
 
 #endif

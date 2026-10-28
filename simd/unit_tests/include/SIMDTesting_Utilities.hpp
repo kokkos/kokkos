@@ -8,10 +8,46 @@
 #include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
 import kokkos.simd;
+import kokkos.simd_impl;
 #else
 #include <Kokkos_SIMD.hpp>
 #endif
 #include <SIMDTesting_Ops.hpp>
+
+#ifndef KOKKOS_SIMD_TEST_SUITE
+#define KOKKOS_SIMD_TEST_SUITE simd
+#endif
+
+template <typename AbiSet>
+struct remove_scalar_abi;
+
+template <typename... Abis>
+struct remove_scalar_abi<Kokkos::Experimental::Impl::abi_set<
+    Kokkos::Experimental::simd_abi::scalar, Abis...>> {
+  using type = Kokkos::Experimental::Impl::abi_set<Abis...>;
+};
+
+#if defined(KOKKOS_SIMD_TEST_SCALAR)
+
+using test_host_abi_set =
+    Kokkos::Experimental::Impl::abi_set<Kokkos::Experimental::simd_abi::scalar>;
+using test_device_abi_set =
+    Kokkos::Experimental::Impl::abi_set<Kokkos::Experimental::simd_abi::scalar>;
+
+#define KOKKOS_SIMD_DEVICE_TEST(TEST_SUITE_NAME, TEST_NAME) \
+  TEST(TEST_SUITE_NAME, TEST_NAME)
+
+#elif defined(KOKKOS_SIMD_TEST_NATIVE)
+
+using test_host_abi_set =
+    remove_scalar_abi<Kokkos::Experimental::Impl::host_abi_set>::type;
+using test_device_abi_set = Kokkos::Experimental::Impl::abi_set<>;
+
+#define KOKKOS_SIMD_DEVICE_TEST(TEST_SUITE_NAME, TEST_NAME) \
+  template <typename = void>                                \
+  void TEST_SUITE_NAME##_##TEST_NAME##_skipped()
+
+#endif
 
 class gtest_checker {
  public:
