@@ -132,7 +132,8 @@ class GraphNodeRef {
   // TODO kernel name propagation and exposure
 
   template <class NextKernelDeduced>
-  auto _then_kernel(NextKernelDeduced&& arg_kernel) const {
+  auto _then_kernel(const device_handle_t& device_handle,
+                    NextKernelDeduced&& arg_kernel) const {
     static_assert(
         Kokkos::Impl::is_graph_kernel_v<std::remove_cvref_t<NextKernelDeduced>>,
         "Kokkos internal error");
@@ -148,8 +149,7 @@ class GraphNodeRef {
         m_graph_impl,
         Kokkos::Impl::GraphAccess::make_node_shared_ptr<
             typename return_t::node_impl_t>(
-            m_node_impl->get_device_handle(),
-            Kokkos::Impl::_graph_node_kernel_ctor_tag{},
+            device_handle, Kokkos::Impl::_graph_node_kernel_ctor_tag{},
             (NextKernelDeduced&&)arg_kernel,
             // *this is the predecessor
             Kokkos::Impl::_graph_node_predecessor_ctor_tag{}, *this));
@@ -239,9 +239,10 @@ class GraphNodeRef {
         Kokkos::Impl::get_properties_or<device_handle_t, std::string>(
             std::forward<Props>(props), graph_ptr->get_device_handle(),
             "[unlabeled]");
-    return this->_then_kernel(next_kernel_t{
-        std::move(label), device_handle.m_exec, std::forward<Policy>(policy),
-        std::forward<Functor>(functor)});
+    return this->_then_kernel(
+        device_handle, next_kernel_t{std::move(label), device_handle.m_exec,
+                                     std::forward<Policy>(policy),
+                                     std::forward<Functor>(functor)});
   }
 
   template <typename Props, typename Functor>
@@ -378,7 +379,7 @@ class GraphNodeRef {
           m_graph_impl,
           Kokkos::Impl::GraphAccess::make_node_shared_ptr<
               typename return_t::node_impl_t>(
-              m_node_impl->get_device_handle(),
+              Kokkos::Experimental::get_device_handle(exec),
               Kokkos::Impl::_graph_node_capture_ctor_tag{},
               std::forward<Functor>(functor),
               Kokkos::Impl::_graph_node_predecessor_ctor_tag{}, *this));
@@ -428,8 +429,8 @@ class GraphNodeRef {
                                           std::decay_t<Functor>,
                                           Kokkos::ParallelForTag>;
     return this->_then_kernel(
-        next_kernel_t{std::move(label), device_handle.m_exec,
-                      (Functor&&)functor, std::move(policy)});
+        std::move(device_handle),
+        next_kernel_t{std::move(label), (Functor&&)functor, std::move(policy)});
   }
 
   template <class Policy, class Functor>
@@ -587,8 +588,9 @@ class GraphNodeRef {
                                           Kokkos::ParallelReduceTag>;
 
     return this->_then_kernel(
-        next_kernel_t{std::move(label), device_handle.m_exec,
-                      std::move(functor_reducer), std::move(policy),
+        std::move(device_handle),
+        next_kernel_t{std::move(label), std::move(functor_reducer),
+                      std::move(policy),
                       return_value_adapter::return_value(
                           return_value, std::forward<Functor>(functor))});
   }
