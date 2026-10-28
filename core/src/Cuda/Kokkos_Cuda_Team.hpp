@@ -39,54 +39,54 @@ struct CudaJoinFunctor {
   }
 };
 
-/**\brief  Warp lane mask of the vector that holds team thread vector_index.
- *
- *  Tuned for ThreadVectorRange collectives: vector reductions and scans,
- *  single(PerThread) broadcasts, and cuda_team_vector_barrier(). The mask
- *  names exactly the vector_length lanes of one team thread, so it is not
- *  valid for TeamThreadRange or TeamVectorRange collectives, which span
- *  several vectors or warps.
- *
- *  Cuda team closures run with blockDim = (vector_length, team_size, 1), so
- *  the vector lanes of each team thread are vector_length consecutive lanes:
- *    vector_length                       : the size of the vector, blockDim.x
- *    0xffffffffu >> (32 - vector_length) : vector_length bits set to 1; unlike
- *                                        : ((1 << vector_length) - 1) this is
- *                                        : also defined for vector_length 32
- *    vector_index                        : my thread ID in the team,
- *                                        : threadIdx.y (not a lane's
- *                                        : threadIdx.x)
- *    (vector_index * vector_length) & 31 : the first lane of my vector in the
- *                                        : warp, e.g. if vector_length is 8,
- *                                        : there are 4 vectors in a warp and
- *                                        : thread 6 starts at lane
- *                                        : (6 * 8) & 31 = 16
- *
- *  Requires vector_length to be a power of two in [1, 32];
- *  TeamPolicyInternal<Cuda>::impl_determine_vector_length rounds requests
- *  down to one. Then vector_length divides the warp size, no vector straddles
- *  a warp, and the first lane equals
- *  (vector_index % (32 / vector_length)) * vector_length without the integer
- *  division and modulo. Other vector lengths are not supported.
- */
+/// \brief Warp lane mask of the vector that holds team thread vector_index.
+///
+/// Tuned for ThreadVectorRange collectives: vector reductions and scans,
+/// single(PerThread) broadcasts, and cuda_team_vector_barrier(). The mask
+/// names exactly the vector_length lanes of one team thread, so it is not
+/// valid for TeamThreadRange or TeamVectorRange collectives, which span
+/// several vectors or warps.
+///
+/// Cuda team closures run with blockDim = (vector_length, team_size, 1), so
+/// the vector lanes of each team thread are vector_length consecutive lanes:
+/// \code
+///   vector_length                       : the size of the vector, blockDim.x
+///   0xffffffffu >> (32 - vector_length) : vector_length bits set to 1; unlike
+///                                       : ((1 << vector_length) - 1) this is
+///                                       : also defined for vector_length 32
+///   vector_index                        : my thread ID in the team,
+///                                       : threadIdx.y (not a lane's
+///                                       : threadIdx.x)
+///   (vector_index * vector_length) & 31 : the first lane of my vector in the
+///                                       : warp, e.g. if vector_length is 8,
+///                                       : there are 4 vectors in a warp and
+///                                       : thread 6 starts at lane
+///                                       : (6 * 8) & 31 = 16
+/// \endcode
+///
+/// Requires vector_length to be a power of two in [1, 32];
+/// TeamPolicyInternal<Cuda>::impl_determine_vector_length rounds requests
+/// down to one. Then vector_length divides the warp size, no vector straddles
+/// a warp, and the first lane equals
+/// (vector_index % (32 / vector_length)) * vector_length without the integer
+/// division and modulo. Other vector lengths are not supported.
 KOKKOS_INLINE_FUNCTION
 unsigned cuda_team_vector_mask(unsigned vector_length, unsigned vector_index) {
   return (0xffffffffu >> (32u - vector_length))
          << ((vector_index * vector_length) & 31u);
 }
 
-/**\brief  Synchronize the vector lanes of the calling team thread.
- *
- *  __syncwarp over cuda_team_vector_mask(blockDim.x, threadIdx.y): waits until
- *  every lane of the calling thread's vector arrives, and orders the memory
- *  accesses of those lanes. Used at the end of parallel_for(ThreadVectorRange)
- *  and of single(PerThread) and single(PerTeam).
- *
- *  This is a vector barrier only. Other vectors in the same warp are not
- *  synchronized; use team_barrier() for the whole team. Every lane of the
- *  vector must reach the call. Same layout and power-of-two blockDim.x
- *  requirements as cuda_team_vector_mask.
- */
+/// \brief Synchronize the vector lanes of the calling team thread.
+///
+/// __syncwarp over cuda_team_vector_mask(blockDim.x, threadIdx.y): waits until
+/// every lane of the calling thread's vector arrives, and orders the memory
+/// accesses of those lanes. Used at the end of parallel_for(ThreadVectorRange)
+/// and of single(PerThread) and single(PerTeam).
+///
+/// This is a vector barrier only. Other vectors in the same warp are not
+/// synchronized; use team_barrier() for the whole team. Every lane of the
+/// vector must reach the call. Same layout and power-of-two blockDim.x
+/// requirements as cuda_team_vector_mask.
 KOKKOS_INLINE_FUNCTION
 void cuda_team_vector_barrier() {
   // Keep the full-warp mask literal so the compiler can specialize this path.
