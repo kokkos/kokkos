@@ -125,12 +125,26 @@ if(Kokkos_ENABLE_EXPERIMENTAL_CXX20_MODULES)
   set(KOKKOS_CORE_MODULE_FILES Kokkos_Core.cppm Kokkos_Core_Impl.cppm)
 endif()
 
+set(KOKKOS_GRAPH_MODULE_FILES)
+if(Kokkos_ENABLE_EXPERIMENTAL_CXX20_MODULES)
+  # FIXME_CLANG Clang 19 terminates with many parsing issues in core/unit_test/TestGraph.hpp
+  # when modules are enabled. See also https://github.com/kokkos/kokkos/pull/9673#issuecomment-6261858936.
+  # Therefore, it is NOT included in the modules.
+  if(CMAKE_CXX_COMPILER_ID STREQUAL Clang AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 20)
+    message(WARNING "Older Clang cannot properly deal with Kokkos::Experimental::Graph as a module.")
+  else()
+    set(KOKKOS_GRAPH_MODULE_FILES Kokkos_Graph.cppm Kokkos_Graph_Impl.cppm)
+    global_set(KOKKOS_IMPL_HAVE_CXX20_GRAPH_MODULES 1)
+  endif()
+endif()
+
 kokkos_add_library(
   kokkoscore
   SOURCES
   ${KOKKOS_CORE_SRCS}
   MODULE_INTERFACE
   ${KOKKOS_CORE_MODULE_FILES}
+  ${KOKKOS_GRAPH_MODULE_FILES}
   HEADERS
   ${KOKKOS_CORE_HEADERS}
   ADD_BUILD_OPTIONS # core should be given all the necessary compiler/linker flags
