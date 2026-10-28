@@ -39,6 +39,63 @@ struct CudaJoinFunctor {
   }
 };
 
+/**\brief  Warp lane mask of the vector that holds team thread vector_index.
+ *
+ *  Tuned for ThreadVectorRange collectives: vector reductions and scans,
+ *  single(PerThread) broadcasts, and cuda_team_vector_barrier(). The mask
+ *  names exactly the vector_length lanes of one team thread, so it is not
+ *  valid for TeamThreadRange or TeamVectorRange collectives, which span
+ *  several vectors or warps.
+ *
+ *  Cuda team closures run with blockDim = (vector_length, team_size, 1), so
+ *  the vector lanes of each team thread are vector_length consecutive lanes:
+ *    vector_length                       : the size of the vector, blockDim.x
+ *    0xffffffffu >> (32 - vector_length) : vector_length bits set to 1; unlike
+ *                                        : ((1 << vector_length) - 1) this is
+ *                                        : also defined for vector_length 32
+ *    vector_index                        : my thread ID in the team,
+ *                                        : threadIdx.y (not a lane's
+ *                                        : threadIdx.x)
+ *    (vector_index * vector_length) & 31 : the first lane of my vector in the
+ *                                        : warp, e.g. if vector_length is 8,
+ *                                        : there are 4 vectors in a warp and
+ *                                        : thread 6 starts at lane
+ *                                        : (6 * 8) & 31 = 16
+ *
+ *  Requires vector_length to be a power of two in [1, 32];
+ *  TeamPolicyInternal<Cuda>::impl_determine_vector_length rounds requests
+ *  down to one. Then vector_length divides the warp size, no vector straddles
+ *  a warp, and the first lane equals
+ *  (vector_index % (32 / vector_length)) * vector_length without the integer
+ *  division and modulo. Other vector lengths are not supported.
+ */
+KOKKOS_INLINE_FUNCTION
+unsigned cuda_team_vector_mask(unsigned vector_length, unsigned vector_index) {
+  return (0xffffffffu >> (32u - vector_length))
+         << ((vector_index * vector_length) & 31u);
+}
+
+/**\brief  Synchronize the vector lanes of the calling team thread.
+ *
+ *  __syncwarp over cuda_team_vector_mask(blockDim.x, threadIdx.y): waits until
+ *  every lane of the calling thread's vector arrives, and orders the memory
+ *  accesses of those lanes. Used at the end of parallel_for(ThreadVectorRange)
+ *  and of single(PerThread) and single(PerTeam).
+ *
+ *  This is a vector barrier only. Other vectors in the same warp are not
+ *  synchronized; use team_barrier() for the whole team. Every lane of the
+ *  vector must reach the call. Same layout and power-of-two blockDim.x
+ *  requirements as cuda_team_vector_mask.
+ */
+KOKKOS_INLINE_FUNCTION
+void cuda_team_vector_barrier() {
+  // Keep the full-warp mask literal so the compiler can specialize this path.
+  KOKKOS_IF_ON_DEVICE((
+      if (blockDim.x == 32u) { __syncwarp(0xffffffffu); } else {
+        __syncwarp(cuda_team_vector_mask(blockDim.x, threadIdx.y));
+      }))
+}
+
 /**\brief  Team member_type passed to the TeamPolicy closure.
  *
  *  Cuda thread blocks for team closures are dimensioned as:
@@ -269,11 +326,7 @@ class CudaTeamMember {
          typename WrappedReducerType::value_type tmp(value);
          typename WrappedReducerType::value_type tmp2 = tmp;
 
-         unsigned mask =
-             blockDim.x == 32
-                 ? 0xffffffff
-                 : ((1 << blockDim.x) - 1)
-                       << ((threadIdx.y % (32 / blockDim.x)) * blockDim.x);
+         unsigned mask = Impl::cuda_team_vector_mask(blockDim.x, threadIdx.y);
 
          for (int i = blockDim.x; (i >>= 1);) {
            Impl::in_place_shfl_down(tmp2, tmp, i, blockDim.x, mask);
@@ -653,30 +706,7 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
       // * Everyone in the vector is actually done when the parallel_for returns
       // * Any memory modifications made within the lambda are visible to other
       // threads in the warp
-      //
-      // The context for the mask is that the CUDA backend sets
-      // Range parallel: grid=(ceil(n/B), 1, 1) and block=(1, B, 1)
-      // Team parallel: grid=(league_size, 1, 1) and
-      //                block=(vector_size, team_size, 1)
-      // For this, think of Range as a Team policy configuration where
-      // vector_size is 1
-      //
-      // blockDim.x                        : the size of the vector
-      // ((1 << blockDim.x) - 1)           : vector_size bits set to 1
-      // (32 / blockDim.x)                 : how many vectors are in each warp
-      // threadIdx.y                       : my team ID
-      // (threadIdx.y % (32 / blockDim.x)) : which vector within the warp I am
-      //                                   : in, e.g. if vector_size is 8, there
-      //                                   : are 4 vectors in a warp so this
-      //                                   : becomes (team ID % 4). This gets
-      //                                   : multiplied by vector_size to offset
-      //                                   : it to the start of the vector in
-      //                                   : the warp and then used to shift the
-      //                                   : vector_size 1 bits
-      __syncwarp(blockDim.x == 32
-                     ? 0xffffffff
-                     : ((1 << blockDim.x) - 1)
-                           << (threadIdx.y % (32 / blockDim.x)) * blockDim.x);))
+      Impl::cuda_team_vector_barrier();))
 }
 
 //----------------------------------------------------------------------------
@@ -878,10 +908,7 @@ parallel_scan(const Impl::ThreadVectorRangeBoundariesStruct<
 
       const int mask = blockDim.x - 1;
       const unsigned active_mask =
-          blockDim.x == 32
-              ? 0xffffffff
-              : ((1 << blockDim.x) - 1)
-                    << (threadIdx.y % (32 / blockDim.x)) * blockDim.x;
+          Impl::cuda_team_vector_mask(blockDim.x, threadIdx.y);
       const int rem = loop_boundaries.end & mask;  // == end % blockDim.x
       const int end = loop_boundaries.end + (rem ? blockDim.x - rem : 0);
 
@@ -988,13 +1015,8 @@ KOKKOS_INLINE_FUNCTION void single(
     const Impl::VectorSingleStruct<Impl::CudaTeamMember>&,
     const FunctorType& lambda) {
   (void)lambda;
-  KOKKOS_IF_ON_DEVICE((
-      if (threadIdx.x == 0) { lambda(); }
-
-      __syncwarp(blockDim.x == 32
-                     ? 0xffffffff
-                     : ((1 << blockDim.x) - 1)
-                           << (threadIdx.y % (32 / blockDim.x)) * blockDim.x);))
+  KOKKOS_IF_ON_DEVICE((if (threadIdx.x == 0) { lambda(); }))
+  Impl::cuda_team_vector_barrier();
 }
 
 template <class FunctorType>
@@ -1002,13 +1024,8 @@ KOKKOS_INLINE_FUNCTION void single(
     const Impl::ThreadSingleStruct<Impl::CudaTeamMember>&,
     const FunctorType& lambda) {
   (void)lambda;
-  KOKKOS_IF_ON_DEVICE((
-      if (threadIdx.x == 0 && threadIdx.y == 0) { lambda(); }
-
-      __syncwarp(blockDim.x == 32
-                     ? 0xffffffff
-                     : ((1 << blockDim.x) - 1)
-                           << (threadIdx.y % (32 / blockDim.x)) * blockDim.x);))
+  KOKKOS_IF_ON_DEVICE((if (threadIdx.x == 0 && threadIdx.y == 0) { lambda(); }))
+  Impl::cuda_team_vector_barrier();
 }
 
 template <class FunctorType, class ValueType>
@@ -1017,16 +1034,12 @@ KOKKOS_INLINE_FUNCTION void single(
     const FunctorType& lambda, ValueType& val) {
   (void)lambda;
   (void)val;
-  KOKKOS_IF_ON_DEVICE(
-      (if (threadIdx.x == 0) { lambda(val); }
+  KOKKOS_IF_ON_DEVICE((if (threadIdx.x == 0) { lambda(val); }
 
-       unsigned mask =
-           blockDim.x == 32
-               ? 0xffffffff
-               : ((1 << blockDim.x) - 1)
-                     << ((threadIdx.y % (32 / blockDim.x)) * blockDim.x);
+                       unsigned mask =
+                           Impl::cuda_team_vector_mask(blockDim.x, threadIdx.y);
 
-       Impl::in_place_shfl(val, val, 0, blockDim.x, mask);))
+                       Impl::in_place_shfl(val, val, 0, blockDim.x, mask);))
 }
 
 template <class FunctorType, class ValueType>
