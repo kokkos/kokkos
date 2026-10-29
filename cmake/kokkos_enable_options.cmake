@@ -102,6 +102,16 @@ kokkos_enable_option(OPENACC_FORCE_HOST_AS_DEVICE OFF "Whether to force to use h
 # This option will go away eventually, but allows fallback to old implementation when needed.
 kokkos_enable_option(DESUL_ATOMICS_EXTERNAL OFF "Whether to use an external desul installation")
 kokkos_enable_option(
+  DESUL_DEVICE_LOCK_ARRAYS ON
+  "Whether to allocate the desul device lock arrays used for device atomic operations on types that are not lock-free (if OFF, such operations fail to compile)"
+)
+if(NOT Kokkos_ENABLE_DESUL_DEVICE_LOCK_ARRAYS AND Kokkos_ENABLE_DESUL_ATOMICS_EXTERNAL)
+  message(
+    FATAL_ERROR
+      "Kokkos_ENABLE_DESUL_DEVICE_LOCK_ARRAYS=OFF is not supported with Kokkos_ENABLE_DESUL_ATOMICS_EXTERNAL=ON. Configure the external desul installation instead."
+  )
+endif()
+kokkos_enable_option(
   ATOMICS_BYPASS OFF "**NOT RECOMMENDED** Whether to make atomics non-atomic for non-threaded MPI-only use cases"
 )
 kokkos_enable_option(
