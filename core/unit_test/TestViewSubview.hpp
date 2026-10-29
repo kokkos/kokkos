@@ -1224,6 +1224,12 @@ void test_1d_assign_impl() {
     // Kokkos::View< int[N1] > afail2( a1 );
   }
 
+// FIXME_GCC Kokkos::Impl::SharedAllocationTracker::m_record_bits may be used
+// uninitialized
+#if defined(KOKKOS_COMPILER_GNU) && KOKKOS_COMPILER_GNU >= 1600
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
   {  // Works.
     Kokkos::View<int[N0], LayoutOrg, Space, MemTraits> a("A");
     Kokkos::View<int*, Layout, Space, MemTraits> a1(a);
@@ -1233,6 +1239,9 @@ void test_1d_assign_impl() {
     Kokkos::fence();
     test_Check1D(a1, a, std::pair<int, int>(0, N0));
   }
+#if defined(KOKKOS_COMPILER_GNU) && KOKKOS_COMPILER_GNU >= 1600
+#pragma GCC diagnostic pop
+#endif
 }
 
 template <class Space, class Type, class TypeSub, class LayoutSub, class Layout,

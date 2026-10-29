@@ -89,10 +89,10 @@ pipeline {
                                }
                          }
                 }
-                stage('GCC-15-CXX26') {
+                stage('GCC-16-CXX26') {
                     agent {
                         docker {
-                            image 'gcc:15.1'
+                            image 'gcc:16.2'
                             label 'docker'
                             registryCredentialsId 'dockerhub'
                         }
@@ -116,7 +116,7 @@ pipeline {
                           export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_TESTS=ON" && \
                           export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_DEPRECATED_CODE_5=ON" && \
                           export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_SERIAL=ON" && \
-                          ctest -VV -D CDASH_MODEL="Nightly" -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}" -S scripts/CTestRun.cmake -D CTEST_SITE="ornl-jenkins" -D CTEST_BUILD_NAME="GCC-15-CXX26"
+                          ctest -VV -D CDASH_MODEL="Nightly" -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}" -S scripts/CTestRun.cmake -D CTEST_SITE="ornl-jenkins" -D CTEST_BUILD_NAME="GCC-16-CXX26"
                           '''
                     }
                     post {
