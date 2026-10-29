@@ -58,8 +58,10 @@
 * Add Kokkos::Experimental::Graph to modules [\#9673](https://github.com/kokkos/kokkos/pull/9673)
 * Avoid `TypeInfo` instantiation when label passed to `parallel_for`, `parallel_reduce` and `parallel_scan` [\#9653](https://github.com/kokkos/kokkos/pull/9653)
 * Check if flat extent of iteration space fits in `MDRangePolicy::index_type` [\#9650](https://github.com/kokkos/kokkos/pull/9650)
+*Add fallback for `Kokkos::sort` on non-arithmetic data [\#9539](https://github.com/kokkos/kokkos/pull/9539)
 
 ### Build System Changes
+* Update bundled GoogleTest version to 1.14.0 and use FetchContent to build it [\#8593](https://github.com/kokkos/kokkos/pull/8593)
 
 ### Incompatibilities (i.e. breaking changes)
 * Require Google Benchmark 1.9.5 when building with `Kokkos_ENABLE_BENCHMARKS=ON` [\#9562](https://github.com/kokkos/kokkos/pull/9562)
