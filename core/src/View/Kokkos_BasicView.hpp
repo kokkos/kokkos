@@ -146,7 +146,17 @@ class BasicView {
 #ifndef KOKKOS_ENABLE_DEPRECATED_CODE_5
     // Need to cast in order to avoid warning for rank zero about pointless
     // comparison to zero
-    KOKKOS_ASSERT(static_cast<int>(r) < static_cast<int>(rank()));
+    if constexpr (std::is_pointer_v<data_handle_type>) {
+      KOKKOS_ASSERT(static_cast<int>(r) < static_cast<int>(rank()),
+                    "BasicView ERROR: attempt to access static_extent(%d) of "
+                    "View (label=\"**UNMANAGED**\", rank=%lu)\n",
+                    r, rank());
+    } else {
+      KOKKOS_ASSERT(static_cast<int>(r) < static_cast<int>(rank()),
+                    "BasicView ERROR: attempt to access static_extent(%d) of "
+                    "View (label=\"**UNAVAILABLE**\", rank=%lu)\n",
+                    r, rank());
+    }
 #endif
     return extents_type::static_extent(r);
   }
@@ -154,7 +164,23 @@ class BasicView {
 #ifndef KOKKOS_ENABLE_DEPRECATED_CODE_5
     // Need to cast in order to avoid warning for rank zero about pointless
     // comparison to zero
-    KOKKOS_ASSERT(static_cast<int>(r) < static_cast<int>(rank()));
+    if constexpr (std::is_pointer_v<data_handle_type>) {
+      KOKKOS_ASSERT(static_cast<int>(r) < static_cast<int>(rank()),
+                    "BasicView ERROR: attempt to access extent(%d) of View "
+                    "(label=\"**UNMANAGED**\", ptr=%p, rank=%lu)\n",
+                    r, m_ptr, rank());
+    } else {
+      KOKKOS_IF_ON_DEVICE(
+          (KOKKOS_ASSERT(static_cast<int>(r) < static_cast<int>(rank()),
+                         "BasicView ERROR: attempt to access extent(%d) of "
+                         "View (label=\"**UNAVAILABLE**\", ptr=%p, rank=%lu)\n",
+                         r, m_ptr.get(), rank());))
+      KOKKOS_IF_ON_HOST(
+          (KOKKOS_ASSERT(static_cast<int>(r) < static_cast<int>(rank()),
+                         "BasicView ERROR: attempt to access extent(%d) of "
+                         "View (label=\"%s\", ptr=%p, rank=%lu)",
+                         r, m_ptr.get_label().c_str(), m_ptr.get(), rank());))
+    }
 #endif
     return m_map.extents().extent(r);
   }
@@ -788,7 +814,23 @@ class BasicView {
   KOKKOS_FUNCTION constexpr index_type stride(rank_type r) const {
     // Need to cast in order to avoid warning for rank zero about pointless
     // comparison to zero
-    KOKKOS_ASSERT(static_cast<int>(r) < static_cast<int>(rank()));
+    if constexpr (std::is_pointer_v<data_handle_type>) {
+      KOKKOS_ASSERT(static_cast<int>(r) < static_cast<int>(rank()),
+                    "BasicView ERROR: attempt to access stride(%d) of View "
+                    "(label=\"**UNMANAGED**\", ptr=%p, rank=%lu)\n",
+                    r, m_ptr, rank());
+    } else {
+      KOKKOS_IF_ON_HOST(
+          (KOKKOS_ASSERT(static_cast<int>(r) < static_cast<int>(rank()),
+                         "BasicView ERROR: attempt to access stride(%d) of "
+                         "View (label=\"%s\", ptr=%p, rank=%lu)",
+                         r, m_ptr.get_label().c_str(), m_ptr.get(), rank());))
+      KOKKOS_IF_ON_DEVICE(
+          (KOKKOS_ASSERT(static_cast<int>(r) < static_cast<int>(rank()),
+                         "BasicView ERROR: attempt to access stride(%d) of "
+                         "View (label=\"**UNAVAILABLE**\", ptr=%p, rank=%lu)\n",
+                         r, m_ptr.get(), rank());))
+    }
     return m_map.stride(r);
   }
 
