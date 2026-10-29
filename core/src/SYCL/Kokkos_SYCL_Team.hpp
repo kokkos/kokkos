@@ -875,13 +875,14 @@ std::enable_if_t<Kokkos::is_reducer<ReducerType>::value> parallel_scan(
   const iType tidx1   = loop_boundaries.member.item().get_local_id(1);
   const iType grange1 = loop_boundaries.member.item().get_local_range(1);
 
-  const int mask          = grange1 - 1;
-  const int rem           = loop_boundaries.end & mask;  // == end % grange1
-  const int end           = loop_boundaries.end + (rem ? grange1 - rem : 0);
+  const int mask  = grange1 - 1;
+  const iType rem = (loop_boundaries.end - loop_boundaries.start) &
+                    mask;  // == (end - start) % grange1
+  const iType end         = loop_boundaries.end + (rem ? grange1 - rem : 0);
   const auto sg           = loop_boundaries.member.item().get_sub_group();
   const int vector_offset = (sg.get_local_id() / grange1) * grange1;
 
-  for (int i = tidx1; i < end; i += grange1) {
+  for (iType i = loop_boundaries.start + tidx1; i < end; i += grange1) {
     value_type val = identity;
 
     // First acquire per-lane contributions.
