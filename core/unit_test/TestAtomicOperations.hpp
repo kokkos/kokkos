@@ -15,6 +15,14 @@ import kokkos.core;
 #include <iostream>
 #include <limits>
 
+// Device atomic operations on types that are not lock-free require the desul
+// device lock arrays.
+#if (defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
+     defined(KOKKOS_ENABLE_SYCL)) &&                              \
+    !KOKKOS_ENABLE_DESUL_DEVICE_LOCK_ARRAYS
+#define KOKKOS_IMPL_TEST_NO_DEVICE_LOCK_ARRAYS
+#endif
+
 namespace TestAtomicOperations {
 
 struct AddAtomicTest {

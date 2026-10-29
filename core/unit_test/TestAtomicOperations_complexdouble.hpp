@@ -6,6 +6,7 @@
 using namespace TestAtomicOperations;
 
 namespace Test {
+#ifndef KOKKOS_IMPL_TEST_NO_DEVICE_LOCK_ARRAYS
 TEST(TEST_CATEGORY, atomic_operations_complexdouble) {
 #if defined(KOKKOS_ENABLE_SYCL) && \
     !defined(KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED)
@@ -42,4 +43,5 @@ TEST(TEST_CATEGORY, atomic_operations_complexdouble) {
         old_val, update)));
   }
 }
+#endif
 }  // namespace Test

@@ -245,6 +245,11 @@ TEST(TEST_CATEGORY, basic_view_atomic_accessor_double) {
   test_atomic_accessor<double>();
 }
 
+// Device atomic operations on types that are not lock-free require the desul
+// device lock arrays.
+#if !((defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
+       defined(KOKKOS_ENABLE_SYCL)) &&                              \
+      !KOKKOS_ENABLE_DESUL_DEVICE_LOCK_ARRAYS)
 TEST(TEST_CATEGORY, basic_view_atomic_accessor_complex_double) {
   // FIXME OPENACC atomics
 #ifdef KOKKOS_ENABLE_OPENACC
@@ -262,5 +267,6 @@ TEST(TEST_CATEGORY, basic_view_atomic_accessor_complex_double) {
 
   test_atomic_accessor<Kokkos::complex<double>>();
 }
+#endif
 
 }  // namespace
