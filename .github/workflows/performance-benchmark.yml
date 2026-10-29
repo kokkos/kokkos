@@ -21,8 +21,8 @@ jobs:
       BUILD_ID: ${{ matrix.distro }}-${{ matrix.cxx }}-${{ matrix.backend }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        uses: actions/checkout@v7.0.1
+      - uses: actions/cache@v6.1.0
         with:
           path: ~/.cache/ccache
           key: kokkos-${{ matrix.distro }}-${{ matrix.cxx }}-${{ matrix.backend }}-${{ github.ref }}-${{ github.sha }}
@@ -50,13 +50,13 @@ jobs:
           mkdir ${{ env.BUILD_ID }}
           find builddir/core/perf_test/ -name "*.json" -exec mv {} ${{ env.BUILD_ID }}/  \;
       - name: Archive benchmark results
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: ${{ matrix.cxx }}-${{ matrix.backend }}
           path: ${{ env.BUILD_ID }}
       - name: Push benchmark results
         if: ${{ github.ref == 'refs/heads/develop' }}
-        uses: dmnemec/copy_file_to_another_repo_action@bbebd3da22e4a37d04dca5f782edd5201cb97083 # main
+        uses: dmnemec/copy_file_to_another_repo_action@main
         env:
           API_TOKEN_GITHUB: ${{ secrets.DALG24_PUSH_BENCHMARK_RESULTS }}
         with:

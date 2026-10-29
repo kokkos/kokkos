@@ -19,7 +19,7 @@ jobs:
     outputs:
       code: ${{ steps.filter.outputs.code }}
     steps:
-      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+      - uses: dorny/paths-filter@v4.0.3
         id: filter
         with:
           filters: |
@@ -39,7 +39,7 @@ jobs:
 
     steps:
       - name: checkout_kokkos
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7.0.1
         with:
           repository: kokkos/kokkos
           path: kokkos
@@ -49,7 +49,7 @@ jobs:
           echo "KOKKOS_MDSPAN_HASH=$(cat kokkos/tpls/mdspan-hash.txt)" >> $GITHUB_ENV
 
       - name: checkout_mdspan
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7.0.1
         with:
           repository: kokkos/mdspan
           path: mdspan
@@ -116,7 +116,7 @@ jobs:
 
     steps:
       - name: checkout_kokkos
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7.0.1
         with:
           repository: kokkos/kokkos
           path: kokkos
@@ -172,7 +172,7 @@ jobs:
 
     steps:
       - name: checkout_kokkos
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7.0.1
         with:
           repository: kokkos/kokkos
           path: kokkos
@@ -234,7 +234,7 @@ jobs:
 
     steps:
       - name: checkout_kokkos
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7.0.1
         with:
           repository: kokkos/kokkos
           path: kokkos
@@ -289,7 +289,7 @@ jobs:
 
     steps:
       - name: checkout_kokkos
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7.0.1
         with:
           repository: kokkos/kokkos
           path: kokkos
@@ -343,7 +343,7 @@ jobs:
 
     steps:
       - name: checkout_kokkos
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7.0.1
         with:
           repository: kokkos/kokkos
           path: kokkos
@@ -379,7 +379,7 @@ jobs:
 
     steps:
       - name: checkout_kokkos
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7.0.1
         with:
           repository: kokkos/kokkos
           path: kokkos
@@ -419,7 +419,7 @@ jobs:
 
     steps:
       - name: checkout_kokkos
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7.0.1
         with:
           repository: kokkos/kokkos
           path: kokkos
@@ -467,7 +467,7 @@ jobs:
 
     steps:
       - name: checkout_kokkos
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7.0.1
         with:
           repository: kokkos/kokkos
           path: kokkos
@@ -524,7 +524,7 @@ jobs:
           nextcli system terminate
 
       - name: checkout_kokkos
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7.0.1
         with:
           repository: kokkos/kokkos
           path: kokkos
