@@ -1,4 +1,91 @@
 # CHANGELOG
+
+## 5.3.0
+
+[Full Changelog](https://github.com/kokkos/kokkos/compare/5.2.2...5.3.0)
+
+### Features:
+* Introduce `DefaultMemorySpace` and `DefaultHostMemorySpace` type aliases [\#9560](https://github.com/kokkos/kokkos/pull/9560).
+* Introduce a new top level parallel construct: `single`. It allow users to execute non-parallel code on device, potentially returning a value [\#8123](https://github.com/kokkos/kokkos/pull/8123)
+
+### Backend and Architecture Enhancements:
+
+#### CUDA:
+* Add support for NVIDIA Rubin GPU architecture [\#9395](https://github.com/kokkos/kokkos/pull/9395)
+* Workaround warnings with std::pair as subview slice specifiers in relaxed constexpr mode [\#9467](https://github.com/kokkos/kokkos/pull/9467)
+* Increase the grid size used for reductions with `MDRangePolicy` [\#9523](https://github.com/kokkos/kokkos/pull/9523)
+* Fix response file handling of nvcc_wrapper by removing quotes [\#9573](https://github.com/kokkos/kokkos/pull/9573)
+
+#### HIP:
+* Increase the grid size used for reductions with `MDRangePolicy` [\#9535](https://github.com/kokkos/kokkos/pull/9535)
+* Add Hygon DCU architecture support (`ARCH_HYGON_GFX936`) [\#9403](https://github.com/kokkos/kokkos/pull/9403)
+
+#### SYCL:
+* SYCL: Introspect TeamPolicy kernels for maximum team size [\#9353](https://github.com/kokkos/kokkos/pull/9353)
+* SYCL: Reduce device memory footprint of team scratch pads [\#9617](https://github.com/kokkos/kokkos/pull/9617)
+* Add Intel Battlemage as SYCL architecture [\#9410](https://github.com/kokkos/kokkos/pull/9410)
+
+#### OpenACC:
+
+#### NextSilicon:
+* Defer use of NextAPI until after `Kokkos::initialize` to prevent errors during `MPI_Init` [\#9358](https://github.com/kokkos/kokkos/pull/9358)
+* Team-level parallelism (TeamPolicy) [\#9594](https://github.com/kokkos/kokkos/pull/9594)
+
+#### HPX:
+* Reorder destruction of default instance on `Kokkos::finalize` to prevent memory leaks [\#9443](https://github.com/kokkos/kokkos/pull/9443)
+
+#### Threads:
+
+#### OpenMP:
+
+#### Serial:
+
+#### Serial, OpenMP, Threads:
+
+* Aligning functor indices type with `MDRangePolicy::index_type` will encourage GCC auto-vectorization [\#9650](https://github.com/kokkos/kokkos/pull/9650)
+
+### General Enhancements
+* Add NVIDIA Vera CPU architecture: Kokkos_ARCH_ARMV9_VERA [\#9630](https://github.com/kokkos/kokkos/pull/9630)
+* Make headers `<Kokkos_ScopeGuard.hpp>` and `<Kokkos_InitializeFinalize.hpp>` public [\#9309](https://github.com/kokkos/kokkos/pull/9309)
+* Use raw pointers instead of iterators for CUDA/HIP sort_by_key if possible [\#9466](https://github.com/kokkos/kokkos/pull/9466)
+* Make `push_finalize_hook` thread-safe [\#9484](https://github.com/kokkos/kokkos/pull/9512)
+* Support larger ranges for algorithms [\#9503](https://github.com/kokkos/kokkos/pull/9503)
+* Promote KOKKOS_IMPL_[B]HALF_TYPE_DEFINED to KOKKOS_HAS_NATIVE_[B]HALF_TYPE [\#9519](https://github.com/kokkos/kokkos/pull/9519)
+* Provide std::common_type specializations for half precision [\#9251](https://github.com/kokkos/kokkos/pull/9251)
+* Allow `full_extent` instead of `ALL` as `subview` slice parameter [\#9601](https://github.com/kokkos/kokkos/pull/9601)
+* Add `std::tuple_element`, `std::tuple_size` and get support to `Kokkos::pair` [\#9583](https://github.com/kokkos/kokkos/pull/9583)
+* Allow using std:float16_t and std::bfloat16_t in Kokkos::Experimental::[b]half_t - [\#9253](https://github.com/kokkos/kokkos/pull/9253)
+* Add Kokkos::Experimental::Graph to modules [\#9673](https://github.com/kokkos/kokkos/pull/9673)
+* Avoid `TypeInfo` instantiation when label passed to `parallel_for`, `parallel_reduce` and `parallel_scan` [\#9653](https://github.com/kokkos/kokkos/pull/9653)
+* Check if flat extent of iteration space fits in `MDRangePolicy::index_type` [\#9650](https://github.com/kokkos/kokkos/pull/9650)
+
+### Build System Changes
+
+### Incompatibilities (i.e. breaking changes)
+* Require Google Benchmark 1.9.5 when building with `Kokkos_ENABLE_BENCHMARKS=ON` [\#9562](https://github.com/kokkos/kokkos/pull/9562)
+* Drop workaround for invalid use of View of Views that causes program hang on destruction [\#9612](https://github.com/kokkos/kokkos/pull/9612)
+* Relax semantics of atomic floating-point min/max [\#9606](https://github.com/kokkos/kokkos/pull/9606)
+*  Default label from `TypeInfo` no longer provided when empty string is passed as label to `parallel_for`, `parallel_reduce`, and `parallel_scan` [\#9653](https://github.com/kokkos/kokkos/pull/9653)
+
+### Deprecations
+* Final removal of code guarded by `KOKKOS_ENABLE_DEPRECATED_CODE_4` [\#9386](https://github.com/kokkos/kokkos/pull/9386)
+* Remove deprecated AMD GPU architectures [\#9570](https://github.com/kokkos/kokkos/pull/9570)
+* Remove (deprecated) `KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION` macro [\#9571](https://github.com/kokkos/kokkos/pull/9571)
+* Remove the Clacc compiler support for the OpenACC backend and AMD GPU support by the OpenACC backend [\#9608](https://github.com/kokkos/kokkos/pull/9608)
+* Deprecate direct access to `MDRangePolicy` data members and add `lower()`, `upper()` and `tile_size()` accessors [\#9370](https://github.com/kokkos/kokkos/pull/9370)
+
+### Bug Fixes
+
+* Fix missing and obsolete architecture defines in CMake configuration [\#9536](https://github.com/kokkos/kokkos/pull/9536)
+* Add for building with clang++ using CUDA 13 underneath with CMake < 3.31 [\#9437](https://github.com/kokkos/kokkos/pull/9437)
+* Add support for querying the team and thread level scratch size on all backends [\#9344](https://github.com/kokkos/kokkos/pull/9344)
+* HIP: Fix `Kokkos::abort` on Windows [\#9372](https://github.com/kokkos/kokkos/pull/9372)
+* Fix compile or runtime failures when using the `RangePolicy` version of `parallel_for` with a 16-bit `IndexType` [\#9373](https://github.com/kokkos/kokkos/pull/9373)
+* Fix undefined behavior in scalar_intra_warp_reduction [\#9572](https://github.com/kokkos/kokkos/pull/9572)
+* MSVC: fix race conditions if mixing 16-byte atomic compare exchange with other atomic operations [\#9553](https://github.com/kokkos/kokkos/pull/9553)
+* Fix masked unchecked_scatter_to / partial_scatter_to with simd_abi::scalar writing to the masked-off lane. [\#9649](https://github.com/kokkos/kokkos/pull/9649)
+* Return neutral element in parallel_scan with empty work range [\#9319](https://github.com/kokkos/kokkos/pull/9319)
+
 ## 5.2.2
 
 [Full Changelog](https://github.com/kokkos/kokkos/compare/5.2.1...5.2.2)
