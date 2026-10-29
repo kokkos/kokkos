@@ -913,6 +913,8 @@ bool has_all_zero_bits(const T& value) {
                 (std::is_standard_layout_v<T> &&
                  std::has_unique_object_representations_v<T>)) {
     constexpr std::byte all_zeroes[sizeof(T)] = {};
+    // The suppression below is for floating-point types
+    // NOLINTNEXTLINE(bugprone-suspicious-memory-comparison)
     return std::memcmp(&value, all_zeroes, sizeof(T)) == 0;
   } else {
     return false;
