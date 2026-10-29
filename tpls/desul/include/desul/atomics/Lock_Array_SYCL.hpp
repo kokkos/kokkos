@@ -25,8 +25,30 @@ SPDX-License-Identifier: (BSD-3-Clause)
 namespace desul {
 namespace Impl {
 
+#ifndef DESUL_ATOMICS_ENABLE_DEVICE_LOCK_ARRAYS
+
+template <typename /*AlwaysInt*/ = int>
+void init_lock_arrays_sycl(sycl::queue) {}
+
+template <typename /*AlwaysInt*/ = int>
+void finalize_lock_arrays_sycl(sycl::queue) {}
+
+// Lock-based atomic operations (used for types that are not lock-free on the device)
+// are not available without the device lock arrays.
+template <class MemoryScope>
+bool lock_address_sycl(void*, MemoryScope) {
+  static_assert(sizeof(MemoryScope) == 0,
+                "desul: device atomic operations on types that are not lock-free "
+                "require the device lock arrays, which are disabled "
+                "(DESUL_ATOMICS_ENABLE_DEVICE_LOCK_ARRAYS is not defined)");
+  return true;
+}
+
+template <class MemoryScope>
+void unlock_address_sycl(void*, MemoryScope) {}
+
 // FIXME_SYCL Use SYCL_EXT_ONEAPI_DEVICE_GLOBAL when available instead
-#ifdef DESUL_SYCL_DEVICE_GLOBAL_SUPPORTED
+#elif defined(DESUL_SYCL_DEVICE_GLOBAL_SUPPORTED)
 
 /**
  * \brief This global variable in Host space is the central definition of these
@@ -217,7 +239,8 @@ inline static
 #endif
 }  // namespace Impl
 
-#ifdef DESUL_ATOMICS_ENABLE_SYCL_SEPARABLE_COMPILATION
+#if defined(DESUL_ATOMICS_ENABLE_SYCL_SEPARABLE_COMPILATION) || \
+    !defined(DESUL_ATOMICS_ENABLE_DEVICE_LOCK_ARRAYS)
 inline void ensure_sycl_lock_arrays_on_device(sycl::queue) {}
 #else
 static inline void ensure_sycl_lock_arrays_on_device(sycl::queue q) {

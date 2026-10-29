@@ -19,6 +19,8 @@ SPDX-License-Identifier: (BSD-3-Clause)
 namespace desul {
 namespace Impl {
 
+#ifdef DESUL_ATOMICS_ENABLE_DEVICE_LOCK_ARRAYS
+
 /**
  * \brief This global variable in Host space is the central definition of these
  * arrays.
@@ -133,9 +135,34 @@ inline static
   }();
   (void)once;
 }
+
+#else  // DESUL_ATOMICS_ENABLE_DEVICE_LOCK_ARRAYS
+
+template <typename /*AlwaysInt*/ = int>
+void init_lock_arrays_hip() {}
+
+template <typename /*AlwaysInt*/ = int>
+void finalize_lock_arrays_hip() {}
+
+// Lock-based atomic operations (used for types that are not lock-free on the device)
+// are not available without the device lock arrays.
+template <class MemoryScope>
+__device__ bool lock_address_hip(void*, MemoryScope) {
+  static_assert(sizeof(MemoryScope) == 0,
+                "desul: device atomic operations on types that are not lock-free "
+                "require the device lock arrays, which are disabled "
+                "(DESUL_ATOMICS_ENABLE_DEVICE_LOCK_ARRAYS is not defined)");
+  return true;
+}
+
+template <class MemoryScope>
+__device__ void unlock_address_hip(void*, MemoryScope) {}
+
+#endif  // DESUL_ATOMICS_ENABLE_DEVICE_LOCK_ARRAYS
 }  // namespace Impl
 
-#ifdef DESUL_ATOMICS_ENABLE_HIP_SEPARABLE_COMPILATION
+#if defined(DESUL_ATOMICS_ENABLE_HIP_SEPARABLE_COMPILATION) || \
+    !defined(DESUL_ATOMICS_ENABLE_DEVICE_LOCK_ARRAYS)
 inline void ensure_hip_lock_arrays_on_device() {}
 #else
 static inline void ensure_hip_lock_arrays_on_device() {

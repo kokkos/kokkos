@@ -17,6 +17,8 @@ SPDX-License-Identifier: (BSD-3-Clause)
 namespace desul {
 namespace Impl {
 
+#ifdef DESUL_ATOMICS_ENABLE_DEVICE_LOCK_ARRAYS
+
 /// \brief This global variable in Host space is the central definition
 ///        of these arrays.
 DESUL_IMPL_EXPORT extern int32_t* CUDA_SPACE_ATOMIC_LOCKS_DEVICE_h;
@@ -127,12 +129,37 @@ inline static
   (void)once;
 }
 
+#else  // DESUL_ATOMICS_ENABLE_DEVICE_LOCK_ARRAYS
+
+template <typename /*AlwaysInt*/ = int>
+void init_lock_arrays_cuda() {}
+
+template <typename /*AlwaysInt*/ = int>
+void finalize_lock_arrays_cuda() {}
+
+// Lock-based atomic operations (used for types that are not lock-free on the device)
+// are not available without the device lock arrays.
+template <class MemoryScope>
+__device__ bool lock_address_cuda(void*, MemoryScope) {
+  static_assert(sizeof(MemoryScope) == 0,
+                "desul: device atomic operations on types that are not lock-free "
+                "require the device lock arrays, which are disabled "
+                "(DESUL_ATOMICS_ENABLE_DEVICE_LOCK_ARRAYS is not defined)");
+  return true;
+}
+
+template <class MemoryScope>
+__device__ void unlock_address_cuda(void*, MemoryScope) {}
+
+#endif  // DESUL_ATOMICS_ENABLE_DEVICE_LOCK_ARRAYS
+
 }  // namespace Impl
 }  // namespace desul
 
 namespace desul {
 
-#ifdef DESUL_ATOMICS_ENABLE_CUDA_SEPARABLE_COMPILATION
+#if defined(DESUL_ATOMICS_ENABLE_CUDA_SEPARABLE_COMPILATION) || \
+    !defined(DESUL_ATOMICS_ENABLE_DEVICE_LOCK_ARRAYS)
 inline void ensure_cuda_lock_arrays_on_device() {}
 #else
 static inline void ensure_cuda_lock_arrays_on_device() {
