@@ -8,6 +8,7 @@
 #include <limits>
 
 namespace {
+
 struct DeepCopyFloatingPointEnvironment {
   std::fenv_t saved;
   DeepCopyFloatingPointEnvironment() { std::feholdexcept(&saved); }
@@ -49,7 +50,6 @@ void test_deep_copy_scalar_representation() {
     }
   }
 }
-}  // namespace
 
 TEST(TEST_CATEGORY, deep_copy_scalar_representation) {
   test_deep_copy_scalar_representation<float>();
@@ -108,3 +108,5 @@ TEST(TEST_CATEGORY, deep_copy_assignable_types_rank_3_half) {
   test_deep_copy_assignable_types<double***, Kokkos::Experimental::half_t***>(
       1, 1, 1);
 }
+
+}  // namespace
