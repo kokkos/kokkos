@@ -15,3 +15,4 @@
 #include <TestSIMD_LoadStore.hpp>
 #include <TestSIMD_MemoryPermute.hpp>
 #include <TestSIMD_InDeviceConstruction.hpp>
+#include <TestSIMD_SVEIndex.hpp>
