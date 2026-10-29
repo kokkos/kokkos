@@ -64,8 +64,7 @@
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-// FIXME_OpenACC
-#ifndef KOKKOS_ENABLE_OPENACC
+#ifndef KOKKOS_ENABLE_OPENACC  // FIXME_OPENACC
 #include <Kokkos_Event.hpp>
 #endif
 #include <Kokkos_Crs.hpp>

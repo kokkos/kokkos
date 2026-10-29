@@ -110,21 +110,12 @@ class Event {
   explicit Event(const std::string& label_)
       : m_handle(std::make_shared<resource_t>(
             label_, flag_t(std::string("Kokkos::Event::flag:" + label_)),
-            execution_space())) {
-    desul::atomic_store(&(m_handle->flag()), uint64_t(0),
-                        desul::MemoryOrderRelease(), desul::MemoryScopeNode());
-    desul::atomic_store(&(m_handle->counter), uint64_t(0),
-                        desul::MemoryOrderRelease(), desul::MemoryScopeNode());
-  }
+            execution_space())) {}
 
   Event(const std::string& label_, const execution_space& exec_space)
       : m_handle(std::make_shared<resource_t>(
             label_, flag_t(std::string("Kokkos::Event::flag:") + label_),
             execution_space())) {
-    desul::atomic_store(&(m_handle->flag()), uint64_t(0),
-                        desul::MemoryOrderRelease(), desul::MemoryScopeNode());
-    desul::atomic_store(&(m_handle->counter), uint64_t(0),
-                        desul::MemoryOrderRelease(), desul::MemoryScopeNode());
     record(exec_space);
   }
 
@@ -148,7 +139,7 @@ class Event {
   void fence() const {
     KOKKOS_EXPECTS(bool(m_handle));
     std::lock_guard<std::mutex> guard(m_handle->lock);
-    wait_locked();
+    while (!is_complete()) std::this_thread::yield();
   }
 
   // Check whether the event has occured.
@@ -170,18 +161,6 @@ class Event {
       const execution_space& exec_space, const Event<execution_space>& event);
 
  private:
-  // The caller must hold m_handle->lock throughout this wait.
-  void wait_locked() const {
-    // Comparing for != is correct here, because of the lock mechanism
-    // furthermore that actually means it will work with wrap around overflow
-    // however unlikely that is considering the use of a 64bit integer
-    while (desul::atomic_load(&m_handle->flag(), desul::MemoryOrderAcquire(),
-                              desul::MemoryScopeNode()) !=
-           desul::atomic_load(&m_handle->counter, desul::MemoryOrderAcquire(),
-                              desul::MemoryScopeNode()))
-      std::this_thread::yield();
-  }
-
   handle_t m_handle;
 };
 
@@ -194,7 +173,9 @@ space_depends_on(const WaiterExec& exec_space, const Event<EventExec>& event) {
     // Only compare instances of the same backend. Matching instances already
     // order subsequent work after the event.
     std::lock_guard<std::mutex> guard(event.m_handle->lock);
-    if (exec_space != event.m_handle->exec) event.wait_locked();
+    if (exec_space != event.m_handle->exec) {
+      while (!event.is_complete()) std::this_thread::yield();
+    }
   } else {
     event.fence();
   }
