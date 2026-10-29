@@ -11,7 +11,6 @@ import kokkos.core;
 #include <gtest/gtest.h>
 
 #include <atomic>
-#include <barrier>
 #include <concepts>
 #include <thread>
 
@@ -178,6 +177,8 @@ TEST(TEST_CATEGORY_DEATH, event_moved_from_preconditions) {
   destination.fence();
 
   const char* message = "Expected precondition .*m_handle.* evaluated false.";
+  // These calls intentionally check moved-from preconditions.
+  // NOLINTBEGIN(bugprone-use-after-move)
   EXPECT_DEATH(source.record(space), message);
   EXPECT_DEATH(source.fence(), message);
   EXPECT_DEATH((void)source.is_complete(), message);
@@ -189,6 +190,7 @@ TEST(TEST_CATEGORY_DEATH, event_moved_from_preconditions) {
                    "Expected precondition .*m_handle.* evaluated false.");
     }
   }(source);
+  // NOLINTEND(bugprone-use-after-move)
 }
 
 TEST(TEST_CATEGORY, event_copy_semantics) {
@@ -233,7 +235,8 @@ TEST(TEST_CATEGORY, event_two_threads_query_while_recording) {
   using view_type      = Kokkos::View<int*, typename exec_space::memory_space>;
   constexpr int count  = 1024;
   constexpr int rounds = 256;
-  auto [space]         = Kokkos::Experimental::partition_space(exec_space(), 1);
+  auto spaces          = Kokkos::Experimental::partition_space(exec_space(), 1);
+  auto space           = spaces[0];
   view_type data(Kokkos::view_alloc(space, Kokkos::WithoutInitializing,
                                     "query while recording data"),
                  count);
@@ -241,14 +244,14 @@ TEST(TEST_CATEGORY, event_two_threads_query_while_recording) {
       "query while recording result", count);
   Kokkos::Experimental::Event<exec_space> event("query while recording");
   auto event_copy = event;
-  std::barrier start(2);
   std::atomic<bool> polling_started{false};
   std::atomic<bool> final_record_submitted{false};
   int queries         = 0;
   bool final_complete = false;
 
-  std::thread recorder([&] {
-    start.arrive_and_wait();
+  // The Threads backend requires kernel submission from the thread
+  // that called Kokkos::initialize().
+  const auto record = [&] {
     while (!polling_started.load(std::memory_order_acquire))
       std::this_thread::yield();
     for (int generation = 1; generation <= rounds; ++generation) {
@@ -260,9 +263,8 @@ TEST(TEST_CATEGORY, event_two_threads_query_while_recording) {
     Kokkos::deep_copy(space, result, data);
     event.record(space);
     final_record_submitted.store(true, std::memory_order_release);
-  });
+  };
   std::thread poller([&] {
-    start.arrive_and_wait();
     (void)event_copy.is_complete();
     ++queries;
     polling_started.store(true, std::memory_order_release);
@@ -276,7 +278,7 @@ TEST(TEST_CATEGORY, event_two_threads_query_while_recording) {
     event_copy.fence();
     final_complete = event_copy.is_complete();
   });
-  recorder.join();
+  record();
   poller.join();
   EXPECT_GE(queries, 2);
   EXPECT_TRUE(final_complete);
@@ -298,27 +300,29 @@ TEST(TEST_CATEGORY, event_two_threads_record_and_dependency_overlap) {
   const auto check_overlap = [&](const TEST_EXECSPACE& waiter_space) {
     Kokkos::Experimental::Event<TEST_EXECSPACE> event("overlap", producer_a);
     auto event_copy = event;
-    std::barrier handoff(2);
+    std::atomic<int> recorded_phase{0};
+    std::atomic<int> dependency_completed_phase{0};
     constexpr int repetitions = 20000;
 
     std::thread recorder([&] {
       // Deterministic phases cover comparison against both recorded instances.
       for (int phase = 0; phase < 2; ++phase) {
         event.record(phase == 0 ? producer_a : producer_b);
-        handoff.arrive_and_wait();
-        handoff.arrive_and_wait();
+        recorded_phase.store(phase + 1, std::memory_order_release);
+        while (dependency_completed_phase.load(std::memory_order_acquire) !=
+               phase + 1)
+          std::this_thread::yield();
       }
-      handoff.arrive_and_wait();
       for (int i = 0; i < repetitions; ++i)
         event.record(i % 2 ? producer_a : producer_b);
     });
     std::thread waiter([&] {
       for (int phase = 0; phase < 2; ++phase) {
-        handoff.arrive_and_wait();
+        while (recorded_phase.load(std::memory_order_acquire) != phase + 1)
+          std::this_thread::yield();
         Kokkos::Experimental::space_depends_on(waiter_space, event_copy);
-        handoff.arrive_and_wait();
+        dependency_completed_phase.store(phase + 1, std::memory_order_release);
       }
-      handoff.arrive_and_wait();
       // Contend on the shared resource while its recorded instance changes.
       for (int i = 0; i < repetitions; ++i)
         Kokkos::Experimental::space_depends_on(waiter_space, event_copy);

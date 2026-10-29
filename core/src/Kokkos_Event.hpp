@@ -88,9 +88,12 @@ template <Kokkos::ExecutionSpace Exec = DefaultExecutionSpace>
 class Event;
 
 // Order subsequent work in the given execution space after the event.
-template <Kokkos::ExecutionSpace WaiterExec, Kokkos::ExecutionSpace EventExec>
-void space_depends_on(const WaiterExec& exec_space,
-                      const Event<EventExec>& event);
+// Use return-type SFINAE to avoid constrained-friend crashes in older
+// Intel/LLVM compilers.
+template <class WaiterExec, class EventExec>
+std::enable_if_t<Kokkos::ExecutionSpace<WaiterExec> &&
+                 Kokkos::ExecutionSpace<EventExec>>
+space_depends_on(const WaiterExec& exec_space, const Event<EventExec>& event);
 
 // FIXME: tried to use SeqCst for load and store but it didn't compile for CUDA
 template <Kokkos::ExecutionSpace Exec>
@@ -182,9 +185,10 @@ class Event {
   handle_t m_handle;
 };
 
-template <Kokkos::ExecutionSpace WaiterExec, Kokkos::ExecutionSpace EventExec>
-void space_depends_on(const WaiterExec& exec_space,
-                      const Event<EventExec>& event) {
+template <class WaiterExec, class EventExec>
+std::enable_if_t<Kokkos::ExecutionSpace<WaiterExec> &&
+                 Kokkos::ExecutionSpace<EventExec>>
+space_depends_on(const WaiterExec& exec_space, const Event<EventExec>& event) {
   if constexpr (std::is_same_v<WaiterExec, EventExec>) {
     KOKKOS_EXPECTS(bool(event.m_handle));
     // Only compare instances of the same backend. Matching instances already
