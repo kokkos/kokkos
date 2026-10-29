@@ -87,6 +87,7 @@
 * MSVC: fix race conditions if mixing 16-byte atomic compare exchange with other atomic operations [\#9553](https://github.com/kokkos/kokkos/pull/9553)
 * Fix masked unchecked_scatter_to / partial_scatter_to with simd_abi::scalar writing to the masked-off lane. [\#9649](https://github.com/kokkos/kokkos/pull/9649)
 * Return neutral element in parallel_scan with empty work range [\#9319](https://github.com/kokkos/kokkos/pull/9319)
+* Fix host `parallel_reduce` into view in shared space [\#9642](https://github.com/kokkos/kokkos/pull/9642)
 
 ## 5.2.2
 
