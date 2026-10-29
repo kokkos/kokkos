@@ -20,7 +20,21 @@ namespace Impl {
 
 //<editor-fold desc="device_atomic_{store,load}">
 
-DESUL_IMPL_ATOMIC_LOAD_AND_STORE_WITH_CAS(DESUL_IMPL_DEVICE_FUNCTION, device)
+#pragma acc routine seq
+template <class T, class MemoryOrder, class MemoryScope>
+std::enable_if_t<!is_openacc_arithmetic_type_v<T>, void> device_atomic_store(
+    T* const ptr, const T val, MemoryOrder order, MemoryScope scope) {
+  (void)device_atomic_fetch_oper(
+    _store_fetch_operator<T, const T>(), ptr, val, order, scope);
+}
+
+#pragma acc routine seq
+template <class T, class MemoryOrder, class MemoryScope>
+std::enable_if_t<!is_openacc_arithmetic_type_v<T>, T> device_atomic_load(
+    const T* const ptr, MemoryOrder order, MemoryScope scope) {
+  return device_atomic_fetch_oper(
+    _load_fetch_operator<T, const T>(), const_cast<T*>(ptr), T(), order, scope);
+}
 
 #pragma acc routine seq
 template <class T>
