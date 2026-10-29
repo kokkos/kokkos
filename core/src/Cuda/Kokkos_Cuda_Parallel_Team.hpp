@@ -427,7 +427,7 @@ __device__ inline int64_t cuda_get_scratch_index(Cuda::size_type league_size,
         Kokkos::min(int64_t(league_size),
                     int64_t(num_scratch_locks) /
                         (static_cast<int64_t>(blockDim.x) * blockDim.y)));
-    threadid = (blockIdx.x * blockDim.z + threadIdx.z) % wraparound_len;
+    threadid = blockIdx.x % wraparound_len;
     threadid *= static_cast<int64_t>(blockDim.x) * blockDim.y;
     int done = 0;
     while (!done) {
@@ -645,8 +645,8 @@ class ParallelReduce<CombinedFunctorReducerType,
 
  public:
   using functor_type = FunctorType;
-  // Conditionally set word_size_type to int16_t or int8_t if value_type is
-  // smaller than int32_t (Kokkos::Cuda::size_type)
+  // Conditionally set word_size_type to uint16_t or uint8_t if value_type is
+  // smaller than 32 bits (width of Kokkos::Cuda::size_type)
   // word_size_type is used to determine the word count, shared memory buffer
   // size, and global memory buffer size before the reduction is performed.
   // Within the reduction, the word count is recomputed based on word_size_type
@@ -659,7 +659,7 @@ class ParallelReduce<CombinedFunctorReducerType,
   // bytes.
   using word_size_type = std::conditional_t<
       sizeof(value_type) < sizeof(Kokkos::Cuda::size_type),
-      std::conditional_t<sizeof(value_type) == 2, int16_t, int8_t>,
+      std::conditional_t<sizeof(value_type) == 2, uint16_t, uint8_t>,
       Kokkos::Cuda::size_type>;
   using size_type    = Cuda::size_type;
   using reducer_type = ReducerType;
@@ -732,9 +732,8 @@ class ParallelReduce<CombinedFunctorReducerType,
   }
 
   __device__ inline void run(SHMEMReductionTag, const int& threadid) const {
-    const integral_nonzero_constant<word_size_type,
-                                    ReducerType::static_value_size() /
-                                        sizeof(word_size_type)>
+    const integral_nonzero_constant<
+        size_type, ReducerType::static_value_size() / sizeof(word_size_type)>
         word_count(m_functor_reducer.get_reducer().value_size() /
                    sizeof(word_size_type));
 
@@ -773,7 +772,7 @@ class ParallelReduce<CombinedFunctorReducerType,
       word_size_type* const shared =
           kokkos_impl_cuda_shared_memory<word_size_type>() +
           (blockDim.y - 1) * word_count.value;
-      size_type* const global =
+      word_size_type* const global =
           m_result_ptr_device_accessible
               ? reinterpret_cast<word_size_type*>(m_result_ptr)
               : (m_unified_space ? m_unified_space : m_scratch_space);

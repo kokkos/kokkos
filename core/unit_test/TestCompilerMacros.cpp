@@ -16,8 +16,9 @@ import kokkos.core;
           (defined(KOKKOS_COMPILER_CLANG) ? 1 : 0) +      \
           (defined(KOKKOS_COMPILER_GNU) ? 1 : 0) +        \
           (defined(KOKKOS_COMPILER_NVHPC) ? 1 : 0) +      \
-          (defined(KOKKOS_COMPILER_MSVC) ? 1 : 0))
-#error "Only one host compiler macro can be defined"
+          (defined(KOKKOS_COMPILER_MSVC) ? 1 : 0) +       \
+          (defined(KOKKOS_COMPILER_NEXT_LLVM) ? 1 : 0))
+#error "Exactly one host compiler macro must be defined"
 #endif
 
 #if !defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)

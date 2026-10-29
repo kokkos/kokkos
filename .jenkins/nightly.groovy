@@ -43,6 +43,11 @@ pipeline {
                           spack test results -l
                           '''
                     }
+                    post {
+                        always {
+                            cleanWs()
+                               }
+                         }
                 }
                 stage('spack-cuda') {
                     agent {
@@ -78,6 +83,11 @@ pipeline {
                           spack load kokkos
                           '''
                     }
+                    post {
+                        always {
+                            cleanWs()
+                               }
+                         }
                 }
                 stage('GCC-15-CXX26') {
                     agent {
@@ -91,6 +101,8 @@ pipeline {
                         sh '''
                           wget https://github.com/Kitware/CMake/releases/download/v3.30.0/cmake-3.30.0-linux-x86_64.sh && \
                           chmod +x cmake-3.30.0-linux-x86_64.sh && ./cmake-3.30.0-linux-x86_64.sh --skip-license --prefix=/usr
+
+                          ulimit -c 0
 
                           export CMAKE_BUILD_PARALLEL_LEVEL=8 && \
                           export ENV_CMAKE_OPTIONS="" && \
@@ -110,6 +122,7 @@ pipeline {
                     post {
                         always {
                             xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                            cleanWs()
                         }
                     }
                 }
@@ -126,7 +139,9 @@ pipeline {
                     }
                     steps {
                         sh 'ccache --zero-stats'
-                        sh '''export CMAKE_BUILD_PARALLEL_LEVEL=16 && \
+                        sh '''ulimit -c 0
+
+                              export CMAKE_BUILD_PARALLEL_LEVEL=16 && \
                               export ENV_CMAKE_OPTIONS="" && \
                               export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_BUILD_TYPE=RelWithDebInfo" && \
                               export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_CXX_COMPILER=hipcc" && \
@@ -148,6 +163,7 @@ pipeline {
                         always {
                             sh 'ccache --show-stats'
                             xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                            cleanWs()
                         }
                     }
                 }
@@ -164,7 +180,9 @@ pipeline {
                     }
                     steps {
                         sh 'ccache --zero-stats'
-                        sh '''export CMAKE_BUILD_PARALLEL_LEVEL=16 && \
+                        sh '''ulimit -c 0
+
+                              export CMAKE_BUILD_PARALLEL_LEVEL=16 && \
                               export ENV_CMAKE_OPTIONS="" && \
                               export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_BUILD_TYPE=RelWithDebInfo" && \
                               export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_CXX_COMPILER=hipcc" && \
@@ -185,6 +203,7 @@ pipeline {
                         always {
                             sh 'ccache --show-stats'
                             xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                            cleanWs()
                         }
                     }
                 }

@@ -134,11 +134,6 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
     auto& instance = *m_policy.space().impl_internal_space_instance();
 
-    // Only let one instance at a time resize the instance's scratch memory
-    // allocations.
-    std::scoped_lock<std::mutex> team_scratch_lock(
-        instance.m_team_scratch_mutex);
-
     // Functor's reduce memory, team scan memory, and team shared memory depend
     // upon team size.
     int scratch_pool_id = instance.acquire_team_scratch_space();
@@ -156,7 +151,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     sycl::event event = sycl_direct_launch(global_scratch_ptr, functor_wrapper,
                                            functor_wrapper.get_copy_event());
     functor_wrapper.register_event(event);
-    instance.register_team_scratch_event(scratch_pool_id, event);
+    instance.release_team_scratch_space(scratch_pool_id);
   }
 
   ParallelFor(FunctorType const& arg_functor, Policy const& arg_policy)

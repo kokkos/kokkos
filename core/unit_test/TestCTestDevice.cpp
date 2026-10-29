@@ -5,7 +5,7 @@
 
 #include <impl/Kokkos_DeviceManagement.hpp>  // get_ctest_gpu
 
-#include <impl/Kokkos_SetEnv.hpp>
+#include "Kokkos_SetEnv.hpp"
 
 class ctest_environment : public ::testing::Test {
  protected:

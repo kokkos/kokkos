@@ -11,7 +11,6 @@ import kokkos.core_impl;
 #else
 #include <Kokkos_Core.hpp>
 #endif
-#include "experimental/__p0009_bits/layout_stride.hpp"
 
 namespace {
 
@@ -506,11 +505,12 @@ TEST(TEST_CATEGORY, view_mdspan_conversion) {
 #if !(defined(KOKKOS_COMPILER_NVHPC) && defined(KOKKOS_ENABLE_OPENACC))
 TEST(TEST_CATEGORY, view_mdspan_conversion_with_stride) {
   {
-    Kokkos::View<int ***, Kokkos::LayoutLeft> source("S", 20, 40, 70);
+    Kokkos::View<int ***, Kokkos::LayoutLeft, TEST_EXECSPACE> source("S", 20,
+                                                                     40, 70);
     auto sub_v   = Kokkos::subview(source, Kokkos::pair{5, 15}, Kokkos::ALL(),
                                    Kokkos::pair{2, 38});
     auto sub_mds = sub_v.to_mdspan();
-    Kokkos::View<int ***, Kokkos::LayoutLeft> sub_v2(sub_mds);
+    Kokkos::View<int ***, Kokkos::LayoutLeft, TEST_EXECSPACE> sub_v2(sub_mds);
     ASSERT_EQ(static_cast<int>(sub_v.extent(0)), 10);
     ASSERT_EQ(static_cast<int>(sub_v.extent(1)), 40);
     ASSERT_EQ(static_cast<int>(sub_v.extent(2)), 36);
@@ -534,11 +534,12 @@ TEST(TEST_CATEGORY, view_mdspan_conversion_with_stride) {
     // layout_right_padded<dynamic_extent> has a custom stride for
     // stride(rank-2) LayoutRight has a custom stride for stride(0) That means
     // the "padding" only matches up for Rank-2 Views
-    Kokkos::View<int **, Kokkos::LayoutRight> source("S", 20, 40);
+    Kokkos::View<int **, Kokkos::LayoutRight, TEST_EXECSPACE> source("S", 20,
+                                                                     40);
     auto sub_v =
         Kokkos::subview(source, Kokkos::pair{5, 15}, Kokkos::pair{2, 38});
     auto sub_mds = sub_v.to_mdspan();
-    Kokkos::View<int **, Kokkos::LayoutRight> sub_v2(sub_mds);
+    Kokkos::View<int **, Kokkos::LayoutRight, TEST_EXECSPACE> sub_v2(sub_mds);
     ASSERT_EQ(static_cast<int>(sub_v.extent(0)), 10);
     ASSERT_EQ(static_cast<int>(sub_v.extent(1)), 36);
     ASSERT_EQ(static_cast<int>(sub_v.stride(0)), 40);

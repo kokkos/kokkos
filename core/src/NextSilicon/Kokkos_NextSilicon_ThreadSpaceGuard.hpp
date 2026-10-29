@@ -5,7 +5,6 @@
 #define KOKKOS_NEXTSILICON_THREAD_SPACE_GUARD_HPP
 
 #include <nextapi/intrinsics.h>
-#include <NextSilicon/Kokkos_NextSilicon_PageAlignedData.hpp>
 
 namespace Kokkos::Impl {
 // used to implement KOKKOS_IF_ON_HOST / KOKKOS_IF_ON_DEVICE
@@ -55,8 +54,7 @@ namespace Kokkos::Impl {
 // without touching any thread_local flags.
 class [[nodiscard]] NextSiliconThreadSpaceGuard {
  private:
-  static thread_local PageAlignedData<bool, PageLocation::Host>
-      thread_is_on_device;
+  static thread_local bool thread_is_on_device;
 
   // Containment for the TLS read. If `thread_is_on_device > 0` were inlined
   // into is_on_device()'s callers, the underlying `llvm.threadlocal.address`
@@ -70,7 +68,7 @@ class [[nodiscard]] NextSiliconThreadSpaceGuard {
   // FIXME_NEXTSILICON: __attribute__((noinline)) prevents scheduling to grid;
   // when ticket https://nextsilicon.atlassian.net/browse/SW-25677 is resolved,
   // __attribute__((weak)) can be switched to __attribute__((noinline)).
-  static __attribute__((weak)) bool host_thread_is_on_device() {
+  static __attribute__((weak)) bool& host_thread_is_on_device() {
     return thread_is_on_device;
   }
 

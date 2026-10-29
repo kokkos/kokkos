@@ -122,7 +122,7 @@ struct TestParallelScanRangePolicy {
       // Input: label, work_count, functor
       // Input/Output: return_value
       {
-        ValueType return_val = 0;
+        ValueType return_val = static_cast<ValueType>(-1);
         Kokkos::parallel_scan("TestWithStrArg2", work_size, *this, return_val);
         check_scan_results();
         ASSERT_EQ(static_cast<ValueType>(static_cast<ValueType>(work_size) *
@@ -133,7 +133,7 @@ struct TestParallelScanRangePolicy {
       // Input: work_count, functor
       // Input/Output: return_value
       {
-        ValueType return_val = 0;
+        ValueType return_val = static_cast<ValueType>(-1);
         Kokkos::parallel_scan(work_size, *this, return_val);
         check_scan_results();
         ASSERT_EQ(static_cast<ValueType>(static_cast<ValueType>(work_size) *
@@ -167,7 +167,7 @@ struct TestParallelScanRangePolicy {
       {
         // Input: label, work_count, functor
         // Input/Output: return_value
-        ValueType return_val = 0;
+        ValueType return_val = static_cast<ValueType>(-1);
         Kokkos::parallel_scan("TestWithStrArg4", policy, *this, return_val);
         check_scan_results();
         ASSERT_EQ(static_cast<ValueType>(static_cast<ValueType>(work_size) *
@@ -178,7 +178,7 @@ struct TestParallelScanRangePolicy {
       // Input: work_count, functor
       // Input/Output: return_value
       {
-        ValueType return_val = 0;
+        ValueType return_val = static_cast<ValueType>(-1);
         Kokkos::parallel_scan(policy, *this, return_val);
         check_scan_results();
         ASSERT_EQ(static_cast<ValueType>(static_cast<ValueType>(work_size) *
@@ -210,7 +210,7 @@ struct TestParallelScanRangePolicy {
 
         // Input: work_count, functor
         // Input/Output: return_value
-        ValueType return_val = 0;
+        ValueType return_val = static_cast<ValueType>(-1);
         Kokkos::parallel_scan(policy_with_require, *this, return_val);
         check_scan_results();
         ASSERT_EQ(static_cast<ValueType>(static_cast<ValueType>(work_size) *
@@ -234,7 +234,7 @@ struct TestParallelScanRangePolicy {
         {
           // Input: label, work_count, functor
           // Input/Output: return_value
-          ValueType return_val = 0;
+          ValueType return_val = static_cast<ValueType>(-1);
           Kokkos::parallel_scan("TestWithStrArg6", policy2, *this, return_val);
           check_scan_results_start2();
           ASSERT_EQ(
@@ -246,7 +246,7 @@ struct TestParallelScanRangePolicy {
         // Input: work_count, functor
         // Input/Output: return_value
         {
-          ValueType return_val = 0;
+          ValueType return_val = static_cast<ValueType>(-1);
           Kokkos::parallel_scan(policy2, *this, return_val);
           check_scan_results_start2();
           ASSERT_EQ(
@@ -280,7 +280,7 @@ struct TestParallelScanRangePolicy {
 
           // Input: work_count, functor
           // Input/Output: return_value
-          ValueType return_val = 0;
+          ValueType return_val = static_cast<ValueType>(-1);
           Kokkos::parallel_scan(policy_with_require2, *this, return_val);
           check_scan_results_start2();
           ASSERT_EQ(
@@ -305,7 +305,7 @@ TEST(TEST_CATEGORY, parallel_scan_range_policy) {
   {
     TestParallelScanRangePolicy<char> f;
 
-    std::vector<size_t> work_sizes{5, 10};
+    std::vector<size_t> work_sizes{0, 5, 10};
     f.test_scan<>(work_sizes);
     f.test_scan<Kokkos::Schedule<Kokkos::Static>>(work_sizes);
     f.test_scan<Kokkos::Schedule<Kokkos::Dynamic>>(work_sizes);
@@ -350,5 +350,94 @@ TEST(TEST_CATEGORY, parallel_scan_range_policy) {
     f.test_scan<Kokkos::Schedule<Kokkos::Static>>(work_sizes);
     f.test_scan<Kokkos::Schedule<Kokkos::Dynamic>>(work_sizes);
   }
+  {
+    TestParallelScanRangePolicy<int> f;
+
+    std::vector<size_t> work_sizes{0, 1, 2, 1000, 1001};
+    f.test_scan<Kokkos::LaunchBounds<1>>(work_sizes);
+    f.test_scan<Kokkos::LaunchBounds<2>>(work_sizes);
+    f.test_scan<Kokkos::LaunchBounds<4>>(work_sizes);
+    f.test_scan<Kokkos::LaunchBounds<8>>(work_sizes);
+    f.test_scan<Kokkos::LaunchBounds<16>>(work_sizes);
+    f.test_scan<Kokkos::LaunchBounds<32>>(work_sizes);
+  }
+}
+
+// Test for allowing parallel_scan with a dynamic length array as value_type
+// This mirrors officially supported functionality in parallel_reduce,
+// But we have not decided yet whether we officially will support this for
+// parallel_scan.
+// For now this test status quo existing functionality, not a promise of
+// supported API
+
+#if !defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ENABLE_OPENACC) && \
+    !defined(KOKKOS_ENABLE_NEXTSILICON)
+struct DynamicArrayScanMaxFunctor {
+  using execution_space = TEST_EXECSPACE;
+
+  Kokkos::View<int**, TEST_EXECSPACE> data;
+  int value_count;
+  using value_type = int[];
+
+  KOKKOS_FUNCTION
+  void join(value_type a, const value_type b) const {
+    for (int k = 0; k < value_count; k++) {
+      if (b[k] > a[k]) a[k] = b[k];
+    }
+  }
+
+  KOKKOS_FUNCTION
+  void init(value_type a) const {
+    for (int k = 0; k < value_count; k++) {
+      a[k] = Kokkos::reduction_identity<int>::max();
+    }
+  }
+
+  KOKKOS_FUNCTION
+  void operator()(int i, value_type upd, bool final) const {
+    for (int k = 0; k < value_count; k++) {
+      if (k % 2)
+        upd[k] = Kokkos::max(-i - 1, upd[k]);
+      else
+        upd[k] = Kokkos::max(i + 1, upd[k]);
+    }
+    if (final) {
+      for (int k = 0; k < value_count; k++) {
+        data(i, k) = upd[k];
+      }
+    }
+  }
+};
+
+void test_parallel_scan_dynamic_array() {
+  int N = 15000;
+  int M = 5;
+  Kokkos::View<int**, TEST_EXECSPACE> data("data", N, M);
+
+  Kokkos::parallel_scan("parallel_scan dynamic_length_array",
+                        Kokkos::RangePolicy<TEST_EXECSPACE>(0, N),
+                        DynamicArrayScanMaxFunctor{data, M});
+
+  int num_errors = 0;
+  Kokkos::parallel_reduce(
+      "check_result", Kokkos::RangePolicy<TEST_EXECSPACE>(0, N),
+      KOKKOS_LAMBDA(int i, int& error) {
+        for (int j = 0; j < M; j++)
+          // we are doing pre-fix scan
+          if (data(i, j) != (j % 2 ? -1 : i + 1)) error++;
+      },
+      num_errors);
+
+  ASSERT_EQ(num_errors, 0);
+}
+#endif
+
+TEST(TEST_CATEGORY, parallel_scan_dynamic_array) {
+#if !defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ENABLE_OPENACC) && \
+    !defined(KOKKOS_ENABLE_NEXTSILICON)
+  test_parallel_scan_dynamic_array();
+#else
+  GTEST_SKIP() << "Not supported for SYCL, OpenACC, and NextSilicon";
+#endif
 }
 }  // namespace

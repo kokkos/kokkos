@@ -20,9 +20,14 @@ TEST(TEST_CATEGORY, atomic_operations_complexfloat) {
     ASSERT_TRUE(
         (atomic_op_test<MulAtomicTest, T, TEST_EXECSPACE>(old_val, update)));
 
-    // FIXME_32BIT disable division test for 32bit where we have accuracy issues
-    // with division atomics still compile it though
-    if (sizeof(void*) == 8) {
+    if (sizeof(void*) == 4) {
+      // 32-bit x86 may do reference division in 80-bit x87, so allow up to
+      // one ULP.
+      ASSERT_TRUE((update != 0
+                       ? atomic_op_test<DivAtomicTest, T, TEST_EXECSPACE, true>(
+                             old_val, update)
+                       : true));
+    } else {
       ASSERT_TRUE((update != 0
                        ? atomic_op_test<DivAtomicTest, T, TEST_EXECSPACE>(
                              old_val, update)

@@ -17,4 +17,3 @@
 #include "desul/atomics/cuda/cuda_cc7_asm_memorder.inc"
 #undef __DESUL_IMPL_CUDA_ASM_MEMORY_SCOPE
 #undef __DESUL_IMPL_CUDA_ASM_MEMORY_SCOPE_ASM
-

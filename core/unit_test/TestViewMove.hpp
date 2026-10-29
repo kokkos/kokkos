@@ -120,6 +120,15 @@ void test_moved_from_view(ViewType v) {
 }
 
 TEST(TEST_CATEGORY, view_moved_from) {
+#if defined(KOKKOS_ENABLE_OPENACC) && (KOKKOS_COMPILER_NVHPC > 240500) && \
+    (KOKKOS_COMPILER_NVHPC <= 260500)
+  // FIXME_OPENACC: Test is known to fail if 24.5 < NVHPC version <= 26.5.
+  // Error message: failed moved-from view after calling move constructor
+  //                failed moved-from view after calling move assignment
+  //                operator
+  GTEST_SKIP() << "skipping since the OpenACC backend test fails if 24.5 < "
+                  "NVHPC version <= 26.5";
+#else
   using ExecutionSpace = TEST_EXECSPACE;
 
   test_moved_from_view(Kokkos::View<int, ExecutionSpace>("v0"));
@@ -137,6 +146,7 @@ TEST(TEST_CATEGORY, view_moved_from) {
   test_moved_from_view(Kokkos::View<double**, ExecutionSpace,
                                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>(
       v2.data(), v2.extent(0), v2.extent(1)));
+#endif
 }
 
 #if !(defined(KOKKOS_COMPILER_NVCC) || defined(KOKKOS_COMPILER_NVHPC) || \

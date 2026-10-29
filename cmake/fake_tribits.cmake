@@ -33,8 +33,8 @@ endmacro()
 
 function(KOKKOS_ADD_TEST)
   cmake_parse_arguments(
-    TEST "WILL_FAIL;SKIP_TRIBITS" "FAIL_REGULAR_EXPRESSION;PASS_REGULAR_EXPRESSION;EXE;NAME;TOOL" "CATEGORIES;ARGS"
-    ${ARGN}
+    TEST "WILL_FAIL;SKIP_TRIBITS;NO_HWM_TRACKER" "FAIL_REGULAR_EXPRESSION;PASS_REGULAR_EXPRESSION;EXE;NAME;TOOL"
+    "CATEGORIES;ARGS" ${ARGN}
   )
   # To match Tribits, we should always be receiving
   # the root names of exes/libs
@@ -90,6 +90,24 @@ function(KOKKOS_ADD_TEST)
     add_dependencies(${EXE} ${TEST_TOOL}) #make sure the exe has to build the tool
     set_property(TEST ${TEST_NAME} APPEND_STRING PROPERTY ENVIRONMENT "KOKKOS_TOOLS_LIBS=$<TARGET_FILE:${TEST_TOOL}>")
   endif()
+
+  # This tool will get applied by default unless DefaultInstance is specified in the test name
+  # Requires libdl.
+  if(NOT WIN32)
+    string(FIND "${TEST_NAME}" "DefaultInstance" index)
+    if((NOT TEST_TOOL)
+       AND (NOT TEST_NO_HWM_TRACKER)
+       AND (${index} LESS 0)
+       AND (KOKKOS_ENABLE_LIBDL)
+       AND (NOT KOKKOS_ENABLE_LARGE_MEM_TESTS)
+    )
+      set_property(
+        TEST ${TEST_NAME} APPEND PROPERTY ENVIRONMENT_MODIFICATION
+                                          KOKKOS_TOOLS_LIBS=cmake_list_append:$<TARGET_FILE:kokkoshwmtracker-tool>
+      )
+    endif()
+  endif()
+
   verify_empty(KOKKOS_ADD_TEST ${TEST_UNPARSED_ARGUMENTS})
 endfunction()
 

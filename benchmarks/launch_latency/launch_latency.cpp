@@ -245,11 +245,11 @@ int main(int argc, char* argv[]) {
         // signing off that arg.data() is null terminated
         // NOLINTBEGIN(bugprone-suspicious-stringview-data-usage)
         if (i == 1)
-          N = atoi(arg.data());
+          N = std::stoi(arg.data());
         else if (i == 2)
-          M = atoi(arg.data());
+          M = std::stoi(arg.data());
         else if (i == 3)
-          K = atoi(arg.data());
+          K = std::stoi(arg.data());
         // NOLINTEND(bugprone-suspicious-stringview-data-usage)
         else {
           Kokkos::abort("unexpected argument!");

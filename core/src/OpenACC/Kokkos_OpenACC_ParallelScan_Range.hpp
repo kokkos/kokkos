@@ -12,25 +12,11 @@
 
 #include <type_traits>
 
-// Clacc uses an alternative implementation to work around not-yet-implemented
-// OpenACC features: Clacc does not fully support private clauses for
-// gang-private variables, and the alternative implementation allocates
-// the gang-private arrays on GPU global memory using array expansion,
-// instead of using the private clause.
 /* clang-format off */
-#ifdef KOKKOS_COMPILER_CLANG
-#define KOKKOS_IMPL_ACC_ACCESS_ELEMENTS(THREADID) \
-  element_values[team_id * 2 * chunk_size + THREADID]
-#define KOKKOS_IMPL_ACC_ACCESS_RED_ELEMS(THREADID) \
-  red_elem_vals[team_id * chunk_size + THREADID]
-#define KOKKOS_IMPL_ACC_ELEMENT_VALUES_CLAUSE create(element_values [0:num_elements])
-#define KOKKOS_IMPL_ACC_RED_ELEM_VALS_CLAUSE create(red_elem_vals [0:num_red_elems])
-#else
 #define KOKKOS_IMPL_ACC_ACCESS_ELEMENTS(THREADID) element_values[THREADID]
 #define KOKKOS_IMPL_ACC_ACCESS_RED_ELEMS(THREADID) red_elem_vals[THREADID]
 #define KOKKOS_IMPL_ACC_ELEMENT_VALUES_CLAUSE private(element_values [0:num_elements])
 #define KOKKOS_IMPL_ACC_RED_ELEM_VALS_CLAUSE private(red_elem_vals [0:num_red_elems])
-#endif
 /* clang-format on */
 
 namespace Kokkos::Impl {
@@ -82,13 +68,8 @@ class ParallelScanOpenACCBase {
         functor(m_functor);
     const IndexType N        = end - begin;
     const IndexType n_chunks = (N + chunk_size - 1) / chunk_size;
-#ifdef KOKKOS_COMPILER_CLANG
-    int const num_elements  = n_chunks * 2 * chunk_size;
-    int const num_red_elems = n_chunks * chunk_size;
-#else
-    int const num_elements  = 2 * chunk_size;
-    int const num_red_elems = chunk_size;
-#endif
+    int const num_elements   = 2 * chunk_size;
+    int const num_red_elems  = chunk_size;
     Kokkos::View<ValueType*, Kokkos::Experimental::OpenACCSpace> chunk_values(
         "Kokkos::OpenACCParallelScan::chunk_values", n_chunks);
     Kokkos::View<ValueType*, Kokkos::Experimental::OpenACCSpace> offset_values(

@@ -23,9 +23,6 @@ void finalize();
  * \brief Push a user-defined function to be called in
  *   Kokkos::finalize, before any Kokkos state is finalized.
  *
- * \warning Only call this after Kokkos::initialize, but before
- *   Kokkos::finalize.
- *
  * This function is the Kokkos analog to std::atexit.  If you call
  * this with a function f, then your function will get called when
  * Kokkos::finalize is called.  Specifically, it will be called BEFORE

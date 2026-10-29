@@ -18,6 +18,7 @@ static_assert(false,
 #include <Kokkos_ScratchSpace.hpp>
 #include <Kokkos_Parallel.hpp>
 #include <Kokkos_Layout.hpp>
+#include <impl/Kokkos_CheckUsage.hpp>
 #include <impl/Kokkos_HostSharedPtr.hpp>
 #include <impl/Kokkos_Profiling_Interface.hpp>
 #include <impl/Kokkos_InitializationSettings.hpp>
@@ -59,7 +60,14 @@ class OpenMP {
   KOKKOS_FUNCTION OpenMP& operator=(OpenMP&& other) noexcept {
     return *this = static_cast<const OpenMP&>(other);
   }
-  ~OpenMP();
+  // Must be __host__ __device__ for the implicitly defined
+  // ~RangePolicy<ExecSpace>(); see the comment on ~Cuda() in
+  // Cuda/Kokkos_Cuda.hpp.
+  KOKKOS_FUNCTION ~OpenMP() {
+    KOKKOS_IF_ON_HOST(
+        (Impl::check_execution_space_destructor_precondition(name());))
+  }
+
   OpenMP();
 
   explicit OpenMP(int pool_size);

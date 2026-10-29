@@ -86,7 +86,7 @@ void test_abort_from_device() {
 }
 
 TEST(TEST_CATEGORY_DEATH, abort_from_device) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+  GTEST_FLAG_SET(death_test_style, "threadsafe");
 // FIXME_OPENACC FIXME_NVHPC: NVHPC fails when targetting CPUs.
 #if defined(KOKKOS_ENABLE_OPENACC) && defined(KOKKOS_COMPILER_NVHPC) && \
     defined(KOKKOS_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE)

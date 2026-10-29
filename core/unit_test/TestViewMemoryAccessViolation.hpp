@@ -140,6 +140,9 @@ void test_view_memory_access_violations_from_device() {
   // clang-format on
 }
 
+#if !(defined(KOKKOS_ENABLE_OPENACC) && (KOKKOS_COMPILER_NVHPC > 240500) && \
+      (KOKKOS_COMPILER_NVHPC < 260500))
+
 TEST(TEST_CATEGORY_DEATH, view_memory_access_violations_from_host) {
   using ExecutionSpace = TEST_EXECSPACE;
 
@@ -153,7 +156,7 @@ TEST(TEST_CATEGORY_DEATH, view_memory_access_violations_from_host) {
 }
 
 TEST(TEST_CATEGORY_DEATH, view_memory_access_violations_from_device) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+  GTEST_FLAG_SET(death_test_style, "threadsafe");
 
   using ExecutionSpace = TEST_EXECSPACE;
 
@@ -184,3 +187,5 @@ TEST(TEST_CATEGORY_DEATH, view_memory_access_violations_from_device) {
 
   test_view_memory_access_violations_from_device<ExecutionSpace>();
 }
+
+#endif

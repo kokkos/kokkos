@@ -8,7 +8,7 @@ namespace Test {
 TEST(TEST_CATEGORY, view_layout_left_with_stride) {
   Kokkos::LayoutLeft ll(10, 20);
   ll.stride = 15;
-  Kokkos::View<int**, Kokkos::LayoutLeft> a("A", ll);
+  Kokkos::View<int**, Kokkos::LayoutLeft, TEST_EXECSPACE> a("A", ll);
   ASSERT_EQ(static_cast<int>(a.extent(0)), 10);
   ASSERT_EQ(static_cast<int>(a.extent(1)), 20);
   ASSERT_EQ(static_cast<int>(a.stride(0)), 1);
@@ -23,7 +23,7 @@ TEST(TEST_CATEGORY, view_layout_left_with_stride) {
 TEST(TEST_CATEGORY, view_layout_right_with_stride) {
   Kokkos::LayoutRight lr(10, 20);
   lr.stride = 25;
-  Kokkos::View<int**, Kokkos::LayoutRight> a("A", lr);
+  Kokkos::View<int**, Kokkos::LayoutRight, TEST_EXECSPACE> a("A", lr);
   ASSERT_EQ(static_cast<int>(a.extent(0)), 10);
   ASSERT_EQ(static_cast<int>(a.extent(1)), 20);
   ASSERT_EQ(static_cast<int>(a.stride(0)), 25);

@@ -34,7 +34,7 @@ class Kokkos::Impl::ParallelFor<Functor, Kokkos::RangePolicy<Traits...>,
 
   void execute() const {
     // Acquire the device for potential handoff before kernel execution begins
-    const std::lock_guard<std::mutex> device_lock =
+    const std::lock_guard<std::recursive_mutex> device_lock =
         this->m_policy.space().impl_internal_space_instance()->lock_device();
 
     // Clone the driver to prevent the stack from getting migrated to device.
@@ -64,14 +64,20 @@ class Kokkos::Impl::ParallelFor<Functor, Kokkos::RangePolicy<Traits...>,
     //   of the mechanism and rationale.
     NextSiliconThreadSpaceGuard thread_guard{};
 
-    // Communicate to the compiler that the functor is a immutable and thread
+    // Communicate to the compiler that the functor is immutable and thread
     // invariant for the duration of the microtask.
-    Kokkos::Experimental::Impl::
-        __ns_immutable_thread_invariant_parameter_struct(functor);
+    if (__next_is_in_handed_off_code()) {
+      nextapi::detail::__next_immutable_thread_invariant_parameter_struct(
+          functor);
+    }
 
     // Invokes the functor itself. Expected to inline (if compiler visible) the
     // functor body while passing the extra this pointer.
-    (*functor)(index);
+    if constexpr (std::is_void_v<WorkTag>) {
+      (*functor)(index);
+    } else {
+      (*functor)(WorkTag{}, index);
+    }
   }
 };
 

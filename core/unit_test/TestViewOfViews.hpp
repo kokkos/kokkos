@@ -56,11 +56,9 @@ void test_view_of_views_default() {
   vov(0, 0) = a;
   vov(1, 0) = a;
   vov(0, 1) = b;
-#ifndef KOKKOS_ENABLE_IMPL_VIEW_OF_VIEWS_DESTRUCTOR_PRECONDITION_VIOLATION_WORKAROUND
   vov(0, 0) = V();
   vov(1, 0) = V();
   vov(0, 1) = V();
-#endif
 }
 
 template <class V>
@@ -74,13 +72,9 @@ void test_view_of_views_without_initializing() {
   new (&vov(0, 0)) V(a);
   new (&vov(1, 0)) V(a);
   new (&vov(0, 1)) V(b);
-#ifndef KOKKOS_ENABLE_IMPL_VIEW_OF_VIEWS_DESTRUCTOR_PRECONDITION_VIOLATION_WORKAROUND
   vov(0, 0).~V();
   vov(1, 0).~V();
   vov(0, 1).~V();
-#else
-  // leaks memory
-#endif
 }
 
 template <class V>

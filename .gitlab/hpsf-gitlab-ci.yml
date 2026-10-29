@@ -1,3 +1,13 @@
+workflow:
+  auto_cancel:
+    on_new_commit: interruptible
+  rules:
+    # Do not auto-cancel pipelines on develop
+    - if: $CI_COMMIT_BRANCH == "develop"
+      auto_cancel:
+        on_new_commit: none
+    - when: always
+
 .common-setup:
   stage: test
   variables:
@@ -16,8 +26,44 @@
         export BUILD_TYPE="RelWithDebInfo";
         export GITHUB_PR_ID=$(echo ${CI_COMMIT_BRANCH} | cut -d \_ -f 1 | cut -c 3-);
       fi
+    - ulimit -c 0
   after_script:
     - sed -n "s/[0-9]*:[ ]\[[ ]*OK \] \([^ ]*\) (\([0-9]*\) ms)/\2 \1/p" test_results.txt | sort -nr | head
+
+NVIDIA-HOPPER-OPENACC:
+  extends: .common-setup
+  tags: [cuda90, hpsf-gpu]
+  image: nvcr.io/nvidia/nvhpc:26.9-devel-cuda13.3-ubuntu24.04
+  script:
+    - apt-get update && apt-get install -y cmake git
+    - export CMAKE_BUILD_PARALLEL_LEVEL=32
+    - export ENV_CMAKE_OPTIONS=""
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_BUILD_TYPE=Release"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_COMPILER=nvc++"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_FLAGS='-Werror'"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ARCH_HOPPER90=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ARCH_NATIVE=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_OPENACC=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_COMPILER_WARNINGS=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_TESTS=ON"
+    - export CTEST_BUILD_NAME="NVIDIA-HOPPER-OPENACC"
+    - ctest -VV
+        -D CDASH_MODEL=${CDASH_MODEL}
+        -D GITHUB_PR_ID="${GITHUB_PR_ID}"
+        -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}"
+        -D OUTPUT_JUNIT_FILE=result_hopper_openacc.xml
+        -S scripts/CTestRun.cmake
+        -D CTEST_SITE="gitlab.spack.io"
+        -D CTEST_BUILD_NAME="${CTEST_BUILD_NAME}"
+        -D CTEST_NOTES_FILES=/builds/kokkos/kokkos/build/CMakeCache.txt
+      | tee test_results.txt
+  artifacts:
+    when: always
+    paths:
+      - build/result_hopper_openacc.xml
+    reports:
+      junit: build/result_hopper_openacc.xml
+
 
 NVIDIA-RTX5080:
   extends: .common-setup
@@ -193,6 +239,7 @@ INTEL-B70:
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_VERBOSE_MAKEFILE=ON"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_SYCL=ON"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_SYCL_RELOCATABLE_DEVICE_CODE=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ARCH_INTEL_BMG=ON"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ARCH_NATIVE=ON"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_TESTS=ON"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_COMPILER_WARNINGS=ON"
@@ -267,7 +314,7 @@ AMD-MI300A:
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_PREFIX_PATH=/opt/rocm-7.14.0"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_BUILD_TYPE=${BUILD_TYPE}"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_COMPILER=hipcc"
-    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_FLAGS='-Werror'"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_FLAGS='-Werror -ftime-trace'"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_STANDARD=20"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_HIP=ON"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ARCH_AMD_GFX942_APU=ON"
@@ -290,6 +337,12 @@ AMD-MI300A:
       -D CTEST_BUILD_NAME="${CTEST_BUILD_NAME}"
       -D CTEST_NOTES_FILES=/builds/kokkos/kokkos/build/CMakeCache.txt
       | tee test_results.txt
+    - git clone https://github.com/aras-p/ClangBuildAnalyzer --depth=1 --branch v1.6.0 &&
+      test "$(git -C ClangBuildAnalyzer rev-parse HEAD)" = bae0cb488cce944bfc3da9850a69ad621701ebef &&
+      cd ClangBuildAnalyzer && cmake -B build &&
+      cmake --build build && cd ..
+    - ./ClangBuildAnalyzer/build/ClangBuildAnalyzer --all build analyze_results.bin
+    - ./ClangBuildAnalyzer/build/ClangBuildAnalyzer --analyze analyze_results.bin
   artifacts:
     when: always
     paths:

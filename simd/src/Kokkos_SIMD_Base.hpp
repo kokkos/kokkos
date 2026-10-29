@@ -1,0 +1,93 @@
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
+
+#ifndef KOKKOS_SIMD_BASE_HPP
+#define KOKKOS_SIMD_BASE_HPP
+
+#include <Kokkos_SIMD_Common.hpp>
+#include <impl/Kokkos_SIMD_Impl_Macros.hpp>
+
+#ifdef KOKKOS_SIMD_COMMON_MATH_HPP
+#error \
+    "Kokkos_SIMD_Base.hpp must be included before Kokkos_SIMD_Common_Math.hpp!"
+#endif
+
+namespace Kokkos::Experimental::Impl {
+
+template <typename Derived>
+class basic_simd_mask_base {
+ private:
+  KOKKOS_SIMD_IMPL_BASE_DERIVED()
+
+ public:
+  KOKKOS_SIMD_IMPL_BASE_SUBSCRIPT_OP()
+
+  KOKKOS_SIMD_IMPL_BASE_UNARY_OP(!, lnot)
+  KOKKOS_SIMD_IMPL_BASE_UNARY_OP(~, bnot)
+
+  KOKKOS_SIMD_IMPL_BASE_BINARY_OP(&&, land)
+  KOKKOS_SIMD_IMPL_BASE_BINARY_OP(||, lor)
+  KOKKOS_SIMD_IMPL_BASE_BINARY_OP(&, band)
+  KOKKOS_SIMD_IMPL_BASE_BINARY_OP(|, bor)
+  KOKKOS_SIMD_IMPL_BASE_BINARY_OP(^, bxor)
+
+  KOKKOS_SIMD_IMPL_BASE_COMPOUND_OP(&=, band_eq)
+  KOKKOS_SIMD_IMPL_BASE_COMPOUND_OP(|=, bor_eq)
+  KOKKOS_SIMD_IMPL_BASE_COMPOUND_OP(^=, bxor_eq)
+
+  KOKKOS_SIMD_IMPL_BASE_MASK_COMPARISON_OP(==, eq)
+  KOKKOS_SIMD_IMPL_BASE_MASK_COMPARISON_OP(!=, neq)
+  KOKKOS_SIMD_IMPL_BASE_MASK_COMPARISON_OP(>=, ge)
+  KOKKOS_SIMD_IMPL_BASE_MASK_COMPARISON_OP(<=, le)
+  KOKKOS_SIMD_IMPL_BASE_MASK_COMPARISON_OP(>, gt)
+  KOKKOS_SIMD_IMPL_BASE_MASK_COMPARISON_OP(<, lt)
+};
+
+template <typename Derived>
+class basic_simd_base {
+ private:
+  KOKKOS_SIMD_IMPL_BASE_DERIVED()
+
+ public:
+  KOKKOS_SIMD_IMPL_BASE_SUBSCRIPT_OP()
+
+  KOKKOS_SIMD_IMPL_BASE_UNARY_OP(-, neg)
+  KOKKOS_SIMD_IMPL_BASE_UNARY_OP(~, bnot)
+
+  KOKKOS_SIMD_IMPL_BASE_BINARY_OP(+, plus)
+  KOKKOS_SIMD_IMPL_BASE_BINARY_OP(-, minus)
+  KOKKOS_SIMD_IMPL_BASE_BINARY_OP(*, multiply)
+  KOKKOS_SIMD_IMPL_BASE_BINARY_OP(/, divide)
+  KOKKOS_SIMD_IMPL_BASE_BINARY_OP(&, band)
+  KOKKOS_SIMD_IMPL_BASE_BINARY_OP(|, bor)
+  KOKKOS_SIMD_IMPL_BASE_BINARY_OP(^, bxor)
+
+  KOKKOS_SIMD_IMPL_BASE_SHIFT_OP(<<, sll, Derived const&)
+  KOKKOS_SIMD_IMPL_BASE_SHIFT_OP(>>, sra, Derived const&)
+  KOKKOS_SIMD_IMPL_BASE_SHIFT_OP(<<, sll, simd_size_t)
+  KOKKOS_SIMD_IMPL_BASE_SHIFT_OP(>>, sra, simd_size_t)
+
+  KOKKOS_SIMD_IMPL_BASE_COMPOUND_OP(+=, plus_eq)
+  KOKKOS_SIMD_IMPL_BASE_COMPOUND_OP(-=, minus_eq)
+  KOKKOS_SIMD_IMPL_BASE_COMPOUND_OP(*=, multiply_eq)
+  KOKKOS_SIMD_IMPL_BASE_COMPOUND_OP(/=, divide_eq)
+  KOKKOS_SIMD_IMPL_BASE_COMPOUND_OP(&=, band_eq)
+  KOKKOS_SIMD_IMPL_BASE_COMPOUND_OP(|=, bor_eq)
+  KOKKOS_SIMD_IMPL_BASE_COMPOUND_OP(^=, bxor_eq)
+
+  KOKKOS_SIMD_IMPL_BASE_COMPOUND_SHIFT_OP(<<=, sll_eq, Derived const&)
+  KOKKOS_SIMD_IMPL_BASE_COMPOUND_SHIFT_OP(>>=, sra_eq, Derived const&)
+  KOKKOS_SIMD_IMPL_BASE_COMPOUND_SHIFT_OP(<<=, sll_eq, simd_size_t)
+  KOKKOS_SIMD_IMPL_BASE_COMPOUND_SHIFT_OP(>>=, sra_eq, simd_size_t)
+
+  KOKKOS_SIMD_IMPL_BASE_COMPARISON_OP(==, eq)
+  KOKKOS_SIMD_IMPL_BASE_COMPARISON_OP(!=, neq)
+  KOKKOS_SIMD_IMPL_BASE_COMPARISON_OP(>=, ge)
+  KOKKOS_SIMD_IMPL_BASE_COMPARISON_OP(<=, le)
+  KOKKOS_SIMD_IMPL_BASE_COMPARISON_OP(>, gt)
+  KOKKOS_SIMD_IMPL_BASE_COMPARISON_OP(<, lt)
+};
+
+}  // namespace Kokkos::Experimental::Impl
+
+#endif

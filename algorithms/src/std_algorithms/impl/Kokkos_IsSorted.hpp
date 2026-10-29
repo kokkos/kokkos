@@ -62,7 +62,10 @@ bool is_sorted_exespace_impl(const std::string& label, const ExecutionSpace& ex,
   // result is incremented by one if sorting breaks at index i
   std::size_t result = 0;
   ::Kokkos::parallel_reduce(
-      label, RangePolicy<ExecutionSpace>(ex, 0, num_elements_minus_one),
+      label,
+      RangePolicy<ExecutionSpace,
+                  IndexType<typename IteratorType::difference_type>>(
+          ex, 0, num_elements_minus_one),
       functor_type(first, std::move(comp)), result);
 
   return result == 0;

@@ -8,6 +8,12 @@
 namespace Test {
 
 TEST(TEST_CATEGORY, team_reduction_scan) {
+// FIXME_NEXTSILICON
+#ifdef KOKKOS_ENABLE_NEXTSILICON
+  if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::NextSilicon>) {
+    GTEST_SKIP() << "very slow during handoff on 1.3.0-120";
+  }
+#endif
   TestScanTeam<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >(0);
   TestScanTeam<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >(0);
   TestScanTeam<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >(10);
@@ -91,6 +97,68 @@ TEST(TEST_CATEGORY, team_double_array_reduce) {
         .run_array_test(100000);
     TestReduceTeam<double, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >{}
         .run_array_test(100000);
+  }
+}
+
+// The maximum work sizes below are chosen such that the sum
+// nwork*(nwork+1)/2 still fits into the unsigned integer type.
+
+TEST(TEST_CATEGORY, team_uint8_array_reduce) {
+  {
+    TestReduceTeam<uint8_t, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >{}
+        .run_array_test(0);
+    TestReduceTeam<uint8_t, TEST_EXECSPACE,
+                   Kokkos::Schedule<Kokkos::Dynamic> >{}
+        .run_array_test(0);
+    TestReduceTeam<uint8_t, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >{}
+        .run_array_test(3);
+    TestReduceTeam<uint8_t, TEST_EXECSPACE,
+                   Kokkos::Schedule<Kokkos::Dynamic> >{}
+        .run_array_test(3);
+    TestReduceTeam<uint8_t, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >{}
+        .run_array_test(22);
+    TestReduceTeam<uint8_t, TEST_EXECSPACE,
+                   Kokkos::Schedule<Kokkos::Dynamic> >{}
+        .run_array_test(22);
+// Now test reductions on uint8_t[] with a value_count large enough to
+// overflow uint8_t. This ensures that we are never using the array element
+// type to index or iterate over the arrays (issue for Cuda/HIP prior to
+// #9633).
+#ifdef KOKKOS_ENABLE_SYCL  // FIXME_SYCL
+    if (std::is_same_v<Kokkos::SYCL, TEST_EXECSPACE>) {
+      GTEST_SKIP()
+          << "Skipping large TeamPolicy array reduce tests on SYCL due to "
+             "PI_ERROR_OUT_OF_RESOURCES exception (see issue #9644)";
+    }
+#endif
+    TestReduceTeam<uint8_t, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >{}
+        .run_large_array_test(600, 300);
+    TestReduceTeam<uint8_t, TEST_EXECSPACE,
+                   Kokkos::Schedule<Kokkos::Dynamic> >{}
+        .run_large_array_test(600, 300);
+  }
+}
+
+TEST(TEST_CATEGORY, team_uint16_array_reduce) {
+  {
+    TestReduceTeam<uint16_t, TEST_EXECSPACE,
+                   Kokkos::Schedule<Kokkos::Static> >{}
+        .run_array_test(0);
+    TestReduceTeam<uint16_t, TEST_EXECSPACE,
+                   Kokkos::Schedule<Kokkos::Dynamic> >{}
+        .run_array_test(0);
+    TestReduceTeam<uint16_t, TEST_EXECSPACE,
+                   Kokkos::Schedule<Kokkos::Static> >{}
+        .run_array_test(3);
+    TestReduceTeam<uint16_t, TEST_EXECSPACE,
+                   Kokkos::Schedule<Kokkos::Dynamic> >{}
+        .run_array_test(3);
+    TestReduceTeam<uint16_t, TEST_EXECSPACE,
+                   Kokkos::Schedule<Kokkos::Static> >{}
+        .run_array_test(361);
+    TestReduceTeam<uint16_t, TEST_EXECSPACE,
+                   Kokkos::Schedule<Kokkos::Dynamic> >{}
+        .run_array_test(361);
   }
 }
 

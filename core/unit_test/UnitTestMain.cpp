@@ -3,13 +3,14 @@
 
 #include <gtest/gtest.h>
 
-#include <impl/Kokkos_SetEnv.hpp>
+#include <cstdlib>
 
+// NOLINTNEXTLINE(bugprone-exception-escape)
 int main(int argc, char *argv[]) {
   // We want to use "threadsafe" by default while the default in GTest on Linux
   // is "fast"
-  Kokkos::Impl::setenv("GTEST_DEATH_TEST_STYLE", "threadsafe",
-                       /*overwrite=*/0);
+  if (!std::getenv("GTEST_DEATH_TEST_STYLE"))
+    GTEST_FLAG_SET(death_test_style, "threadsafe");
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

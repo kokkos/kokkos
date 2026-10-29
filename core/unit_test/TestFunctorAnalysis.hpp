@@ -11,9 +11,9 @@ import kokkos.core;
 import kokkos.core_impl;
 #else
 #include <Kokkos_Core.hpp>
-#endif
 
 #include <impl/Kokkos_FunctorAnalysis.hpp>
+#endif
 
 /*--------------------------------------------------------------------------*/
 

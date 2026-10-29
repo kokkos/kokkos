@@ -166,12 +166,6 @@ struct HostMirror {
 
 }  // namespace Kokkos
 
-//----------------------------------------------------------------------------
-
-KOKKOS_IMPL_SHARED_ALLOCATION_SPECIALIZATION(Kokkos::HostSpace);
-
-//----------------------------------------------------------------------------
-
 namespace Kokkos {
 
 namespace Impl {

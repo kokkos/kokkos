@@ -11,8 +11,8 @@ else()
   FetchContent_Declare(
     googlebenchmark
     DOWNLOAD_EXTRACT_TIMESTAMP FALSE
-    URL https://github.com/google/benchmark/archive/refs/tags/v1.8.3.tar.gz
-    URL_HASH MD5=7b93dd03670665684f1b2e9b70ad17fe
+    URL https://github.com/google/benchmark/archive/refs/tags/v1.9.5.tar.gz
+    URL_HASH MD5=12c6c0c228fc07106c62634222bd2541
   )
   FetchContent_MakeAvailable(googlebenchmark)
   list(POP_BACK CMAKE_MESSAGE_INDENT)
@@ -20,6 +20,7 @@ else()
   # Suppress clang-tidy diagnostics on code that we do not have control over
   if(CMAKE_CXX_CLANG_TIDY)
     set_target_properties(benchmark PROPERTIES CXX_CLANG_TIDY "")
+    set_target_properties(benchmark_main PROPERTIES CXX_CLANG_TIDY "")
   endif()
 
   target_compile_options(benchmark PRIVATE -w)
@@ -55,14 +56,28 @@ macro(KOKKOS_ADD_BENCHMARK NAME)
   string(TIMESTAMP BENCHMARK_TIME "%Y-%m-%d_T%H-%M-%S" UTC)
   set(BENCHMARK_ARGS --benchmark_counters_tabular=true --benchmark_out=${BENCHMARK_NAME}_${BENCHMARK_TIME}.json)
 
-  add_test(NAME ${BENCHMARK_NAME} COMMAND ${BENCHMARK_NAME} ${BENCHMARK_ARGS})
+  # If we are on linux/mac, we automatically load a tool to track memory usage.
+  if((CMAKE_SYSTEM_NAME STREQUAL "Linux" OR CMAKE_SYSTEM_NAME STREQUAL "Darwin") AND (NOT KOKKOS_ENABLE_LARGE_MEM_TESTS
+                                                                                     )
+  )
+    if(NOT TARGET kokkoshwmtracker-tool)
+      kokkos_add_test_library(
+        kokkoshwmtracker-tool SHARED SOURCES ${KOKKOS_SOURCE_DIR}/core/unit_test/tools/memory-hwm-tool.cpp
+      )
+    endif()
+    add_test(NAME ${BENCHMARK_NAME} COMMAND ${BENCHMARK_NAME} ${BENCHMARK_ARGS})
+    set_tests_properties(
+      ${BENCHMARK_NAME} PROPERTIES ENVIRONMENT_MODIFICATION
+                                   KOKKOS_TOOLS_LIBS=cmake_list_append:$<TARGET_FILE:kokkoshwmtracker-tool>
+    )
+  else()
+    add_test(NAME ${BENCHMARK_NAME} COMMAND ${BENCHMARK_NAME} ${BENCHMARK_ARGS})
+  endif()
+
 endmacro()
 
 # FIXME_OPENACC - temporarily disabled due to unimplemented features
 if(KOKKOS_ENABLE_OPENACC AND KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
-  return()
-endif()
-if(KOKKOS_ENABLE_OPENACC AND KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
   return()
 endif()
 

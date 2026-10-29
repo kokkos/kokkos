@@ -238,7 +238,6 @@ void test_view_mapping() {
 
     using a_const_int_r1 = ViewDataAnalysis<const int[], void>;
 
-    static_assert(std::is_void_v<typename a_const_int_r1::specialize>);
     static_assert(std::is_same_v<typename a_const_int_r1::dimension,
                                  Kokkos::Impl::ViewDimension<0> >);
     static_assert(
@@ -265,7 +264,6 @@ void test_view_mapping() {
 
     using a_const_int_r3 = ViewDataAnalysis<const int** [4], void>;
 
-    static_assert(std::is_void_v<typename a_const_int_r3::specialize>);
     static_assert(std::is_same_v<typename a_const_int_r3::dimension,
                                  Kokkos::Impl::ViewDimension<0, 0, 4> >);
     static_assert(
@@ -651,11 +649,14 @@ void test_view_mapping() {
           // constructing the ParallelReduce object (with reference-counting
           // turned off). When the parallel dispatch accepts a move for the
           // lambda, this count should become 2.
+          // With the only host asynchronous backend, HPX, in particular, we
+          // observe count 2 already.
 
-          if (a.use_count() != 3) ++e;
+          const int initial_count = a.use_count();
+          if (initial_count > 3 || initial_count < 2) ++e;
           V x = a;
-          if (a.use_count() != 3) ++e;
-          if (x.use_count() != 3) ++e;
+          if (a.use_count() != initial_count) ++e;
+          if (x.use_count() != initial_count) ++e;
         },
         errors);
     ASSERT_EQ(errors, 0);
@@ -664,6 +665,27 @@ void test_view_mapping() {
 }
 
 TEST(TEST_CATEGORY, view_mapping) { test_view_mapping<TEST_EXECSPACE>(); }
+
+template <class Layout>
+void test_create_mirror_view_preserves_padding() {
+  constexpr size_t N = 11;
+  constexpr size_t R = 7;
+
+  auto view = Kokkos::View<double**, Layout, TEST_EXECSPACE>(
+      Kokkos::view_alloc("view", Kokkos::AllowPadding), N, R);
+  auto mirror = Kokkos::create_mirror_view(view);
+
+  ASSERT_EQ(view.extent(0), mirror.extent(0));
+  ASSERT_EQ(view.extent(1), mirror.extent(1));
+  ASSERT_EQ(view.stride(0), mirror.stride(0));
+  ASSERT_EQ(view.stride(1), mirror.stride(1));
+}
+
+TEST(TEST_CATEGORY, create_mirror_view_preserves_padding) {
+  test_create_mirror_view_preserves_padding<Kokkos::LayoutLeft>();
+  test_create_mirror_view_preserves_padding<Kokkos::LayoutRight>();
+}
+
 /*--------------------------------------------------------------------------*/
 
 template <class ViewType>

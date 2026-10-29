@@ -7,7 +7,8 @@
 #include <impl/Kokkos_InitializationSettings.hpp>
 #include <impl/Kokkos_DeviceManagement.hpp>
 #include <impl/Kokkos_Command_Line_Parsing.hpp>
-#include <impl/Kokkos_SetEnv.hpp>
+
+#include "Kokkos_SetEnv.hpp"
 
 #include <cstdlib>
 #include <mutex>

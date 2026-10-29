@@ -41,7 +41,9 @@ struct TestDynamicView {
 
         d1 = view_type("d1", 1024, arg_total_size);
         view_type d2(d1);
-        view_type d3("d3", 1024, arg_total_size);
+        // test #5280: construct with exec space instance
+        view_type d3(Kokkos::view_alloc(execution_space{}, "d3"), 1024,
+                     arg_total_size);
 
         ASSERT_FALSE(d1.is_allocated());
         ASSERT_FALSE(d2.is_allocated());

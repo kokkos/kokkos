@@ -346,6 +346,7 @@ class View
   // typedefs originally from ViewTraits
   using traits = typename basic_view_from_traits::view_traits;
 
+  using value_type           = typename traits::value_type;
   using const_value_type     = typename traits::const_value_type;
   using non_const_value_type = typename traits::non_const_value_type;
   using data_type            = typename basic_view_from_traits::data_type;
@@ -358,16 +359,7 @@ class View
   using memory_space         = typename traits::memory_space;
   using memory_traits        = typename traits::memory_traits;
   using host_mirror_space    = typename traits::host_mirror_space;
-  using typename base_t::index_type;
 
-  // aliases from BasicView
-
-  // FIXME: Should be unsigned
-  // FIXME: these are overriden so that their types are identical when using
-  // BasicView or Legacy we will need to obtain these from base_t in the future
-  // and deprecate old behavior
-  using size_type  = typename memory_space::size_type;
-  using value_type = typename traits::value_type;
   // pointer_type can be different from element_type*
   using pointer_type = decltype(Impl::ptr_from_data_handle(
       std::declval<typename base_t::data_handle_type>()));
@@ -391,6 +383,8 @@ class View
   using typename base_t::mdspan_type;
   using reference_type = typename base_t::reference;
   using typename base_t::data_handle_type;
+  using typename base_t::index_type;
+  using typename base_t::size_type;
 
  private:
   using view_types =
@@ -945,8 +939,22 @@ class View
   // Compatible subview constructor
   // may assign unmanaged from managed.
 
+// This annotation lets std::pair slice arguments be used from device code
+// when relaxed constexpr support is enabled, while avoiding warnings about
+// calling a host function from a host device function: constexpr alone is
+// enough to silence that warning, including when using Clang (and its
+// derivatives, e.g. hipcc, amdclang++) as the device compiler.  NVCC is the
+// exception: there, constexpr alone instead triggers the warning, so we use
+// KOKKOS_FUNCTION in that specific configuration.
+#if defined(KOKKOS_COMPILER_NVCC) && defined(KOKKOS_ENABLE_CUDA_CONSTEXPR)
+#define KOKKOS_IMPL_SUBVIEW_STD_PAIR_SPECIFIER KOKKOS_FUNCTION
+#else
+#define KOKKOS_IMPL_SUBVIEW_STD_PAIR_SPECIFIER constexpr
+#endif
+
   template <class RT, class... RP, class Arg0, class... Args>
-  View(const View<RT, RP...>& src_view, const Arg0 arg0, Args... args)
+  KOKKOS_IMPL_SUBVIEW_STD_PAIR_SPECIFIER View(const View<RT, RP...>& src_view,
+                                              const Arg0 arg0, Args... args)
       : base_t(Impl::subview_ctor_tag, src_view,
                Impl::convert_to_kokkos_pair_if_std_pair(arg0),
                Impl::convert_to_kokkos_pair_if_std_pair(args)...) {}
@@ -1581,23 +1589,19 @@ struct RankDataType<ValueType, 0> {
 };
 
 template <unsigned N, typename... Args>
-KOKKOS_FUNCTION std::enable_if_t<
-    N == View<Args...>::rank() &&
-        std::is_same_v<typename ViewTraits<Args...>::specialize, void>,
-    View<Args...> >
-as_view_of_rank_n(View<Args...> v) {
+  requires(N == View<Args...>::rank())
+KOKKOS_FUNCTION View<Args...> as_view_of_rank_n(View<Args...> v) {
   return v;
 }
 
 // Placeholder implementation to compile generic code for DynRankView; should
 // never be called
 template <unsigned N, typename T, typename... Args>
-KOKKOS_FUNCTION std::enable_if_t<
-    N != View<T, Args...>::rank() &&
-        std::is_same_v<typename ViewTraits<T, Args...>::specialize, void>,
+  requires(N != View<T, Args...>::rank())
+KOKKOS_FUNCTION
     View<typename RankDataType<typename View<T, Args...>::value_type, N>::type,
-         Args...> >
-as_view_of_rank_n(View<T, Args...>) {
+         Args...>
+    as_view_of_rank_n(View<T, Args...>) {
   Kokkos::abort("Trying to get at a View of the wrong rank");
   return {};
 }
@@ -1623,9 +1627,10 @@ namespace Impl {
 template <class V, class... Slices>
 struct SubviewReturnType {
   using sub_mapping_t =
-      decltype(submdspan_mapping(std::declval<typename V::mapping_type>(),
-                                 transform_kokkos_slice_to_mdspan_slice(
-                                     std::declval<Slices>())...)
+      decltype(submdspan_mapping(
+                   std::declval<typename V::mapping_type>(),
+                   transform_kokkos_slice_to_mdspan_canonical_slice<
+                       typename V::index_type>(std::declval<Slices>())...)
                    .mapping);
   using sub_extents_t  = typename sub_mapping_t::extents_type;
   using sub_layout_t   = typename sub_mapping_t::layout_type;
@@ -1648,9 +1653,10 @@ struct SubviewReturnType<
   using view_t =
       Kokkos::View<ElementType, Kokkos::extents<IndexType, Extents...>, L, A>;
   using sub_mapping_t =
-      decltype(submdspan_mapping(std::declval<typename view_t::mapping_type>(),
-                                 transform_kokkos_slice_to_mdspan_slice(
-                                     std::declval<Slices>())...)
+      decltype(submdspan_mapping(
+                   std::declval<typename view_t::mapping_type>(),
+                   transform_kokkos_slice_to_mdspan_canonical_slice<IndexType>(
+                       std::declval<Slices>())...)
                    .mapping);
   using sub_extents_t  = typename sub_mapping_t::extents_type;
   using sub_layout_t   = typename sub_mapping_t::layout_type;
@@ -1661,9 +1667,12 @@ struct SubviewReturnType<
 }  // namespace Impl
 
 template <class D, class... P, class... Slices>
-auto subview(const View<D, P...>& src, Slices... slices) {
+KOKKOS_IMPL_SUBVIEW_STD_PAIR_SPECIFIER auto subview(const View<D, P...>& src,
+                                                    Slices... slices) {
   return subview(src, Impl::convert_to_kokkos_pair_if_std_pair(slices)...);
 }
+
+#undef KOKKOS_IMPL_SUBVIEW_STD_PAIR_SPECIFIER
 
 // std::pair isn't device-compatible
 template <class D, class... P, class... Slices>

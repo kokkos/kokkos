@@ -48,8 +48,8 @@ struct ScatterAtomic {};
 }  // namespace Kokkos
 
 namespace Kokkos {
-namespace Impl {
 namespace Experimental {
+namespace Impl {
 
 template <typename ExecSpace>
 struct DefaultDuplication;
@@ -598,16 +598,16 @@ struct ResetDuplicates : public ResetDuplicatesBase<ExecSpace, ValueType, Op> {
 
 template <typename... P>
 void check_scatter_view_allocation_properties_argument(
-    ViewCtorProp<P...> const&) {
-  static_assert(ViewCtorProp<P...>::has_execution_space &&
-                    ViewCtorProp<P...>::has_label &&
-                    ViewCtorProp<P...>::initialize,
+    Kokkos::Impl::ViewCtorProp<P...> const&) {
+  static_assert(Kokkos::Impl::ViewCtorProp<P...>::has_execution_space &&
+                    Kokkos::Impl::ViewCtorProp<P...>::has_label &&
+                    Kokkos::Impl::ViewCtorProp<P...>::initialize,
                 "Allocation property must have an execution name as well as a "
                 "label, and must perform the view initialization");
 }
 
-}  // namespace Experimental
 }  // namespace Impl
+}  // namespace Experimental
 }  // namespace Kokkos
 
 namespace Kokkos {
@@ -617,10 +617,10 @@ template <typename DataType,
           typename Layout      = Kokkos::DefaultExecutionSpace::array_layout,
           typename DeviceType  = Kokkos::DefaultExecutionSpace,
           typename Op          = Kokkos::Experimental::ScatterSum,
-          typename Duplication = typename Kokkos::Impl::Experimental::
+          typename Duplication = typename Kokkos::Experimental::Impl::
               DefaultDuplication<typename DeviceType::execution_space>::type,
           typename Contribution =
-              typename Kokkos::Impl::Experimental::DefaultContribution<
+              typename Kokkos::Experimental::Impl::DefaultContribution<
                   typename DeviceType::execution_space, Duplication>::type>
 class ScatterView;
 
@@ -682,7 +682,7 @@ class ScatterView<DataType, Layout, DeviceType, Op, ScatterNonDuplicated,
   template <typename... P, typename... Dims>
   ScatterView(::Kokkos::Impl::ViewCtorProp<P...> const& arg_prop, Dims... dims)
       : internal_view(arg_prop, dims...) {
-    using ::Kokkos::Impl::Experimental::
+    using ::Kokkos::Experimental::Impl::
         check_scatter_view_allocation_properties_argument;
     check_scatter_view_allocation_properties_argument(arg_prop);
   }
@@ -732,14 +732,14 @@ class ScatterView<DataType, Layout, DeviceType, Op, ScatterNonDuplicated,
             execution_space, typename dest_type::memory_space>::accessible,
         "ScatterView contribute destination memory space not accessible");
     if (dest.data() == internal_view.data()) return;
-    Kokkos::Impl::Experimental::ReduceDuplicates<execution_space,
+    Kokkos::Experimental::Impl::ReduceDuplicates<execution_space,
                                                  original_value_type, Op>(
         exec_space, internal_view.data(), dest.data(), 0, 0, 1,
         internal_view.label());
   }
 
   void reset(execution_space const& exec_space = execution_space()) {
-    Kokkos::Impl::Experimental::ResetDuplicates<execution_space,
+    Kokkos::Experimental::Impl::ResetDuplicates<execution_space,
                                                 original_value_type, Op>(
         exec_space, internal_view.data(), internal_view.size(),
         internal_view.label());
@@ -848,7 +848,7 @@ class ScatterAccess<DataType, Op, DeviceType, Layout, ScatterNonDuplicated,
   using view_type           = ScatterView<DataType, Layout, DeviceType, Op,
                                 ScatterNonDuplicated, Contribution>;
   using original_value_type = typename view_type::original_value_type;
-  using value_type          = Kokkos::Impl::Experimental::ScatterValue<
+  using value_type          = Kokkos::Experimental::Impl::ScatterValue<
       original_value_type, Op, DeviceType, OverrideContribution>;
 
   KOKKOS_INLINE_FUNCTION
@@ -898,7 +898,7 @@ class ScatterView<DataType, Kokkos::LayoutRight, DeviceType, Op,
   friend class ScatterView;
 
   using data_type_info =
-      typename Kokkos::Impl::Experimental::DuplicatedDataType<
+      typename Kokkos::Experimental::Impl::DuplicatedDataType<
           DataType, Kokkos::LayoutRight>;
   using internal_data_type = typename data_type_info::value_type;
   using internal_view_type =
@@ -968,7 +968,7 @@ class ScatterView<DataType, Kokkos::LayoutRight, DeviceType, Op,
                                      void, std::string> const&>(arg_prop)
                                      .value),
                       unique_token.size(), dims...) {
-    using ::Kokkos::Impl::Experimental::
+    using ::Kokkos::Experimental::Impl::
         check_scatter_view_allocation_properties_argument;
     check_scatter_view_allocation_properties_argument(arg_prop);
 
@@ -988,7 +988,7 @@ class ScatterView<DataType, Kokkos::LayoutRight, DeviceType, Op,
   }
 
   auto subview() const {
-    return Kokkos::Impl::Experimental::Slice<
+    return Kokkos::Experimental::Impl::Slice<
         Kokkos::LayoutRight, internal_view_type::rank,
         internal_view_type>::get(internal_view, 0);
   }
@@ -1015,14 +1015,14 @@ class ScatterView<DataType, Kokkos::LayoutRight, DeviceType, Op,
         "ScatterView deep_copy destination memory space not accessible");
     bool is_equal = (dest.data() == internal_view.data());
     size_t start  = is_equal ? 1 : 0;
-    Kokkos::Impl::Experimental::ReduceDuplicates<execution_space,
+    Kokkos::Experimental::Impl::ReduceDuplicates<execution_space,
                                                  original_value_type, Op>(
         exec_space, internal_view.data(), dest.data(), internal_view.stride(0),
         start, internal_view.extent(0), internal_view.label());
   }
 
   void reset(execution_space const& exec_space = execution_space()) {
-    Kokkos::Impl::Experimental::ResetDuplicates<execution_space,
+    Kokkos::Experimental::Impl::ResetDuplicates<execution_space,
                                                 original_value_type, Op>(
         exec_space, internal_view.data(), internal_view.size(),
         internal_view.label());
@@ -1040,7 +1040,7 @@ class ScatterView<DataType, Kokkos::LayoutRight, DeviceType, Op,
       reset(exec_space);
       return;
     }
-    Kokkos::Impl::Experimental::ResetDuplicates<execution_space,
+    Kokkos::Experimental::Impl::ResetDuplicates<execution_space,
                                                 original_value_type, Op>(
         exec_space, internal_view.data() + view.size(),
         internal_view.size() - view.size(), internal_view.label());
@@ -1155,7 +1155,7 @@ class ScatterView<DataType, Kokkos::LayoutLeft, DeviceType, Op,
   friend class ScatterView;
 
   using data_type_info =
-      typename Kokkos::Impl::Experimental::DuplicatedDataType<
+      typename Kokkos::Experimental::Impl::DuplicatedDataType<
           DataType, Kokkos::LayoutLeft>;
   using internal_data_type = typename data_type_info::value_type;
   using internal_view_type =
@@ -1206,7 +1206,7 @@ class ScatterView<DataType, Kokkos::LayoutLeft, DeviceType, Op,
   template <typename... P, typename... Dims>
   ScatterView(::Kokkos::Impl::ViewCtorProp<P...> const& arg_prop,
               Dims... dims) {
-    using ::Kokkos::Impl::Experimental::
+    using ::Kokkos::Experimental::Impl::
         check_scatter_view_allocation_properties_argument;
     check_scatter_view_allocation_properties_argument(arg_prop);
 
@@ -1226,7 +1226,7 @@ class ScatterView<DataType, Kokkos::LayoutLeft, DeviceType, Op,
                        original_view.rank > 6 ? original_view.static_extent(6)
                                               : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
                        KOKKOS_IMPL_CTOR_DEFAULT_ARG};
-    Kokkos::Impl::Experimental::args_to_array(arg_N, 0, dims...);
+    Kokkos::Experimental::Impl::args_to_array(arg_N, 0, dims...);
     arg_N[internal_view_type::rank - 1] = unique_token.size();
 
     auto const& name =
@@ -1267,7 +1267,7 @@ class ScatterView<DataType, Kokkos::LayoutLeft, DeviceType, Op,
   }
 
   auto subview() const {
-    return Kokkos::Impl::Experimental::Slice<
+    return Kokkos::Experimental::Impl::Slice<
         Kokkos::LayoutLeft, internal_view_type::rank,
         internal_view_type>::get(internal_view, 0);
   }
@@ -1299,7 +1299,7 @@ class ScatterView<DataType, Kokkos::LayoutLeft, DeviceType, Op,
     auto extent   = internal_view.extent(internal_view_type::rank - 1);
     bool is_equal = (dest.data() == internal_view.data());
     size_t start  = is_equal ? 1 : 0;
-    Kokkos::Impl::Experimental::ReduceDuplicates<execution_space,
+    Kokkos::Experimental::Impl::ReduceDuplicates<execution_space,
                                                  original_value_type, Op>(
         exec_space, internal_view.data(), dest.data(),
         internal_view.stride(internal_view_type::rank - 1), start, extent,
@@ -1307,7 +1307,7 @@ class ScatterView<DataType, Kokkos::LayoutLeft, DeviceType, Op,
   }
 
   void reset(execution_space const& exec_space = execution_space()) {
-    Kokkos::Impl::Experimental::ResetDuplicates<execution_space,
+    Kokkos::Experimental::Impl::ResetDuplicates<execution_space,
                                                 original_value_type, Op>(
         exec_space, internal_view.data(), internal_view.size(),
         internal_view.label());
@@ -1325,7 +1325,7 @@ class ScatterView<DataType, Kokkos::LayoutLeft, DeviceType, Op,
       reset(exec_space);
       return;
     }
-    Kokkos::Impl::Experimental::ResetDuplicates<execution_space,
+    Kokkos::Experimental::Impl::ResetDuplicates<execution_space,
                                                 original_value_type, Op>(
         exec_space, internal_view.data() + view.size(),
         internal_view.size() - view.size(), internal_view.label());
@@ -1394,7 +1394,7 @@ class ScatterAccess<DataType, Op, DeviceType, Layout, ScatterDuplicated,
   using view_type           = ScatterView<DataType, Layout, DeviceType, Op,
                                 ScatterDuplicated, Contribution>;
   using original_value_type = typename view_type::original_value_type;
-  using value_type          = Kokkos::Impl::Experimental::ScatterValue<
+  using value_type          = Kokkos::Experimental::Impl::ScatterValue<
       original_value_type, Op, DeviceType, OverrideContribution>;
 
   KOKKOS_FORCEINLINE_FUNCTION
@@ -1451,16 +1451,16 @@ ScatterView<
     typename ViewTraits<RT, RP...>::device_type, Op,
     std::conditional_t<
         std::is_void_v<Duplication>,
-        typename Kokkos::Impl::Experimental::DefaultDuplication<
+        typename Kokkos::Experimental::Impl::DefaultDuplication<
             typename ViewTraits<RT, RP...>::execution_space>::type,
         Duplication>,
     std::conditional_t<
         std::is_void_v<Contribution>,
-        typename Kokkos::Impl::Experimental::DefaultContribution<
+        typename Kokkos::Experimental::Impl::DefaultContribution<
             typename ViewTraits<RT, RP...>::execution_space,
             typename std::conditional_t<
                 std::is_void_v<Duplication>,
-                typename Kokkos::Impl::Experimental::DefaultDuplication<
+                typename Kokkos::Experimental::Impl::DefaultDuplication<
                     typename ViewTraits<RT, RP...>::execution_space>::type,
                 Duplication>>::type,
         Contribution>>
@@ -1472,11 +1472,11 @@ template <typename Op, typename RT, typename... RP>
 ScatterView<
     RT, typename ViewTraits<RT, RP...>::array_layout,
     typename ViewTraits<RT, RP...>::device_type, Op,
-    typename Kokkos::Impl::Experimental::DefaultDuplication<
+    typename Kokkos::Experimental::Impl::DefaultDuplication<
         typename ViewTraits<RT, RP...>::execution_space>::type,
-    typename Kokkos::Impl::Experimental::DefaultContribution<
+    typename Kokkos::Experimental::Impl::DefaultContribution<
         typename ViewTraits<RT, RP...>::execution_space,
-        typename Kokkos::Impl::Experimental::DefaultDuplication<
+        typename Kokkos::Experimental::Impl::DefaultDuplication<
             typename ViewTraits<RT, RP...>::execution_space>::type>::type>
 create_scatter_view(Op, View<RT, RP...> const& original_view) {
   return original_view;  // implicit ScatterView constructor call

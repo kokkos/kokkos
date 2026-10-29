@@ -177,7 +177,7 @@ class Kokkos::Impl::TeamPolicyInternal<Kokkos::SYCL, Properties...>
     return m_thread_scratch_size[level];
   }
 
-  typename traits::execution_space space() const { return m_space; }
+  const typename traits::execution_space& space() const { return m_space; }
 
   TeamPolicyInternal()
       : m_space(),

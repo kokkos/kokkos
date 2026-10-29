@@ -19,10 +19,7 @@ if(NOT desul_FOUND)
     endif()
   endif()
   if(KOKKOS_ENABLE_OPENACC)
-    # FIXME_OPENACC FIXME_CLACC - Below condition will be removed if Clacc can compile atomics.
-    if(KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
-      set(DESUL_ATOMICS_ENABLE_OPENACC ON)
-    endif()
+    set(DESUL_ATOMICS_ENABLE_OPENACC ON)
   endif()
   if(BUILD_SHARED_LIBS)
     set(DESUL_IMPL_BUILD_SHARED_LIBS ON)
@@ -128,12 +125,26 @@ if(Kokkos_ENABLE_EXPERIMENTAL_CXX20_MODULES)
   set(KOKKOS_CORE_MODULE_FILES Kokkos_Core.cppm Kokkos_Core_Impl.cppm)
 endif()
 
+set(KOKKOS_GRAPH_MODULE_FILES)
+if(Kokkos_ENABLE_EXPERIMENTAL_CXX20_MODULES)
+  # FIXME_CLANG Clang 19 terminates with many parsing issues in core/unit_test/TestGraph.hpp
+  # when modules are enabled. See also https://github.com/kokkos/kokkos/pull/9673#issuecomment-6261858936.
+  # Therefore, it is NOT included in the modules.
+  if(CMAKE_CXX_COMPILER_ID STREQUAL Clang AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 20)
+    message(WARNING "Older Clang cannot properly deal with Kokkos::Experimental::Graph as a module.")
+  else()
+    set(KOKKOS_GRAPH_MODULE_FILES Kokkos_Graph.cppm Kokkos_Graph_Impl.cppm)
+    global_set(KOKKOS_IMPL_HAVE_CXX20_GRAPH_MODULES 1)
+  endif()
+endif()
+
 kokkos_add_library(
   kokkoscore
   SOURCES
   ${KOKKOS_CORE_SRCS}
   MODULE_INTERFACE
   ${KOKKOS_CORE_MODULE_FILES}
+  ${KOKKOS_GRAPH_MODULE_FILES}
   HEADERS
   ${KOKKOS_CORE_HEADERS}
   ADD_BUILD_OPTIONS # core should be given all the necessary compiler/linker flags
@@ -152,25 +163,12 @@ endif()
 if(Kokkos_ENABLE_MDSPAN_EXTERNAL)
   global_set(KOKKOS_MDSPAN_VERSION "unknown")
   message(STATUS "Using external mdspan")
-  target_link_libraries(kokkoscore PUBLIC mdspan::mdspan)
 else()
-  target_include_directories(kokkoscore SYSTEM PUBLIC $<BUILD_INTERFACE:${KOKKOS_SOURCE_DIR}/tpls/mdspan/include>)
-
-  append_glob(KOKKOS_CORE_HEADERS ${KOKKOS_SOURCE_DIR}/tpls/mdspan/include/experimental/__p0009_bits/*.hpp)
-  append_glob(KOKKOS_CORE_HEADERS ${KOKKOS_SOURCE_DIR}/tpls/mdspan/include/experimental/mdspan)
-
-  install(
-    DIRECTORY "${KOKKOS_SOURCE_DIR}/tpls/mdspan/include/"
-    DESTINATION ${KOKKOS_HEADER_DIR}
-    FILES_MATCHING
-    PATTERN "mdspan"
-    PATTERN "*.hpp"
-  )
-
   file(STRINGS "${KOKKOS_SOURCE_DIR}/tpls/mdspan-hash.txt" KOKKOS_MDSPAN_HASH)
   global_set(KOKKOS_MDSPAN_VERSION "${KOKKOS_MDSPAN_HASH}")
   message(STATUS "Using bundled mdspan copy (kokkos/mdspan@${KOKKOS_MDSPAN_HASH})")
 endif()
+target_link_libraries(kokkoscore PUBLIC mdspan::mdspan)
 
 kokkos_link_tpl(kokkoscore PUBLIC HWLOC)
 kokkos_link_tpl(kokkoscore PUBLIC CUDA)

@@ -57,6 +57,8 @@ export {
   using ::Kokkos::AnonymousSpace;
   using ::Kokkos::DefaultExecutionSpace;
   using ::Kokkos::DefaultHostExecutionSpace;
+  using ::Kokkos::DefaultHostMemorySpace;
+  using ::Kokkos::DefaultMemorySpace;
   using ::Kokkos::Device;
   using ::Kokkos::device_id;
   using ::Kokkos::ExecutionSpace;
@@ -172,6 +174,7 @@ export {
   using ::Kokkos::RangePolicy;
   using ::Kokkos::Schedule;
   using ::Kokkos::single;
+  using ::Kokkos::SinglePolicy;
   using ::Kokkos::Static;
   using ::Kokkos::TeamHandle;
   using ::Kokkos::TeamPolicy;
@@ -191,6 +194,7 @@ export {
   using ::Kokkos::Experimental::prefer;
   using ::Kokkos::Experimental::require;
   using ::Kokkos::Experimental::StaticBatchSize;
+  using ::Kokkos::Experimental::ThreadHandle;
   using ::Kokkos::Experimental::WorkItemProperty;
   }  // namespace Experimental
 
@@ -709,12 +713,14 @@ export {
   using ::Kokkos::Profiling::Experimental::set_begin_parallel_for_callback;
   using ::Kokkos::Profiling::Experimental::set_begin_parallel_reduce_callback;
   using ::Kokkos::Profiling::Experimental::set_begin_parallel_scan_callback;
+  using ::Kokkos::Profiling::Experimental::set_begin_single_callback;
   using ::Kokkos::Profiling::Experimental::set_create_profile_section_callback;
   using ::Kokkos::Profiling::Experimental::set_destroy_profile_section_callback;
   using ::Kokkos::Profiling::Experimental::set_end_deep_copy_callback;
   using ::Kokkos::Profiling::Experimental::set_end_parallel_for_callback;
   using ::Kokkos::Profiling::Experimental::set_end_parallel_reduce_callback;
   using ::Kokkos::Profiling::Experimental::set_end_parallel_scan_callback;
+  using ::Kokkos::Profiling::Experimental::set_end_single_callback;
   using ::Kokkos::Profiling::Experimental::set_finalize_callback;
   using ::Kokkos::Profiling::Experimental::set_pop_region_callback;
   using ::Kokkos::Profiling::Experimental::set_profile_event_callback;
@@ -787,6 +793,7 @@ export {
   using ::Kokkos::Tools::Experimental::set_begin_parallel_for_callback;
   using ::Kokkos::Tools::Experimental::set_begin_parallel_reduce_callback;
   using ::Kokkos::Tools::Experimental::set_begin_parallel_scan_callback;
+  using ::Kokkos::Tools::Experimental::set_begin_single_callback;
   using ::Kokkos::Tools::Experimental::set_callbacks;
   using ::Kokkos::Tools::Experimental::set_create_profile_section_callback;
   using ::Kokkos::Tools::Experimental::set_deallocate_data_callback;
@@ -803,6 +810,7 @@ export {
   using ::Kokkos::Tools::Experimental::set_end_parallel_for_callback;
   using ::Kokkos::Tools::Experimental::set_end_parallel_reduce_callback;
   using ::Kokkos::Tools::Experimental::set_end_parallel_scan_callback;
+  using ::Kokkos::Tools::Experimental::set_end_single_callback;
   using ::Kokkos::Tools::Experimental::set_finalize_callback;
   using ::Kokkos::Tools::Experimental::set_init_callback;
   using ::Kokkos::Tools::Experimental::set_parse_args_callback;
@@ -896,6 +904,7 @@ export {
   using ::Kokkos::dextents;
   using ::Kokkos::dims;
   using ::Kokkos::dynamic_extent;
+  using ::Kokkos::extent_slice;
   using ::Kokkos::extents;
   using ::Kokkos::full_extent;
   using ::Kokkos::full_extent_t;
@@ -907,9 +916,9 @@ export {
   using ::Kokkos::mdspan;
   using ::Kokkos::mdspan_non_standard;
   using ::Kokkos::mdspan_non_standard_tag;
-  using ::Kokkos::strided_slice;
+  using ::Kokkos::range_slice;
+  using ::Kokkos::subextents;
   using ::Kokkos::submdspan;
-  using ::Kokkos::submdspan_extents;
   using ::Kokkos::submdspan_mapping_result;
 
   // UniqueToken

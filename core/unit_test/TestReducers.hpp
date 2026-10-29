@@ -409,7 +409,7 @@ struct TestReducers {
   // than 32.
   template <int N>
   static void test_launch_bounds() {
-    Kokkos::View<Scalar*> v("", N);
+    Kokkos::View<Scalar*, ExecSpace> v("", N);
     Kokkos::deep_copy(v, Scalar(2));
 
     // Functor
@@ -418,13 +418,14 @@ struct TestReducers {
 
     // This first reduction is necessary to ensure we trigger the bug #8443
     Scalar ret;
-    Kokkos::parallel_reduce(Kokkos::RangePolicy(0, 1), suml,
+    Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecSpace>(0, 1), suml,
                             Kokkos::Sum<Scalar>(ret));
     EXPECT_EQ(ret, 2) << "N=" << N;
 
     // Test that LaunchBounds<N> works with Sum
-    Kokkos::parallel_reduce(Kokkos::RangePolicy<Kokkos::LaunchBounds<N>>(0, N),
-                            suml, Kokkos::Sum<Scalar>(ret));
+    Kokkos::parallel_reduce(
+        Kokkos::RangePolicy<ExecSpace, Kokkos::LaunchBounds<N>>(0, N), suml,
+        Kokkos::Sum<Scalar>(ret));
     EXPECT_EQ(ret, 2 * N) << "N=" << N;
 
     // This test can't be run on int32 with N>= 31 because of overflow
@@ -432,7 +433,7 @@ struct TestReducers {
                   N < 31) {
       // Test that LaunchBounds<N> works with Prod
       Kokkos::parallel_reduce(
-          Kokkos::RangePolicy<Kokkos::LaunchBounds<N>>(0, N), prodl,
+          Kokkos::RangePolicy<ExecSpace, Kokkos::LaunchBounds<N>>(0, N), prodl,
           Kokkos::Prod<Scalar>(ret));
 
       Scalar expected = Scalar(1ull << N);
@@ -558,6 +559,25 @@ struct TestReducers {
       Kokkos::deep_copy(sum_view_scalar, sum_view);
       ASSERT_EQ(sum_view_scalar, reference_sum) << "N: " << N;
     }
+
+#ifdef KOKKOS_HAS_SHARED_SPACE
+    {
+      Kokkos::View<Scalar, Kokkos::SharedSpace> sum_view("View");
+      sum_view() = Scalar(1);
+      Kokkos::Sum<Scalar, Kokkos::SharedSpace> reducer_view(sum_view);
+      Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecSpace>(0, 0), f,
+                              reducer_view);
+      Kokkos::fence();
+      Scalar sum_view_scalar = sum_view();
+      ASSERT_EQ(sum_view_scalar, init) << "N: " << N;
+
+      Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecSpace>(0, N), f,
+                              reducer_view);
+      Kokkos::fence();
+      sum_view_scalar = sum_view();
+      ASSERT_EQ(sum_view_scalar, reference_sum) << "N: " << N;
+    }
+#endif
   }
 
   static void test_prod(int N) {
