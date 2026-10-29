@@ -8,7 +8,7 @@
 #include <TestSIMD_ShiftOps.hpp>
 #include <TestSIMD_BitwiseOps.hpp>
 #include <TestSIMD_ComparisonOps.hpp>
-#include <TestSIMD_Condition.hpp>
+#include <TestSIMD_Select.hpp>
 #include <TestSIMD_GeneratorCtors.hpp>
 #include <TestSIMD_Reductions.hpp>
 #include <TestSIMD_Construction.hpp>

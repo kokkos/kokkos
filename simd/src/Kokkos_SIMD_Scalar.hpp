@@ -135,6 +135,14 @@ class basic_simd_mask<T, simd_abi::scalar> {
       basic_simd_mask const& lhs, basic_simd_mask const& rhs) noexcept {
     return basic_simd_mask(static_cast<bool>(lhs) < static_cast<bool>(rhs));
   }
+  KOKKOS_FORCEINLINE_FUNCTION
+  friend constexpr basic_simd_mask simd_select_impl(
+      basic_simd_mask const& mask, basic_simd_mask const& a,
+      basic_simd_mask const& b) noexcept {
+    return basic_simd_mask(static_cast<value_type>(mask)
+                               ? static_cast<value_type>(a)
+                               : static_cast<value_type>(b));
+  }
 };
 
 template <class T>
@@ -331,6 +339,13 @@ class basic_simd<T, simd_abi::scalar> {
   KOKKOS_FORCEINLINE_FUNCTION friend constexpr mask_type operator<(
       basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return mask_type(lhs.m_value < rhs.m_value);
+  }
+  KOKKOS_FORCEINLINE_FUNCTION
+  friend constexpr basic_simd simd_select_impl(mask_type const& mask,
+                                               basic_simd const& a,
+                                               basic_simd const& b) noexcept {
+    return basic_simd(static_cast<bool>(mask) ? static_cast<T>(a)
+                                              : static_cast<T>(b));
   }
 };
 
@@ -556,7 +571,9 @@ KOKKOS_FORCEINLINE_FUNCTION constexpr void partial_scatter_to(
   unchecked_scatter_to<V>(v, out, mask, indices);
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
 template <class T>
+KOKKOS_DEPRECATED_WITH_COMMENT("Use select instead.")
 KOKKOS_FORCEINLINE_FUNCTION constexpr basic_simd<T, simd_abi::scalar> condition(
     std::type_identity_t<basic_simd_mask<T, simd_abi::scalar>> const& a,
     basic_simd<T, simd_abi::scalar> const& b,
@@ -564,6 +581,7 @@ KOKKOS_FORCEINLINE_FUNCTION constexpr basic_simd<T, simd_abi::scalar> condition(
   return basic_simd<T, simd_abi::scalar>(
       static_cast<bool>(a) ? static_cast<T>(b) : static_cast<T>(c));
 }
+#endif
 
 template <class T, class BinaryOperation = std::plus<>>
   requires requires(T x, BinaryOperation op) { op(x, x); }
