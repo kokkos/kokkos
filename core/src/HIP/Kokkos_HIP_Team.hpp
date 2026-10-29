@@ -833,11 +833,13 @@ parallel_scan(const Impl::ThreadVectorRangeBoundariesStruct<
   //     ( end % blockDim.x ) == ( end & ( blockDim.x - 1 ) )
   //   1 <= blockDim.x <= HIPTraits::WarpSize
 
-  const int mask = blockDim.x - 1;
-  const int rem  = loop_boundaries.end & mask;  // == end % blockDim.x
-  const int end  = loop_boundaries.end + (rem ? blockDim.x - rem : 0);
+  const int mask  = blockDim.x - 1;
+  const iType rem = (loop_boundaries.end - loop_boundaries.start) &
+                    mask;  // == (end - start) % blockDim.x
+  const iType end = loop_boundaries.end + (rem ? blockDim.x - rem : 0);
 
-  for (int i = threadIdx.x; i < end; i += blockDim.x) {
+  for (iType i = loop_boundaries.start + threadIdx.x; i < end;
+       i += blockDim.x) {
     value_type val = identity;
 
     // First acquire per-lane contributions.
