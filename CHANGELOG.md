@@ -5,8 +5,10 @@
 [Full Changelog](https://github.com/kokkos/kokkos/compare/5.2.2...5.3.0)
 
 ### Features:
+* NextSilicon backend (close to feature complete)
 * Introduce `DefaultMemorySpace` and `DefaultHostMemorySpace` type aliases [\#9560](https://github.com/kokkos/kokkos/pull/9560).
 * Introduce a new top level parallel construct: `single`. It allow users to execute non-parallel code on device, potentially returning a value [\#8123](https://github.com/kokkos/kokkos/pull/8123)
+* Add `ThreadHandle` concept and use of `RangePolicy` for `ThreadVectorRange` (limited to `parallel_for` for now [\#8953](https://github.com/kokkos/kokkos/pull/8953)
 
 ### Backend and Architecture Enhancements:
 
@@ -28,8 +30,6 @@
 #### OpenACC:
 
 #### NextSilicon:
-* Defer use of NextAPI until after `Kokkos::initialize` to prevent errors during `MPI_Init` [\#9358](https://github.com/kokkos/kokkos/pull/9358)
-* Team-level parallelism (TeamPolicy) [\#9594](https://github.com/kokkos/kokkos/pull/9594)
 
 #### HPX:
 * Reorder destruction of default instance on `Kokkos::finalize` to prevent memory leaks [\#9443](https://github.com/kokkos/kokkos/pull/9443)
@@ -58,16 +58,21 @@
 * Add Kokkos::Experimental::Graph to modules [\#9673](https://github.com/kokkos/kokkos/pull/9673)
 * Avoid `TypeInfo` instantiation when label passed to `parallel_for`, `parallel_reduce` and `parallel_scan` [\#9653](https://github.com/kokkos/kokkos/pull/9653)
 * Check if flat extent of iteration space fits in `MDRangePolicy::index_type` [\#9650](https://github.com/kokkos/kokkos/pull/9650)
-*Add fallback for `Kokkos::sort` on non-arithmetic data [\#9539](https://github.com/kokkos/kokkos/pull/9539)
+* Add fallback for `Kokkos::sort` on non-arithmetic data [\#9539](https://github.com/kokkos/kokkos/pull/9539)
+* Removal of legacy View implementation [\#9391](https://github.com/kokkos/kokkos/pull/9391)
+* Align `View::size_type` with `mdspan` specification [\#9614](https://github.com/kokkos/kokkos/pull/9614)
+* Support `mdspan`-style template arguments for `DualView` [\#9638](https://github.com/kokkos/kokkos/pull/9638)
 
 ### Build System Changes
 * Update bundled GoogleTest version to 1.14.0 and use FetchContent to build it [\#8593](https://github.com/kokkos/kokkos/pull/8593)
+* Incorporate `mdspan` released based deployment aligned with Kokkos's Ecosystem releases
 
 ### Incompatibilities (i.e. breaking changes)
 * Require Google Benchmark 1.9.5 when building with `Kokkos_ENABLE_BENCHMARKS=ON` [\#9562](https://github.com/kokkos/kokkos/pull/9562)
 * Drop workaround for invalid use of View of Views that causes program hang on destruction [\#9612](https://github.com/kokkos/kokkos/pull/9612)
 * Relax semantics of atomic floating-point min/max [\#9606](https://github.com/kokkos/kokkos/pull/9606)
 *  Default label from `TypeInfo` no longer provided when empty string is passed as label to `parallel_for`, `parallel_reduce`, and `parallel_scan` [\#9653](https://github.com/kokkos/kokkos/pull/9653)
+* Remove `View::specialize` trait that was tied to legacy `View` [\#9478](https://github.com/kokkos/kokkos/pull/9478)
 
 ### Deprecations
 * Final removal of code guarded by `KOKKOS_ENABLE_DEPRECATED_CODE_4` [\#9386](https://github.com/kokkos/kokkos/pull/9386)
