@@ -14,6 +14,7 @@ static_assert(false,
 
 #include <impl/Kokkos_Volatile_Load.hpp>
 
+#include <atomic>
 #include <type_traits>
 
 namespace Kokkos {
@@ -124,6 +125,28 @@ template <class T, class MemoryOrder>
 KOKKOS_FUNCTION void atomic_store(T* const src, const T val,
                                   MemoryOrder order) {
   return desul::atomic_store(src, val, order, KOKKOS_DESUL_MEM_SCOPE);
+}
+
+// Host-only compare-exchange for code that never runs on the device.
+// Kokkos::atomic_compare_exchange is a host-device function, so calling it also
+// instantiates its device version when compiling for a device. For types that
+// are not lock-free on the device, that version requires the desul device lock
+// arrays. When available, std::atomic_ref avoids instantiating any device code.
+template <class T>
+T host_atomic_compare_exchange(T* dest, std::type_identity_t<T> expected,
+                               std::type_identity_t<T> desired) {
+  static_assert(
+      !std::is_const_v<T> && !std::is_volatile_v<T>,
+      "host_atomic_compare_exchange requires a non-cv-qualified type");
+#ifdef __cpp_lib_atomic_ref
+  std::atomic_ref<T>(*dest).compare_exchange_strong(expected, desired,
+                                                    std::memory_order_relaxed);
+  return expected;
+#else
+  return desul::atomic_compare_exchange(dest, expected, desired,
+                                        desul::MemoryOrderRelaxed(),
+                                        KOKKOS_DESUL_MEM_SCOPE);
+#endif
 }
 
 }  // namespace Kokkos::Impl

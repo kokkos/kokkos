@@ -184,7 +184,7 @@ int HostThreadTeamData::get_work_stealing() noexcept {
 
       const pair_int_t w_new(w.first + 1, w.second);
 
-      w = Kokkos::atomic_compare_exchange(&m_work_range, w, w_new);
+      w = host_atomic_compare_exchange(&m_work_range, w, w_new);
 
       if (w.first < w.second) {
         // m_work_range is viable
@@ -207,7 +207,7 @@ int HostThreadTeamData::get_work_stealing() noexcept {
 
       // Attempt from beginning failed, try to steal from end of neighbor
 
-      pair_int_t volatile *steal_range = &(pool[m_steal_rank]->m_work_range);
+      pair_int_t *steal_range = &(pool[m_steal_rank]->m_work_range);
 
       for (int attempt = true; attempt;) {
         // Query and attempt to update steal_work_range
@@ -218,7 +218,7 @@ int HostThreadTeamData::get_work_stealing() noexcept {
 
         const pair_int_t w_new(w.first, w.second - 1);
 
-        w = Kokkos::atomic_compare_exchange(steal_range, w, w_new);
+        w = host_atomic_compare_exchange(steal_range, w, w_new);
 
         if (w.first < w.second) {
           // steal_work_range is viable

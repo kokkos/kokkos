@@ -64,7 +64,7 @@ class HostThreadTeamData {
 
   using pair_int_t = Kokkos::pair<int64_t, int64_t>;
 
-  pair_int_t m_work_range;
+  alignas(16) pair_int_t m_work_range;
   int64_t m_work_end;
   int64_t* m_scratch;       // per-thread buffer
   int64_t* m_pool_scratch;  // == pool[0]->m_scratch

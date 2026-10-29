@@ -411,7 +411,7 @@ class ThreadsInternal {
 
     bool success = false;
     while (!success) {
-      work_range_new = Kokkos::atomic_compare_exchange(
+      work_range_new = host_atomic_compare_exchange(
           &m_work_range, work_range_old, work_range_new);
       success        = ((work_range_new == work_range_old) ||
                  (work_range_new.first >= work_range_new.second));
@@ -432,7 +432,7 @@ class ThreadsInternal {
     work_range_new.second -= 1;
     bool success = false;
     while (!success) {
-      work_range_new = Kokkos::atomic_compare_exchange(
+      work_range_new = host_atomic_compare_exchange(
           &m_work_range, work_range_old, work_range_new);
       success        = ((work_range_new == work_range_old) ||
                  (work_range_new.first >= work_range_new.second));
