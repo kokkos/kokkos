@@ -882,10 +882,12 @@ parallel_scan(const Impl::ThreadVectorRangeBoundariesStruct<
               ? 0xffffffff
               : ((1 << blockDim.x) - 1)
                     << (threadIdx.y % (32 / blockDim.x)) * blockDim.x;
-      const int rem = loop_boundaries.end & mask;  // == end % blockDim.x
-      const int end = loop_boundaries.end + (rem ? blockDim.x - rem : 0);
+      const iType rem = (loop_boundaries.end - loop_boundaries.start) &
+                        mask;  // == (end - start) % blockDim.x
+      const iType end = loop_boundaries.end + (rem ? blockDim.x - rem : 0);
 
-      for (int i = threadIdx.x; i < end; i += blockDim.x) {
+      for (iType i = loop_boundaries.start + threadIdx.x; i < end;
+           i += blockDim.x) {
         value_type val = identity;
 
         // First acquire per-lane contributions.

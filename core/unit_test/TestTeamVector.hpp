@@ -598,6 +598,41 @@ struct functor_vec_scan {
   }
 };
 
+template <typename Scalar, class ExecutionSpace>
+struct functor_vec_scan_begin_end {
+  using policy_type     = Kokkos::TeamPolicy<ExecutionSpace>;
+  using execution_space = ExecutionSpace;
+
+  Kokkos::View<int, Kokkos::LayoutLeft, ExecutionSpace> flag;
+  functor_vec_scan_begin_end(
+      Kokkos::View<int, Kokkos::LayoutLeft, ExecutionSpace> flag_)
+      : flag(flag_) {}
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(typename policy_type::member_type team) const {
+    Kokkos::parallel_scan(Kokkos::ThreadVectorRange(team, 4, 13),
+                          [&](int i, Scalar &val, bool final) {
+                            val += i;
+
+                            if (final) {
+                              Scalar test = 0;
+                              for (int k = 4; k <= i; k++) test += k;
+
+                              if (test != val) {
+                                Kokkos::printf(
+                                    "FAILED vector_par_scan_begin_end %i %i "
+                                    "%lf %lf\n",
+                                    team.league_rank(), team.team_rank(),
+                                    static_cast<double>(test),
+                                    static_cast<double>(val));
+
+                                flag() = 1;
+                              }
+                            }
+                          });
+  }
+};
+
 // Temporary: This condition will progressively be reduced when parallel_scan
 // with return value will be implemented for more backends.
 #if !defined(KOKKOS_ENABLE_OPENACC)
@@ -746,6 +781,12 @@ bool test_scalar(int nteams, int team_size, int test) {
     Kokkos::parallel_for(
         Kokkos::TeamPolicy<ExecutionSpace>(nteams, team_size, 8),
         functor_vec_scan_ret_val<Scalar, ExecutionSpace>(d_flag, team_size));
+#endif
+  } else if (test == 13) {
+#if !defined(KOKKOS_ENABLE_OPENACC)
+    Kokkos::parallel_for(
+        Kokkos::TeamPolicy<ExecutionSpace>(nteams, team_size, 8),
+        functor_vec_scan_begin_end<Scalar, ExecutionSpace>(d_flag));
 #endif
   }
 
@@ -1036,6 +1077,7 @@ TEST(TEST_CATEGORY, team_vector) {
   ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(10)));
   ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(11)));
   ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(12)));
+  ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(13)));
 }
 
 TEST(TEST_CATEGORY, triple_nested_parallelism) {
