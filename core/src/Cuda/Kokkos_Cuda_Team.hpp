@@ -909,10 +909,12 @@ parallel_scan(const Impl::ThreadVectorRangeBoundariesStruct<
       const int mask = blockDim.x - 1;
       const unsigned active_mask =
           Impl::cuda_team_vector_mask(blockDim.x, threadIdx.y);
-      const int rem = loop_boundaries.end & mask;  // == end % blockDim.x
-      const int end = loop_boundaries.end + (rem ? blockDim.x - rem : 0);
+      const iType rem = (loop_boundaries.end - loop_boundaries.start) &
+                        mask;  // == (end - start) % blockDim.x
+      const iType end = loop_boundaries.end + (rem ? blockDim.x - rem : 0);
 
-      for (int i = threadIdx.x; i < end; i += blockDim.x) {
+      for (iType i = loop_boundaries.start + threadIdx.x; i < end;
+           i += blockDim.x) {
         value_type val = identity;
 
         // First acquire per-lane contributions.
