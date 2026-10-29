@@ -909,19 +909,17 @@ template <typename T>
 bool has_all_zero_bits(const T& value) {
   static_assert(std::is_trivially_copyable_v<T>);
 
-  if constexpr (std::is_scalar_v<T>) {
-    return value == T();
-  }
-
-  KOKKOS_IMPL_DISABLE_UNREACHABLE_WARNINGS_PUSH()
-  if constexpr (std::is_standard_layout_v<T> &&
-                std::has_unique_object_representations_v<T>) {
+  // memcmp is safe for standard-layout types with unique representation
+  if constexpr (std::is_floating_point_v<T> ||
+                (std::is_standard_layout_v<T> &&
+                 std::has_unique_object_representations_v<T>)) {
     constexpr std::byte all_zeroes[sizeof(T)] = {};
+    // The suppression below is for floating-point types
+    // NOLINTNEXTLINE(bugprone-suspicious-memory-comparison)
     return std::memcmp(&value, all_zeroes, sizeof(T)) == 0;
+  } else {
+    return false;
   }
-
-  return false;
-  KOKKOS_IMPL_DISABLE_UNREACHABLE_WARNINGS_POP()
 }
 
 template <typename ExecutionSpace, class DT, class... DP>
