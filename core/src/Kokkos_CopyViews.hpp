@@ -909,7 +909,8 @@ template <typename T>
 bool has_all_zero_bits(const T& value) {
   static_assert(std::is_trivially_copyable_v<T>);
 
-  if constexpr (std::is_arithmetic_v<T> || std::is_enum_v<T> ||
+  // memcmp is safe for standard-layout types with unique representation
+  if constexpr (std::is_floating_point_v<T> ||
                 (std::is_standard_layout_v<T> &&
                  std::has_unique_object_representations_v<T>)) {
     constexpr std::byte all_zeroes[sizeof(T)] = {};
