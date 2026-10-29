@@ -126,6 +126,25 @@ KOKKOS_FUNCTION void atomic_store(T* const src, const T val,
   return desul::atomic_store(src, val, order, KOKKOS_DESUL_MEM_SCOPE);
 }
 
+// Host-only compare-exchange for code that never runs on the device.
+// Kokkos::atomic_compare_exchange is a host-device function, so calling it also
+// instantiates its device version when compiling for a device. For types that
+// are not lock-free on the device, that version requires the desul device lock
+// arrays. This function only instantiates the host version.
+template <class T>
+std::remove_volatile_t<T> host_atomic_compare_exchange(
+    T* ptr, not_deduced_atomic_t<T> expected, not_deduced_atomic_t<T> desired) {
+#ifdef KOKKOS_ENABLE_ATOMICS_BYPASS
+  return desul::atomic_compare_exchange(
+      const_cast<std::remove_volatile_t<T>*>(ptr), expected, desired,
+      desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE);
+#else
+  return desul::Impl::host_atomic_compare_exchange(
+      const_cast<std::remove_volatile_t<T>*>(ptr), expected, desired,
+      desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE);
+#endif
+}
+
 }  // namespace Kokkos::Impl
 
 #undef KOKKOS_DESUL_MEM_SCOPE
