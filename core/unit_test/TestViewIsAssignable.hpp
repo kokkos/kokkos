@@ -121,6 +121,24 @@ TEST(TEST_CATEGORY, view_is_assignable) {
                           View<int*, left, d_exec>>::test(expected, expected,
                                                           10);
 
+  // not covered by default host and device space pairings
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
+    defined(KOKKOS_ENABLE_SYCL)
+  Impl::TestAssignability<View<int*, left, HostSpace>,
+                          View<int*, left, SharedHostPinnedSpace>>::test(true,
+                                                                         true,
+                                                                         10);
+  Impl::TestAssignability<View<int*, left, HostSpace, MemoryRandomAccess>,
+                          View<int*, left, SharedHostPinnedSpace>>::test(true,
+                                                                         true,
+                                                                         10);
+  Impl::TestAssignability<View<int*, left, DefaultMemorySpace>,
+                          View<int*, left, SharedSpace>>::test(true, true, 10);
+  Impl::TestAssignability<
+      View<int*, left, DefaultMemorySpace, MemoryRandomAccess>,
+      View<int*, left, SharedSpace>>::test(true, true, 10);
+#endif
+
   // reference type and const-qualified types
   using SomeViewType = View<int*, left, d_exec>;
   static_assert(is_always_assignable_v<SomeViewType, SomeViewType>);
