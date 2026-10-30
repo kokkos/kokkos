@@ -21,6 +21,11 @@
 namespace Kokkos {
 namespace Impl {
 
+template <typename iType, class Closure, class Member = void>
+concept is_invocable_functor =
+    std::is_invocable_v<Closure, iType> ||
+    std::is_invocable_v<Closure, Impl::ThreadHandleType<Member> const&, iType>;
+
 template <class F, class WTag, class ref_type>
 concept has_init_tag_function = requires(const F f) {
   { f.init(WTag{}, std::declval<ref_type>()) } -> std::same_as<void>;
