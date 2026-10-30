@@ -13,6 +13,8 @@ import kokkos.simd_impl;
 #endif
 #include <SIMDTesting_Utilities.hpp>
 
+namespace {
+
 template <typename Abi, typename Loader, typename ShiftOp, typename DataType>
 inline void host_check_shift_on_one_loader(
     ShiftOp shift_op, DataType test_vals[], DataType shift_by[],
@@ -287,18 +289,19 @@ KOKKOS_INLINE_FUNCTION void device_check_shift_ops_all_abis(
 class simd_device_shift_ops_functor {
  public:
   KOKKOS_INLINE_FUNCTION void operator()(int) const {
-    device_check_shift_ops_all_abis(
-        Kokkos::Experimental::Impl::device_abi_set());
+    device_check_shift_ops_all_abis(test_device_abi_set());
   }
 };
 
-TEST(simd, host_shift_ops) {
-  host_check_shift_ops_all_abis(Kokkos::Experimental::Impl::host_abi_set());
+TEST(KOKKOS_SIMD_TEST_SUITE, host_shift_ops) {
+  host_check_shift_ops_all_abis(test_host_abi_set());
 }
 
-TEST(simd, device_shift_ops) {
+KOKKOS_SIMD_DEVICE_TEST(KOKKOS_SIMD_TEST_SUITE, device_shift_ops) {
   Kokkos::parallel_for(1, simd_device_shift_ops_functor());
   Kokkos::fence();
 }
+
+}  // namespace
 
 #endif

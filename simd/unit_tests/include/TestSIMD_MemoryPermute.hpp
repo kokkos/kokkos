@@ -13,6 +13,8 @@ import kokkos.simd_impl;
 #endif
 #include <SIMDTesting_Utilities.hpp>
 
+namespace {
+
 template <typename T>
 using simd_index_type =
     std::conditional_t<(sizeof(T) == 8), std::int64_t, std::int32_t>;
@@ -426,19 +428,19 @@ KOKKOS_INLINE_FUNCTION void device_check_memory_permute_all_abis(
 class simd_device_memory_permute_functor {
  public:
   KOKKOS_INLINE_FUNCTION void operator()(int) const {
-    device_check_memory_permute_all_abis(
-        Kokkos::Experimental::Impl::device_abi_set{});
+    device_check_memory_permute_all_abis(test_device_abi_set{});
   }
 };
 
-TEST(simd, host_memory_permute) {
-  host_check_memory_permute_all_abis(
-      Kokkos::Experimental::Impl::host_abi_set{});
+TEST(KOKKOS_SIMD_TEST_SUITE, host_memory_permute) {
+  host_check_memory_permute_all_abis(test_host_abi_set{});
 }
 
-TEST(simd, device_memory_permute) {
+KOKKOS_SIMD_DEVICE_TEST(KOKKOS_SIMD_TEST_SUITE, device_memory_permute) {
   Kokkos::parallel_for(1, simd_device_memory_permute_functor{});
   Kokkos::fence();
 }
+
+}  // namespace
 
 #endif
