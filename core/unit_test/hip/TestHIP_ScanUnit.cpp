@@ -55,9 +55,10 @@ void test_intra_block_scan() {
 template <int N>
 __global__ void start_scalar_intra_block_reduction_test(int* out)
     __attribute__((amdgpu_flat_work_group_size(1, 1024))) {
-  constexpr int warp_size = Kokkos::Impl::HIPTraits::WarpSize;
-  static_assert((N % warp_size) == 0);
-  static_assert((N / warp_size) != warp_size);
+  const int warp_size = Kokkos::Impl::HIPTraits::WarpSize();
+  if ((N % warp_size) != 0 || (N / warp_size) == warp_size) {
+    Kokkos::abort("Invalid test configuration for HIP warp size");
+  }
 
   __shared__ int values[N];
   const int i = threadIdx.y * blockDim.x + threadIdx.x;
