@@ -11,6 +11,7 @@ SPDX-License-Identifier: (BSD-3-Clause)
 
 #include <cinttypes>
 #include <desul/atomics/Lock_Array_SYCL.hpp>
+#include <vector>
 
 namespace desul::Impl {
 
@@ -24,6 +25,31 @@ sycl_device_global<int32_t*> SYCL_SPACE_ATOMIC_LOCKS_NODE;
 int32_t* SYCL_SPACE_ATOMIC_LOCKS_DEVICE_h = nullptr;
 int32_t* SYCL_SPACE_ATOMIC_LOCKS_NODE_h = nullptr;
 
+#ifndef DESUL_ATOMICS_ENABLE_SYCL_SEPARABLE_COMPILATION
+namespace {
+// Function-local statics so that registration from other translation units'
+// static initializers works regardless of static initialization order.
+std::vector<void (*)(sycl::queue)>& sycl_lock_arrays_copiers() {
+  static std::vector<void (*)(sycl::queue)> copiers;
+  return copiers;
+}
+}  // namespace
+
+void register_sycl_lock_arrays_copier(void (*copier)(sycl::queue)) {
+  sycl_lock_arrays_copiers().push_back(copier);
+}
+#endif
+
+namespace {
+void copy_all_sycl_lock_arrays_to_device(sycl::queue q) {
+#ifdef DESUL_ATOMICS_ENABLE_SYCL_SEPARABLE_COMPILATION
+  copy_sycl_lock_arrays_to_device(q);
+#else
+  for (auto copier : sycl_lock_arrays_copiers()) copier(q);
+#endif
+}
+}  // namespace
+
 template <>
 void init_lock_arrays_sycl<int>(sycl::queue q) {
   if (SYCL_SPACE_ATOMIC_LOCKS_DEVICE_h != nullptr) return;
@@ -33,7 +59,7 @@ void init_lock_arrays_sycl<int>(sycl::queue q) {
   SYCL_SPACE_ATOMIC_LOCKS_NODE_h =
       sycl::malloc_host<int32_t>(SYCL_SPACE_ATOMIC_MASK + 1, q);
 
-  copy_sycl_lock_arrays_to_device(q);
+  copy_all_sycl_lock_arrays_to_device(q);
 
   q.memset(SYCL_SPACE_ATOMIC_LOCKS_DEVICE_h,
            0,
@@ -53,9 +79,6 @@ void finalize_lock_arrays_sycl<int>(sycl::queue q) {
   sycl::free(SYCL_SPACE_ATOMIC_LOCKS_NODE_h, q);
   SYCL_SPACE_ATOMIC_LOCKS_DEVICE_h = nullptr;
   SYCL_SPACE_ATOMIC_LOCKS_NODE_h = nullptr;
-#ifdef DESUL_ATOMICS_ENABLE_SYCL_SEPARABLE_COMPILATION
-  copy_sycl_lock_arrays_to_device(q);
-#endif
 }
 
 }  // namespace desul::Impl

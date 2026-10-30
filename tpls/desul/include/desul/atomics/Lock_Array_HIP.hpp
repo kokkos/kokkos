@@ -65,11 +65,15 @@ void finalize_lock_arrays_hip();
  */
 #ifdef DESUL_ATOMICS_ENABLE_HIP_SEPARABLE_COMPILATION
 extern
+#else
+static
 #endif
     __device__ __constant__ int32_t* HIP_SPACE_ATOMIC_LOCKS_DEVICE;
 
 #ifdef DESUL_ATOMICS_ENABLE_HIP_SEPARABLE_COMPILATION
 extern
+#else
+static
 #endif
     __device__ __constant__ int32_t* HIP_SPACE_ATOMIC_LOCKS_NODE;
 
@@ -133,6 +137,34 @@ inline static
   }();
   (void)once;
 }
+
+#ifndef DESUL_ATOMICS_ENABLE_HIP_SEPARABLE_COMPILATION
+/// \brief Each translation unit registers a function that copies the host lock
+///        array pointers into its own (static) device symbols.
+///
+/// init_lock_arrays_hip() invokes all registered copiers, so every translation
+/// unit's instance is valid regardless of which translation unit launches the
+/// kernel.  This matters when user code is compiled with relocatable device code
+/// while desul is not: a __device__ function using a lock-based atomic may be
+/// defined in a translation unit that never launches a kernel itself.
+///
+/// Translation units must be registered before init_lock_arrays_hip() is
+/// called and must not be unloaded before finalization, i.e. loading shared
+/// libraries (dlopen) after initialization or unloading them (dlclose) before
+/// finalization is not supported.  The copiers are not invoked again by
+/// finalize, since initializing again after finalization is not supported
+/// either.
+DESUL_IMPL_EXPORT void register_hip_lock_arrays_copier(void (*copier)());
+
+namespace {
+struct HipLockArraysCopierRegistrar {
+  HipLockArraysCopierRegistrar() {
+    register_hip_lock_arrays_copier(&copy_hip_lock_arrays_to_device);
+  }
+};
+HipLockArraysCopierRegistrar hip_lock_arrays_copier_registrar;
+}  // namespace
+#endif
 }  // namespace Impl
 
 #ifdef DESUL_ATOMICS_ENABLE_HIP_SEPARABLE_COMPILATION
