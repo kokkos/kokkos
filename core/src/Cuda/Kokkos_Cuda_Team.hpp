@@ -540,6 +540,8 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
  *  The range [0..N) is mapped to all threads of the
  *  calling thread team and a summation of val is
  *  performed and put into result.
+ *  If the closure accepts (thread_handle, iType, ValueType&), the thread
+ *  handle is passed so the body can use the vector lanes.
  */
 template <typename iType, class Closure, class ReducerType>
 KOKKOS_INLINE_FUNCTION std::enable_if_t<Kokkos::is_reducer<ReducerType>::value>
@@ -553,12 +555,27 @@ parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
            TeamPolicy<typename Impl::CudaTeamMember::execution_space>,
            ReducerType, value_type>;
        using wrapped_reducer_type = typename functor_analysis_type::Reducer;
+       using thread_handle_t = Impl::ThreadHandleType<Impl::CudaTeamMember>;
 
        wrapped_reducer_type wrapped_reducer(reducer); value_type value;
        wrapped_reducer.init(&value);
 
        for (iType i = loop_boundaries.start + threadIdx.y;
-            i < loop_boundaries.end; i += blockDim.y) { closure(i, value); }
+            i < loop_boundaries.end; i += blockDim.y) {
+         if constexpr (std::is_invocable_v<Closure, iType, value_type&>) {
+           closure(i, value);
+         } else if constexpr (std::is_invocable_v<Closure,
+                                                  thread_handle_t const&, iType,
+                                                  value_type&>) {
+           closure(thread_handle_t(loop_boundaries.member), i, value);
+         } else {
+           static_assert(
+               Kokkos::Impl::always_false<Closure>::value,
+               "Kokkos::parallel_reduce(TeamThreadRange) closure must be "
+               "invocable with (iType, ValueType&) or "
+               "(ThreadHandleType, iType, ValueType&)");
+         }
+       }
 
        loop_boundaries.member.impl_team_reduce(wrapped_reducer, value);
        wrapped_reducer.final(&value); reducer.reference() = value;))
@@ -576,6 +593,8 @@ parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
  *  The range [0..N) is mapped to all threads of the
  *  calling thread team and a summation of val is
  *  performed and put into result.
+ *  If the closure accepts (thread_handle, iType, ValueType&), the thread
+ *  handle is passed so the body can use the vector lanes.
  */
 template <typename iType, class Closure, typename ValueType>
 KOKKOS_INLINE_FUNCTION std::enable_if_t<!Kokkos::is_reducer<ValueType>::value>
@@ -593,12 +612,27 @@ parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
            ValueType>;
        using wrapped_reducer_type = typename functor_analysis_type::Reducer;
        using value_type           = typename wrapped_reducer_type::value_type;
+       using thread_handle_t = Impl::ThreadHandleType<Impl::CudaTeamMember>;
 
        wrapped_reducer_type wrapped_reducer(closure); value_type value{};
        wrapped_reducer.init(&value);
 
        for (iType i = loop_boundaries.start + threadIdx.y;
-            i < loop_boundaries.end; i += blockDim.y) { closure(i, value); }
+            i < loop_boundaries.end; i += blockDim.y) {
+         if constexpr (std::is_invocable_v<Closure, iType, value_type&>) {
+           closure(i, value);
+         } else if constexpr (std::is_invocable_v<Closure,
+                                                  thread_handle_t const&, iType,
+                                                  value_type&>) {
+           closure(thread_handle_t(loop_boundaries.member), i, value);
+         } else {
+           static_assert(
+               Kokkos::Impl::always_false<Closure>::value,
+               "Kokkos::parallel_reduce(TeamThreadRange) closure must be "
+               "invocable with (iType, ValueType&) or "
+               "(ThreadHandleType, iType, ValueType&)");
+         }
+       }
 
        loop_boundaries.member.impl_team_reduce(wrapped_reducer, value);
        wrapped_reducer.final(&value); result = value;
