@@ -720,6 +720,27 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
 #endif
 }
 
+/** \brief  Serial parallel_for nested under a thread handle.
+ *
+ *  Executes closure(iType i) for each i in [start, end) on vector lane 0.
+ */
+template <typename iType, class Closure>
+KOKKOS_INLINE_FUNCTION void parallel_for(
+    const Impl::InlineRangeBoundariesStruct<iType, Impl::HIPTeamMember>&
+        loop_boundaries,
+    const Closure& closure) {
+#ifdef __HIP_DEVICE_COMPILE__
+  if (threadIdx.x == 0) {
+    for (iType i = loop_boundaries.start; i < loop_boundaries.end; ++i) {
+      closure(i);
+    }
+  }
+#else
+  (void)loop_boundaries;
+  (void)closure;
+#endif
+}
+
 //----------------------------------------------------------------------------
 
 /** \brief  Intra-thread vector parallel_reduce.

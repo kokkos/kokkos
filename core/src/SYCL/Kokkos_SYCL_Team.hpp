@@ -760,6 +760,26 @@ void parallel_for(const Impl::ThreadVectorRangeBoundariesStruct<
   sycl::group_barrier(loop_boundaries.member.item().get_sub_group());
 }
 
+/** \brief  Serial parallel_for nested under a thread handle.
+ *
+ *  Executes closure(iType i) for each i in [start, end) on vector lane 0.
+ *  Every lane must reach the subgroup barrier, as in ThreadVectorRange.
+ */
+template <typename iType, class Closure>
+void parallel_for(const Impl::InlineRangeBoundariesStruct<
+                      iType, Impl::SYCLTeamMember>& loop_boundaries,
+                  const Closure& closure) {
+  const iType tidx1 = loop_boundaries.member.item().get_local_id(1);
+
+  if (tidx1 == 0) {
+    for (iType i = loop_boundaries.start; i < loop_boundaries.end; ++i) {
+      closure(i);
+    }
+  }
+
+  sycl::group_barrier(loop_boundaries.member.item().get_sub_group());
+}
+
 //----------------------------------------------------------------------------
 
 /** \brief  Intra-thread vector parallel_reduce.

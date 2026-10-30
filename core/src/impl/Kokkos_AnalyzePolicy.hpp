@@ -13,6 +13,7 @@
 #include <traits/Kokkos_ExecutionSpaceTrait.hpp>
 #include <traits/Kokkos_TeamHandleTrait.hpp>
 #include <traits/Kokkos_ThreadHandleTrait.hpp>
+#include <traits/Kokkos_InlineHandleTrait.hpp>
 #include <traits/Kokkos_GraphKernelTrait.hpp>
 #include <traits/Kokkos_IndexTypeTrait.hpp>
 #include <traits/Kokkos_IterationPatternTrait.hpp>
@@ -172,14 +173,22 @@ struct DefaultExecutionSpaceSelector<T> {
   using type = typename T::execution_space;
 };
 
+template <Kokkos::Experimental::InlineHandle T>
+struct DefaultExecutionSpaceSelector<T> {
+  using type = typename T::execution_space;
+};
+
 // Helper to get the primary handle type for execution space/type deduction
 template <class AnalysisResults>
 struct HandleSelector {
   using type = std::conditional_t<
-      !AnalysisResults::thread_handle_is_not_set,
-      typename AnalysisResults::thread_handle,
-      std::conditional_t<!AnalysisResults::team_handle_is_not_set,
-                         typename AnalysisResults::team_handle, void>>;
+      !AnalysisResults::inline_handle_is_not_set,
+      typename AnalysisResults::inline_handle,
+      std::conditional_t<
+          !AnalysisResults::thread_handle_is_not_set,
+          typename AnalysisResults::thread_handle,
+          std::conditional_t<!AnalysisResults::team_handle_is_not_set,
+                             typename AnalysisResults::team_handle, void>>>;
 };
 
 //------------------------------------------------------------------------------
@@ -191,14 +200,14 @@ struct ExecPolicyTraitsWithDefaults : AnalysisResults {
 
   using handle = typename HandleSelector<base_t>::type;
 
-  // At most one of ExecSpace, TeamHandle, or ThreadHandle may be specified
-  static_assert(
-      (base_t::execution_space_is_not_set || base_t::team_handle_is_not_set) &&
-          (base_t::execution_space_is_not_set ||
-           base_t::thread_handle_is_not_set) &&
-          (base_t::team_handle_is_not_set || base_t::thread_handle_is_not_set),
-      "Kokkos Error: Cannot give more than one policy trait (ExecSpace, "
-      "TeamHandle, or ThreadHandle).");
+  // At most one of ExecSpace, TeamHandle, ThreadHandle, or InlineHandle may be
+  // specified.
+  static_assert((int(!base_t::execution_space_is_not_set) +
+                 int(!base_t::team_handle_is_not_set) +
+                 int(!base_t::thread_handle_is_not_set) +
+                 int(!base_t::inline_handle_is_not_set)) <= 1,
+                "Kokkos Error: Cannot give more than one policy trait "
+                "(ExecSpace, TeamHandle, ThreadHandle, or InlineHandle).");
 
   // Query for the default execution space
   using execution_space = typename std::conditional_t<

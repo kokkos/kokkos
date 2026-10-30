@@ -219,8 +219,6 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;NextSilicon)
     endforeach()
 
     # Add additional test(s) from subdirectory range_policy.
-    # Cases that do not use ThreadHandle run for every category. ThreadHandle
-    # cases are compiled only when TEST_CATEGORY is cuda.
     # FIXME_NEXTSILICON: requires TeamPolicy.
     if(NOT Tag STREQUAL "NextSilicon")
       set(file ${dir}/Test${Tag}_RangePolicyNestedInvocation.cpp)
