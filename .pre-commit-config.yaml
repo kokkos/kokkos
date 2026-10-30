@@ -1,3 +1,5 @@
+default_install_hook_types: [pre-commit, commit-msg]
+
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: 3e8a8703264a2f4a69428a0aa4dcb512790b2c8c # v6.0.0
@@ -42,3 +44,8 @@ repos:
       - '/*| *| */'
       files: '\.[hc]$'
       exclude: '^tpls/'
+
+  - repo: https://github.com/kc9jud/ai-attribution-check
+    rev: bbe5a3fe7f573c9b7093883690146823ff7187e4 # v0.1.0
+    hooks:
+    - id: ai-attribution
