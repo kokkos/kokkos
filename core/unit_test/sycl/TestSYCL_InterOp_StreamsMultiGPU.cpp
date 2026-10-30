@@ -6,46 +6,43 @@
 
 namespace {
 
-std::array<TEST_EXECSPACE, 2> get_execution_spaces() {
-  std::vector<sycl::device> gpu_devices =
-      sycl::device::get_devices(sycl::info::device_type::gpu);
-
-  TEST_EXECSPACE exec0(
-      sycl::queue{gpu_devices.front(), sycl::property::queue::in_order()});
-  TEST_EXECSPACE exec1(
-      sycl::queue{gpu_devices.back(), sycl::property::queue::in_order()});
-
-  return {exec0, exec1};
-}
-
 TEST(sycl_multi_gpu, managed_views) {
-  std::array<TEST_EXECSPACE, 2> execs = get_execution_spaces();
+  auto execs = ::Kokkos::create_device_space();
 
-  Kokkos::View<int *, TEST_EXECSPACE> view0(Kokkos::view_alloc("v0", execs[0]),
+  auto execs0 = execs.front();
+  auto execs1 = execs.back();
+
+  Kokkos::View<int *, TEST_EXECSPACE> view0(Kokkos::view_alloc("v0", execs0),
                                             100);
-  Kokkos::View<int *, TEST_EXECSPACE> view(Kokkos::view_alloc("v", execs[1]),
-                                           100);
+  Kokkos::View<int *, TEST_EXECSPACE> view1(Kokkos::view_alloc("v1", execs1),
+                                            100);
 
-  test_policies(execs[0], view0, execs[1], view);
+  test_policies(execs0, view0, execs1, view1);
 }
 
 TEST(sycl_multi_gpu, unmanaged_views) {
-  std::array<TEST_EXECSPACE, 2> execs = get_execution_spaces();
+  auto execs = ::Kokkos::create_device_space();
 
-  int *p0 = sycl::malloc_device<int>(100, execs[0].sycl_queue());
+  auto execs0 = execs.front();
+  auto execs1 = execs.back();
+
+  int *p0 = sycl::malloc_device<int>(100, execs0.sycl_queue());
   Kokkos::View<int *, TEST_EXECSPACE> view0(p0, 100);
 
-  int *p1 = sycl::malloc_device<int>(100, execs[1].sycl_queue());
+  int *p1 = sycl::malloc_device<int>(100, execs1.sycl_queue());
   Kokkos::View<int *, TEST_EXECSPACE> view1(p1, 100);
 
-  test_policies(execs[0], view0, execs[1], view1);
-  sycl::free(p0, execs[0].sycl_queue());
-  sycl::free(p1, execs[1].sycl_queue());
+  test_policies(execs0, view0, execs1, view1);
+  sycl::free(p0, execs0.sycl_queue());
+  sycl::free(p1, execs1.sycl_queue());
 }
 
 TEST(sycl_multi_gpu, scratch_space) {
-  std::array<TEST_EXECSPACE, 2> execs = get_execution_spaces();
+  auto execs = ::Kokkos::create_device_space();
 
-  test_scratch(execs[0], execs[1]);
+  auto execs0 = execs.front();
+  auto execs1 = execs.back();
+
+  test_scratch(execs0, execs1);
 }
 }  // namespace
