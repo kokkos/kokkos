@@ -236,4 +236,34 @@ TEST(TEST_CATEGORY, view_copy_degenerated) {
   Kokkos::deep_copy(v_m_1, v_m_def_2);
   Kokkos::deep_copy(v_m_1, v_m_2);
 }
+
+TEST(TEST_CATEGORY, view_copy_unmanaged_atomic) {
+  // issue 9196 regression test: deep_copy atomic unmanaged -> managed
+  using view_type = Kokkos::View<double**, Kokkos::LayoutLeft, TEST_EXECSPACE>;
+  using unmanaged_atomic_type =
+      Kokkos::View<double**, Kokkos::LayoutLeft, TEST_EXECSPACE,
+                   Kokkos::MemoryTraits<Kokkos::Atomic | Kokkos::Unmanaged>>;
+
+  constexpr int N0 = 10, N1 = 10;
+
+  auto check_value = [](view_type v, double expected) {
+    auto h_v = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), v);
+    for (int i = 0; i < N0; ++i)
+      for (int j = 0; j < N1; ++j) EXPECT_EQ(h_v(i, j), expected);
+  };
+
+  view_type x("x", N0, N1);
+  view_type y("y", N0, N1);
+
+  Kokkos::deep_copy(x, 0.0);
+  Kokkos::deep_copy(y, 1.0);
+  unmanaged_atomic_type z_ua(x);
+
+  Kokkos::deep_copy(y, z_ua);
+  check_value(y, 0.0);
+
+  Kokkos::deep_copy(y, 1.0);
+  Kokkos::deep_copy(typename TEST_EXECSPACE::execution_space(), y, z_ua);
+  check_value(y, 0.0);
+}
 }  // namespace Test

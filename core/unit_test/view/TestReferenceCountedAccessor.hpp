@@ -21,6 +21,8 @@ using const_acc_t =
     Kokkos::Impl::ReferenceCountedAccessor<memory_space_t, const_defacc_t>;
 using data_handle_t       = typename acc_t::data_handle_type;
 using const_data_handle_t = typename const_acc_t::data_handle_type;
+using atomic_acc_t        = Kokkos::Impl::AtomicAccessorRelaxed<element_t>;
+using const_atomic_acc_t = Kokkos::Impl::AtomicAccessorRelaxed<const element_t>;
 }  // namespace
 
 TEST(TEST_CATEGORY, RefCountedAcc_Typedefs) {
@@ -58,6 +60,20 @@ void test_refcountedacc_ctors() {
   const_acc_t c_acc1(defacc);
   const_acc_t c_acc2(c_defacc);
   static_assert(!std::is_constructible_v<acc_t, const_defacc_t>);
+
+  unused_variable_sink(acc);
+  unused_variable_sink(c_acc1);
+  unused_variable_sink(c_acc2);
+}
+// from AtomicAccessorRelaxed (issue #9196)
+{
+  atomic_acc_t atomic_acc;
+  const_atomic_acc_t c_atomic_acc;
+  acc_t acc(atomic_acc);
+  const_acc_t c_acc1(atomic_acc);
+  const_acc_t c_acc2(c_atomic_acc);
+  static_assert(std::is_constructible_v<acc_t, atomic_acc_t>);
+  static_assert(!std::is_constructible_v<acc_t, const_atomic_acc_t>);
 
   unused_variable_sink(acc);
   unused_variable_sink(c_acc1);
