@@ -12,6 +12,9 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #include <desul/atomics/Config.hpp>
 
 // Intercept incompatible relocatable device code mode which leads to ODR violations
+// of the device lock arrays. Without the device lock arrays there is nothing to
+// violate, so any relocatable device code mode is fine.
+#ifdef DESUL_ATOMICS_ENABLE_DEVICE_LOCK_ARRAYS
 #ifdef DESUL_ATOMICS_ENABLE_CUDA
 #if (defined(__clang__) && defined(__CUDA__) && defined(__CLANG_RDC__)) || \
     defined(__CUDACC_RDC__)
@@ -38,6 +41,7 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #error Relocatable device code mode incompatible with desul atomics configuration
 #endif
 #endif
+#endif  // DESUL_ATOMICS_ENABLE_DEVICE_LOCK_ARRAYS
 
 // Macros
 

@@ -4,6 +4,7 @@
 #include <TestAtomicOperations.hpp>
 
 namespace Test {
+#ifndef KOKKOS_IMPL_TEST_NO_DEVICE_LOCK_ARRAYS
 KOKKOS_IMPL_DISABLE_UNREACHABLE_WARNINGS_PUSH()
 TEST(TEST_CATEGORY, atomic_operations_int8) {
   // FIXME_OPENACC - does not support atomic operations on int8_t data
@@ -25,4 +26,5 @@ TEST(TEST_CATEGORY, atomic_operations_int8) {
   }
 }
 KOKKOS_IMPL_DISABLE_UNREACHABLE_WARNINGS_POP()
+#endif
 }  // namespace Test

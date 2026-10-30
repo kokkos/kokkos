@@ -396,6 +396,11 @@ TEST(TEST_CATEGORY, atomics) {
     !defined(KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED)
   if (std::is_same_v<TEST_EXECSPACE, Kokkos::SYCL>) return;
 #endif
+// Device atomic operations on types that are not lock-free require the desul
+// device lock arrays.
+#if !((defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
+       defined(KOKKOS_ENABLE_SYCL)) &&                              \
+      !KOKKOS_ENABLE_DESUL_DEVICE_LOCK_ARRAYS)
   Loop<Kokkos::complex<double>, TEST_EXECSPACE>(1, 1);
   Loop<Kokkos::complex<double>, TEST_EXECSPACE>(1, 2);
   Loop<Kokkos::complex<double>, TEST_EXECSPACE>(1, 3);
@@ -409,6 +414,7 @@ TEST(TEST_CATEGORY, atomics) {
   Loop<SuperScalar<4>, TEST_EXECSPACE>(100, 1);
   Loop<SuperScalar<4>, TEST_EXECSPACE>(100, 2);
   Loop<SuperScalar<4>, TEST_EXECSPACE>(100, 3);
+#endif
 #endif
 #endif
 }
