@@ -717,6 +717,68 @@ void test_offsetview_offsets_rank3() {
   ASSERT_EQ(0, errors);
 }
 
+namespace {
+template <class Left, class Right>
+KOKKOS_INLINE_FUNCTION bool check_equal(const Left& l, const Right& r) {
+  return l == r && !(l != r);
+}
+}  // namespace
+
+// OffsetView equivalence is defined as View equivalence of view() plus
+// matching begins. Comparing an OffsetView with a View ignores the begins.
+template <typename Device>
+void test_offset_view_equality_operator() {
+  using SCALAR           = int;
+  using offset_view_type = Kokkos::Experimental::OffsetView<SCALAR***, Device>;
+  using view_type        = Kokkos::View<SCALAR***, Device>;
+
+  view_type v("v", 3, 4, 5);
+
+  {
+    // The underlying views have to match
+    offset_view_type ov(v, {-1, 2, 0});
+    ASSERT_TRUE(check_equal(ov, offset_view_type(v, {-1, 2, 0})));
+
+    // Check a runtime parameter of the underlying view
+    view_type other("otherV", 3, 4, 5);
+    ASSERT_FALSE(check_equal(ov, offset_view_type(other, {-1, 2, 0})));
+
+    // Check a compiletime parameter of the underlying view
+    using other_offset_view_type =
+        Kokkos::Experimental::OffsetView<SCALAR***, Kokkos::LayoutStride>;
+    ASSERT_FALSE(check_equal(offset_view_type(), other_offset_view_type()));
+  }
+
+  {
+    // Same View, the begins have to match
+    offset_view_type ov(v, {-1, 2, 0});
+    ASSERT_TRUE(check_equal(ov, offset_view_type(v, {-1, 2, 0})));
+    ASSERT_FALSE(check_equal(ov, offset_view_type(v, {0, 2, 0})));
+    ASSERT_FALSE(check_equal(ov, offset_view_type(v, {-1, 3, 0})));
+  }
+
+  {
+    // The comparison operators are usable inside a kernel
+    offset_view_type ov(v, {-1, 2, 0});
+    int errors = 0;
+
+    Kokkos::parallel_reduce(
+        Kokkos::RangePolicy<Device>(0, 1),
+        KOKKOS_LAMBDA(const int, int& l_errors) {
+          // Unmanaged OffsetView with ends = begins + extents of v
+          offset_view_type same(v.data(), {-1, 2, 0}, {2, 6, 5});
+          offset_view_type shifted(v.data(), {0, 2, 0}, {3, 6, 5});
+          offset_view_type smaller(v.data(), {-1, 2, 1}, {2, 6, 4});
+          if (!check_equal(ov, same)) ++l_errors;
+          if (check_equal(ov, shifted)) ++l_errors;
+          if (check_equal(ov, smaller)) ++l_errors;
+          if (!check_equal(v, same)) ++l_errors;
+        },
+        errors);
+    ASSERT_EQ(errors, 0);
+  }
+}
+
 TEST(TEST_CATEGORY, offsetview_construction) {
   test_offsetview_construction<int, TEST_EXECSPACE>();
 }
@@ -743,6 +805,10 @@ TEST(TEST_CATEGORY, offsetview_offsets_rank2) {
 
 TEST(TEST_CATEGORY, offsetview_offsets_rank3) {
   test_offsetview_offsets_rank3<TEST_EXECSPACE>();
+}
+
+TEST(TEST_CATEGORY, offsetview_equality_operator) {
+  test_offset_view_equality_operator<TEST_EXECSPACE>();
 }
 
 }  // namespace Test

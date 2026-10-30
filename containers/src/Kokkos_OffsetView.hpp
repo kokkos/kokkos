@@ -749,22 +749,7 @@ namespace Experimental {
 template <class LT, class... LP, class RT, class... RP>
 KOKKOS_INLINE_FUNCTION bool operator==(const OffsetView<LT, LP...>& lhs,
                                        const OffsetView<RT, RP...>& rhs) {
-  // Same data, layout, dimensions
-  using lhs_traits = ViewTraits<LT, LP...>;
-  using rhs_traits = ViewTraits<RT, RP...>;
-
-  return std::is_same_v<typename lhs_traits::const_value_type,
-                        typename rhs_traits::const_value_type> &&
-         std::is_same_v<typename lhs_traits::array_layout,
-                        typename rhs_traits::array_layout> &&
-         std::is_same_v<typename lhs_traits::memory_space,
-                        typename rhs_traits::memory_space> &&
-         lhs.data() == rhs.data() && lhs.span() == rhs.span() &&
-         lhs.extents() == rhs.extents() && lhs.begin(0) == rhs.begin(0) &&
-         lhs.begin(1) == rhs.begin(1) && lhs.begin(2) == rhs.begin(2) &&
-         lhs.begin(3) == rhs.begin(3) && lhs.begin(4) == rhs.begin(4) &&
-         lhs.begin(5) == rhs.begin(5) && lhs.begin(6) == rhs.begin(6) &&
-         lhs.begin(7) == rhs.begin(7);
+  return lhs.view() == rhs.view() && lhs.begins() == rhs.begins();
 }
 
 template <class LT, class... LP, class RT, class... RP>
@@ -776,18 +761,7 @@ KOKKOS_INLINE_FUNCTION bool operator!=(const OffsetView<LT, LP...>& lhs,
 template <class LT, class... LP, class RT, class... RP>
 KOKKOS_INLINE_FUNCTION bool operator==(const View<LT, LP...>& lhs,
                                        const OffsetView<RT, RP...>& rhs) {
-  // Same data, layout, dimensions
-  using lhs_traits = ViewTraits<LT, LP...>;
-  using rhs_traits = ViewTraits<RT, RP...>;
-
-  return std::is_same_v<typename lhs_traits::const_value_type,
-                        typename rhs_traits::const_value_type> &&
-         std::is_same_v<typename lhs_traits::array_layout,
-                        typename rhs_traits::array_layout> &&
-         std::is_same_v<typename lhs_traits::memory_space,
-                        typename rhs_traits::memory_space> &&
-         lhs.data() == rhs.data() && lhs.span() == rhs.span() &&
-         lhs.extents() == rhs.extents();
+  return lhs == rhs.view();
 }
 
 template <class LT, class... LP, class RT, class... RP>
