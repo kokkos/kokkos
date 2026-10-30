@@ -21,6 +21,7 @@
 #### HIP:
 * Increase the grid size used for reductions with `MDRangePolicy` [\#9535](https://github.com/kokkos/kokkos/pull/9535)
 * Add Hygon DCU architecture support (`ARCH_HYGON_GFX936`) [\#9403](https://github.com/kokkos/kokkos/pull/9403)
+* Fix parallel_reduce memory fences for crayclang [\#9511](https://github.com/kokkos/kokkos/issues/9511)
 
 #### SYCL:
 * SYCL: Introspect TeamPolicy kernels for maximum team size [\#9353](https://github.com/kokkos/kokkos/pull/9353)
@@ -62,6 +63,8 @@
 * Removal of legacy View implementation [\#9391](https://github.com/kokkos/kokkos/pull/9391)
 * Align `View::size_type` with `mdspan` specification [\#9614](https://github.com/kokkos/kokkos/pull/9614)
 * Support `mdspan`-style template arguments for `DualView` [\#9638](https://github.com/kokkos/kokkos/pull/9638)
+* Allow kernels with block size smaller than warp size for HIP/CUDA/SYCL [\#9339](https://github.com/kokkos/kokkos/pull/9638)
+* Add CTAD for std::pair to Kokkos::pair conversion [\#9426](https://github.com/kokkos/kokkos/pull/9426)
 
 ### Build System Changes
 * Update bundled GoogleTest version to 1.14.0 and use FetchContent to build it [\#8593](https://github.com/kokkos/kokkos/pull/8593)
@@ -93,6 +96,7 @@
 * Fix masked unchecked_scatter_to / partial_scatter_to with simd_abi::scalar writing to the masked-off lane. [\#9649](https://github.com/kokkos/kokkos/pull/9649)
 * Return neutral element in parallel_scan with empty work range [\#9319](https://github.com/kokkos/kokkos/pull/9319)
 * Fix host `parallel_reduce` into view in shared space [\#9642](https://github.com/kokkos/kokkos/pull/9642)
+* Fix compiling modules with clang++-22 [\#9495](https://github.com/kokkos/kokkos/pull/9495)
 
 ## 5.2.2
 
