@@ -1139,7 +1139,7 @@ set_source_files_properties(UnitTest_DeviceAndThreads.cpp PROPERTIES LANGUAGE ${
 add_executable(Kokkos_CoreUnitTest_DeviceAndThreads UnitTest_DeviceAndThreads.cpp)
 target_link_libraries(Kokkos_CoreUnitTest_DeviceAndThreads Kokkos::kokkoscore)
 
-kokkos_add_test_executable(Kokkos_CoreUnitTest_DeathTestStyle UnitTest_DeathTestStyle.cpp)
+kokkos_add_test_executable(DeathTestStyle UnitTest_DeathTestStyle.cpp)
 
 find_package(Python3 COMPONENTS Interpreter)
 if(Python3_Interpreter_FOUND AND Python3_VERSION VERSION_GREATER_EQUAL 3.7)
