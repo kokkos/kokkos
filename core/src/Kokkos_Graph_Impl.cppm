@@ -18,8 +18,10 @@ export {
   using ::Kokkos::Impl::get_property;
 
   using ::Kokkos::Impl::DeviceHandle;
+  using ::Kokkos::Impl::GraphAccess;
   using ::Kokkos::Impl::GraphImpl;
   using ::Kokkos::Impl::GraphNodeCaptureImpl;
+  using ::Kokkos::Impl::GraphNodeImpl;
   using ::Kokkos::Impl::GraphNodeKernelImpl;
   using ::Kokkos::Impl::GraphNodeThenHostImpl;
   using ::Kokkos::Impl::GraphNodeThenImpl;
