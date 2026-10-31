@@ -170,7 +170,7 @@ auto TileSizeRecommended<ExecutionSpace>::get(Policy const& policy) {
   int prod_tile_size = 1;
   for (int i = inner_rank; i != outer_bound; i += iter_step) {
     int rank_tile_size = 1;
-    if (prod_tile_size * default_tile_size <= max_total_tile_size) {
+    if (prod_tile_size <= max_total_tile_size / default_tile_size) {
       rank_tile_size = default_tile_size;
     } else {
       rank_tile_size = 1;
