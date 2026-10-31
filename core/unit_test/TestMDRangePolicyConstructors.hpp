@@ -11,7 +11,10 @@ import kokkos.core_impl;
 #include <Kokkos_Core.hpp>
 #endif
 
+#include <cstdint>
+#include <limits>
 #include <regex>
+#include <type_traits>
 
 namespace {
 
@@ -345,6 +348,34 @@ TEST(TEST_CATEGORY, md_range_policy_impl_set_space) {
   ASSERT_EQ(policy_new.space(), exec_new);
   ASSERT_EQ(policy_new.lower(), (typename policy_t::point_type{42, 47}));
   ASSERT_EQ(policy_new.upper(), (typename policy_t::point_type{666, 999}));
+}
+
+TEST(TEST_CATEGORY, md_range_policy_recommendation_near_int_max) {
+  constexpr bool uses_host_recommendation =
+      std::is_same_v<TEST_EXECSPACE, Kokkos::Serial>
+#ifdef KOKKOS_ENABLE_OPENMP
+      || std::is_same_v<TEST_EXECSPACE, Kokkos::OpenMP>
+#endif
+      ;
+  if constexpr (uses_host_recommendation) {
+    using index_type               = std::int32_t;
+    constexpr index_type max_index = std::numeric_limits<index_type>::max();
+    using policy_type = Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>,
+                                              Kokkos::IndexType<index_type>>;
+
+    // The explicit tile product is 1, and the full range fits index_type.
+    // Computing the unused default tile recommendation must also be safe.
+    policy_type policy({0, 0}, {1, max_index - 1}, {1, 1});
+    EXPECT_EQ(policy.impl_num_tiles(), max_index - 1);
+    EXPECT_EQ(policy.tile_size()[0], 1);
+    EXPECT_EQ(policy.tile_size()[1], 1);
+
+    const auto recommendation = policy.tile_size_recommended();
+    EXPECT_EQ(recommendation[0], 1);
+    EXPECT_EQ(recommendation[1], max_index - 1);
+  } else {
+    GTEST_SKIP() << "This regression covers the Host tile recommender";
+  }
 }
 
 }  // namespace
