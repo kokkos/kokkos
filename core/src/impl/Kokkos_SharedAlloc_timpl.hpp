@@ -70,6 +70,7 @@ HostInaccessibleSharedAllocationRecordCommon<MemorySpace>::
 
   fill_host_accessible_header_info(this, header, label);
 
+#if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
   typename MemorySpace::execution_space exec;
   Kokkos::Impl::DeepCopy<MemorySpace, HostSpace>(
       exec, SharedAllocationRecord<void, void>::m_alloc_ptr, &header,
@@ -78,6 +79,7 @@ HostInaccessibleSharedAllocationRecordCommon<MemorySpace>::
              MemorySpace::name() +
              "Space, void>::SharedAllocationRecord(): "
              "fence after copying header from HostSpace");
+#endif
 }
 
 template <class MemorySpace>
