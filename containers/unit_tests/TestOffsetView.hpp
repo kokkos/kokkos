@@ -747,6 +747,11 @@ void test_offset_view_equality_operator() {
     using other_offset_view_type =
         Kokkos::Experimental::OffsetView<SCALAR***, Kokkos::LayoutStride>;
     ASSERT_FALSE(check_equal(offset_view_type(), other_offset_view_type()));
+    // Ensure that operator== also compiles for different dimensional views
+    using other_rank_offset_view_type =
+        Kokkos::Experimental::OffsetView<SCALAR**>;
+    ASSERT_FALSE(
+        check_equal(offset_view_type(), other_rank_offset_view_type()));
   }
 
   {

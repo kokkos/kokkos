@@ -749,7 +749,12 @@ namespace Experimental {
 template <class LT, class... LP, class RT, class... RP>
 KOKKOS_INLINE_FUNCTION bool operator==(const OffsetView<LT, LP...>& lhs,
                                        const OffsetView<RT, RP...>& rhs) {
-  return lhs.view() == rhs.view() && lhs.begins() == rhs.begins();
+  // operator== for Kokkos::Array only compiles, if ranks match
+  if constexpr (OffsetView<LT, LP...>::rank() ==
+                OffsetView<RT, RP...>::rank()) {
+    return lhs.view() == rhs.view() && lhs.begins() == rhs.begins();
+  }
+  return false;
 }
 
 template <class LT, class... LP, class RT, class... RP>
