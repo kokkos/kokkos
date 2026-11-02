@@ -21,6 +21,26 @@
 namespace Kokkos {
 namespace Impl {
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
+template <typename iType, class Closure>
+concept is_invocable_normal_functor = (std::is_invocable_v<Closure, iType> ||
+                                       std::is_invocable_v<Closure, iType&>);
+
+template <typename iType, class Closure, class Member>
+concept is_invocable_member_functor =
+    (std::is_invocable_v<Closure, Impl::ThreadHandleType<Member> const&,
+                         iType> ||
+     std::is_invocable_v<Closure, Impl::ThreadHandleType<Member> const&,
+                         iType&>);
+#else
+template <typename iType, class Closure>
+concept is_invocable_normal_functor = std::is_invocable_v<Closure, iType>;
+
+template <typename iType, class Closure, class Member>
+concept is_invocable_member_functor =
+    std::is_invocable_v<Closure, Impl::ThreadHandleType<Member> const&, iType>;
+#endif
+
 template <typename iType, class Closure, class Member = void>
 concept is_invocable_functor =
     std::is_invocable_v<Closure, iType> ||
