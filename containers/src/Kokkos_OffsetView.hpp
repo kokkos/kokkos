@@ -766,7 +766,8 @@ KOKKOS_INLINE_FUNCTION bool operator!=(const OffsetView<LT, LP...>& lhs,
 template <class LT, class... LP, class RT, class... RP>
 KOKKOS_INLINE_FUNCTION bool operator==(const View<LT, LP...>& lhs,
                                        const OffsetView<RT, RP...>& rhs) {
-  return lhs == rhs.view();
+  return lhs == rhs.view() &&
+         rhs.begins() == typename OffsetView<RT, RP...>::begins_type();
 }
 
 template <class LT, class... LP, class RT, class... RP>

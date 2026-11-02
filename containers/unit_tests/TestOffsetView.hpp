@@ -199,16 +199,6 @@ void test_offsetview_construction() {
   }
   view_type viewFromOV = ov.view();
 
-  ASSERT_EQ(viewFromOV == ov, true)
-      << "OffsetView::view() or equivalence operator View == OffsetView broken";
-
-  {
-    offset_view_type ovFromV(viewFromOV, {-1, -2});
-
-    ASSERT_EQ(ovFromV == viewFromOV, true)
-        << "Construction of OffsetView from View or equivalence operator "
-           "OffsetView == View broken";
-  }
   {
     offset_view_type ovFromV = viewFromOV;
     ASSERT_EQ(ovFromV == viewFromOV, true)
@@ -763,6 +753,13 @@ void test_offset_view_equality_operator() {
   }
 
   {
+    offset_view_type ov1(v, {0, 0, 0});
+    ASSERT_TRUE(check_equal(ov1, v));
+    offset_view_type ov2(v, {1, 2, 0});
+    ASSERT_FALSE(check_equal(ov2, v));
+  }
+
+  {
     // The comparison operators are usable inside a kernel
     offset_view_type ov(v, {-1, 2, 0});
     int errors = 0;
@@ -777,7 +774,8 @@ void test_offset_view_equality_operator() {
           if (!check_equal(ov, same)) ++l_errors;
           if (check_equal(ov, shifted)) ++l_errors;
           if (check_equal(ov, smaller)) ++l_errors;
-          if (!check_equal(v, same)) ++l_errors;
+          // View and OffsetView are only equal if begins() are zero
+          if (check_equal(v, same)) ++l_errors;
         },
         errors);
     ASSERT_EQ(errors, 0);
