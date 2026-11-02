@@ -55,6 +55,8 @@ workflows:
     '.github/workflows/snl-ci.yml':
         - 'actions/checkout@v7.0.1'
         - 'dorny/paths-filter@v4.0.3'
+    '.github/workflows/verify-lockfile.yml':
+        - 'actions/checkout@v7.0.1'
 dependencies:
     'actions/cache@v4':
         ref: 'v4'
