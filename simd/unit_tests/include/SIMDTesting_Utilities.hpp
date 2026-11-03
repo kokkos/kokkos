@@ -49,7 +49,7 @@ using test_device_abi_set = Kokkos::Experimental::Impl::abi_set<>;
 
 #else
 #error \
-     "Either KOKKOS_SIMD_TEST_NATIVE or KOKKOS_SIMD_TEST_SCALAR needs to be defined"
+    "Either KOKKOS_SIMD_TEST_NATIVE or KOKKOS_SIMD_TEST_SCALAR needs to be defined"
 #endif
 
 class gtest_checker {
