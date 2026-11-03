@@ -1,8 +1,18 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core;
+#else
 #include <Kokkos_Core.hpp>
-#include <impl/Kokkos_GraphNodeCtorProps.hpp>
+#endif
+#ifdef KOKKOS_IMPL_HAVE_CXX20_GRAPH_MODULES
+import kokkos.graph;
+import kokkos.graph_impl;
+#else
+#include <Kokkos_Graph.hpp>
+#endif
 
 #include <gtest/gtest.h>
 
@@ -14,6 +24,20 @@ constexpr bool test_node_ctor_prop_traits() {
   return true;
 }
 static_assert(test_node_ctor_prop_traits());
+
+consteval bool test_valid_node_property() {
+  static_assert(Kokkos::Impl::ValidNodeProperty<std::string>);
+  static_assert(Kokkos::Impl::ValidNodeProperty<const char[9]>);
+  static_assert(Kokkos::Impl::ValidNodeProperty<
+                Kokkos::Impl::DeviceHandle<TEST_EXECSPACE>>);
+
+  static_assert(!Kokkos::Impl::ValidNodeProperty<char*>);
+  static_assert(!Kokkos::Impl::ValidNodeProperty<std::string_view>);
+
+  return true;
+}
+
+static_assert(test_valid_node_property());
 
 TEST(TEST_CATEGORY, node_props_empty) {
   using props_t = decltype(Kokkos::Experimental::node_props());
