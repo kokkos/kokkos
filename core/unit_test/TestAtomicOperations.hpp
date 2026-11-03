@@ -347,6 +347,18 @@ KOKKOS_FUNCTION bool atomic_values_equal(T actual, T expected) {
   }
 }
 
+template <class ExecSpace>
+inline constexpr bool division_may_differ_by_one_ulp =
+    // 32-bit x86 may do reference division in 80-bit x87.
+    sizeof(void*) == 4
+#ifdef KOKKOS_ENABLE_NEXTSILICON
+    // FIXME_NEXTSILICON: The default -ffast-math (-freciprocal-math) lets LLVM
+    // turn x / y into x * (1 / y), which may differ by 1 ULP from the reference
+    // division.
+    || std::is_same_v<ExecSpace, Kokkos::Experimental::NextSilicon>
+#endif
+    ;
+
 template <class Op, class T, class ExecSpace, bool AllowOneUlp = false>
 bool atomic_op_test(T old_val, T update) {
   Kokkos::View<T[3], ExecSpace> op_data("op_data");
