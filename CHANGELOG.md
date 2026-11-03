@@ -8,7 +8,7 @@
 * NextSilicon backend (close to feature complete)
 * Introduce `DefaultMemorySpace` and `DefaultHostMemorySpace` type aliases [\#9560](https://github.com/kokkos/kokkos/pull/9560).
 * Introduce a new top level parallel construct: `single`. It allow users to execute non-parallel code on device, potentially returning a value [\#8123](https://github.com/kokkos/kokkos/pull/8123)
-* Add `ThreadHandle` concept and use of `RangePolicy` for `ThreadVectorRange` (limited to `parallel_for` for now [\#8953](https://github.com/kokkos/kokkos/pull/8953)
+* Add `ThreadHandle` concept and use of `RangePolicy` for `ThreadVectorRange` (limited to `parallel_for` for now) [\#8953](https://github.com/kokkos/kokkos/pull/8953)
 
 ### Backend and Architecture Enhancements:
 
@@ -63,7 +63,7 @@
 * Removal of legacy View implementation [\#9391](https://github.com/kokkos/kokkos/pull/9391)
 * Align `View::size_type` with `mdspan` specification [\#9614](https://github.com/kokkos/kokkos/pull/9614)
 * Support `mdspan`-style template arguments for `DualView` [\#9638](https://github.com/kokkos/kokkos/pull/9638)
-* Allow kernels with block size smaller than warp size for HIP/CUDA/SYCL [\#9339](https://github.com/kokkos/kokkos/pull/9638)
+* Allow kernels with block size smaller than warp size for HIP/CUDA/SYCL [\#9339](https://github.com/kokkos/kokkos/pull/9339)
 * Add CTAD for std::pair to Kokkos::pair conversion [\#9426](https://github.com/kokkos/kokkos/pull/9426)
 
 ### Build System Changes
