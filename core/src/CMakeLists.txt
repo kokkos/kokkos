@@ -195,3 +195,24 @@ endif()
 if(Kokkos_ENABLE_LIBDL)
   target_link_libraries(kokkoscore PUBLIC ${CMAKE_DL_LIBS})
 endif()
+
+# Host-only atomics use std::atomic_ref on 16-byte types, which GCC and Clang
+# may lower to libatomic calls. Link libatomic only if it is actually required.
+try_compile(
+  KOKKOS_IMPL_ATOMIC_REF_LINKS_WITHOUT_LIBATOMIC ${KOKKOS_TOP_BUILD_DIR}/compile_tests/atomic_ref
+  ${KOKKOS_SOURCE_DIR}/cmake/compile_tests/atomic_ref_16byte.cpp CXX_STANDARD ${KOKKOS_CXX_STANDARD}
+  CXX_STANDARD_REQUIRED ON
+)
+if(NOT KOKKOS_IMPL_ATOMIC_REF_LINKS_WITHOUT_LIBATOMIC)
+  try_compile(
+    KOKKOS_IMPL_ATOMIC_REF_LINKS_WITH_LIBATOMIC ${KOKKOS_TOP_BUILD_DIR}/compile_tests/atomic_ref_libatomic
+    ${KOKKOS_SOURCE_DIR}/cmake/compile_tests/atomic_ref_16byte.cpp CXX_STANDARD ${KOKKOS_CXX_STANDARD}
+    CXX_STANDARD_REQUIRED ON LINK_LIBRARIES atomic
+  )
+  if(KOKKOS_IMPL_ATOMIC_REF_LINKS_WITH_LIBATOMIC)
+    message(STATUS "Linking libatomic for 16-byte host atomics")
+    target_link_libraries(kokkoscore PUBLIC atomic)
+  else()
+    message(WARNING "16-byte std::atomic_ref compare-exchange fails to link, with or without libatomic")
+  endif()
+endif()
