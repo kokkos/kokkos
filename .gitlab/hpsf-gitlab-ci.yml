@@ -226,6 +226,12 @@ INTEL-B70:
   image: intel/oneapi:2026.1.0-devel-ubuntu26.04
   script:
     - apt-get update && apt-get install -y git intel-ocloc
+    - wget -q https://github.com/Kitware/CMake/releases/download/v4.5.0-rc2/cmake-4.5.0-rc2-linux-x86_64.sh -O /tmp/cmake-install.sh
+    - bash /tmp/cmake-install.sh \
+      --skip-license \
+      --include-subdir \
+      --prefix=/tmp
+    - rm /tmp/cmake-install.sh
     - sycl-ls
     - export ONEAPI_DEVICE_SELECTOR=level_zero:gpu
     - export CMAKE_BUILD_PARALLEL_LEVEL=16
@@ -236,7 +242,9 @@ INTEL-B70:
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_FLAGS_DEBUG='-g -O1'"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_STANDARD=23"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_EXE_LINKER_FLAGS=-fsycl -flink-huge-device-code"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_EXPERIMENTAL_SYCL=c0d1fb10-2ece-420e-9d29-7d7f2b300f25"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_VERBOSE_MAKEFILE=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE=ON"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_SYCL=ON"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_SYCL_RELOCATABLE_DEVICE_CODE=ON"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ARCH_INTEL_BMG=ON"
@@ -245,7 +253,7 @@ INTEL-B70:
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_COMPILER_WARNINGS=ON"
     - export CTEST_BUILD_NAME="INTEL-B70"
     - export GTEST_DEATH_TEST_STYLE=fast
-    - ctest -VV
+    - /tmp/cmake-4.5.0-rc2-linux-x86_64/bin/ctest -VV
         -D CDASH_MODEL=${CDASH_MODEL}
         -D GITHUB_PR_ID="${GITHUB_PR_ID}"
         -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}"
