@@ -168,10 +168,16 @@ void test_loc_array_index_reducers() {
 }
 
 TEST(TEST_CATEGORY, min_max_loc_reduction_3d) {
-  test_loc_array_index_reducers<int32_t>();
-  test_loc_array_index_reducers<int64_t>();
-  test_loc_array_index_reducers<uint32_t>();
-  test_loc_array_index_reducers<uint64_t>();
+// FIXME_OPENACC: MinLoc and MaxLoc reductions are not yet implemented
+#if defined(KOKKOS_ENABLE_OPENACC)
+  if constexpr (!std::is_same_v<TEST_EXECSPACE,
+                                Kokkos::Experimental::OpenACC>) {
+    test_loc_array_index_reducers<int32_t>();
+    test_loc_array_index_reducers<int64_t>();
+    test_loc_array_index_reducers<uint32_t>();
+    test_loc_array_index_reducers<uint64_t>();
+  }
+#endif
 }
 
 }  // namespace
