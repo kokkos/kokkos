@@ -396,6 +396,20 @@ reduce_max(const basic_simd<T, Abi>& x) noexcept {
   return reduce_max(x, typename basic_simd<T, Abi>::mask_type(true));
 }
 
+template <typename T, typename U>
+KOKKOS_FORCEINLINE_FUNCTION constexpr auto select(bool c, T const& a,
+                                                  U const& b)
+    -> std::remove_cvref_t<decltype(c ? a : b)> {
+  return c ? a : b;
+}
+
+template <typename T, typename Abi, typename U, typename V>
+KOKKOS_FORCEINLINE_FUNCTION constexpr auto select(
+    basic_simd_mask<T, Abi> const& c, U const& a, V const& b) noexcept
+    -> decltype(simd_select_impl(c, a, b)) {
+  return simd_select_impl(c, a, b);
+}
+
 }  // namespace Experimental
 }  // namespace Kokkos
 

@@ -329,6 +329,25 @@
     return typename Derived::mask_type(Derived::impl_ops::IMPL_FN(lhs, rhs)); \
   }
 
+#define KOKKOS_SIMD_IMPL_BASE_MASK_SELECT_FN(IMPL_FN)                   \
+  KOKKOS_FORCEINLINE_FUNCTION                                           \
+  constexpr friend Derived simd_select_impl(                            \
+      Derived const& mask, Derived const& a, Derived const& b) noexcept \
+    requires requires { Derived::impl_ops::IMPL_FN(mask, a, b); }       \
+  {                                                                     \
+    return Derived(Derived::impl_ops::IMPL_FN(mask, a, b));             \
+  }
+
+#define KOKKOS_SIMD_IMPL_BASE_SELECT_FN(IMPL_FN)                         \
+  template <typename MaskType, typename D = Derived>                     \
+  KOKKOS_FORCEINLINE_FUNCTION constexpr friend Derived simd_select_impl( \
+      MaskType const& mask, Derived const& a, Derived const& b) noexcept \
+    requires std::same_as<MaskType, typename D::mask_type> &&            \
+             requires { Derived::impl_ops::IMPL_FN(mask, a, b); }        \
+  {                                                                      \
+    return Derived(Derived::impl_ops::IMPL_FN(mask, a, b));              \
+  }
+
 #define KOKKOS_SIMD_IMPL_BASE_SHIFT_OP(OP, IMPL_FN, RHS_TYPE)   \
   KOKKOS_FORCEINLINE_FUNCTION                                   \
   constexpr friend Derived operator OP(Derived const& lhs,      \
@@ -422,8 +441,10 @@
 // Referring directly to the function parameters in the requires expression
 // causes the constrained overload to be rejected during compilation. Using the
 // requires parameter list instead seems to resolve this issue.
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
 #define KOKKOS_SIMD_IMPL_DEFINE_MASKED_FN_AVX2(FN)                            \
   template <typename T, Experimental::Impl::simd_size_t N, typename... Args>  \
+  KOKKOS_DEPRECATED_WITH_COMMENT("Use select instead.")                       \
   KOKKOS_FORCEINLINE_FUNCTION                                                 \
       Experimental::basic_simd<T, Experimental::simd_abi::avx2_fixed_size<N>> \
       FN(Experimental::basic_simd_mask<                                       \
@@ -446,6 +467,7 @@
                                  Experimental::simd_abi::avx2_fixed_size<N>>; \
     return simd_type(impl_ops::FN(a, args...));                               \
   }
+#endif
 
 #define KOKKOS_SIMD_IMPL_DEFINE_LOAD_FN(PREFIX, DATA_TYPE, ABI)                \
   template <typename SimdType, typename... Flags>                              \
