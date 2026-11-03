@@ -47,6 +47,8 @@ using test_device_abi_set = Kokkos::Experimental::Impl::abi_set<>;
   template <typename = void>                                \
   void TEST_SUITE_NAME##_##TEST_NAME##_skipped()
 
+#else
+#error "Either KOKKOS_SIMD_TEST_NATIVE or KOKKOS_SIMD_TEST_SCALAR needs to be defined"
 #endif
 
 class gtest_checker {
