@@ -13,7 +13,7 @@ TEST(TEST_CATEGORY, atomic_operations_float) {
         // 32-bit x86 may do reference division in 80-bit x87, so allow up to
         // one ULP.
         ASSERT_TRUE((TestAtomicOperations::AtomicOperationsTestNonIntegralType<
-                     double, TEST_EXECSPACE, true>(i, end - i + start, t)));
+                     float, TEST_EXECSPACE, true>(i, end - i + start, t)));
       } else {
         ASSERT_TRUE((TestAtomicOperations::AtomicOperationsTestNonIntegralType<
                      float, TEST_EXECSPACE>(i, end - i + start, t)));
