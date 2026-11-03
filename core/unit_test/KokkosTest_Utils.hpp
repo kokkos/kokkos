@@ -187,7 +187,7 @@ KOKKOS_FUNCTION OptionalString<string_capacity> expect_eq(
     const KokkosTest::TestReporter<Space, string_capacity>& test_reporter,
     const char* file, int line, const char* arg1, const T1 arg1_val,
     const char* arg2, const T2 arg2_val) {
-  if (!((arg1_val) == (arg2_val))) {
+  if (!(arg1_val == arg2_val)) {
     auto* log = test_reporter.emplace_report();
     if (log != nullptr) {
       log->error_message << file << ":" << line
@@ -206,7 +206,7 @@ KOKKOS_FUNCTION OptionalString<string_capacity> expect_ne(
     const KokkosTest::TestReporter<Space, string_capacity>& test_reporter,
     const char* file, int line, const char* arg1, const T1 arg1_val,
     const char* arg2, const T2 arg2_val) {
-  if (!((arg1_val) != (arg2_val))) {
+  if (!(arg1_val != arg2_val)) {
     auto* log = test_reporter.emplace_report();
     if (log != nullptr) {
       log->error_message << file << ":" << line << ": Failure\nExpected: ("
@@ -224,7 +224,7 @@ template <class Space, size_t string_capacity, class T>
 KOKKOS_FUNCTION OptionalString<string_capacity> expect_true(
     const KokkosTest::TestReporter<Space, string_capacity>& test_reporter,
     const char* file, int line, const char* arg, const T arg_val) {
-  if (!(arg_val)) {
+  if (!static_cast<bool>(arg_val)) {
     auto* log = test_reporter.emplace_report();
     if (log != nullptr) {
       log->error_message << file << ":" << line
@@ -241,7 +241,7 @@ template <class Space, size_t string_capacity, class T>
 KOKKOS_FUNCTION OptionalString<string_capacity> expect_false(
     const KokkosTest::TestReporter<Space, string_capacity>& test_reporter,
     const char* file, int line, const char* arg, const T arg_val) {
-  if (!!(arg_val)) {
+  if (static_cast<bool>(arg_val)) {
     auto* log = test_reporter.emplace_report();
     if (log != nullptr) {
       log->error_message << file << ":" << line

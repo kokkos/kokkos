@@ -2005,7 +2005,6 @@ KOKKOS_DEVICE_TEST(TestFloatingPointRemainderFunction) {
   KOKKOS_EXPECT_NEAR_ULPS(m_test_reporter, fmod(-6.2, 4.), -2.2, 1);
 
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
-  // special values
   KOKKOS_EXPECT_NEAR_ULPS(m_test_reporter, fmod(6.2l, 4.l), 2.2l, 1);
   KOKKOS_EXPECT_NEAR_ULPS(m_test_reporter, fmod(-6.2l, 4.l), -2.2l, 1);
 #endif

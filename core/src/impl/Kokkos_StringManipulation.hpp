@@ -316,7 +316,7 @@ class StaticString {
   // Append half value
   KOKKOS_FUNCTION constexpr StaticString<capacity> &operator<<(
       Kokkos::Experimental::half_t val) {
-    *this << cast_from_half<float>(val);
+    *this << Experimental::cast_from_half<float>(val);
     return *this;
   }
 #endif
@@ -325,7 +325,7 @@ class StaticString {
   // Append bhalf value
   KOKKOS_FUNCTION constexpr StaticString<capacity> &operator<<(
       Kokkos::Experimental::bhalf_t val) {
-    *this << cast_from_bhalf<float>(val);
+    *this << Experimental::cast_from_bhalf<float>(val);
     return *this;
   }
 #endif
