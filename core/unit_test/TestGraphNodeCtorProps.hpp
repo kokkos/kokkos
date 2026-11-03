@@ -39,6 +39,17 @@ consteval bool test_valid_node_property() {
 
 static_assert(test_valid_node_property());
 
+consteval bool test_node_properties() {
+  static_assert(Kokkos::Impl::NodeProperties<
+                decltype(Kokkos::Experimental::node_props())>);
+
+  static_assert(!Kokkos::Impl::NodeProperties<std::string>);
+
+  return true;
+}
+
+static_assert(test_node_properties());
+
 TEST(TEST_CATEGORY, node_props_empty) {
   using props_t = decltype(Kokkos::Experimental::node_props());
 

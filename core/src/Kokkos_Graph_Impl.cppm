@@ -29,6 +29,7 @@ export {
   using ::Kokkos::Impl::IsGraphKernelTag;
   using ::Kokkos::Impl::NodeCtorProp;
   using ::Kokkos::Impl::NodeCtorProps;
+  using ::Kokkos::Impl::NodeProperties;
   using ::Kokkos::Impl::ValidNodeProperty;
   }  // namespace Impl
   }  // namespace Kokkos
