@@ -15,6 +15,8 @@ import kokkos.simd_impl;
 
 #include <climits>
 
+namespace {
+
 using Kokkos::Experimental::all_of;
 
 template <typename Abi, typename DataType>
@@ -224,18 +226,19 @@ KOKKOS_INLINE_FUNCTION void device_check_construction_all_abis(
 class simd_device_construction_functor {
  public:
   KOKKOS_INLINE_FUNCTION void operator()(int) const {
-    device_check_construction_all_abis(
-        Kokkos::Experimental::Impl::device_abi_set());
+    device_check_construction_all_abis(test_device_abi_set());
   }
 };
 
-TEST(simd, host_construction) {
-  host_check_construction_all_abis(Kokkos::Experimental::Impl::host_abi_set());
+TEST(KOKKOS_SIMD_TEST_SUITE, host_construction) {
+  host_check_construction_all_abis(test_host_abi_set());
 }
 
-TEST(simd, device_construction) {
+KOKKOS_SIMD_DEVICE_TEST(KOKKOS_SIMD_TEST_SUITE, device_construction) {
   Kokkos::parallel_for(1, simd_device_construction_functor());
   Kokkos::fence();
 }
+
+}  // namespace
 
 #endif

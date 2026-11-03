@@ -12,6 +12,8 @@ import kokkos.simd;
 #endif
 #include <SIMDTesting_Utilities.hpp>
 
+namespace {
+
 template <typename T>
 KOKKOS_INLINE_FUNCTION void test_simd_constructions() {
   using simd_type  = T;
@@ -139,13 +141,12 @@ KOKKOS_INLINE_FUNCTION void check_host_simd_construction_all_abis(
 template <typename = void>
 struct test_host_simd_construction_in_device_functor {
   KOKKOS_INLINE_FUNCTION void operator()(int) const {
-    check_host_simd_construction_all_abis(
-        Kokkos::Experimental::Impl::host_abi_set());
+    check_host_simd_construction_all_abis(test_host_abi_set());
   }
 };
 
 // FIXME This test should eventually be integrated into other simd unit tests
-TEST(simd, host_simd_construction_in_device) {
+TEST(KOKKOS_SIMD_TEST_SUITE, host_simd_construction_in_device) {
 #ifndef KOKKOS_IMPL_SIMD_DEVICE_COMPAT_TRANSITION
   test_host_simd_construction_in_device_functor{}(0);
   Kokkos::parallel_for(1, test_host_simd_construction_in_device_functor{});
@@ -154,5 +155,7 @@ TEST(simd, host_simd_construction_in_device) {
                   "refactoring";
 #endif
 }
+
+}  // namespace
 
 #endif

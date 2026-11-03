@@ -13,6 +13,8 @@ import kokkos.simd_impl;
 #endif
 #include <SIMDTesting_Utilities.hpp>
 
+namespace {
+
 template <class Abi, class BinaryOp, class T>
 void host_check_arithmetic_op_vector_vector(
     BinaryOp binary_op, Kokkos::Experimental::basic_simd<T, Abi> first_arg,
@@ -378,17 +380,15 @@ KOKKOS_INLINE_FUNCTION void device_check_arithmetic_ops_all_abis(
 class simd_device_arithmetic_ops_functor {
  public:
   KOKKOS_INLINE_FUNCTION void operator()(int) const {
-    device_check_arithmetic_ops_all_abis(
-        Kokkos::Experimental::Impl::device_abi_set());
+    device_check_arithmetic_ops_all_abis(test_device_abi_set());
   }
 };
 
-TEST(simd, host_arithmetic_ops) {
-  host_check_arithmetic_ops_all_abis(
-      Kokkos::Experimental::Impl::host_abi_set());
+TEST(KOKKOS_SIMD_TEST_SUITE, host_arithmetic_ops) {
+  host_check_arithmetic_ops_all_abis(test_host_abi_set());
 }
 
-TEST(simd, device_arithmetic_ops) {
+KOKKOS_SIMD_DEVICE_TEST(KOKKOS_SIMD_TEST_SUITE, device_arithmetic_ops) {
 #if defined(KOKKOS_IMPL_32BIT)
   // FIXME_GCC: Floating point comparisons fail in a 32-bit build
   // See https://github.com/kokkos/kokkos/pull/7912#issuecomment-2747713935
@@ -399,5 +399,7 @@ TEST(simd, device_arithmetic_ops) {
   Kokkos::parallel_for(1, simd_device_arithmetic_ops_functor());
   Kokkos::fence();
 }
+
+}  // namespace
 
 #endif
