@@ -166,11 +166,11 @@ void test_host_native_conversion() {
   if constexpr (is_simd_avail_v<DataType, Abi>) {
     using native_type = Kokkos::Experimental::Impl::simd_vector_t<
         DataType, Abi, Kokkos::Experimental::Impl::simd_host_tag>;
-    native_type v = static_cast<native_type>(simd_type{});
-    native_type m = static_cast<native_type>(mask_type{});
+    native_type native_vec  = static_cast<native_type>(simd_type{});
+    native_type native_mask = static_cast<native_type>(mask_type{});
 
-    [[maybe_unused]] simd_type v1(v);
-    [[maybe_unused]] mask_type m1(m);
+    [[maybe_unused]] simd_type vec(native_vec);
+    [[maybe_unused]] mask_type mask(native_mask);
   }
 }
 

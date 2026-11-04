@@ -74,10 +74,11 @@ class basic_simd_mask<T, simd_abi::avx2_fixed_size<N>>
   // To allow host-only code using host intrinsic types to compile
   // in the device compilation pass, even though these are never called from
   // device
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask(
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd_mask(
       impl_host_vector_type const& value_in) noexcept
     requires(!std::same_as<impl_vector_type, impl_host_vector_type>)
       : m_value(reinterpret_cast<impl_vector_type const&>(value_in)) {}
+
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION operator impl_host_vector_type()
       const noexcept
     requires(!std::same_as<impl_vector_type, impl_host_vector_type>)
@@ -154,10 +155,11 @@ class basic_simd<T, simd_abi::avx2_fixed_size<N>>
   // To allow host-only code using host intrinsic types to compile
   // in the device compilation pass, even though these are never called from
   // device
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
       impl_host_vector_type const& value_in) noexcept
     requires(!std::same_as<impl_vector_type, impl_host_vector_type>)
       : m_value(reinterpret_cast<impl_vector_type const&>(value_in)) {}
+
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION operator impl_host_vector_type()
       const noexcept
     requires(!std::same_as<impl_vector_type, impl_host_vector_type>)
