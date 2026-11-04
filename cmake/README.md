@@ -1,3 +1,9 @@
+<!--
+Copyright Contributors to the Kokkos project
+
+SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+-->
+
 ![Kokkos](https://avatars2.githubusercontent.com/u/10199860?s=200&v=4)
 
 # Developing Kokkos

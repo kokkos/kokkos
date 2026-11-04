@@ -1,3 +1,7 @@
+# Copyright Contributors to the Kokkos project
+#
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 variables:
   FF_ENABLE_JOB_CLEANUP: 1
   FF_GIT_URLS_WITHOUT_TOKENS: 1

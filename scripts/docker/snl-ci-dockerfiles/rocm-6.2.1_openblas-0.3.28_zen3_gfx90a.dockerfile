@@ -1,3 +1,6 @@
+# Copyright Contributors to the Kokkos project
+#
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 FROM registry.access.redhat.com/ubi9:9.5@sha256:a010f5a7096ea45d77c2df0779c28b1829112816d6fb248bb2d2ed0e04f94498
 
 # certs may be needed for your system, e.g.

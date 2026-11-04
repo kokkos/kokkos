@@ -1,3 +1,7 @@
+# Copyright Contributors to the Kokkos project
+#
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 kokkos_add_benchmark_directories(atomic)
 kokkos_add_benchmark_directories(gather)
 kokkos_add_benchmark_directories(gups)

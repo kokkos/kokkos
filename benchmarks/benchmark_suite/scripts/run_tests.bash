@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Copyright Contributors to the Kokkos project
+#
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 # BytesAndFlops
 cd build/bytes_and_flops
 

@@ -1,3 +1,9 @@
+<!--
+Copyright Contributors to the Kokkos project
+
+SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+-->
+
 #Kokkos Tuning
 
 This is a design document describing the motivation, ideas, design, and prototype implementation of the Kokkos Tuning System

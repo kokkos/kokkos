@@ -1,0 +1,33 @@
+version = 1
+
+[[annotations]]
+path = [
+  "*.patch", "**/*.patch",
+  "*.txt", "**/*.txt",
+  "*.in", "**/*.in",
+  "*.inc", "**/*.inc",
+  "*.inc_*", "**/*.inc_*",
+  "*.def", "**/*.def",
+  "*.lock", "**/*.lock",
+  ".git-*", "**/.git-*" ,
+]
+precedence = "override"
+SPDX-FileCopyrightText = "Copyright Contributors to the Kokkos project"
+SPDX-License-Identifier = "Apache-2.0 WITH LLVM-exception"
+
+[[annotations]]
+path = [
+  "tpls/desul/include/desul/.clang-format",
+  "tpls/desul/include/desul/atomics/cuda/CUDA_asm.hpp",
+  "tpls/desul/include/desul/atomics/cuda/CUDA_asm_exchange.hpp",
+  "tpls/desul/include/desul/atomics/cuda/CUDA_asm_loadstore.hpp"
+]
+precedence = "override"
+SPDX-FileCopyrightText = "2019 Lawrence Livermore National Security, LLC and DESUL project contributors"
+SPDX-License-Identifier = "BSD-3-Clause"
+
+[[annotations]]
+path = "tpls/googletest-1.14.0/**"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2008 Google Inc."
+SPDX-License-Identifier = "BSD-3-Clause"

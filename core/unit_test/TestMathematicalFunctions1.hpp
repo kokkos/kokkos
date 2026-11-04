@@ -1,5 +1,7 @@
-// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+// Copyright Contributors to the Kokkos project
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
+//
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #define KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_2
 #define KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_3

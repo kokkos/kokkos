@@ -1,3 +1,7 @@
+# Copyright Contributors to the Kokkos project
+#
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 if(NOT CUDAToolkit_ROOT)
   if(NOT CUDA_ROOT)
     set(CUDA_ROOT $ENV{CUDA_ROOT})

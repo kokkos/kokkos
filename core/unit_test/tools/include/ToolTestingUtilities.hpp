@@ -1,5 +1,7 @@
-// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+// Copyright Contributors to the Kokkos project
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
+//
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 /**
  * Before digging in to the code, it's worth taking a moment to review this
  * design. Fundamentally, what we're looking to do is allow people to test that

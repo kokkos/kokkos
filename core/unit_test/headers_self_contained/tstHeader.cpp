@@ -1,5 +1,7 @@
-// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+// Copyright Contributors to the Kokkos project
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
+//
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #define KOKKOS_HEADER_TEST_STRINGIZE_IMPL(x) #x
 #define KOKKOS_HEADER_TEST_STRINGIZE(x) KOKKOS_HEADER_TEST_STRINGIZE_IMPL(x)

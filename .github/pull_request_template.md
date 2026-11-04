@@ -1,3 +1,9 @@
+<!--
+Copyright Contributors to the Kokkos project
+
+SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+-->
+
 <!-- Provide a short summary of the changes in this pull request. -->
 
 ### Related issues / PRs

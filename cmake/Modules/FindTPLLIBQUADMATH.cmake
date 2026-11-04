@@ -1,3 +1,7 @@
+# Copyright Contributors to the Kokkos project
+#
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 # gcc bundles libquadmath and doesn't need any extra link or include directories
 # (which would not be contained in CMake's search paths anyway).
 # Hence, try if the compiler supports libquadmath natively first before doing

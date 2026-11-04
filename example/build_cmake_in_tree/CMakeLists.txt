@@ -1,3 +1,7 @@
+# Copyright Contributors to the Kokkos project
+#
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 # Kokkos minimally requires 3.22 right now,
 # but your project can set it higher
 cmake_minimum_required(VERSION 3.22)

@@ -1,3 +1,7 @@
+# Copyright Contributors to the Kokkos project
+#
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 function(kokkos_set_gnu_flags full_standard int_standard)
   string(TOLOWER ${full_standard} FULL_LC_STANDARD)
   string(TOLOWER ${int_standard} INT_LC_STANDARD)

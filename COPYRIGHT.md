@@ -1,3 +1,9 @@
+<!--
+Copyright Contributors to the Kokkos project
+
+SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+-->
+
 # Copyright Contributors to the Kokkos Project
 
 This file contains a (partial) list of people who contributed to the Kokkos Project

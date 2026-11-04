@@ -1,3 +1,7 @@
+# Copyright Contributors to the Kokkos project
+#
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 function(kokkos_set_msvc_flags full_standard int_standard)
   if(CMAKE_CXX_EXTENSIONS)
     set(KOKKOS_CXX_STANDARD_FLAG "" PARENT_SCOPE)

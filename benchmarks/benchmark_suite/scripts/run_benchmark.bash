@@ -1,4 +1,9 @@
 #!/bin/bash
+
+# Copyright Contributors to the Kokkos project
+#
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 SCRIPT_PATH=$1
 KOKKOS_DEVICES=$2
 KOKKOS_ARCH=$3

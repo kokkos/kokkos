@@ -1,5 +1,7 @@
-// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+// Copyright Contributors to the Kokkos project
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
+//
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #ifndef KOKKOS_PARSE_COMMAND_LINE_ARGUMENTS_AND_ENVIRONMENT_VARIABLES_HPP
 #define KOKKOS_PARSE_COMMAND_LINE_ARGUMENTS_AND_ENVIRONMENT_VARIABLES_HPP

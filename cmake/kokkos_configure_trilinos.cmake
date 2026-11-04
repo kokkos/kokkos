@@ -1,3 +1,7 @@
+# Copyright Contributors to the Kokkos project
+#
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 if(CMAKE_PROJECT_NAME STREQUAL "Trilinos")
   set(Kokkos_ENABLE_SERIAL ON CACHE BOOL "Whether to build Serial backend" FORCE)
 

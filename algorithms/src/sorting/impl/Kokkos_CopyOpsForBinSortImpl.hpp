@@ -1,5 +1,7 @@
-// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+// Copyright Contributors to the Kokkos project
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
+//
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #ifndef KOKKOS_COPY_OPS_FOR_BINSORT_IMPL_HPP_
 #define KOKKOS_COPY_OPS_FOR_BINSORT_IMPL_HPP_

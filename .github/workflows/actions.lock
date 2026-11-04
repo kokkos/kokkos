@@ -47,6 +47,9 @@ workflows:
         - 'actions/upload-artifact@v7.0.2'
         - 'softprops/action-gh-release@v3.0.3'
     '.github/workflows/releases.yml': []
+    '.github/workflows/reuse.yaml':
+        - 'actions/checkout@v5.1.0'
+        - 'fsfe/reuse-action@v6.0.0'
     '.github/workflows/scorecard.yml':
         - 'actions/checkout@v7.0.1'
         - 'actions/upload-artifact@v7.0.2'
@@ -68,6 +71,11 @@ dependencies:
         commit: 'sha1-55cc8345863c7cc4c66a329aec7e433d2d1c52a9'
         owner_id: 44036562
         repo_id: 215566462
+    'actions/checkout@v5.1.0':
+        ref: 'v5.1.0'
+        commit: 'sha1-fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09'
+        owner_id: 44036562
+        repo_id: 197814629
     'actions/checkout@v7.0.1':
         ref: 'v7.0.1'
         commit: 'sha1-3d3c42e5aac5ba805825da76410c181273ba90b1'
@@ -103,6 +111,11 @@ dependencies:
         commit: 'sha1-ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d'
         owner_id: 1588572
         repo_id: 265601040
+    'fsfe/reuse-action@v6.0.0':
+        ref: 'v6.0.0'
+        commit: 'sha1-676e2d560c9a403aa252096d99fcab3e1132b0f5'
+        owner_id: 27927890
+        repo_id: 244390200
     'github/codeql-action@v4.39.1':
         ref: 'v4.39.1'
         commit: 'sha1-9b3254085494b55a0f7c4c2b3d2d52cc712ce370'

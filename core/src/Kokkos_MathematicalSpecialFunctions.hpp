@@ -1,5 +1,7 @@
-// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+// Copyright Contributors to the Kokkos project
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
+//
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #ifndef KOKKOS_MATHEMATICAL_SPECIAL_FUNCTIONS_HPP
 #define KOKKOS_MATHEMATICAL_SPECIAL_FUNCTIONS_HPP

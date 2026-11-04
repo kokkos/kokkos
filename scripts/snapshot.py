@@ -1,5 +1,9 @@
 #! /usr/bin/env python3
 
+# Copyright Contributors to the Kokkos project
+#
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 """
 Snapshot a project into another project and perform the necessary repo actions
 to provide a commit message that can be used to trace back to the exact point

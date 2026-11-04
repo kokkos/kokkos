@@ -1,3 +1,6 @@
+# Copyright Contributors to the Kokkos project
+#
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 ARG BASE=rocm/dev-ubuntu-20.04:5.2-complete@sha256:4030c8af0c06c286174758523dabe4b3850bf72d4a8c1ef275d3ec69aa475f65
 FROM $BASE
 

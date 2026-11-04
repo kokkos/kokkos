@@ -1,3 +1,7 @@
+# Copyright Contributors to the Kokkos project
+#
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: 3e8a8703264a2f4a69428a0aa4dcb512790b2c8c # v6.0.0
@@ -42,3 +46,9 @@ repos:
       - '/*| *| */'
       files: '\.[hc]$'
       exclude: '^tpls/'
+
+  - repo: https://codeberg.org/fsfe/reuse-tool
+    rev: v6.3.0
+    hooks:
+      - id: reuse
+        always_run: true

@@ -1,3 +1,7 @@
+# Copyright Contributors to the Kokkos project
+#
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 # Create tests that contain each header separately. We do not  run these tests
 # but we just try to compile them.
 

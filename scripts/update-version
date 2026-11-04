@@ -1,4 +1,6 @@
-
+# Copyright Contributors to the Kokkos project
+#
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 NEW_MAJOR=$1
 NEW_MINOR=$2
 NEW_PATCH=$3

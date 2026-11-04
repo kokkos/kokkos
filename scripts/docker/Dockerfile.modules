@@ -1,3 +1,6 @@
+# Copyright Contributors to the Kokkos project
+#
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 ARG BASE=gcc:15.1.0-bookworm@sha256:0a7989a3828096f97fd62feb896699e151544e0cfc5fdc0f30ace70cdcf003e6
 FROM $BASE
 

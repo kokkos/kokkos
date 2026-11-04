@@ -1,4 +1,9 @@
 #!/bin/bash -e
+
+# Copyright Contributors to the Kokkos project
+#
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 NT=$1
 PROG="./KokkosCore_PerformanceTest_Mempool"
 COMMON_ARGS="--kokkos-threads=$NT --fill_stride=1 --fill_level=70 --chunk_span=5 --repeat_inner=100"

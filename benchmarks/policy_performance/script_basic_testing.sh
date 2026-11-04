@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Copyright Contributors to the Kokkos project
+#
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 # Script to check policy_perf_test code works with each possible combo of options
 
 echo "Performance test results for parallel_reduce code computing sum of sequence [0,N) with various (nested) policies"

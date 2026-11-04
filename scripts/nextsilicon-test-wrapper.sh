@@ -1,5 +1,9 @@
 #! /bin/bash
 
+# Copyright Contributors to the Kokkos project
+#
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 # This script has two different modes of operation:
 # if KOKKOS_NEXTSILICON_TEST_TELEMETRYLESS is anything, we run in a telemetry-less mode, where any projection error counts as a failure
 # else, we run the two-pass telemetry-based flow

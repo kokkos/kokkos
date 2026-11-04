@@ -1,3 +1,7 @@
+# Copyright Contributors to the Kokkos project
+#
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 include(CheckIncludeFileCXX)
 check_include_file_cxx(oneapi/dpl/execution KOKKOS_COMPILER_HAS_ONEDPL_EXECUTION_HEADER)
 check_include_file_cxx(oneapi/dpl/algorithm KOKKOS_COMPILER_HAS_ONEDPL_ALGORITHM_HEADER)

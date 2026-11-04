@@ -1,3 +1,7 @@
+# Copyright Contributors to the Kokkos project
+#
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 kokkos_add_example_directories(01_thread_teams)
 kokkos_add_example_directories(01_thread_teams_lambda)
 kokkos_add_example_directories(02_nested_parallel_for)

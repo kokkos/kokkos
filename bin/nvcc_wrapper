@@ -1,3 +1,6 @@
+# Copyright Contributors to the Kokkos project
+#
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #!/usr/bin/env bash
 #
 # This shell script (nvcc_wrapper) wraps both the host compiler and

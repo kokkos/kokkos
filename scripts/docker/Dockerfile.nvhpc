@@ -1,3 +1,6 @@
+# Copyright Contributors to the Kokkos project
+#
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 ARG BASE=nvcr.io/nvidia/nvhpc:23.7-devel-cuda12.2-ubuntu22.04@sha256:d06b3185fe53e8d2d31482c974dcf6023efe857ebf2c1d9625a29b394560ac91
 FROM $BASE
 

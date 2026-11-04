@@ -1,3 +1,7 @@
+# Copyright Contributors to the Kokkos project
+#
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 set(CRAYPE_VERSION $ENV{CRAYPE_VERSION})
 if(CRAYPE_VERSION)
   set(KOKKOS_IS_CRAYPE TRUE)

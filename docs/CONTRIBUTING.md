@@ -1,3 +1,9 @@
+<!--
+Copyright Contributors to the Kokkos project
+
+SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+-->
+
 # Contributing to Kokkos
 
 Thank you for your interest in contributing to Kokkos! There are many ways to

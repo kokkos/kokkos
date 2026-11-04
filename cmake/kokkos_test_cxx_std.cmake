@@ -1,3 +1,7 @@
+# Copyright Contributors to the Kokkos project
+#
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
 kokkos_cfg_depends(CXX_STD COMPILER_ID)
 
 function(kokkos_set_cxx_standard_feature standard)
