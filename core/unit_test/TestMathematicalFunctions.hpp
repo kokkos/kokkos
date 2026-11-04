@@ -395,7 +395,7 @@ DEFINE_UNARY_FUNCTION_EVAL_CUSTOM(rcp, 2,
                                   math_unary_function_return_type_t<T>(1) / x);
 #endif
 
-#ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_2
+#ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_4
 #if defined(__APPLE__)
 // Apple's standard library implementation seems to have a poor implementation
 DEFINE_UNARY_FUNCTION_EVAL(erf, 5);
@@ -424,7 +424,9 @@ DEFINE_UNARY_FUNCTION_EVAL(rint, 0);
 DEFINE_UNARY_FUNCTION_EVAL_INT(lrint);
 DEFINE_UNARY_FUNCTION_EVAL_INT(llrint);
 #endif
+#endif
 
+#ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_2
 DEFINE_UNARY_FUNCTION_EVAL_INT(ilogb);
 DEFINE_UNARY_FUNCTION_EVAL(logb, 2);
 #endif
@@ -1721,7 +1723,7 @@ TEST(TEST_CATEGORY, mathematical_functions_non_standard) {
 }
 #endif
 
-#ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_2
+#ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_4
 
 TEST(TEST_CATEGORY, mathematical_functions_error_and_gamma_functions) {
   TEST_MATH_FUNCTION(erf)({-3, -2, -1, 0, 1});
@@ -1961,6 +1963,9 @@ TEST(TEST_CATEGORY,
 #endif
 #endif
 }
+#endif
+
+#ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_2
 
 TEST(TEST_CATEGORY,
      mathematical_functions_floating_point_manipulation_functions) {
@@ -2340,6 +2345,7 @@ struct TestIEEEFloatingPointRemainderFunction
 TEST(TEST_CATEGORY, mathematical_functions_ieee_remainder_function) {
   TestIEEEFloatingPointRemainderFunction<TEST_EXECSPACE>();
 }
+#endif
 
 // TODO: TestFpClassify, see https://github.com/kokkos/kokkos/issues/6279
 
@@ -3258,6 +3264,8 @@ TEST(TEST_CATEGORY, mathematical_functions_nextafter_fp16) {
 #endif
 }
 #endif
+
+#ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_2
 
 template <class T>
 struct TestNextToward {
