@@ -19,6 +19,8 @@ import kokkos.sort;
 #endif
 
 #include <algorithm>
+#include <type_traits>
+#include <vector>
 
 namespace Test {
 namespace SortImpl {
@@ -293,6 +295,74 @@ void test_sort_custom_type_subrange_impl() {
   }
 }
 
+// -----------------------------------------------------------------------
+// Kokkos::sort for a value type that is not default constructible (#9676).
+// thrust::sort, which Kokkos uses for CUDA and HIP, does not compile for such
+// types, so Kokkos sorts an index permutation instead.
+// -----------------------------------------------------------------------
+
+struct SortNonDefaultConstructible {
+  int value;
+
+  KOKKOS_FUNCTION explicit SortNonDefaultConstructible(int v) : value(v) {}
+
+  KOKKOS_FUNCTION bool operator<(
+      const SortNonDefaultConstructible& other) const {
+    return value < other.value;
+  }
+};
+
+static_assert(!std::is_default_constructible_v<SortNonDefaultConstructible>);
+
+// Values in [0, 1009) in scrambled order, repeated once n exceeds 1009.
+KOKKOS_INLINE_FUNCTION int non_default_constructible_test_value(int i) {
+  return static_cast<int>((static_cast<int64_t>(i) * 7919) % 1009);
+}
+
+template <class ViewType>
+struct FillNonDefaultConstructible {
+  ViewType m_view;
+  KOKKOS_FUNCTION void operator()(int i) const {
+    m_view(i) =
+        SortNonDefaultConstructible(non_default_constructible_test_value(i));
+  }
+};
+
+struct GreaterNonDefaultConstructible {
+  KOKKOS_FUNCTION bool operator()(const SortNonDefaultConstructible& a,
+                                  const SortNonDefaultConstructible& b) const {
+    return b < a;
+  }
+};
+
+template <class ExecutionSpace>
+void test_sort_non_default_constructible_impl(int n, bool use_comparator) {
+  using view_type = Kokkos::View<SortNonDefaultConstructible*, ExecutionSpace>;
+  ExecutionSpace exec;
+  view_type v(Kokkos::view_alloc(exec, "v", Kokkos::WithoutInitializing), n);
+  Kokkos::parallel_for(Kokkos::RangePolicy<ExecutionSpace>(exec, 0, n),
+                       FillNonDefaultConstructible<view_type>{v});
+
+  if (use_comparator) {
+    Kokkos::sort(exec, v, GreaterNonDefaultConstructible{});
+  } else {
+    Kokkos::sort(exec, v);
+  }
+
+  std::vector<int> expected(n);
+  for (int i = 0; i < n; ++i) {
+    expected[i] = non_default_constructible_test_value(i);
+  }
+  std::sort(expected.begin(), expected.end());
+  if (use_comparator) std::reverse(expected.begin(), expected.end());
+
+  auto h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), v);
+  for (int i = 0; i < n; ++i) {
+    ASSERT_EQ(h(i).value, expected[i])
+        << "n = " << n << ", comparator = " << use_comparator << ", i = " << i;
+  }
+}
+
 }  // namespace SortImpl
 
 TEST(TEST_CATEGORY, SortUnsignedValueType) {
@@ -326,6 +396,17 @@ TEST(TEST_CATEGORY, SortCustomType) {
 TEST(TEST_CATEGORY, SortCustomTypeSubrange) {
   SortImpl::test_sort_custom_type_subrange_impl<TEST_EXECSPACE>();
 }
+
+// FIXME_SYCL: not checked with oneDPL's sort
+#if !defined(KOKKOS_ENABLE_ONEDPL)
+TEST(TEST_CATEGORY, SortNonDefaultConstructible) {
+  for (int n : {0, 1, 2, 1009, 5000}) {
+    SortImpl::test_sort_non_default_constructible_impl<TEST_EXECSPACE>(n,
+                                                                       false);
+    SortImpl::test_sort_non_default_constructible_impl<TEST_EXECSPACE>(n, true);
+  }
+}
+#endif
 
 }  // namespace Test
 #endif
