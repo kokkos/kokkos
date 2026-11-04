@@ -399,13 +399,12 @@ constexpr bool IsReferenceCountedAccessorV =
     IsReferenceCountedAccessor<T>::value;
 
 // Helper to check memory-scope compatibility
-template <class NestedAccessor, class OtherMemoryScope, class = void>
+template <class NestedAccessor, class OtherMemoryScope>
 struct IsCompatibleMemoryScope : std::true_type {};
 
 template <class NestedAccessor, class OtherMemoryScope>
-struct IsCompatibleMemoryScope<
-    NestedAccessor, OtherMemoryScope,
-    std::void_t<typename NestedAccessor::memory_scope>>
+  requires requires { typename NestedAccessor::memory_scope; }
+struct IsCompatibleMemoryScope<NestedAccessor, OtherMemoryScope>
     : std::is_same<OtherMemoryScope, typename NestedAccessor::memory_scope> {};
 
 template <class MemorySpace, class NestedAccessor>
