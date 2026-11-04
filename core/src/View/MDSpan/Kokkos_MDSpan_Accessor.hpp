@@ -466,14 +466,21 @@ class ReferenceCountedAccessor {
   KOKKOS_FUNCTION constexpr ReferenceCountedAccessor(
       const default_accessor<OtherElementType>&) {}
 
-  // Disallow converting between memory scopes.
+  // Allow converting between memory scopes.
+  // Must be explicit when scopes are present but not the same.
   // As long as accessors are stateless, default construction is okay.
-  template <
-      class OtherElementType, class OtherMemoryScope,
-      class = std::enable_if_t<
-          std::is_convertible_v<OtherElementType (*)[], element_type (*)[]> &&
-          IsCompatibleMemoryScope<NestedAccessor, OtherMemoryScope>::value>>
+  template <class OtherElementType, class OtherMemoryScope>
+    requires(
+        std::is_convertible_v<OtherElementType (*)[], element_type (*)[]> &&
+        IsCompatibleMemoryScope<NestedAccessor, OtherMemoryScope>::value)
   KOKKOS_FUNCTION constexpr ReferenceCountedAccessor(
+      const AtomicAccessorRelaxed<OtherElementType, OtherMemoryScope>&) {}
+
+  template <class OtherElementType, class OtherMemoryScope>
+    requires(
+        std::is_convertible_v<OtherElementType (*)[], element_type (*)[]> &&
+        !IsCompatibleMemoryScope<NestedAccessor, OtherMemoryScope>::value)
+  KOKKOS_FUNCTION explicit constexpr ReferenceCountedAccessor(
       const AtomicAccessorRelaxed<OtherElementType, OtherMemoryScope>&) {}
 
   template <class DstAccessor,
