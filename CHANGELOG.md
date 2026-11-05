@@ -14,7 +14,6 @@
 
 #### CUDA:
 * Add support for NVIDIA Rubin GPU architecture [\#9395](https://github.com/kokkos/kokkos/pull/9395)
-* Workaround warnings with std::pair as subview slice specifiers in relaxed constexpr mode [\#9467](https://github.com/kokkos/kokkos/pull/9467)
 * Increase the grid size used for reductions with `MDRangePolicy` [\#9523](https://github.com/kokkos/kokkos/pull/9523)
 * Fix response file handling of nvcc_wrapper by removing quotes [\#9573](https://github.com/kokkos/kokkos/pull/9573)
 
