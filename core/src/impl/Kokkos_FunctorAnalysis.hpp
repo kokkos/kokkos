@@ -382,6 +382,11 @@ struct FunctorAnalysis {
     template <typename M, typename A, typename I>
     KOKKOS_INLINE_FUNCTION static A deduce(void (Functor::*)(M, A&, I) const);
 
+    // TeamThreadRange may pass a ThreadHandle before the index.
+    template <typename H, typename M, typename A, typename I>
+    KOKKOS_INLINE_FUNCTION static A deduce(void (Functor::*)(H, M, A&, I)
+                                               const);
+
     using type = decltype(deduce(&F::operator()));
   };
 
@@ -394,6 +399,14 @@ struct FunctorAnalysis {
     template <typename M, typename A, typename I>
     KOKKOS_INLINE_FUNCTION static A deduce(void (Functor::*)(WTag const&, M, A&,
                                                              I) const);
+
+    template <typename H, typename M, typename A, typename I>
+    KOKKOS_INLINE_FUNCTION static A deduce(void (Functor::*)(WTag, H, M, A&, I)
+                                               const);
+
+    template <typename H, typename M, typename A, typename I>
+    KOKKOS_INLINE_FUNCTION static A deduce(void (Functor::*)(WTag const&, H, M,
+                                                             A&, I) const);
 
     using type = decltype(deduce(&F::operator()));
   };

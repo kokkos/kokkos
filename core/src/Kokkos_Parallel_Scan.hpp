@@ -246,6 +246,7 @@ inline void parallel_scan_dispatch(
 /// \endcode
 ///
 template <Kokkos::ExecutionPolicy ExecutionPolicy, class FunctorType>
+  requires Kokkos::ExecutionSpace<typename ExecutionPolicy::execution_type>
 inline void parallel_scan(const std::string& str, const ExecutionPolicy& policy,
                           const FunctorType& functor) {
   Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check(
@@ -254,6 +255,7 @@ inline void parallel_scan(const std::string& str, const ExecutionPolicy& policy,
 }
 
 template <Kokkos::ExecutionPolicy ExecutionPolicy, class FunctorType>
+  requires Kokkos::ExecutionSpace<typename ExecutionPolicy::execution_type>
 inline void parallel_scan(const ExecutionPolicy& policy,
                           const FunctorType& functor) {
   Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check("parallel_scan",
@@ -286,6 +288,7 @@ inline void parallel_scan(const size_t work_count, const FunctorType& functor) {
 
 template <Kokkos::ExecutionPolicy ExecutionPolicy, class FunctorType,
           class ReturnType>
+  requires Kokkos::ExecutionSpace<typename ExecutionPolicy::execution_type>
 inline void parallel_scan(const std::string& str, const ExecutionPolicy& policy,
                           const FunctorType& functor,
                           ReturnType& return_value) {
@@ -297,6 +300,7 @@ inline void parallel_scan(const std::string& str, const ExecutionPolicy& policy,
 
 template <Kokkos::ExecutionPolicy ExecutionPolicy, class FunctorType,
           class ReturnType>
+  requires Kokkos::ExecutionSpace<typename ExecutionPolicy::execution_type>
 inline void parallel_scan(const ExecutionPolicy& policy,
                           const FunctorType& functor,
                           ReturnType& return_value) {
