@@ -397,8 +397,6 @@ TEST(TEST_CATEGORY, SortCustomTypeSubrange) {
   SortImpl::test_sort_custom_type_subrange_impl<TEST_EXECSPACE>();
 }
 
-// FIXME_SYCL: not checked with oneDPL's sort
-#if !defined(KOKKOS_ENABLE_ONEDPL)
 TEST(TEST_CATEGORY, SortNonDefaultConstructible) {
   for (int n : {0, 1, 2, 1009, 5000}) {
     SortImpl::test_sort_non_default_constructible_impl<TEST_EXECSPACE>(n,
@@ -406,7 +404,6 @@ TEST(TEST_CATEGORY, SortNonDefaultConstructible) {
     SortImpl::test_sort_non_default_constructible_impl<TEST_EXECSPACE>(n, true);
   }
 }
-#endif
 
 }  // namespace Test
 #endif
