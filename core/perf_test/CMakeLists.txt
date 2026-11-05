@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+# SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
+
 # Download google/benchmark if it was not found by find_package
 if(benchmark_FOUND)
   message(STATUS "Using google benchmark found in ${benchmark_DIR}")

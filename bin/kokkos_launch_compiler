@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+# SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
+
 #
 #   This script allows CMAKE_CXX_COMPILER to be a standard
 #   C++ compiler and Kokkos sets RULE_LAUNCH_COMPILE and

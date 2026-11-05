@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+# SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
+
 function(KOKKOS_DEVICE_OPTION SUFFIX DEFAULT DEV_TYPE DOCSTRING)
   kokkos_option(ENABLE_${SUFFIX} ${DEFAULT} BOOL ${DOCSTRING})
   string(TOUPPER ${SUFFIX} UC_NAME)

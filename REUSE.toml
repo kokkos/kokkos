@@ -1,0 +1,41 @@
+version = 1
+
+[[annotations]]
+path = "**/*.md"
+SPDX-FileCopyrightText = "Copyright Contributors to the Kokkos project"
+SPDX-License-Identifier = "Apache-2.0 WITH LLVM-exception"
+
+[[annotations]]
+path = [".github/**", ".gitlab/**", ".jenkins/**", "scripts/docker/**"]
+SPDX-FileCopyrightText = "Copyright Contributors to the Kokkos project"
+SPDX-License-Identifier = "Apache-2.0 WITH LLVM-exception"
+
+[[annotations]]
+path = [
+  "**/.clang-format",
+  "**/.clang-tidy",
+  "**/.cmake-format.py",
+  ".git-blame-ignore-revs",
+  ".gitattributes",
+  ".gitignore",
+  ".mailmap",
+  ".pre-commit-config.yaml",
+  "CITATION.cff",
+]
+SPDX-FileCopyrightText = "Copyright Contributors to the Kokkos project"
+SPDX-License-Identifier = "Apache-2.0 WITH LLVM-exception"
+
+[[annotations]]
+path = ["tpls/googletest-1.14.0/**", "tpls/googletest-1.14.0.patches/**"]
+SPDX-FileCopyrightText = "Google Inc."
+SPDX-License-Identifier = "BSD-3-Clause"
+
+[[annotations]]
+path = "tpls/desul/**"
+SPDX-FileCopyrightText = "Lawrence Livermore National Security, LLC and DESUL project contributors"
+SPDX-License-Identifier = "BSD-3-Clause"
+
+[[annotations]]
+path = ["tpls/mdspan/**", "tpls/*-hash.txt"]
+SPDX-FileCopyrightText = "Copyright Contributors to the Kokkos project"
+SPDX-License-Identifier = "Apache-2.0 WITH LLVM-exception"

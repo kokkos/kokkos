@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+# SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
+
 cmake_minimum_required(VERSION 3.22 FATAL_ERROR)
 
 # scan source files for importing C++20 modules

@@ -37,7 +37,7 @@ ctest --test-dir builddir --timeout 2000 --output-on-failure
 **Checks enforced:**
 - **clang-format v16** (Google style, `SortIncludes: false` - never reorder includes!)
 - **cmake-format** (auto-formats CMake files)
-- **License headers** (auto-inserted from `scripts/license_header.txt`, C++: `//`, C: `/* */`)
+- **REUSE compliance** (`reuse-lint-file`): every file needs an SPDX license identifier and copyright notice, either in a header (see `scripts/license_header.txt`; C++: `//`, CMake/shell: `#`) or via `REUSE.toml`. Headers are not auto-inserted.
 - YAML, trailing whitespace, EOF fixes
 
 **clang-tidy** (static analysis, used in CI):
