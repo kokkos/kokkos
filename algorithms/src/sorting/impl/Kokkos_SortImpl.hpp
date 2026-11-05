@@ -19,6 +19,8 @@ import kokkos.core;
 
 #include <cmath>
 #include <cstdint>
+#include <type_traits>
+#include <utility>
 
 #if defined(KOKKOS_ENABLE_CUDA)
 
@@ -175,6 +177,88 @@ void sort_via_binsort(const ExecutionSpace& exec,
   bin_sort.sort(exec, view);
 }
 
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_ROCTHRUST)
+// thrust::sort keeps arrays of the value type in its kernels, so it does not
+// compile for value types that are not default constructible (#9676).  For
+// those, sort an index permutation with thrust and then permute the values.
+// FIXME_NVCC: functors instead of lambdas, see sort_by_key_via_sort.
+template <class Permutation>
+struct SortIotaFunctor {
+  Permutation m_permutation;
+  KOKKOS_FUNCTION void operator()(int64_t i) const { m_permutation(i) = i; }
+};
+
+template <class ViewType, class Comparator>
+struct SortIndexComparator {
+  ViewType m_view;
+  Comparator m_comparator;
+  KOKKOS_FUNCTION bool operator()(int64_t i, int64_t j) const {
+    return m_comparator(m_view(i), m_view(j));
+  }
+};
+
+template <class ViewType, class ViewCopy, class Permutation>
+struct SortPermuteFunctor {
+  ViewType m_view;
+  ViewCopy m_view_copy;
+  Permutation m_permutation;
+  KOKKOS_FUNCTION void operator()(int64_t i) const {
+    m_view(i) = m_view_copy(m_permutation(i));
+  }
+};
+
+template <class ExecutionSpace, class ThrustPolicy, class ViewType,
+          class Comparator>
+void thrust_sort_via_permutation(const ExecutionSpace& space,
+                                 const ThrustPolicy& policy,
+                                 const ViewType& view,
+                                 const Comparator& comparator) {
+  using range_policy =
+      Kokkos::RangePolicy<ExecutionSpace, Kokkos::IndexType<int64_t>>;
+  const int64_t n = view.extent(0);
+
+  Kokkos::View<int64_t*, ExecutionSpace> permutation(
+      Kokkos::view_alloc(space, Kokkos::WithoutInitializing,
+                         "Kokkos::sort::permutation"),
+      n);
+  Kokkos::parallel_for("Kokkos::sort::iota", range_policy(space, 0, n),
+                       SortIotaFunctor<decltype(permutation)>{permutation});
+  thrust::sort(policy, ::Kokkos::Experimental::begin(permutation),
+               ::Kokkos::Experimental::end(permutation),
+               SortIndexComparator<ViewType, Comparator>{view, comparator});
+
+  auto view_copy = Kokkos::create_mirror(
+      Kokkos::view_alloc(space, typename ExecutionSpace::memory_space{},
+                         Kokkos::WithoutInitializing),
+      view);
+  Kokkos::deep_copy(space, view_copy, view);
+  Kokkos::parallel_for(
+      "Kokkos::sort::permute", range_policy(space, 0, n),
+      SortPermuteFunctor<ViewType, decltype(view_copy), decltype(permutation)>{
+          view, view_copy, permutation});
+}
+
+template <class ExecutionSpace, class ThrustPolicy, class ViewType,
+          class... MaybeComparator>
+void thrust_sort([[maybe_unused]] const ExecutionSpace& space,
+                 const ThrustPolicy& policy, const ViewType& view,
+                 MaybeComparator&&... maybeComparator) {
+  using value_type = typename ViewType::non_const_value_type;
+  if constexpr (std::is_default_constructible_v<value_type>) {
+    thrust::sort(policy, ::Kokkos::Experimental::begin(view),
+                 ::Kokkos::Experimental::end(view),
+                 std::forward<MaybeComparator>(maybeComparator)...);
+  } else if constexpr (sizeof...(MaybeComparator) == 0) {
+    thrust_sort_via_permutation(
+        space, policy, view,
+        ::Kokkos::Experimental::Impl::StdAlgoLessThanBinaryPredicate<
+            value_type>());
+  } else {
+    thrust_sort_via_permutation(space, policy, view, maybeComparator...);
+  }
+}
+#endif
+
 #if defined(KOKKOS_ENABLE_CUDA)
 template <class DataType, class... Properties, class... MaybeComparator>
 void sort_cudathrust(const Cuda& space,
@@ -188,10 +272,8 @@ void sort_cudathrust(const Cuda& space,
     return;
   }
   const auto exec = thrust::cuda::par.on(space.cuda_stream());
-  auto first      = ::Kokkos::Experimental::begin(view);
-  auto last       = ::Kokkos::Experimental::end(view);
-  thrust::sort(exec, first, last,
-               std::forward<MaybeComparator>(maybeComparator)...);
+  thrust_sort(space, exec, view,
+              std::forward<MaybeComparator>(maybeComparator)...);
 }
 #endif
 
@@ -208,10 +290,8 @@ void sort_rocthrust(const HIP& space,
     return;
   }
   const auto exec = thrust::hip::par.on(space.hip_stream());
-  auto first      = ::Kokkos::Experimental::begin(view);
-  auto last       = ::Kokkos::Experimental::end(view);
-  thrust::sort(exec, first, last,
-               std::forward<MaybeComparator>(maybeComparator)...);
+  thrust_sort(space, exec, view,
+              std::forward<MaybeComparator>(maybeComparator)...);
 }
 #endif
 
