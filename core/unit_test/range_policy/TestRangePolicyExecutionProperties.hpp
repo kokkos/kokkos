@@ -68,6 +68,26 @@ struct CheckRuntimeValues {
         },
         nerrs_thread_handle);
     ASSERT_EQ(nerrs_thread_handle, 0);
+
+    int nerrs_inline_handle;
+    Kokkos::parallel_reduce(
+        "check_runtime_inline",
+        Kokkos::TeamPolicy<ExecSpace>(1, Kokkos::AUTO()),
+        KOKKOS_LAMBDA(const team_member_t<ExecSpace>& team, int& nerrs) {
+          Kokkos::parallel_reduce(
+              Kokkos::TeamThreadRange(team, 1),
+              [&](const int, int& thread_nerrs) {
+                using thread_handle =
+                    typename team_member_t<ExecSpace>::thread_handle;
+                using inline_handle = typename thread_handle::inline_handle;
+                auto p_inline       = Kokkos::RangePolicy(
+                    inline_handle(thread_handle(team)), beg, end);
+                thread_nerrs += check_runtime_inputs(p_inline, beg, end);
+              },
+              nerrs);
+        },
+        nerrs_inline_handle);
+    ASSERT_EQ(nerrs_inline_handle, 0);
   }
 };
 
