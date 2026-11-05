@@ -96,6 +96,8 @@
 * Return neutral element in parallel_scan with empty work range [\#9319](https://github.com/kokkos/kokkos/pull/9319)
 * Fix host `parallel_reduce` into view in shared space [\#9642](https://github.com/kokkos/kokkos/pull/9642)
 * Fix compiling modules with clang++-22 [\#9495](https://github.com/kokkos/kokkos/pull/9495)
+* Fix `parallel_scan` with a non-zero start index on a `ThreadVectorRange` [\#9719](https://github.com/kokkos/kokkos/pull/9719)
+* Fix filling views with `NaN`s [\#9700](https://github.com/kokkos/kokkos/pull/9700)
 
 ## 5.2.2
 
