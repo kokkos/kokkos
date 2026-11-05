@@ -199,6 +199,10 @@ void test_kernel_name_single() {
     Kokkos::single(my_label, Kokkos::SinglePolicy<ExecutionSpace>(), my_lambda);
     ASSERT_EQ(last_single, my_label);
 
+    Kokkos::single(std::string{}, Kokkos::SinglePolicy<ExecutionSpace>(),
+                   my_lambda);
+    ASSERT_TRUE(last_single.empty());
+
     Kokkos::single(Kokkos::SinglePolicy<ExecutionSpace>(), my_lambda);
     ASSERT_EQ(last_single, typeid_name(my_lambda));
     ASSERT_FALSE(last_single.starts_with("const "))
