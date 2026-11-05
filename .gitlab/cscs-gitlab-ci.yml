@@ -1,0 +1,76 @@
+# Kokkos nightly tests at CSCS machine Alps.
+include:
+  - remote: 'https://gitlab.com/cscs-ci/recipes/-/raw/master/templates/v2/.ci-ext.yml'
+
+stages:
+  - test
+
+.common-setup:
+  stage: test
+  variables:
+    OMP_NUM_THREADS: 8
+    OMP_PLACES: "cores"
+    OMP_PROC_BIND: "close"
+    CSCS_OVERRIDE_BASE_DIR: '/dev/shm'
+  before_script:
+    - |
+      if [ ${CRON_RUN} == "true" ]; then
+        export CDASH_MODEL="Nightly"
+        export BUILD_TYPE="Debug"
+      elif [ ${CI_COMMIT_REF_NAME} == "develop" ]; then
+        export CDASH_MODEL="Continuous"
+        export BUILD_TYPE="Release"
+      else
+        export CDASH_MODEL="Experimental"
+        export BUILD_TYPE="RelWithDebInfo"
+        export GITHUB_PR_ID=$(echo ${CI_COMMIT_BRANCH} | sed -e 's/__CSCSCI__pr//')
+      fi
+      echo "CDASH_MODEL=${CDASH_MODEL} BUILD_TYPE=${BUILD_TYPE} GITHUB_PR_ID=${GITHUB_PR_ID}"
+    - ulimit -c 0
+  after_script:
+    - sed -n "s/[0-9]*:[ ]\[[ ]*OK \] \([^ ]*\) (\([0-9]*\) ms)/\2 \1/p" test_results.txt | sort -nr | head
+
+NVIDIA-GH200:
+  extends: [.uenv-runner-daint-gh200, .common-setup]
+  image: prgenv-gnu/26.3:v1
+  script:
+    - export CMAKE_BUILD_PARALLEL_LEVEL=144
+    - export ENV_CMAKE_OPTIONS=""
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_BUILD_TYPE=${BUILD_TYPE}"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_COMPILER=`pwd`/bin/nvcc_wrapper"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_FLAGS='-Werror=all-warnings -Werror'"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_STANDARD=20"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_DEBUG=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ARCH_NATIVE=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ARCH_HOPPER90=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_CUDA=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_CUDA_CONSTEXPR=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_OPENMP=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_COMPILER_WARNINGS=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_LARGE_MEM_TESTS=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_LIBDL=OFF"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_TESTS=ON"
+    - export CTEST_BUILD_NAME="NVIDIA-GH200"
+    - export GTEST_DEATH_TEST_STYLE=fast
+    - export GTEST_FILTER="-cuda.debug_pin_um_to_host"
+    - ctest -VV
+        -D CDASH_MODEL=${CDASH_MODEL}
+        -D GITHUB_PR_ID="${GITHUB_PR_ID}"
+        -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}"
+        -D OUTPUT_JUNIT_FILE=result_gh200.xml
+        -S scripts/CTestRun.cmake
+        -D CTEST_SITE="cscs-alps"
+        -D CTEST_BUILD_NAME="${CTEST_BUILD_NAME}"
+        -D CTEST_NOTES_FILES="${CI_PROJECT_DIR}/build/CMakeCache.txt"
+      | tee test_results.txt
+  variables:
+    GIT_STRATEGY: fetch
+    SLURM_TIMELIMIT: '04:00:00'
+    WITH_UENV_VIEW: 'default'
+  artifacts:
+    when: always
+    paths:
+      - build/result_gh200.xml
+    reports:
+      junit: build/result_gh200.xml
