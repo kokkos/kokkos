@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+# SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
+
 kokkos_add_example_directories(query_device)
 if(NOT Kokkos_ENABLE_SYCL
    AND (NOT Kokkos_ENABLE_CUDA OR Kokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE)

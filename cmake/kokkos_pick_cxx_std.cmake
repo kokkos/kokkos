@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+# SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
+
 # Set CXX standard flags
 set(KOKKOS_ENABLE_CXX20 OFF)
 set(KOKKOS_ENABLE_CXX23 OFF)

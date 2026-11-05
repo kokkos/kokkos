@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+# SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
+
 kokkos_cfg_depends(COMPILER_ID NONE)
 
 set(KOKKOS_CXX_COMPILER ${CMAKE_CXX_COMPILER})

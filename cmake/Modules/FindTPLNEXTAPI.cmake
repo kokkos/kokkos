@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+# SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
+
 find_package(NextAPI REQUIRED COMPONENTS Core)
 
 kokkos_create_imported_tpl(NEXTAPI INTERFACE LINK_LIBRARIES NextAPI::Core)
