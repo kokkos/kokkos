@@ -352,7 +352,8 @@ class Kokkos::Impl::TeamPolicyInternal<Kokkos::SYCL, Properties...>
                             Kokkos::SYCL>;
       auto lambda = ParallelForImpl::create_team_for_lambda(
           functor_wrapper, team_scratch_memory_L0, scratch_size, shmem_begin,
-          /*global_scratch_ptr*/ nullptr);
+          /*global_scratch_ptr*/ nullptr, /*scratch_locks*/ nullptr,
+          /*num_scratch_locks*/ 0);
 
       sycl::kernel_id functor_kernel_id =
           sycl::get_kernel_id<decltype(lambda)>();
@@ -426,7 +427,8 @@ class Kokkos::Impl::TeamPolicyInternal<Kokkos::SYCL, Properties...>
                   shmem_begin,
                   /*global_scratch_ptr*/ nullptr,
                   /*num_teams_done*/ {1, cgh},
-                  /*scratch_flags*/ nullptr);
+                  /*scratch_flags*/ nullptr, /*scratch_locks*/ nullptr,
+                  /*num_scratcht_locks*/ 0);
 
       sycl::kernel_id functor_kernel_id =
           sycl::get_kernel_id<decltype(lambda)>();
