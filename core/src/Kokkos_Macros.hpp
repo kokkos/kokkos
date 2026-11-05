@@ -249,11 +249,6 @@
 #define KOKKOS_IMPL_ALIGN_PTR(size) __attribute__((aligned(size)))
 #endif
 
-// FIXME_NEXTSILICON: Marking functions as weak prevents host code from being
-// inlined. If host code is inlined or speculated, it may prevent offloading to
-// the device.
-#define KOKKOS_IMPL_HOST_FUNCTION __attribute__((weak))
-
 #endif
 
 //----------------------------------------------------------------------------
