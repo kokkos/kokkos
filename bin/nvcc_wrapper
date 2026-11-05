@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+# SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
+
 #
 # This shell script (nvcc_wrapper) wraps both the host compiler and
 # NVCC, if you are building legacy C or C++ code with CUDA enabled.
