@@ -23,6 +23,10 @@ export {
   using ::Kokkos::Experimental::Impl::host_abi_set;
   using ::Kokkos::Experimental::Impl::Identity;
   using ::Kokkos::Experimental::Impl::simd_size_t;
+#if defined(KOKKOS_ARCH_AVX2)
+  using ::Kokkos::Experimental::Impl::simd_host_tag;
+  using ::Kokkos::Experimental::Impl::simd_vector_t;
+#endif
   }  // namespace Impl
   }  // namespace Kokkos::Experimental
 }
