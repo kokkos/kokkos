@@ -610,6 +610,8 @@ void parallel_scan(const Impl::TeamThreadRangeBoundariesStruct<
   static_assert(std::is_same_v<closure_value_type, ValueType>,
                 "Non-matching value types of closure and return type");
 
+  using thread_handle_t = Impl::ThreadHandleType<Impl::SYCLTeamMember>;
+
   const auto start     = loop_bounds.start;
   const auto end       = loop_bounds.end;
   auto& member         = loop_bounds.member;
@@ -623,13 +625,34 @@ void parallel_scan(const Impl::TeamThreadRangeBoundariesStruct<
     // local accumulation for this chunk
     ValueType local_accum = 0;
     // user updates value with prefix value
-    if (ii < loop_bounds.end) lambda(ii, local_accum, false);
+    if (ii < loop_bounds.end) {
+      if constexpr (std::is_invocable_v<FunctorType, iType, ValueType&, bool>) {
+        lambda(ii, local_accum, false);
+      } else if constexpr (std::is_invocable_v<FunctorType,
+                                               thread_handle_t const&, iType,
+                                               ValueType&, bool>) {
+        lambda(thread_handle_t(member), ii, local_accum, false);
+      } else {
+        static_assert(Kokkos::Impl::always_false<FunctorType>::value,
+                      "Kokkos::parallel_scan(TeamThreadRange) closure must be "
+                      "invocable with (iType, ValueType&, bool) or "
+                      "(ThreadHandleType, iType, ValueType&, bool)");
+      }
+    }
     // perform team scan
     local_accum = member.team_scan(local_accum);
     // add this blocks accum to total accumulation
     ValueType val = accum + local_accum;
     // user updates their data with total accumulation
-    if (ii < loop_bounds.end) lambda(ii, val, true);
+    if (ii < loop_bounds.end) {
+      if constexpr (std::is_invocable_v<FunctorType, iType, ValueType&, bool>) {
+        lambda(ii, val, true);
+      } else if constexpr (std::is_invocable_v<FunctorType,
+                                               thread_handle_t const&, iType,
+                                               ValueType&, bool>) {
+        lambda(thread_handle_t(member), ii, val, true);
+      }
+    }
     // the last value needs to be propogated to next chunk
     if (team_rank == team_size - 1) accum = val;
     // broadcast last value to rest of the team

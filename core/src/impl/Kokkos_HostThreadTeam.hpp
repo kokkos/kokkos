@@ -925,12 +925,28 @@ KOKKOS_INLINE_FUNCTION
   static_assert(std::is_same_v<ClosureValueType, ValueType>,
                 "Non-matching value types of closure and return type");
 
+  using thread_handle_t = Impl::ThreadHandleType<Member>;
+
   ValueType accum = ValueType();
+
+  auto const invoke = [&](iType i, ValueType& val, bool final_pass) {
+    if constexpr (std::is_invocable_v<Closure, iType, ValueType&, bool>) {
+      closure(i, val, final_pass);
+    } else if constexpr (std::is_invocable_v<Closure, thread_handle_t const&,
+                                             iType, ValueType&, bool>) {
+      closure(thread_handle_t(loop_boundaries.member), i, val, final_pass);
+    } else {
+      static_assert(Kokkos::Impl::always_false<Closure>::value,
+                    "Kokkos::parallel_scan(TeamThreadRange) closure must be "
+                    "invocable with (iType, ValueType&, bool) or "
+                    "(ThreadHandleType, iType, ValueType&, bool)");
+    }
+  };
 
   // Intra-member scan
   for (iType i = loop_boundaries.start; i < loop_boundaries.end;
        i += loop_boundaries.increment) {
-    closure(i, accum, false);
+    invoke(i, accum, false);
   }
 
   auto& team_member = loop_boundaries.member;
@@ -940,7 +956,7 @@ KOKKOS_INLINE_FUNCTION
 
   for (iType i = loop_boundaries.start; i < loop_boundaries.end;
        i += loop_boundaries.increment) {
-    closure(i, accum, true);
+    invoke(i, accum, true);
   }
 
   team_member.team_broadcast(accum, team_member.team_size() - 1);
