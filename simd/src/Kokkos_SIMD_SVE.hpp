@@ -352,6 +352,114 @@ class sve_mask<Derived, 32> {
   }
 };
 
+#if SVE_DOUBLES_IN_VECTOR == 8
+// Half-size (8 x 32-bit lanes of a 16-lane register) mask: same operators as
+// the full-size one, but every predicate operation uses a predicate covering
+// the low half only, so that the upper lanes of the result are always false.
+template <class Derived>
+class sve_mask<Derived, 32, true> {
+  vls_bool_t m_value;
+
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION static svbool_t half_pred() noexcept {
+    return svwhilelt_b32(static_cast<std::int32_t>(0),
+                         static_cast<std::int32_t>(SVE_DOUBLES_IN_VECTOR));
+  }
+
+ protected:
+  using implementation_type = vls_bool_t;
+
+ public:
+  using value_type = bool;
+  using abi_type   = simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>;
+
+  static constexpr std::integral_constant<simd_size_t, SVE_DOUBLES_IN_VECTOR>
+      size{};
+
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION sve_mask() noexcept = default;
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit sve_mask(
+      value_type value) noexcept
+      : m_value(value ? half_pred() : svpfalse()) {}
+  template <class G>
+    requires Impl::InvocableWithReturnType<
+        G, value_type, std::integral_constant<simd_size_t, 0>>
+  // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit sve_mask(
+      G&& gen) noexcept {
+    vls_bool_t b0246 = svdupq_b32(
+        static_cast<bool>(gen(std::integral_constant<simd_size_t, 0>())),
+        static_cast<bool>(gen(std::integral_constant<simd_size_t, 2>())),
+        static_cast<bool>(gen(std::integral_constant<simd_size_t, 4>())),
+        static_cast<bool>(gen(std::integral_constant<simd_size_t, 6>())));
+    vls_bool_t b1357 = svdupq_b32(
+        static_cast<bool>(gen(std::integral_constant<simd_size_t, 1>())),
+        static_cast<bool>(gen(std::integral_constant<simd_size_t, 3>())),
+        static_cast<bool>(gen(std::integral_constant<simd_size_t, 5>())),
+        static_cast<bool>(gen(std::integral_constant<simd_size_t, 7>())));
+    // lanes 8..15 end up as copies of lanes 0..7 and are cleared here
+    m_value = svand_z(svptrue_b32(), svzip1_b32(b0246, b1357), half_pred());
+  }
+  template <class U>
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION sve_mask(
+      sve_mask<U, 32, true> const& other) noexcept
+      : m_value(other) {}
+  // the caller guarantees that the upper lanes of value_in are false
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit sve_mask(
+      implementation_type const& value_in) noexcept
+      : m_value(value_in) {}
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit operator vls_bool_t()
+      const noexcept {
+    return m_value;
+  }
+
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type
+  operator[](simd_size_t i) const {
+    return svptest_last(Impl::get_pred<32>(i), m_value);
+  }
+
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Derived operator!() const noexcept {
+    return operator~();
+  }
+
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Derived operator~() const noexcept {
+    return Derived(static_cast<implementation_type>(
+        svnot_z(sve_mask::half_pred(), m_value)));
+  }
+
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend Derived operator&&(
+      sve_mask const& lhs, sve_mask const& rhs) noexcept {
+    return lhs & rhs;
+  }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend Derived operator||(
+      sve_mask const& lhs, sve_mask const& rhs) noexcept {
+    return lhs | rhs;
+  }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend Derived operator&(
+      sve_mask const& lhs, sve_mask const& rhs) noexcept {
+    return Derived(static_cast<implementation_type>(
+        svand_z(sve_mask::half_pred(), lhs.m_value, rhs.m_value)));
+  }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend Derived operator|(
+      sve_mask const& lhs, sve_mask const& rhs) noexcept {
+    return Derived(static_cast<implementation_type>(
+        svorr_z(sve_mask::half_pred(), lhs.m_value, rhs.m_value)));
+  }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend Derived operator^(
+      sve_mask const& lhs, sve_mask const& rhs) noexcept {
+    return Derived(static_cast<implementation_type>(
+        sveor_z(sve_mask::half_pred(), lhs.m_value, rhs.m_value)));
+  }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend Derived operator!=(
+      sve_mask const& lhs, sve_mask const& rhs) noexcept {
+    return Derived(static_cast<implementation_type>(
+        sveor_z(sve_mask::half_pred(), lhs.m_value, rhs.m_value)));
+  }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend Derived operator==(
+      sve_mask const& lhs, sve_mask const& rhs) noexcept {
+    return !operator!=(lhs, rhs);
+  }
+};
+#endif  // SVE_DOUBLES_IN_VECTOR == 8
+
 }  // namespace Impl
 
 #define INSTANTIATE_SIMD_MASK_SVE(T, SVE_T_IN_VECTOR)                          \
@@ -359,10 +467,12 @@ class sve_mask<Derived, 32> {
   class basic_simd_mask<T, simd_abi::sve_fixed_size<SVE_T_IN_VECTOR>>          \
       : public Impl::sve_mask<                                                 \
             basic_simd_mask<T, simd_abi::sve_fixed_size<SVE_T_IN_VECTOR>>,     \
-            sizeof(T) * 8> {                                                   \
+            sizeof(T) * 8,                                                     \
+            ((__ARM_FEATURE_SVE_BITS / (SVE_T_IN_VECTOR)) != sizeof(T) * 8)> { \
     using base_type = Impl::sve_mask<                                          \
         basic_simd_mask<T, simd_abi::sve_fixed_size<SVE_T_IN_VECTOR>>,         \
-        sizeof(T) * 8>;                                                        \
+        sizeof(T) * 8,                                                         \
+        ((__ARM_FEATURE_SVE_BITS / (SVE_T_IN_VECTOR)) != sizeof(T) * 8)>;      \
                                                                                \
    public:                                                                     \
     KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask() noexcept =         \
