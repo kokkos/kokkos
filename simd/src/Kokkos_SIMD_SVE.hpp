@@ -85,7 +85,7 @@ class sve_fixed_size {};
 
 namespace Impl {
 
-template <class Derived, int Bits>
+template <class Derived, int Bits, bool HalfSize = false>
 class sve_mask;
 
 template <int nbits>
