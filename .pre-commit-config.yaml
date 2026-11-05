@@ -42,3 +42,8 @@ repos:
       - '/*| *| */'
       files: '\.[hc]$'
       exclude: '^tpls/'
+
+  - repo: https://codeberg.org/fsfe/reuse-tool
+    rev: ea739bff9c6daa1c4c8a5c5dfd069f3fb0374728 # v6.3.0
+    hooks:
+    - id: reuse-lint-file
