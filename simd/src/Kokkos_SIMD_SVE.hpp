@@ -3632,6 +3632,14 @@ using sve_index_mask_type =
                     simd_abi::neon_fixed_size<SVE_DOUBLES_IN_VECTOR>>;
 #endif
 
+#if SVE_DOUBLES_IN_VECTOR == 8
+// Predicate covering the low half (8 lanes) of a 32-bit-lane register.
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION svbool_t half_pred32() noexcept {
+  return svwhilelt_b32(static_cast<std::int32_t>(0),
+                       static_cast<std::int32_t>(SVE_DOUBLES_IN_VECTOR));
+}
+#endif
+
 // True for the half-size int32 index mask (32-bit lanes, low half only).
 template <class M>
 inline constexpr bool is_half_int32_mask_v =
@@ -4024,6 +4032,36 @@ KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_SCATTER_TO(
 KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_SCATTER_TO_WITH_MASK(
     std::int32_t, simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>,
     { unchecked_scatter_to<V>(v, out, mask, indices, flag); })
+
+#if SVE_DOUBLES_IN_VECTOR == 8
+// int32 data on 8 lanes (half of a register): only the 8 low lanes may be
+// read or written, so the predicate covers the low half instead of svptrue.
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM(
+    std::int32_t, simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>, {
+      vls_int32_t idx = static_cast<vls_int32_t>(
+          basic_simd<std::int32_t,
+                     simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>{indices});
+      return V(static_cast<vls_int32_t>(svld1_gather_index(
+          Impl::half_pred32(), Impl::Ranges::data(in), idx)));
+    })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_GATHER_FROM(
+    std::int32_t, simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>,
+    { return unchecked_gather_from<V>(in, indices, flag); })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO(
+    std::int32_t, simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>, {
+      vls_int32_t idx = static_cast<vls_int32_t>(
+          basic_simd<std::int32_t,
+                     simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>{indices});
+      svst1_scatter_index(Impl::half_pred32(), Impl::Ranges::data(out), idx,
+                          static_cast<vls_int32_t>(v));
+    })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_SCATTER_TO(
+    std::int32_t, simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>,
+    { unchecked_scatter_to<V>(v, out, indices, flag); })
+#endif  // SVE_DOUBLES_IN_VECTOR == 8
 
 KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM(
     std::uint32_t, simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>, {
