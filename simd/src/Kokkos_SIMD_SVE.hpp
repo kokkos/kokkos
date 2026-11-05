@@ -3631,6 +3631,33 @@ using sve_index_mask_type =
     basic_simd_mask<std::int32_t,
                     simd_abi::neon_fixed_size<SVE_DOUBLES_IN_VECTOR>>;
 #endif
+
+// True for the half-size int32 index mask (32-bit lanes, low half only).
+template <class M>
+inline constexpr bool is_half_int32_mask_v =
+#if SVE_DOUBLES_IN_VECTOR == 8
+    std::is_same_v<
+        M, basic_simd_mask<std::int32_t,
+                           simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>>;
+#else
+    false;
+#endif
+
+// Predicate with one bit per 64-bit lane, for gather/scatter of 8-byte data.
+// A mask on 64-bit lanes is used as is; the half-size int32 index mask is
+// widened so that lane k stays lane k (32-bit lane k is at bit 4k, 64-bit
+// lane k at bit 8k).
+template <class M>
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION vls_bool_t
+to_pred64(M const& mask) noexcept {
+  if constexpr (is_half_int32_mask_v<M>) {
+    return svcmpne_n_s64(
+        svptrue_b64(),
+        svunpklo_s64(svdup_n_s32_z(static_cast<vls_bool_t>(mask), 1)), 0);
+  } else {
+    return static_cast<vls_bool_t>(mask);
+  }
+}
 }  // namespace Impl
 
 }  // namespace Experimental
@@ -3855,7 +3882,7 @@ KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
           basic_simd<std::int64_t,
                      simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>{indices});
       return V(static_cast<vls_float64_t>(svld1_gather_index(
-          static_cast<vls_bool_t>(mask), Impl::Ranges::data(in), idx)));
+          Impl::to_pred64(mask), Impl::Ranges::data(in), idx)));
     })
 
 KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_GATHER_FROM(
@@ -3880,8 +3907,7 @@ KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO_WITH_MASK(
       vls_int64_t idx = static_cast<vls_int64_t>(
           basic_simd<std::int64_t,
                      simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>{indices});
-      svst1_scatter_index(static_cast<vls_bool_t>(mask),
-                          Impl::Ranges::data(out), idx,
+      svst1_scatter_index(Impl::to_pred64(mask), Impl::Ranges::data(out), idx,
                           static_cast<vls_float64_t>(v));
     })
 
@@ -4067,7 +4093,7 @@ KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
           basic_simd<std::int64_t,
                      simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>{indices});
       return V(static_cast<vls_int64_t>(svld1_gather_index(
-          static_cast<vls_bool_t>(mask), Impl::Ranges::data(in), idx)));
+          Impl::to_pred64(mask), Impl::Ranges::data(in), idx)));
     })
 
 KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_GATHER_FROM(
@@ -4092,8 +4118,7 @@ KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO_WITH_MASK(
       vls_int64_t idx = static_cast<vls_int64_t>(
           basic_simd<std::int64_t,
                      simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>{indices});
-      svst1_scatter_index(static_cast<vls_bool_t>(mask),
-                          Impl::Ranges::data(out), idx,
+      svst1_scatter_index(Impl::to_pred64(mask), Impl::Ranges::data(out), idx,
                           static_cast<vls_int64_t>(v));
     })
 
@@ -4120,7 +4145,7 @@ KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
           basic_simd<std::uint64_t,
                      simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>{indices});
       return V(static_cast<vls_uint64_t>(svld1_gather_index(
-          static_cast<vls_bool_t>(mask), Impl::Ranges::data(in), idx)));
+          Impl::to_pred64(mask), Impl::Ranges::data(in), idx)));
     })
 
 KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_GATHER_FROM(
@@ -4145,8 +4170,7 @@ KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO_WITH_MASK(
       vls_uint64_t idx = static_cast<vls_uint64_t>(
           basic_simd<std::uint64_t,
                      simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>{indices});
-      svst1_scatter_index(static_cast<vls_bool_t>(mask),
-                          Impl::Ranges::data(out), idx,
+      svst1_scatter_index(Impl::to_pred64(mask), Impl::Ranges::data(out), idx,
                           static_cast<vls_uint64_t>(v));
     })
 
