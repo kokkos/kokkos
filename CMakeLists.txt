@@ -100,6 +100,16 @@ if(Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE AND Kokkos_ENABLE_HIP)
 
   set(KOKKOS_COMPILE_LANGUAGE HIP)
 endif()
+# use lower case here since we haven't parsed options yet
+if(Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE AND Kokkos_ENABLE_SYCL)
+
+  # Without this as a language for the package we would get a C++ compiler enabled.
+  # but we still need a C++ compiler even if we build all our cpp files as SYCL only
+  # because otherwise the C++ features don't work etc.
+  set(KOKKOS_INTERNAL_EXTRA_COMPILE_LANGUAGE CXX)
+
+  set(KOKKOS_COMPILE_LANGUAGE SYCL)
+endif()
 
 # Always call the project command to define Kokkos_ variables
 # and to make sure that C++ is an enabled language

@@ -280,6 +280,8 @@ function(KOKKOS_SET_LIBRARY_PROPERTIES LIBRARY_NAME)
       set(Kokkos_LANGUAGES "HIP,CXX")
     elseif(Kokkos_ENABLE_CUDA)
       set(Kokkos_LANGUAGES "CUDA,CXX")
+    elseif(Kokkos_ENABLE_SYCL)
+      set(Kokkos_LANGUAGES "SYCL,CXX")
     endif()
   endif()
 
