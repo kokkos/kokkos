@@ -3,7 +3,6 @@
 
 #include <filesystem>
 #include <fstream>
-#include <regex>
 
 #include <TestCuda_Category.hpp>
 #include <Kokkos_Macros.hpp>
@@ -15,6 +14,7 @@ import kokkos.core;
 #include <Kokkos_Graph.hpp>
 
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 namespace {
 
@@ -111,14 +111,12 @@ TEST_F(TEST_CATEGORY_FIXTURE(GraphInterOp), debug_dot_print) {
   // it would make the test rely too much on internal implementation details.
   // Therefore, we just look for the functor and policy. Note that the
   // signature is mangled in the 'dot' output.
-  const std::string expected("[A-Za-z0-9_]+Increment[A-Za-z0-9_]+RangePolicy");
+  const std::string expected(R"(\w+Increment\w+RangePolicy)");
 
   std::stringstream buffer;
   buffer << std::ifstream(dot).rdbuf();
 
-  ASSERT_TRUE(std::regex_search(buffer.str(), std::regex(expected)))
-      << "Could not find expected signature regex " << std::quoted(expected)
-      << " in " << dot;
+  EXPECT_THAT(buffer.str(), ::testing::ContainsRegex(expected)) << "in " << dot;
 }
 
 // Ensure that the graph has been instantiated with the default flag.
