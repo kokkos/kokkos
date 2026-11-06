@@ -9,6 +9,8 @@ import kokkos.core_impl;
 #include <Kokkos_Core.hpp>
 #endif
 
+#include <desul/atomics.hpp>
+
 #include <gtest/gtest.h>
 
 namespace {
@@ -21,6 +23,8 @@ using const_acc_t =
     Kokkos::Impl::ReferenceCountedAccessor<memory_space_t, const_defacc_t>;
 using data_handle_t       = typename acc_t::data_handle_type;
 using const_data_handle_t = typename const_acc_t::data_handle_type;
+using atomic_acc_t        = Kokkos::Impl::AtomicAccessorRelaxed<element_t>;
+using const_atomic_acc_t = Kokkos::Impl::AtomicAccessorRelaxed<const element_t>;
 }  // namespace
 
 TEST(TEST_CATEGORY, RefCountedAcc_Typedefs) {
@@ -58,6 +62,20 @@ void test_refcountedacc_ctors() {
   const_acc_t c_acc1(defacc);
   const_acc_t c_acc2(c_defacc);
   static_assert(!std::is_constructible_v<acc_t, const_defacc_t>);
+
+  unused_variable_sink(acc);
+  unused_variable_sink(c_acc1);
+  unused_variable_sink(c_acc2);
+}
+// from AtomicAccessorRelaxed (issue #9196)
+{
+  atomic_acc_t atomic_acc;
+  const_atomic_acc_t c_atomic_acc;
+  acc_t acc(atomic_acc);
+  const_acc_t c_acc1(atomic_acc);
+  const_acc_t c_acc2(c_atomic_acc);
+  static_assert(std::is_constructible_v<acc_t, atomic_acc_t>);
+  static_assert(!std::is_constructible_v<acc_t, const_atomic_acc_t>);
 
   unused_variable_sink(acc);
   unused_variable_sink(c_acc1);
@@ -145,4 +163,40 @@ void test_refcountedacc_conversion() {
 
 TEST(TEST_CATEGORY, RefCountedAcc_Conversion) {
   test_refcountedacc_conversion();
+}
+
+void test_refcountedacc_memory_scope_conversion() {
+  using atomic_device =
+      Kokkos::Impl::AtomicAccessorRelaxed<element_t, desul::MemoryScopeDevice>;
+  using atomic_node =
+      Kokkos::Impl::AtomicAccessorRelaxed<element_t, desul::MemoryScopeNode>;
+
+  using ref_acc_device =
+      Kokkos::Impl::ReferenceCountedAccessor<memory_space_t, atomic_device>;
+
+  // Compatible memory scope (device == device) implicit conversion allowed
+  static_assert(std::is_constructible_v<ref_acc_device, atomic_device>);
+  static_assert(std::is_convertible_v<atomic_device, ref_acc_device>);
+
+  // Incompatible memory scope (device != host) constructible but not implicitly
+  // convertible
+  static_assert(std::is_constructible_v<ref_acc_device, atomic_node>);
+  static_assert(!std::is_convertible_v<atomic_node, ref_acc_device>);
+
+  Kokkos::parallel_for(
+      Kokkos::RangePolicy<TEST_EXECSPACE>(0, 1), KOKKOS_LAMBDA(int) {
+        // Explicit construction from incompatible scopes (device != node)
+        atomic_node a_node;
+        ref_acc_device ref_from_node{a_node};
+        unused_variable_sink(ref_from_node);
+
+        // Implicit construction from compatible scopes (device == node)
+        atomic_device a_dev;
+        ref_acc_device ref_from_dev = a_dev;
+        unused_variable_sink(ref_from_dev);
+      });
+}
+
+TEST(TEST_CATEGORY, RefCountedAcc_MemoryScopeExplicitConversion) {
+  test_refcountedacc_memory_scope_conversion();
 }
