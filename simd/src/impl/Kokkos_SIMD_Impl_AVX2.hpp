@@ -18,6 +18,8 @@ class avx2_fixed_size {};
 
 }  // namespace simd_abi
 
+#if !defined(KOKKOS_IMPL_SIMD_MODULES_DONT_INCLUDE_IMPLEMENTATION)
+
 namespace Impl {
 
 struct simd_host_tag {};
@@ -2332,6 +2334,9 @@ KOKKOS_SIMD_IMPL_DEFINE_CONVERSION_FALLBACK_DEFN_HOST(
 #endif
 
 }  // namespace Impl
+
+#endif
+
 }  // namespace Kokkos::Experimental
 
 #endif

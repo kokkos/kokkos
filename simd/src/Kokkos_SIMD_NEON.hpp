@@ -27,6 +27,8 @@ class neon_fixed_size {};
 
 }  // namespace simd_abi
 
+#if !defined(KOKKOS_IMPL_SIMD_MODULES_DONT_INCLUDE_IMPLEMENTATION)
+
 namespace Impl {
 
 template <class Derived, int Bits, simd_size_t Size>
@@ -3918,6 +3920,8 @@ basic_simd<std::uint64_t, simd_abi::neon_fixed_size<2>>::basic_simd(
 //   if (none_of(m)) return identity;
 //   return vaddvq_f32(static_cast<float32x4_t>(v));
 // }
+
+#endif
 
 }  // namespace Experimental
 }  // namespace Kokkos

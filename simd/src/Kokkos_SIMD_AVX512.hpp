@@ -27,6 +27,8 @@ class avx512_fixed_size {};
 
 }  // namespace simd_abi
 
+#if !defined(KOKKOS_IMPL_SIMD_MODULES_DONT_INCLUDE_IMPLEMENTATION)
+
 template <class T>
 class basic_simd_mask<T, simd_abi::avx512_fixed_size<8>> {
   __mmask8 m_value;
@@ -4589,6 +4591,8 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION float reduce(
   return _mm512_mask_reduce_add_ps(static_cast<__mmask16>(m),
                                    static_cast<__m512>(v));
 }
+
+#endif
 
 }  // namespace Experimental
 }  // namespace Kokkos

@@ -83,6 +83,8 @@ class sve_fixed_size {};
 
 }  // namespace simd_abi
 
+#if !defined(KOKKOS_IMPL_SIMD_MODULES_DONT_INCLUDE_IMPLEMENTATION)
+
 namespace Impl {
 
 template <class Derived, int Bits>
@@ -3877,6 +3879,8 @@ KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_SCATTER_TO(
 KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_SCATTER_TO_WITH_MASK(
     std::uint64_t, simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>,
     { unchecked_scatter_to<V>(v, out, mask, indices, flag); })
+
+#endif
 
 }  // namespace Experimental
 }  // namespace Kokkos

@@ -10,6 +10,8 @@
 #include <Kokkos_SIMD_Common.hpp>
 #include <impl/Kokkos_SIMD_Impl_AVX2.hpp>
 
+#if !defined(KOKKOS_IMPL_SIMD_MODULES_DONT_INCLUDE_IMPLEMENTATION)
+
 #ifdef KOKKOS_SIMD_COMMON_MATH_HPP
 #error \
     "Kokkos_SIMD_AVX2.hpp must be included before Kokkos_SIMD_Common_Math.hpp!"
@@ -188,5 +190,7 @@ KOKKOS_SIMD_IMPL_DEFINE_MEMORY_PERMUTE_FN_AVX2(std::uint64_t, std::int64_t,
 
 }  // namespace Experimental
 }  // namespace Kokkos
+
+#endif
 
 #endif

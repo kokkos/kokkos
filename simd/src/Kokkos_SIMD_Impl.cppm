@@ -3,6 +3,18 @@
 
 module;
 
+#include <Kokkos_Macros.hpp>
+
+// FIXME_CLANG: Including the same function using intrinsics in both the
+// `kokkos.simd` and `kokkos.simd_impl` modules results in "definition with same
+// mangled name" errors when compiling with clang, most likely because of this
+// bug https://github.com/llvm/llvm-project/issues/195661. Making sure that the
+// `basic_simd` and `basic_simd_mask` implementations are only included in the
+// `kokkos.simd` module and not in `kokkos.simd_impl` fixes the issue.
+#if defined(KOKKOS_COMPILER_CLANG)
+#define KOKKOS_IMPL_SIMD_MODULES_DONT_INCLUDE_IMPLEMENTATION
+#endif
+
 #include <Kokkos_SIMD.hpp>
 
 export module kokkos.simd_impl;
