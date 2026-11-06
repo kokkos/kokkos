@@ -147,6 +147,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;NextSilicon)
       DeepCopy_Narrowing
       DeepCopy_SameArgument
       DeepCopyAlignment
+      Event
       ExecSpacePartitioning
       ExecSpaceThreadSafety
       FunctionAnnotationMacros
@@ -469,6 +470,7 @@ if(Kokkos_ENABLE_OPENACC)
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_AtomicOperations_complexdouble.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_AtomicOperations_complexfloat.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_Crs.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_Event.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_JoinBackwardCompatibility.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_LocalDeepCopy.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_Other.cpp
@@ -626,6 +628,7 @@ if(Kokkos_ENABLE_CUDA)
   kokkos_add_executable_and_test(
     CoreUnitTest_CudaInterOpStreamsMultiGPU SOURCES UnitTestMainInit.cpp cuda/TestCuda_InterOp_StreamsMultiGPU.cpp
   )
+  kokkos_add_executable_and_test(CoreUnitTest_CudaEvent SOURCES UnitTestMainInit.cpp cuda/TestCuda_Event.cpp)
 
   kokkos_add_executable_and_test(
     CoreUnitTest_CudaInterOpGraph SOURCES UnitTestMainInit.cpp cuda/TestCuda_InterOp_Graph.cpp
