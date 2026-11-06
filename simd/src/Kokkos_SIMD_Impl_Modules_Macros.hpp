@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
+#ifndef KOKKOS_SIMD_IMPL_MODULES_MACROS_HPP
+#define KOKKOS_SIMD_IMPL_MODULES_MACROS_HPP
+
 #define KOKKOS_SIMD_MODULES_IMPL_SYMBOLS                           \
   namespace Kokkos::Experimental {                                 \
   namespace simd_abi::Impl {                                       \
@@ -18,3 +21,5 @@
   using ::Kokkos::Experimental::Impl::simd_size_t;                 \
   }                                                                \
   }
+
+#endif

@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
+#ifndef KOKKOS_SIMD_MODULES_MACROS_HPP
+#define KOKKOS_SIMD_MODULES_MACROS_HPP
+
 #include <Kokkos_Macros.hpp>
 
 #define KOKKOS_SIMD_MODULES_SYMBOLS_COMMON                  \
@@ -112,4 +115,6 @@
   }
 #else
 #define KOKKOS_SIMD_MODULES_SYMBOLS KOKKOS_SIMD_MODULES_SYMBOLS_COMMON
+#endif
+
 #endif
