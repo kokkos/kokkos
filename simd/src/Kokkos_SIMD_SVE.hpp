@@ -460,6 +460,26 @@ class sve_mask<Derived, 32, true> {
 };
 #endif  // SVE_DOUBLES_IN_VECTOR == 8
 
+// Predicate of a mask on lanes of type From, expressed for a mask on lanes of
+// type To with the same number of lanes. Lane k of a 64-bit-lane predicate is
+// bit 8k and lane k of a 32-bit-lane predicate is bit 4k: reinterpreting the
+// bits of a mask of another lane width would mix the lanes.
+template <class To, class From>
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION vls_bool_t
+convert_mask_pred(vls_bool_t p) noexcept {
+  if constexpr (sizeof(From) == 8 && sizeof(To) == 4) {
+    // narrow: the 8 low 32-bit lanes get the 8 lanes, the upper ones are false
+    svint32_t v =
+        svuzp1_s32(svreinterpret_s32_s64(svdup_n_s64_z(p, 1)), svdup_n_s32(0));
+    return svcmpne_n_s32(svptrue_b32(), v, 0);
+  } else if constexpr (sizeof(From) == 4 && sizeof(To) == 8) {
+    // widen: the 32-bit mask only has its 8 low lanes set
+    return svcmpne_n_s64(svptrue_b64(), svunpklo_s64(svdup_n_s32_z(p, 1)), 0);
+  } else {
+    return p;
+  }
+}
+
 }  // namespace Impl
 
 #define INSTANTIATE_SIMD_MASK_SVE(T, SVE_T_IN_VECTOR)                          \
@@ -484,7 +504,9 @@ class sve_mask<Derived, 32, true> {
     KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask(                     \
         basic_simd_mask<U, simd_abi::sve_fixed_size<SVE_T_IN_VECTOR>> const&   \
             other) noexcept                                                    \
-        : base_type(static_cast<base_type::implementation_type>(other)) {}     \
+        : base_type(                                                           \
+              Impl::convert_mask_pred<T, U>(static_cast<vls_bool_t>(other))) { \
+    }                                                                          \
     KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd_mask(  \
         vls_bool_t const& value_in) noexcept                                   \
         : base_type(value_in) {}                                               \
@@ -507,6 +529,11 @@ INSTANTIATE_SIMD_MASK_SVE(std::uint64_t, SVE_DOUBLES_IN_VECTOR);
 
 INSTANTIATE_SIMD_MASK_SVE(float, SVE_WORDS_IN_VECTOR);
 INSTANTIATE_SIMD_MASK_SVE(double, SVE_DOUBLES_IN_VECTOR);
+
+#if SVE_DOUBLES_IN_VECTOR == 8
+// half-size int32 mask: the index type of gather/scatter of 8-byte data
+INSTANTIATE_SIMD_MASK_SVE(std::int32_t, SVE_DOUBLES_IN_VECTOR);
+#endif
 
 template <>
 class basic_simd<double, simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> {
@@ -3313,74 +3340,6 @@ condition(
 
 #elif SVE_DOUBLES_IN_VECTOR == 8
 
-// 8-lane int32 index mask: b32 predicate, only the 8 low lanes may be active.
-namespace Impl {
-class sve_index_mask8 {
-  vls_bool_t m_value;
-
-  static svbool_t valid_lanes() noexcept {
-    return svwhilelt_b32(static_cast<std::int32_t>(0),
-                         static_cast<std::int32_t>(SVE_DOUBLES_IN_VECTOR));
-  }
-
- public:
-  using value_type = bool;
-  using abi_type   = simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>;
-  static constexpr std::integral_constant<Impl::simd_size_t,
-                                          SVE_DOUBLES_IN_VECTOR>
-      size{};
-
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION sve_index_mask8() noexcept = default;
-
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit sve_index_mask8(
-      bool value) noexcept
-      : m_value(value ? valid_lanes() : svpfalse()) {}
-
-  template <class G>
-    requires Impl::InvocableWithReturnType<
-        G, value_type, std::integral_constant<Impl::simd_size_t, 0>>
-  // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit sve_index_mask8(
-      G&& gen) noexcept {
-    // lanes 8..15 end up as copies of lanes 0..7 and are cleared below
-    vls_bool_t b0246 = svdupq_b32(
-        static_cast<bool>(gen(std::integral_constant<Impl::simd_size_t, 0>())),
-        static_cast<bool>(gen(std::integral_constant<Impl::simd_size_t, 2>())),
-        static_cast<bool>(gen(std::integral_constant<Impl::simd_size_t, 4>())),
-        static_cast<bool>(gen(std::integral_constant<Impl::simd_size_t, 6>())));
-    vls_bool_t b1357 = svdupq_b32(
-        static_cast<bool>(gen(std::integral_constant<Impl::simd_size_t, 1>())),
-        static_cast<bool>(gen(std::integral_constant<Impl::simd_size_t, 3>())),
-        static_cast<bool>(gen(std::integral_constant<Impl::simd_size_t, 5>())),
-        static_cast<bool>(gen(std::integral_constant<Impl::simd_size_t, 7>())));
-    m_value = svand_z(svptrue_b32(), svzip1_b32(b0246, b1357), valid_lanes());
-  }
-
-  // enforces the invariant: upper lanes are cleared
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit sve_index_mask8(
-      vls_bool_t const& value_in) noexcept
-      : m_value(svand_z(svptrue_b32(), value_in, valid_lanes())) {}
-
-  // 64-bit-lane predicate: lane k of this index mask becomes 64-bit lane k, as
-  // expected by gather/scatter and by the 64-bit-data masks.
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit operator vls_bool_t()
-      const noexcept {
-    return svcmpne_n_s64(svptrue_b64(), svunpklo_s64(svdup_n_s32_z(m_value, 1)),
-                         0);
-  }
-
-  // raw 32-bit-lane predicate (only the 8 low lanes may be active)
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION svbool_t impl_pred32() const noexcept {
-    return m_value;
-  }
-
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type
-  operator[](Impl::simd_size_t i) const {
-    return svptest_last(Impl::get_pred<32>(i), m_value);
-  }
-};
-}  // namespace Impl
-
 // 8-lane int32 index type for SVE-512: the 8 values live in the low half of a
 // full vls_int32_t; the upper half is unspecified and must never reach memory.
 template <>
@@ -3396,7 +3355,9 @@ class basic_simd<std::int32_t,
  public:
   using value_type = std::int32_t;
   using abi_type   = simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>;
-  using mask_type  = Impl::sve_index_mask8;
+  using mask_type =
+      basic_simd_mask<std::int32_t,
+                      simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>;
 
   static constexpr std::integral_constant<Impl::simd_size_t,
                                           SVE_DOUBLES_IN_VECTOR>
@@ -3452,7 +3413,9 @@ class basic_simd<std::int32_t,
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
       const value_type* ptr, mask_type const& mask,
       simd_flags<Flags...> = {}) noexcept {
-    m_value = svld1(mask.impl_pred32(), ptr);
+    // clip to the 8 low lanes: the upper lanes must never be read
+    vls_bool_t p = static_cast<vls_bool_t>(mask);
+    m_value      = svld1(svand_z(valid_lanes(), p, p), ptr);
   }
 
   // narrowing from 64-bit lanes: values land in the low half
@@ -3465,6 +3428,36 @@ class basic_simd<std::int32_t,
 #else
             svreinterpret_s32(
                 (to_sve_vla<std::uint64_t>)static_cast<vls_uint64_t>(other))
+#endif
+                ,
+            svundef_s32())) {
+  }
+
+  // narrowing from int64 lanes, same layout as the uint64 conversion
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit basic_simd(
+      basic_simd<std::int64_t, abi_type> const& other) noexcept
+      : m_value(svuzp1_s32(
+#ifdef __ARM_FEATURE_SVE2
+            svqxtnb_s64(
+                (to_sve_vla<std::int64_t>)static_cast<vls_int64_t>(other))
+#else
+            svreinterpret_s32(
+                (to_sve_vla<std::int64_t>)static_cast<vls_int64_t>(other))
+#endif
+                ,
+            svundef_s32())) {
+  }
+
+  // from double lanes: convert to int64 lanes, then narrow
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit basic_simd(
+      basic_simd<double, abi_type> const& other) noexcept
+      : m_value(svuzp1_s32(
+#ifdef __ARM_FEATURE_SVE2
+            svqxtnb_s64(
+                svcvt_s64_z(svptrue_b64(), static_cast<vls_float64_t>(other)))
+#else
+            svreinterpret_s32(
+                svcvt_s64_z(svptrue_b64(), static_cast<vls_float64_t>(other)))
 #endif
                 ,
             svundef_s32())) {
@@ -3756,7 +3749,9 @@ basic_simd<std::uint64_t, simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>::
 
 namespace Impl {
 #if SVE_DOUBLES_IN_VECTOR == 8
-using sve_index_mask_type = sve_index_mask8;
+using sve_index_mask_type =
+    basic_simd_mask<std::int32_t,
+                    simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>;
 #else
 using sve_index_mask_type =
     basic_simd_mask<std::int32_t,
@@ -3768,6 +3763,16 @@ using sve_index_mask_type =
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION svbool_t half_pred32() noexcept {
   return svwhilelt_b32(static_cast<std::int32_t>(0),
                        static_cast<std::int32_t>(SVE_DOUBLES_IN_VECTOR));
+}
+
+// Predicate of a half-size mask clipped to the 8 low lanes, for memory
+// accesses: lanes whose index is unspecified never reach memory, even if the
+// mask was built from a raw predicate.
+template <class M>
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION svbool_t
+half_mask_pred32(M const& mask) noexcept {
+  vls_bool_t p = static_cast<vls_bool_t>(mask);
+  return svand_z(half_pred32(), p, p);
 }
 #endif
 
@@ -4033,7 +4038,11 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
     simd_unchecked_load(const double* ptr,
                         Impl::sve_index_mask_type const& mask,
                         simd_flags<Flags...> flag = simd_flag_default) {
+#if SVE_DOUBLES_IN_VECTOR == 8
+  Impl::sve_index_mask_type const& nmask = mask;
+#else
   Impl::sve_index_mask_type nmask([=](Impl::simd_size_t i) { return mask[i]; });
+#endif
   return basic_simd<std::int32_t,
                     simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>(ptr, nmask,
                                                                      flag);
@@ -4048,7 +4057,11 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
     simd_unchecked_load(const std::int32_t* ptr,
                         Impl::sve_index_mask_type const& mask,
                         simd_flags<Flags...> flag = simd_flag_default) {
+#if SVE_DOUBLES_IN_VECTOR == 8
+  Impl::sve_index_mask_type const& nmask = mask;
+#else
   Impl::sve_index_mask_type nmask([=](Impl::simd_size_t i) { return mask[i]; });
+#endif
   return basic_simd<std::int32_t,
                     simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>(ptr, nmask,
                                                                      flag);
@@ -4061,7 +4074,11 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
     simd_partial_load(const std::int32_t* ptr,
                       Impl::sve_index_mask_type const& mask,
                       simd_flags<Flags...> flag = simd_flag_default) {
+#if SVE_DOUBLES_IN_VECTOR == 8
+  Impl::sve_index_mask_type const& nmask = mask;
+#else
   Impl::sve_index_mask_type nmask([=](Impl::simd_size_t i) { return mask[i]; });
+#endif
   return basic_simd<std::int32_t,
                     simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>(ptr, nmask,
                                                                      flag);
@@ -4076,7 +4093,11 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
     simd_partial_load(const std::int32_t* ptr,
                       Impl::sve_index_mask_type const& mask,
                       simd_flags<Flags...> flag = simd_flag_default) {
+#if SVE_DOUBLES_IN_VECTOR == 8
+  Impl::sve_index_mask_type const& nmask = mask;
+#else
   Impl::sve_index_mask_type nmask([=](Impl::simd_size_t i) { return mask[i]; });
+#endif
   return basic_simd<std::int32_t,
                     simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>(ptr, nmask,
                                                                      flag);
@@ -4105,10 +4126,15 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
                simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const& simd,
     std::int32_t* ptr, Impl::sve_index_mask_type const& mask,
     simd_flags<Flags...> flag = simd_flag_default) {
+#if SVE_DOUBLES_IN_VECTOR == 8
+  static_cast<void>(flag);
+  svst1(Impl::half_mask_pred32(mask), ptr, static_cast<vls_int32_t>(simd));
+#else
   Impl::sve_index_mask_type nmask([=](Impl::simd_size_t i) { return mask[i]; });
   simd_unchecked_store<std::int32_t,
                        simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>(
       simd, ptr, nmask, flag);
+#endif
 }
 
 // FIXME should be converted to use sve mask
@@ -4118,10 +4144,15 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_partial_store(
                simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const& simd,
     std::int32_t* ptr, Impl::sve_index_mask_type const& mask,
     simd_flags<Flags...> flag = simd_flag_default) {
+#if SVE_DOUBLES_IN_VECTOR == 8
+  static_cast<void>(flag);
+  svst1(Impl::half_mask_pred32(mask), ptr, static_cast<vls_int32_t>(simd));
+#else
   Impl::sve_index_mask_type nmask([=](Impl::simd_size_t i) { return mask[i]; });
   simd_partial_store<std::int32_t,
                      simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>(
       simd, ptr, nmask, flag);
+#endif
 }
 
 // FIXME should be converted to use sve mask
@@ -4133,9 +4164,18 @@ condition(
                simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const& b,
     basic_simd<std::int32_t,
                simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const& c) {
+#if SVE_DOUBLES_IN_VECTOR == 8
+  // the upper lanes of the result are unspecified
+  return basic_simd<std::int32_t,
+                    simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>(
+      static_cast<vls_int32_t>(svsel(static_cast<vls_bool_t>(a),
+                                     static_cast<vls_int32_t>(b),
+                                     static_cast<vls_int32_t>(c))));
+#else
   return basic_simd<std::int32_t,
                     simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>(
       [=](Impl::simd_size_t i) { return a[i] ? b[i] : c[i]; });
+#endif
 }
 
 KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM(
@@ -4324,6 +4364,33 @@ KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO(
 KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_SCATTER_TO(
     std::int32_t, simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>,
     { unchecked_scatter_to<V>(v, out, indices, flag); })
+
+// masked versions: the index mask is clipped to the 8 low lanes
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
+    std::int32_t, simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>, {
+      vls_int32_t idx = static_cast<vls_int32_t>(
+          basic_simd<std::int32_t,
+                     simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>{indices});
+      return V(static_cast<vls_int32_t>(svld1_gather_index(
+          Impl::half_mask_pred32(mask), Impl::Ranges::data(in), idx)));
+    })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_GATHER_FROM_WITH_MASK(
+    std::int32_t, simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>,
+    { return unchecked_gather_from<V>(in, mask, indices, flag); })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO_WITH_MASK(
+    std::int32_t, simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>, {
+      vls_int32_t idx = static_cast<vls_int32_t>(
+          basic_simd<std::int32_t,
+                     simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>{indices});
+      svst1_scatter_index(Impl::half_mask_pred32(mask), Impl::Ranges::data(out),
+                          idx, static_cast<vls_int32_t>(v));
+    })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_SCATTER_TO_WITH_MASK(
+    std::int32_t, simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>,
+    { unchecked_scatter_to<V>(v, out, mask, indices, flag); })
 #endif  // SVE_DOUBLES_IN_VECTOR == 8
 
 KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM(
