@@ -62,6 +62,16 @@ struct TestTeamPolicy {
     }
   }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
+  struct NonConstRefIndexTag {};
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const NonConstRefIndexTag &,
+                  const team_member &member) const {
+    Kokkos::parallel_for(Kokkos::TeamThreadRange(member, 1), [=](int &i) {});
+  }
+#endif
+
   // Included for test_small_league_size.
   TestTeamPolicy() : m_flags() {}
 
@@ -120,6 +130,15 @@ struct TestTeamPolicy {
       Kokkos::parallel_for(policy_type(league_size, team_size), functor);
       Kokkos::parallel_for(policy_type_init(league_size, team_size_init),
                            functor);
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
+      using policy_type_depr =
+          Kokkos::TeamPolicy<ScheduleType, ExecSpace, NonConstRefIndexTag>;
+      const int team_size_depr =
+          policy_type_depr(league_size, 1)
+              .team_size_max(functor, Kokkos::ParallelForTag());
+      Kokkos::parallel_for(policy_type_depr(league_size, team_size_depr),
+                           functor);
+#endif
     }
 
     test_small_league_size();
