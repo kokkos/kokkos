@@ -3480,6 +3480,76 @@ class basic_simd<std::int32_t,
     return m_value;
   }
 
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator<(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
+    return mask_type(static_cast<vls_bool_t>(
+        svcmplt(valid_lanes(), static_cast<vls_int32_t>(lhs),
+                static_cast<vls_int32_t>(rhs))));
+  }
+
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator>(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
+    return mask_type(static_cast<vls_bool_t>(
+        svcmpgt(valid_lanes(), static_cast<vls_int32_t>(lhs),
+                static_cast<vls_int32_t>(rhs))));
+  }
+
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator<=(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
+    return mask_type(static_cast<vls_bool_t>(
+        svcmple(valid_lanes(), static_cast<vls_int32_t>(lhs),
+                static_cast<vls_int32_t>(rhs))));
+  }
+
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator>=(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
+    return mask_type(static_cast<vls_bool_t>(
+        svcmpge(valid_lanes(), static_cast<vls_int32_t>(lhs),
+                static_cast<vls_int32_t>(rhs))));
+  }
+
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator==(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
+    return mask_type(static_cast<vls_bool_t>(
+        svcmpeq(valid_lanes(), static_cast<vls_int32_t>(lhs),
+                static_cast<vls_int32_t>(rhs))));
+  }
+
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator!=(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
+    return mask_type(static_cast<vls_bool_t>(
+        svcmpne(valid_lanes(), static_cast<vls_int32_t>(lhs),
+                static_cast<vls_int32_t>(rhs))));
+  }
+
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator>>(
+      basic_simd const& lhs, Impl::simd_size_t rhs) noexcept {
+    return basic_simd(static_cast<vls_int32_t>(svasr_m(
+        valid_lanes(), static_cast<vls_int32_t>(lhs), std::uint32_t(rhs))));
+  }
+
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator>>(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
+    return basic_simd(static_cast<vls_int32_t>(
+        svasr_m(valid_lanes(), static_cast<vls_int32_t>(lhs),
+                svreinterpret_u32(
+                    (to_sve_vla<value_type>)static_cast<vls_int32_t>(rhs)))));
+  }
+
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator<<(
+      basic_simd const& lhs, Impl::simd_size_t rhs) noexcept {
+    return basic_simd(static_cast<vls_int32_t>(svlsl_m(
+        valid_lanes(), static_cast<vls_int32_t>(lhs), std::uint32_t(rhs))));
+  }
+
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator<<(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
+    return basic_simd(static_cast<vls_int32_t>(
+        svlsl_m(valid_lanes(), static_cast<vls_int32_t>(lhs),
+                svreinterpret_u32(
+                    (to_sve_vla<value_type>)static_cast<vls_int32_t>(rhs)))));
+  }
+
   // The 8 upper lanes of the register are unspecified: every operation uses a
   // predicate covering the 8 low lanes, so they are never computed on (this
   // matters for the division) and the upper lanes of the results stay inert.
