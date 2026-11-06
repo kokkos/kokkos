@@ -3480,6 +3480,67 @@ class basic_simd<std::int32_t,
     return m_value;
   }
 
+  // The 8 upper lanes of the register are unspecified: every operation uses a
+  // predicate covering the 8 low lanes, so they are never computed on (this
+  // matters for the division) and the upper lanes of the results stay inert.
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd operator-() const noexcept {
+    return basic_simd(
+        static_cast<vls_int32_t>(svneg_m(m_value, valid_lanes(), m_value)));
+  }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd operator~() const noexcept {
+    return basic_simd(
+        static_cast<vls_int32_t>(svnot_m(m_value, valid_lanes(), m_value)));
+  }
+
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator*(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
+    return basic_simd(static_cast<vls_int32_t>(
+        svmul_m(valid_lanes(), static_cast<vls_int32_t>(lhs),
+                static_cast<vls_int32_t>(rhs))));
+  }
+
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator/(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
+    return basic_simd(static_cast<vls_int32_t>(
+        svdiv_m(valid_lanes(), static_cast<vls_int32_t>(lhs),
+                static_cast<vls_int32_t>(rhs))));
+  }
+
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator+(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
+    return basic_simd(static_cast<vls_int32_t>(
+        svadd_m(valid_lanes(), static_cast<vls_int32_t>(lhs),
+                static_cast<vls_int32_t>(rhs))));
+  }
+
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator-(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
+    return basic_simd(static_cast<vls_int32_t>(
+        svsub_m(valid_lanes(), static_cast<vls_int32_t>(lhs),
+                static_cast<vls_int32_t>(rhs))));
+  }
+
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator&(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
+    return basic_simd(static_cast<vls_int32_t>(
+        svand_m(valid_lanes(), static_cast<vls_int32_t>(lhs),
+                static_cast<vls_int32_t>(rhs))));
+  }
+
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator|(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
+    return basic_simd(static_cast<vls_int32_t>(
+        svorr_m(valid_lanes(), static_cast<vls_int32_t>(lhs),
+                static_cast<vls_int32_t>(rhs))));
+  }
+
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator^(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
+    return basic_simd(static_cast<vls_int32_t>(
+        sveor_m(valid_lanes(), static_cast<vls_int32_t>(lhs),
+                static_cast<vls_int32_t>(rhs))));
+  }
+
   // sign-extend the 8 low-half indices to int64 (one instruction)
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION svint64_t to_s64() const noexcept {
     return svunpklo_s64(m_value);
