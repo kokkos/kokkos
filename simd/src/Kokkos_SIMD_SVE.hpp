@@ -3829,10 +3829,16 @@ template <typename... Flags>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
     basic_simd<std::int32_t,
                simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const& simd,
-    std::int32_t* ptr, simd_flags<Flags...> flag = simd_flag_default) {
+    std::int32_t* ptr,
+    [[maybe_unused]] simd_flags<Flags...> flag = simd_flag_default) {
+#if SVE_DOUBLES_IN_VECTOR == 8
+  // only the 8 low lanes may be written
+  svst1(Impl::half_pred32(), ptr, static_cast<vls_int32_t>(simd));
+#else
   simd_unchecked_store<std::int32_t,
                        simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>(
       simd, ptr, flag);
+#endif
 }
 
 // FIXME should be converted to use sve mask
