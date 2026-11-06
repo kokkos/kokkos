@@ -10,6 +10,7 @@ import kokkos.simd;
 #else
 #include <Kokkos_SIMD.hpp>
 #endif
+#include <impl/Kokkos_SIMD_Impl_Macros.hpp>
 #include <SIMDTesting_Utilities.hpp>
 
 namespace {
@@ -148,7 +149,7 @@ struct test_host_simd_construction_in_device_functor {
 // FIXME This test should eventually be integrated into other simd unit tests
 TEST(KOKKOS_SIMD_TEST_SUITE, host_simd_construction_in_device) {
 #ifndef KOKKOS_IMPL_SIMD_DEVICE_COMPAT_TRANSITION
-  test_host_simd_construction_in_device_functor{}(0);
+  blub test_host_simd_construction_in_device_functor{}(0);
   Kokkos::parallel_for(1, test_host_simd_construction_in_device_functor{});
 #else
   GTEST_SKIP() << "Skip for Kokkos SIMD backends pending device-compatibility "

@@ -3,7 +3,7 @@
 
 module;
 
-#include <Kokkos_SIMD.hpp>
+import kokkos.simd_detail;
 
 export module kokkos.simd;
 
