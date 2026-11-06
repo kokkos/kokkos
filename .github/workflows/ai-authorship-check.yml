@@ -1,0 +1,28 @@
+name: AI Tool Policy Check
+
+on:
+  pull_request:
+    # 'edited' fires on retargeting, which changes the checked base..head range.
+    types: [opened, synchronize, reopened, edited]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  check-trailers:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        # Check out the PR head itself (not the synthetic merge commit) with
+        # full history so that base..head is resolvable.
+        ref: ${{ github.event.pull_request.head.sha }}
+        fetch-depth: 0
+        persist-credentials: false
+
+    # Checks the commits the pull request adds (base..head).
+    - uses: kc9jud/ai-attribution-check@bbe5a3fe7f573c9b7093883690146823ff7187e4 # v0.1.0
