@@ -534,27 +534,61 @@
     return V(impl_ops::PREFIX##_gather_from(in, idx, flag));            \
   }
 
-#define KOKKOS_SIMD_IMPL_DEFINE_MASKED_GATHER_FROM(PREFIX, DATA_TYPE,     \
-                                                   MASK_DATA_TYPE, ABI)   \
-  template <Impl::SimdVecType V, Impl::Ranges::contiguous_range R,        \
-            Impl::SimdIntegral I, typename... Flags>                      \
-    requires Impl::Ranges::sized_range<R> &&                              \
-             std::same_as<V, basic_simd<DATA_TYPE, ABI>>                  \
-  KOKKOS_FORCEINLINE_FUNCTION constexpr V PREFIX##_gather_from(           \
-      R&& in, typename I::mask_type const& mask, const I& indices,        \
-      simd_flags<Flags...> flag = simd_flag_default) {                    \
-    using impl_ops =                                                      \
-        Impl::simd_native_ops<DATA_TYPE, ABI, Impl::simd_backend_t>;      \
-    using indices_type = basic_simd<std::int32_t, ABI>;                   \
-    using mask_type    = basic_simd_mask<MASK_DATA_TYPE, ABI>;            \
-    using native_indices_type =                                           \
-        Impl::simd_vector_t<std::int32_t, ABI, Impl::simd_backend_t>;     \
-    using native_mask_type =                                              \
-        Impl::simd_vector_t<DATA_TYPE, ABI, Impl::simd_backend_t>;        \
-    auto idx   = static_cast<native_indices_type>(indices_type{indices}); \
-    auto mmask = static_cast<native_mask_type>(mask_type{mask});          \
-                                                                          \
-    return V(impl_ops::PREFIX##_gather_from(in, idx, mmask, flag));       \
+#define KOKKOS_SIMD_IMPL_DEFINE_MASKED_GATHER_FROM_AVX2_FN(                   \
+    DATA_TYPE, MASK_DATA_TYPE, ABI)                                           \
+  using impl_ops =                                                            \
+      Impl::simd_native_ops<DATA_TYPE, ABI, Impl::simd_backend_t>;            \
+  using indices_type = basic_simd<std::int32_t, ABI>;                         \
+  using mask_type    = basic_simd_mask<MASK_DATA_TYPE, ABI>;                  \
+  using native_indices_type =                                                 \
+      Impl::simd_vector_t<std::int32_t, ABI, Impl::simd_backend_t>;           \
+  using native_mask_type =                                                    \
+      Impl::simd_vector_t<DATA_TYPE, ABI, Impl::simd_backend_t>;              \
+  auto idx         = static_cast<native_indices_type>(indices_type{indices}); \
+  auto native_mask = static_cast<native_mask_type>(mask_type{mask});          \
+                                                                              \
+  return V(impl_ops::unchecked_gather_from(in, idx, native_mask, flag));
+
+#define KOKKOS_SIMD_IMPL_DEFINE_MASKED_GATHER_FROM_AVX2(DATA_TYPE,           \
+                                                        MASK_DATA_TYPE, ABI) \
+  template <Impl::SimdVecType V, Impl::Ranges::contiguous_range R,           \
+            Impl::SimdIntegral I, typename... Flags>                         \
+    requires Impl::Ranges::sized_range<R> &&                                 \
+             std::same_as<V, basic_simd<DATA_TYPE, ABI>>                     \
+  KOKKOS_FORCEINLINE_FUNCTION constexpr V unchecked_gather_from(             \
+      R&& in, typename I::mask_type const& mask, const I& indices,           \
+      simd_flags<Flags...> flag = simd_flag_default) {                       \
+    KOKKOS_SIMD_IMPL_DEFINE_MASKED_GATHER_FROM_AVX2_FN(DATA_TYPE,            \
+                                                       MASK_DATA_TYPE, ABI)  \
+  }                                                                          \
+                                                                             \
+  template <Impl::SimdVecType V, Impl::Ranges::contiguous_range R,           \
+            Impl::SimdIntegral I, typename... Flags>                         \
+    requires Impl::Ranges::sized_range<R> &&                                 \
+             std::same_as<V, basic_simd<DATA_TYPE, ABI>>                     \
+  KOKKOS_FORCEINLINE_FUNCTION constexpr V partial_gather_from(               \
+      R&& in, typename I::mask_type const& mmask, const I& indices,          \
+      simd_flags<Flags...> flag = simd_flag_default) {                       \
+    const typename I::mask_type mask([&](Impl::simd_size_t i) {              \
+      return mmask[i] &&                                                     \
+             Impl::is_index_in_range(indices[i], Impl::Ranges::size(in));    \
+    });                                                                      \
+    KOKKOS_SIMD_IMPL_DEFINE_MASKED_GATHER_FROM_AVX2_FN(DATA_TYPE,            \
+                                                       MASK_DATA_TYPE, ABI)  \
+  }                                                                          \
+                                                                             \
+  template <Impl::SimdVecType V, Impl::Ranges::contiguous_range R,           \
+            Impl::SimdIntegral I, typename... Flags>                         \
+    requires Impl::Ranges::sized_range<R> &&                                 \
+             std::same_as<V, basic_simd<DATA_TYPE, ABI>>                     \
+  KOKKOS_FORCEINLINE_FUNCTION constexpr V partial_gather_from(               \
+      R&& in, const I& indices,                                              \
+      simd_flags<Flags...> flag = simd_flag_default) {                       \
+    const typename I::mask_type mask([&](Impl::simd_size_t i) {              \
+      return Impl::is_index_in_range(indices[i], Impl::Ranges::size(in));    \
+    });                                                                      \
+    KOKKOS_SIMD_IMPL_DEFINE_MASKED_GATHER_FROM_AVX2_FN(DATA_TYPE,            \
+                                                       MASK_DATA_TYPE, ABI)  \
   }
 
 #define KOKKOS_SIMD_IMPL_DEFINE_SCATTER_TO_AVX2(PREFIX, DATA_TYPE, ABI) \
@@ -570,32 +604,58 @@
     }                                                                   \
   }
 
-#define KOKKOS_SIMD_IMPL_DEFINE_MASKED_SCATTER_TO_AVX2(PREFIX, DATA_TYPE, ABI) \
-  template <Impl::SimdVecType V, Impl::Ranges::contiguous_range R,             \
-            Impl::SimdIntegral I, typename... Flags>                           \
-    requires Impl::Ranges::sized_range<R> &&                                   \
-             std::same_as<V, basic_simd<DATA_TYPE, ABI>>                       \
-  KOKKOS_FORCEINLINE_FUNCTION constexpr void PREFIX##_scatter_to(              \
-      const V& v, R&& out, const typename I::mask_type& mask,                  \
-      const I& indices,                                                        \
-      [[maybe_unused]] simd_flags<Flags...> flag = simd_flag_default) {        \
-    for (Impl::simd_size_t lane = 0; lane < v.size(); ++lane) {                \
-      if (mask[lane]) out[indices[lane]] = v[lane];                            \
-    }                                                                          \
+#define KOKKOS_SIMD_IMPL_DEFINE_MASKED_SCATTER_TO_AVX2_FN()   \
+  for (Impl::simd_size_t lane = 0; lane < v.size(); ++lane) { \
+    if (mask[lane]) out[indices[lane]] = v[lane];             \
   }
 
-#define KOKKOS_SIMD_IMPL_DEFINE_MEMORY_PERMUTE_FN_AVX2(DATA_TYPE,           \
-                                                       MASK_DATA_TYPE, ABI) \
-  KOKKOS_SIMD_IMPL_DEFINE_GATHER_FROM(unchecked, DATA_TYPE, ABI)            \
-  KOKKOS_SIMD_IMPL_DEFINE_MASKED_GATHER_FROM(unchecked, DATA_TYPE,          \
-                                             MASK_DATA_TYPE, ABI)           \
-  KOKKOS_SIMD_IMPL_DEFINE_GATHER_FROM(partial, DATA_TYPE, ABI)              \
-  KOKKOS_SIMD_IMPL_DEFINE_MASKED_GATHER_FROM(partial, DATA_TYPE,            \
-                                             MASK_DATA_TYPE, ABI)           \
-  KOKKOS_SIMD_IMPL_DEFINE_SCATTER_TO_AVX2(unchecked, DATA_TYPE, ABI)        \
-  KOKKOS_SIMD_IMPL_DEFINE_MASKED_SCATTER_TO_AVX2(unchecked, DATA_TYPE, ABI) \
-  KOKKOS_SIMD_IMPL_DEFINE_SCATTER_TO_AVX2(partial, DATA_TYPE, ABI)          \
-  KOKKOS_SIMD_IMPL_DEFINE_MASKED_SCATTER_TO_AVX2(partial, DATA_TYPE, ABI)
+#define KOKKOS_SIMD_IMPL_DEFINE_MASKED_SCATTER_TO_AVX2(DATA_TYPE, ABI)     \
+  template <Impl::SimdVecType V, Impl::Ranges::contiguous_range R,         \
+            Impl::SimdIntegral I, typename... Flags>                       \
+    requires Impl::Ranges::sized_range<R> &&                               \
+             std::same_as<V, basic_simd<DATA_TYPE, ABI>>                   \
+  KOKKOS_FORCEINLINE_FUNCTION constexpr void unchecked_scatter_to(         \
+      const V& v, R&& out, const typename I::mask_type& mask,              \
+      const I& indices,                                                    \
+      [[maybe_unused]] simd_flags<Flags...> flag = simd_flag_default) {    \
+    KOKKOS_SIMD_IMPL_DEFINE_MASKED_SCATTER_TO_AVX2_FN()                    \
+  }                                                                        \
+                                                                           \
+  template <Impl::SimdVecType V, Impl::Ranges::contiguous_range R,         \
+            Impl::SimdIntegral I, typename... Flags>                       \
+    requires Impl::Ranges::sized_range<R> &&                               \
+             std::same_as<V, basic_simd<DATA_TYPE, ABI>>                   \
+  KOKKOS_FORCEINLINE_FUNCTION constexpr void partial_scatter_to(           \
+      const V& v, R&& out, const typename I::mask_type& mmask,             \
+      const I& indices,                                                    \
+      [[maybe_unused]] simd_flags<Flags...> flag = simd_flag_default) {    \
+    const typename I::mask_type mask([&](Impl::simd_size_t i) {            \
+      return mmask[i] &&                                                   \
+             Impl::is_index_in_range(indices[i], Impl::Ranges::size(out)); \
+    });                                                                    \
+    KOKKOS_SIMD_IMPL_DEFINE_MASKED_SCATTER_TO_AVX2_FN()                    \
+  }                                                                        \
+                                                                           \
+  template <Impl::SimdVecType V, Impl::Ranges::contiguous_range R,         \
+            Impl::SimdIntegral I, typename... Flags>                       \
+    requires Impl::Ranges::sized_range<R> &&                               \
+             std::same_as<V, basic_simd<DATA_TYPE, ABI>>                   \
+  KOKKOS_FORCEINLINE_FUNCTION constexpr void partial_scatter_to(           \
+      const V& v, R&& out, const I& indices,                               \
+      [[maybe_unused]] simd_flags<Flags...> flag = simd_flag_default) {    \
+    const typename I::mask_type mask([&](Impl::simd_size_t i) {            \
+      return Impl::is_index_in_range(indices[i], Impl::Ranges::size(out)); \
+    });                                                                    \
+    KOKKOS_SIMD_IMPL_DEFINE_MASKED_SCATTER_TO_AVX2_FN()                    \
+  }
+
+#define KOKKOS_SIMD_IMPL_DEFINE_MEMORY_PERMUTE_FN_AVX2(DATA_TYPE,            \
+                                                       MASK_DATA_TYPE, ABI)  \
+  KOKKOS_SIMD_IMPL_DEFINE_GATHER_FROM(unchecked, DATA_TYPE, ABI)             \
+  KOKKOS_SIMD_IMPL_DEFINE_MASKED_GATHER_FROM_AVX2(DATA_TYPE, MASK_DATA_TYPE, \
+                                                  ABI)                       \
+  KOKKOS_SIMD_IMPL_DEFINE_SCATTER_TO_AVX2(unchecked, DATA_TYPE, ABI)         \
+  KOKKOS_SIMD_IMPL_DEFINE_MASKED_SCATTER_TO_AVX2(DATA_TYPE, ABI)
 
 #define KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_GATHER_FROM(PREFIX, DATA_TYPE,    \
                                                     ABI_TYPE, EXPR)       \
@@ -614,11 +674,6 @@
   KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_GATHER_FROM(unchecked, DATA_TYPE, ABI_TYPE, \
                                               EXPR)
 
-#define KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_GATHER_FROM(DATA_TYPE,      \
-                                                            ABI_TYPE, EXPR) \
-  KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_GATHER_FROM(partial, DATA_TYPE, ABI_TYPE, \
-                                              EXPR)
-
 #define KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_GATHER_FROM_WITH_MASK(            \
     PREFIX, DATA_TYPE, ABI_TYPE, EXPR)                                    \
   template <Impl::SimdVecType V, Impl::Ranges::contiguous_range R,        \
@@ -630,16 +685,6 @@
       [[maybe_unused]] simd_flags<Flags...> flag = simd_flag_default) {   \
     EXPR                                                                  \
   }
-
-#define KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(      \
-    DATA_TYPE, ABI_TYPE, EXPR)                                                \
-  KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_GATHER_FROM_WITH_MASK(unchecked, DATA_TYPE, \
-                                                        ABI_TYPE, EXPR)
-
-#define KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_GATHER_FROM_WITH_MASK(      \
-    DATA_TYPE, ABI_TYPE, EXPR)                                              \
-  KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_GATHER_FROM_WITH_MASK(partial, DATA_TYPE, \
-                                                        ABI_TYPE, EXPR)
 
 #define KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_SCATTER_TO(PREFIX, DATA_TYPE,       \
                                                    ABI_TYPE, EXPR)          \
@@ -658,10 +703,6 @@
   KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_SCATTER_TO(unchecked, DATA_TYPE, ABI_TYPE, \
                                              EXPR)
 
-#define KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_SCATTER_TO(DATA_TYPE,      \
-                                                           ABI_TYPE, EXPR) \
-  KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_SCATTER_TO(partial, DATA_TYPE, ABI_TYPE, EXPR)
-
 #define KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_SCATTER_TO_WITH_MASK(               \
     PREFIX, DATA_TYPE, ABI_TYPE, EXPR)                                      \
   template <Impl::SimdVecType V, Impl::Ranges::contiguous_range R,          \
@@ -675,14 +716,69 @@
     EXPR                                                                    \
   }
 
-#define KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO_WITH_MASK(      \
-    DATA_TYPE, ABI_TYPE, EXPR)                                               \
-  KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_SCATTER_TO_WITH_MASK(unchecked, DATA_TYPE, \
-                                                       ABI_TYPE, EXPR)
+#define KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_MASKED_GATHER_FROM(DATA_TYPE,         \
+                                                           ABI_TYPE, EXPR)    \
+  KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_GATHER_FROM_WITH_MASK(unchecked, DATA_TYPE, \
+                                                        ABI_TYPE, EXPR)       \
+                                                                              \
+  template <Impl::SimdVecType V, Impl::Ranges::contiguous_range R,            \
+            Impl::SimdIntegral I, typename... Flags>                          \
+    requires Impl::Ranges::sized_range<R> &&                                  \
+             std::same_as<V, basic_simd<DATA_TYPE, ABI_TYPE>>                 \
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr V partial_gather_from(      \
+      R&& in, const typename I::mask_type& mmask, const I& indices,           \
+      [[maybe_unused]] simd_flags<Flags...> flag = simd_flag_default) {       \
+    const typename I::mask_type mask([&](Impl::simd_size_t i) {               \
+      return mmask[i] &&                                                      \
+             Impl::is_index_in_range(indices[i], Impl::Ranges::size(in));     \
+    });                                                                       \
+    EXPR                                                                      \
+  }                                                                           \
+                                                                              \
+  template <Impl::SimdVecType V, Impl::Ranges::contiguous_range R,            \
+            Impl::SimdIntegral I, typename... Flags>                          \
+    requires Impl::Ranges::sized_range<R> &&                                  \
+             std::same_as<V, basic_simd<DATA_TYPE, ABI_TYPE>>                 \
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr V partial_gather_from(      \
+      R&& in, const I& indices,                                               \
+      [[maybe_unused]] simd_flags<Flags...> flag = simd_flag_default) {       \
+    const typename I::mask_type mask([&](Impl::simd_size_t i) {               \
+      return Impl::is_index_in_range(indices[i], Impl::Ranges::size(in));     \
+    });                                                                       \
+    EXPR                                                                      \
+  }
 
-#define KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_SCATTER_TO_WITH_MASK(      \
-    DATA_TYPE, ABI_TYPE, EXPR)                                             \
-  KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_SCATTER_TO_WITH_MASK(partial, DATA_TYPE, \
-                                                       ABI_TYPE, EXPR)
+#define KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_MASKED_SCATTER_TO(DATA_TYPE, ABI_TYPE, \
+                                                          EXPR)                \
+  KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_SCATTER_TO_WITH_MASK(unchecked, DATA_TYPE,   \
+                                                       ABI_TYPE, EXPR)         \
+                                                                               \
+  template <Impl::SimdVecType V, Impl::Ranges::contiguous_range R,             \
+            Impl::SimdIntegral I, typename... Flags>                           \
+    requires Impl::Ranges::sized_range<R> &&                                   \
+             std::same_as<V, basic_simd<DATA_TYPE, ABI_TYPE>>                  \
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr void partial_scatter_to(     \
+      const V& v, R&& out, const typename I::mask_type& mmask,                 \
+      const I& indices,                                                        \
+      [[maybe_unused]] simd_flags<Flags...> flag = simd_flag_default) {        \
+    const typename I::mask_type mask([&](Impl::simd_size_t i) {                \
+      return mmask[i] &&                                                       \
+             Impl::is_index_in_range(indices[i], Impl::Ranges::size(out));     \
+    });                                                                        \
+    EXPR                                                                       \
+  }                                                                            \
+                                                                               \
+  template <Impl::SimdVecType V, Impl::Ranges::contiguous_range R,             \
+            Impl::SimdIntegral I, typename... Flags>                           \
+    requires Impl::Ranges::sized_range<R> &&                                   \
+             std::same_as<V, basic_simd<DATA_TYPE, ABI_TYPE>>                  \
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr void partial_scatter_to(     \
+      const V& v, R&& out, const I& indices,                                   \
+      [[maybe_unused]] simd_flags<Flags...> flag = simd_flag_default) {        \
+    const typename I::mask_type mask([&](Impl::simd_size_t i) {                \
+      return Impl::is_index_in_range(indices[i], Impl::Ranges::size(out));     \
+    });                                                                        \
+    EXPR                                                                       \
+  }
 
 #endif

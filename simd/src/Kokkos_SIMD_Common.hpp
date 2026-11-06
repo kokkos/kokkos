@@ -160,6 +160,16 @@ concept SimdVecType =
 template <typename V>
 concept SimdIntegral = SimdVecType<V> && std::integral<typename V::value_type>;
 
+template <typename IndexType, typename SizeType>
+KOKKOS_FORCEINLINE_FUNCTION constexpr bool is_index_in_range(IndexType index,
+                                                             SizeType size) {
+  if constexpr (std::is_signed_v<IndexType>) {
+    if (index < 0) return false;
+  }
+  return static_cast<std::make_unsigned_t<IndexType>>(index) <
+         static_cast<std::make_unsigned_t<SizeType>>(size);
+}
+
 }  // namespace Impl
 
 // The code below provides:
