@@ -13,9 +13,10 @@ import kokkos.simd_impl;
 #endif
 #include <SIMDTesting_Utilities.hpp>
 
-// The half-size int32 index type of the SVE backend (same number of lanes as a
-// vector of 64-bit data) is not covered by the generic tests, which use an
-// index type with the same ABI as the data. Check it on its own for SVE-512.
+// Gather/scatter of 64-bit data with the half-size int32 index type of the SVE
+// backend (same number of lanes as a vector of 64-bit data). The generic tests
+// index 64-bit data with an int64 index, so this combination is only covered
+// here. Check it for SVE-512.
 #if defined(KOKKOS_SIMD_TEST_NATIVE) && defined(KOKKOS_ARCH_ARM_SVE) && \
     defined(__ARM_FEATURE_SVE_BITS) && (__ARM_FEATURE_SVE_BITS == 512)
 
