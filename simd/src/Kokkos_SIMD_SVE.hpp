@@ -3801,6 +3801,132 @@ to_pred64(M const& mask) noexcept {
 
 }  // namespace Experimental
 
+#if SVE_DOUBLES_IN_VECTOR == 8
+// Half-size int32 vector: every operation uses a predicate covering the 8 low
+// lanes. floor/ceil/round/trunc are the identity, as for the full-size vector;
+// without these overloads the calls are ambiguous with the 64-bit ones.
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<
+    std::int32_t, Experimental::simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>
+floor(Experimental::basic_simd<
+      std::int32_t,
+      Experimental::simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const& a) {
+  return a;
+}
+
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<
+    std::int32_t, Experimental::simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>
+ceil(Experimental::basic_simd<
+     std::int32_t,
+     Experimental::simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const& a) {
+  return a;
+}
+
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<
+    std::int32_t, Experimental::simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>
+round(Experimental::basic_simd<
+      std::int32_t,
+      Experimental::simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const& a) {
+  return a;
+}
+
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<
+    std::int32_t, Experimental::simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>
+trunc(Experimental::basic_simd<
+      std::int32_t,
+      Experimental::simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const& a) {
+  return a;
+}
+
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<
+    std::int32_t, Experimental::simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>
+abs(Experimental::basic_simd<
+    std::int32_t,
+    Experimental::simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const& a) {
+  vls_int32_t aa = static_cast<vls_int32_t>(a);
+  return Experimental::basic_simd<
+      std::int32_t,
+      Experimental::simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>(
+      static_cast<vls_int32_t>(
+          svabs_m(aa, Experimental::Impl::half_pred32(), aa)));
+}
+
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<
+    std::int32_t, Experimental::simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>
+max(Experimental::basic_simd<
+        std::int32_t,
+        Experimental::simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const& a,
+    Experimental::basic_simd<
+        std::int32_t,
+        Experimental::simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const&
+        b) {
+  return Experimental::basic_simd<
+      std::int32_t,
+      Experimental::simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>(
+      static_cast<vls_int32_t>(svmax_m(Experimental::Impl::half_pred32(),
+                                       static_cast<vls_int32_t>(a),
+                                       static_cast<vls_int32_t>(b))));
+}
+
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<
+    std::int32_t, Experimental::simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>
+min(Experimental::basic_simd<
+        std::int32_t,
+        Experimental::simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const& a,
+    Experimental::basic_simd<
+        std::int32_t,
+        Experimental::simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const&
+        b) {
+  return Experimental::basic_simd<
+      std::int32_t,
+      Experimental::simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>(
+      static_cast<vls_int32_t>(svmin_m(Experimental::Impl::half_pred32(),
+                                       static_cast<vls_int32_t>(a),
+                                       static_cast<vls_int32_t>(b))));
+}
+
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<
+    std::int32_t, Experimental::simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>
+fma(Experimental::basic_simd<
+        std::int32_t,
+        Experimental::simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const& a,
+    Experimental::basic_simd<
+        std::int32_t,
+        Experimental::simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const& b,
+    Experimental::basic_simd<
+        std::int32_t,
+        Experimental::simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const&
+        c) {
+  return Experimental::basic_simd<
+      std::int32_t,
+      Experimental::simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>(
+      static_cast<vls_int32_t>(svmad_m(
+          Experimental::Impl::half_pred32(), static_cast<vls_int32_t>(a),
+          static_cast<vls_int32_t>(b), static_cast<vls_int32_t>(c))));
+}
+
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<
+    std::int32_t, Experimental::simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>
+copysign(
+    Experimental::basic_simd<
+        std::int32_t,
+        Experimental::simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const& a,
+    Experimental::basic_simd<
+        std::int32_t,
+        Experimental::simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const&
+        b) {
+  vls_bool_t positivity_b =
+      svcmpge(Experimental::Impl::half_pred32(), static_cast<vls_int32_t>(b),
+              std::int32_t(0));
+  vls_int32_t sign_b = svsel(positivity_b, svdup_s32(1), svdup_s32(-1));
+  return Experimental::basic_simd<
+      std::int32_t,
+      Experimental::simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>(
+      static_cast<vls_int32_t>(svmul_m(Experimental::Impl::half_pred32(),
+                                       static_cast<vls_int32_t>(abs(a)),
+                                       sign_b)));
+}
+#endif  // SVE_DOUBLES_IN_VECTOR == 8
+
 namespace Experimental {
 
 template <typename SimdType, typename... Flags>
