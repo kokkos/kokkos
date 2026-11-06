@@ -87,11 +87,11 @@
   }
 
 #if defined(KOKKOS_ARCH_AVX2)
-#define KOKKOS_SIMD_MODULES_SYMBOLS          \
-  KOKKOS_SIMD_MODULES_SYMBOLS_COMMON         \
-  namespace Kokkos::Experimental::simd_abi { \
-  using ::Kokkos::Experimental::simd_abi::avx2_fixed_size;
-}
+#define KOKKOS_SIMD_MODULES_SYMBOLS                        \
+  KOKKOS_SIMD_MODULES_SYMBOLS_COMMON                       \
+  namespace Kokkos::Experimental::simd_abi {               \
+  using ::Kokkos::Experimental::simd_abi::avx2_fixed_size; \
+  }
 #elif defined(KOKKOS_ARCH_AVX512XEON)
 #define KOKKOS_SIMD_MODULES_SYMBOLS                          \
   KOKKOS_SIMD_MODULES_SYMBOLS_COMMON                         \
