@@ -25,14 +25,6 @@ import kokkos.core_impl;
 #define KOKKOS_IMPL_BASE_FRIEND_FN_DERIVED_ACCESS_RESTRICTION_FIXED
 #endif
 
-// FIXME Temporary flag to identify which simd types have not yet been modified
-// to be device constructible. To be removed when the rest of simd types are
-// device constructible
-#if defined(KOKKOS_ARCH_AVX512XEON) || defined(KOKKOS_ARCH_ARM_SVE) || \
-    defined(KOKKOS_ARCH_ARM_NEON) || defined(KOKKOS_ENABLE_OPENACC)
-#define KOKKOS_IMPL_SIMD_DEVICE_COMPAT_TRANSITION
-#endif
-
 #ifdef KOKKOS_IMPL_SIMD_DEVICE_COMPAT_TRANSITION
 #define KOKKOS_IMPL_SIMD_FUNCTION_EXECSPACE_SPECIFIER \
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
