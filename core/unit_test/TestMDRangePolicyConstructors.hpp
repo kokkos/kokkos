@@ -352,7 +352,10 @@ TEST(TEST_CATEGORY, md_range_policy_impl_set_space) {
 
 TEST(TEST_CATEGORY, md_range_policy_recommendation_near_int_max) {
   constexpr bool uses_host_recommendation =
-      std::is_same_v<TEST_EXECSPACE, Kokkos::Serial>
+      false
+#ifdef KOKKOS_ENABLE_SERIAL
+      || std::is_same_v<TEST_EXECSPACE, Kokkos::Serial>
+#endif
 #ifdef KOKKOS_ENABLE_OPENMP
       || std::is_same_v<TEST_EXECSPACE, Kokkos::OpenMP>
 #endif
