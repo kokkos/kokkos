@@ -27,6 +27,7 @@ static_assert(false,
 #include <array>
 #include <cmath>
 #include <limits>
+#include <cstdint>
 
 namespace Kokkos {
 
@@ -543,16 +544,14 @@ class MDRangePolicy<P, Properties...>
         // FIXME: m_prod_tile_dims may take a value that won't fit in
         // tile_size_type, though not in practice
         // Set to recommended tile size if it fits within effective limit
-        if (static_cast<tile_size_type>(this->m_prod_tile_dims) *
-                default_tile[i] <=
-            effective_max_tile_size) {
+        if (static_cast<tile_size_type>(this->m_prod_tile_dims) <=
+            effective_max_tile_size / default_tile[i]) {
           this->m_tile[i] = default_tile[i];
         } else {
           // Try to fit within effective limit by reducing tile size
           while (default_tile[i] > 1 &&
-                 static_cast<tile_size_type>(this->m_prod_tile_dims) *
-                         default_tile[i] >
-                     effective_max_tile_size) {
+                 static_cast<tile_size_type>(this->m_prod_tile_dims) >
+                     effective_max_tile_size / default_tile[i]) {
             default_tile[i] >>= 1;
           }
           this->m_tile[i] = (default_tile[i] > 1) ? default_tile[i] : 1;
@@ -560,10 +559,20 @@ class MDRangePolicy<P, Properties...>
       }
 
       this->m_tile_end[i] = static_cast<index_type>(
-          (length + this->m_tile[i] - 1) / this->m_tile[i]);
+          length / this->m_tile[i] + (length % this->m_tile[i] != 0));
       this->m_num_tiles *= this->m_tile_end[i];
-      // FIXME: m_tile could be of a type wider than int and have a value
-      // that won't fit in int, though not in practice
+      // Validate before narrowing or multiplying the tile product.
+      if (this->m_prod_tile_dims <= 0 ||
+          static_cast<std::uintmax_t>(this->m_tile[i]) >
+              static_cast<std::uintmax_t>(this->m_max_total_tile_size) /
+                  static_cast<std::uintmax_t>(this->m_prod_tile_dims)) {
+        std::string msg =
+            "Kokkos::MDRangePolicy tile dimensions error: Product of tile "
+            "dimensions is greater than the maximum total tile size (" +
+            std::to_string(this->m_max_total_tile_size) +
+            ") - choose smaller tile dims\n";
+        Kokkos::abort(msg.c_str());
+      }
       this->m_prod_tile_dims *= static_cast<int>(this->m_tile[i]);
     }
 
@@ -579,20 +588,6 @@ class MDRangePolicy<P, Properties...>
             ") - choose smaller tile dims\n";
         Kokkos::abort(msg.c_str());
       }
-    }
-
-    // FIXME: in practice, m_prod_tile_dims and m_max_total_tiles_size are of
-    // the same type and m_max_total_tile_size = max. value of that type.
-    // Better to check this condition without getting into UB.
-    if (this->m_prod_tile_dims > this->m_max_total_tile_size) {
-      std::string msg =
-          "Kokkos::MDRangePolicy tile dimensions error: Product of tile "
-          "dimensions (" +
-          std::to_string(this->m_prod_tile_dims) +
-          ") is greater than the maximum total tile size (" +
-          std::to_string(this->m_max_total_tile_size) +
-          ") - choose smaller tile dims\n";
-      Kokkos::abort(msg.c_str());
     }
   }
 };
