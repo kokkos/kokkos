@@ -70,6 +70,7 @@
 * Incorporate `mdspan` released based deployment aligned with Kokkos's Ecosystem releases
 
 ### Incompatibilities (i.e. breaking changes)
+* Closures passed to `parallel_for(TeamThreadRange)` taking the index by non-const reference no longer compile [\#8953](https://github.com/kokkos/kokkos/pull/8953) [\#9692](https://github.com/kokkos/kokkos/issues/9692)
 * Require Google Benchmark 1.9.5 when building with `Kokkos_ENABLE_BENCHMARKS=ON` [\#9562](https://github.com/kokkos/kokkos/pull/9562)
 * Drop workaround for invalid use of View of Views that causes program hang on destruction [\#9612](https://github.com/kokkos/kokkos/pull/9612)
 * Relax semantics of atomic floating-point min/max [\#9606](https://github.com/kokkos/kokkos/pull/9606)
