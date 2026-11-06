@@ -223,19 +223,25 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;NextSilicon)
     # cases are compiled only when TEST_CATEGORY is cuda.
     # FIXME_NEXTSILICON: requires TeamPolicy.
     if(NOT Tag STREQUAL "NextSilicon")
-      set(file ${dir}/Test${Tag}_RangePolicyNestedInvocation.cpp)
-      file(WRITE ${dir}/dummy.cpp "#include <Test${Tag}_Category.hpp>\n"
-                                  "#include <range_policy/TestRangePolicyNestedInvocation.hpp>\n"
+      # FIXME_OPENACC: NVHPC fails with "parse use of undefined value" error.
+      # Fails for the OpenACC backend if 24.5 < NVHPC version <= 26.5
+      if((NOT Tag STREQUAL "OpenACC") OR (KOKKOS_CXX_COMPILER_VERSION VERSION_LESS_EQUAL 24.5
+                                          OR KOKKOS_CXX_COMPILER_VERSION VERSION_GREATER 26.5)
       )
-      configure_file(${dir}/dummy.cpp ${file})
-      list(APPEND ${Tag}_SOURCES1B ${file})
+        set(file ${dir}/Test${Tag}_RangePolicyNestedInvocation.cpp)
+        file(WRITE ${dir}/dummy.cpp "#include <Test${Tag}_Category.hpp>\n"
+                                    "#include <range_policy/TestRangePolicyNestedInvocation.hpp>\n"
+        )
+        configure_file(${dir}/dummy.cpp ${file})
+        list(APPEND ${Tag}_SOURCES1B ${file})
 
-      set(file ${dir}/Test${Tag}_RangePolicyExecutionProperties.cpp)
-      file(WRITE ${dir}/dummy.cpp "#include <Test${Tag}_Category.hpp>\n"
-                                  "#include <range_policy/TestRangePolicyExecutionProperties.hpp>\n"
-      )
-      configure_file(${dir}/dummy.cpp ${file})
-      list(APPEND ${Tag}_SOURCES1B ${file})
+        set(file ${dir}/Test${Tag}_RangePolicyExecutionProperties.cpp)
+        file(WRITE ${dir}/dummy.cpp "#include <Test${Tag}_Category.hpp>\n"
+                                    "#include <range_policy/TestRangePolicyExecutionProperties.hpp>\n"
+        )
+        configure_file(${dir}/dummy.cpp ${file})
+        list(APPEND ${Tag}_SOURCES1B ${file})
+      endif()
     endif()
 
     set(${Tag}_SOURCES2A)
@@ -373,6 +379,12 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;NextSilicon)
         MinimalViewMDSpanTemplateArgumentViability
         ViewMDSpanTemplateArgumentSubview
       )
+    endif()
+    # Fails for the OpenACC backend if 24.5 < NVHPC version <= 26.5
+    if(Kokkos_ENABLE_OPENACC AND KOKKOS_CXX_COMPILER_VERSION VERSION_GREATER 24.5 AND KOKKOS_CXX_COMPILER_VERSION
+                                                                                      VERSION_LESS_EQUAL 26.5
+    )
+      list(REMOVE_ITEM BV_TestNames SubviewALLFullExtentEquivalence)
     endif()
     set(${Tag}_VIEWSUPPORT)
     foreach(Name IN LISTS BV_TestNames)
