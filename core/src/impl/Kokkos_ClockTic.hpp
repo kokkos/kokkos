@@ -34,25 +34,35 @@ namespace Impl {
  *  having different index-seed values.
  */
 
-KOKKOS_IMPL_DEVICE_FUNCTION inline uint64_t clock_tic_device() noexcept {
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
 
+inline constexpr bool has_clock_tic_device_v = true;
+
+KOKKOS_IMPL_DEVICE_FUNCTION inline uint64_t clock_tic_device() noexcept {
   // Return value of 64-bit hi-res clock register.
   return clock64();
+}
 
 // FIXME_SYCL We can only return something useful for Intel GPUs and with RDC
 #elif defined(KOKKOS_ENABLE_SYCL) &&                       \
     defined(KOKKOS_ENABLE_SYCL_RELOCATABLE_DEVICE_CODE) && \
     defined(KOKKOS_ARCH_INTEL_GPU) && defined(__SYCL_DEVICE_ONLY__)
 
+inline constexpr bool has_clock_tic_device_v = true;
+
+KOKKOS_IMPL_DEVICE_FUNCTION inline uint64_t clock_tic_device() noexcept {
   return intel_get_cycle_counter();
+}
 
 #else
 
+inline constexpr bool has_clock_tic_device_v = false;
+
+KOKKOS_IMPL_DEVICE_FUNCTION inline uint64_t clock_tic_device() noexcept {
   return 0;
+}
 
 #endif
-}
 
 KOKKOS_IMPL_HOST_FUNCTION inline uint64_t clock_tic_host() noexcept {
 #if defined(__i386__) || defined(__x86_64)
@@ -99,6 +109,13 @@ KOKKOS_IMPL_HOST_FUNCTION inline uint64_t clock_tic_host() noexcept {
   return std::chrono::high_resolution_clock::now().time_since_epoch().count();
 
 #endif
+}
+
+// Compile-time information on the support of clock_tic()
+KOKKOS_FORCEINLINE_FUNCTION constexpr bool has_clock_tic() noexcept {
+  KOKKOS_IF_ON_DEVICE((return has_clock_tic_device_v;))
+  KOKKOS_IF_ON_HOST((return true;))
+  KOKKOS_IMPL_UNREACHABLE();
 }
 
 KOKKOS_FORCEINLINE_FUNCTION
