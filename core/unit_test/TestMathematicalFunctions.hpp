@@ -15,6 +15,7 @@ import kokkos.core;
 #include <algorithm>
 #include <cmath>
 #include <initializer_list>
+#include <limits>
 #include <type_traits>
 #include <cstdint>
 #include <cfloat>
@@ -393,7 +394,7 @@ DEFINE_UNARY_FUNCTION_EVAL_CUSTOM(rcp, 2,
                                   math_unary_function_return_type_t<T>(1) / x);
 #endif
 
-#ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_2
+#ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_4
 #if defined(__APPLE__)
 // Apple's standard library implementation seems to have a poor implementation
 DEFINE_UNARY_FUNCTION_EVAL(erf, 5);
@@ -422,7 +423,9 @@ DEFINE_UNARY_FUNCTION_EVAL(rint, 0);
 DEFINE_UNARY_FUNCTION_EVAL_INT(lrint);
 DEFINE_UNARY_FUNCTION_EVAL_INT(llrint);
 #endif
+#endif
 
+#ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_2
 DEFINE_UNARY_FUNCTION_EVAL_INT(ilogb);
 DEFINE_UNARY_FUNCTION_EVAL(logb, 2);
 #endif
@@ -698,15 +701,31 @@ DEFINE_TYPE_NAME(long double)
 #undef DEFINE_TYPE_NAME
 // clang-format on
 
+// The functors below keep their test cases (arguments and expected results) in
+// Views instead of in members. A backend that treats the functor as immutable
+// (e.g. NextSilicon) knows the values stored in it are invariant for the whole
+// kernel, so it may evaluate Func::eval on them outside the kernel and the
+// device implementation would never be exercised. The pointee of a View is not
+// covered by that guarantee, so the loads and the eval stay in the kernel.
+template <class Space, class T, std::size_t N>
+Kokkos::View<T*, Space> make_case_view(const T (&x)[N]) {
+  Kokkos::View<T*, Space> v("math_test_cases", N);
+  auto h = Kokkos::create_mirror_view(v);
+  for (std::size_t i = 0; i < N; ++i) h(i) = x[i];
+  Kokkos::deep_copy(v, h);
+  return v;
+}
+
 template <class Space, class Func, class Arg, std::size_t N,
           class Ret = math_unary_function_return_type_t<Arg>>
 struct TestMathUnaryFunction : KokkosTest::FloatingPointComparison {
-  Arg val_[N];
-  Ret res_[N];
-  TestMathUnaryFunction(const Arg (&val)[N]) {
-    std::copy(val, val + N, val_);
-    std::transform(val, val + N, res_,
-                   [](auto x) { return Func::eval_std(x); });
+  Kokkos::View<Arg*, Space> val_;
+  Kokkos::View<Ret*, Space> res_;
+  TestMathUnaryFunction(const Arg (&val)[N])
+      : val_(make_case_view<Space>(val)) {
+    Ret res[N];
+    std::transform(val, val + N, res, [](auto x) { return Func::eval_std(x); });
+    res_ = make_case_view<Space>(res);
     run();
   }
   void run() {
@@ -717,12 +736,12 @@ struct TestMathUnaryFunction : KokkosTest::FloatingPointComparison {
                          << type_helper<Arg>::name() << ")";
   }
   KOKKOS_FUNCTION void operator()(int i, int& e) const {
-    bool ar = compare(Func::eval(val_[i]), res_[i], Func::ulp_factor());
+    bool ar = compare(Func::eval(val_(i)), res_(i), Func::ulp_factor());
     if (!ar) {
       ++e;
       Kokkos::printf("value at %f which is %f was expected to be %f\n",
-                     (double)val_[i], (double)Func::eval(val_[i]),
-                     (double)res_[i]);
+                     (double)val_(i), (double)Func::eval(val_(i)),
+                     (double)res_(i));
     }
   }
 };
@@ -763,12 +782,13 @@ void do_test_half_math_unary_function(const Arg (&x)[N]) {
 
 template <class Space, class Func, class Arg, std::size_t N>
 struct TestIntMathUnaryFunction : KokkosTest::IntegerComparison {
-  Arg val_[N];
-  int res_[N];
-  TestIntMathUnaryFunction(const Arg (&val)[N]) {
-    std::copy(val, val + N, val_);
-    std::transform(val, val + N, res_,
-                   [](auto x) { return Func::eval_std(x); });
+  Kokkos::View<Arg*, Space> val_;
+  Kokkos::View<int*, Space> res_;
+  TestIntMathUnaryFunction(const Arg (&val)[N])
+      : val_(make_case_view<Space>(val)) {
+    int res[N];
+    std::transform(val, val + N, res, [](auto x) { return Func::eval_std(x); });
+    res_ = make_case_view<Space>(res);
     run();
   }
   void run() {
@@ -779,12 +799,12 @@ struct TestIntMathUnaryFunction : KokkosTest::IntegerComparison {
                          << type_helper<Arg>::name() << ")";
   }
   KOKKOS_FUNCTION void operator()(int i, int& e) const {
-    bool ar = compare(Func::eval(val_[i]), res_[i]);
+    bool ar = compare(Func::eval(val_(i)), res_(i));
     if (!ar) {
       ++e;
       Kokkos::printf("value at %f which is %f was expected to be %f\n",
-                     (double)val_[i], (double)Func::eval(val_[i]),
-                     (double)res_[i]);
+                     (double)val_(i), (double)Func::eval(val_(i)),
+                     (double)res_(i));
     }
   }
 };
@@ -824,278 +844,323 @@ void do_test_int_half_math_unary_function(const Arg (&x)[N]) {
   do_test_int_half_math_unary_function<T, TEST_EXECSPACE, \
                                        MathUnaryFunction_##FUNC>
 
-template <class Space, class Func, class Arg1, class Arg2,
+template <class Space, class Func, class Arg1, class Arg2, std::size_t N,
           class Ret = math_binary_function_return_type_t<Arg1, Arg2>>
 struct TestMathBinaryFunction : KokkosTest::FloatingPointComparison {
-  Arg1 val1_;
-  Arg2 val2_;
-  Ret res_;
-  TestMathBinaryFunction(Arg1 val1, Arg2 val2)
-      : val1_(val1), val2_(val2), res_(Func::eval_std(val1, val2)) {
+  Kokkos::View<Arg1*, Space> val1_;
+  Kokkos::View<Arg2*, Space> val2_;
+  Kokkos::View<Ret*, Space> res_;
+  TestMathBinaryFunction(const Arg1 (&val1)[N], const Arg2 (&val2)[N])
+      : val1_(make_case_view<Space>(val1)), val2_(make_case_view<Space>(val2)) {
+    Ret res[N];
+    std::transform(val1, val1 + N, val2, res,
+                   [](auto x, auto y) { return Func::eval_std(x, y); });
+    res_ = make_case_view<Space>(res);
     run();
   }
   void run() {
     int errors = 0;
-    Kokkos::parallel_reduce(Kokkos::RangePolicy<Space>(0, 1), *this, errors);
+    Kokkos::parallel_reduce(Kokkos::RangePolicy<Space>(0, N), *this, errors);
     ASSERT_EQ(errors, 0) << "Failed check no error for "
                          << math_function_name<Func>::name << "("
                          << type_helper<Arg1>::name() << ", "
                          << type_helper<Arg2>::name() << ")";
   }
-  KOKKOS_FUNCTION void operator()(int, int& e) const {
-    bool ar = compare(Func::eval(val1_, val2_), res_, Func::ulp_factor());
+  KOKKOS_FUNCTION void operator()(int i, int& e) const {
+    bool ar =
+        compare(Func::eval(val1_(i), val2_(i)), res_(i), Func::ulp_factor());
     if (!ar) {
       ++e;
       Kokkos::printf("value at %f, %f which is %f was expected to be %f\n",
-                     (double)val1_, (double)val2_,
-                     (double)Func::eval(val1_, val2_), (double)res_);
+                     (double)val1_(i), (double)val2_(i),
+                     (double)Func::eval(val1_(i), val2_(i)), (double)res_(i));
     }
   }
 };
 
-template <class Space, class... Func, class Arg1, class Arg2>
-void do_test_math_binary_function(Arg1 arg1, Arg2 arg2) {
+template <class Space, class... Func, class Arg1, class Arg2, std::size_t N>
+void do_test_math_binary_function(const Arg1 (&arg1)[N],
+                                  const Arg2 (&arg2)[N]) {
   (void)std::initializer_list<int>{
-      (TestMathBinaryFunction<Space, Func, Arg1, Arg2>(arg1, arg2), 0)...};
+      (TestMathBinaryFunction<Space, Func, Arg1, Arg2, N>(arg1, arg2), 0)...};
 }
 
-template <class Space, class Func, class Arg1, class Arg2,
+template <class Space, class Func, class Arg1, class Arg2, std::size_t N,
           class Ret = math_unary_function_return_type_t<Arg1>>
 struct TestMathBinaryIntFunction : KokkosTest::FloatingPointComparison {
-  Arg1 val1_;
-  Arg2 val2_;
-  Ret res_;
-  TestMathBinaryIntFunction(Arg1 val1, Arg2 val2)
-      : val1_(val1), val2_(val2), res_(Func::eval_std(val1, val2)) {
+  Kokkos::View<Arg1*, Space> val1_;
+  Kokkos::View<Arg2*, Space> val2_;
+  Kokkos::View<Ret*, Space> res_;
+  TestMathBinaryIntFunction(const Arg1 (&val1)[N], const Arg2 (&val2)[N])
+      : val1_(make_case_view<Space>(val1)), val2_(make_case_view<Space>(val2)) {
+    Ret res[N];
+    std::transform(val1, val1 + N, val2, res,
+                   [](auto x, auto y) { return Func::eval_std(x, y); });
+    res_ = make_case_view<Space>(res);
     run();
   }
   void run() {
     int errors = 0;
-    Kokkos::parallel_reduce(Kokkos::RangePolicy<Space>(0, 1), *this, errors);
+    Kokkos::parallel_reduce(Kokkos::RangePolicy<Space>(0, N), *this, errors);
     ASSERT_EQ(errors, 0) << "Failed check no error for "
                          << math_function_name<Func>::name << "("
                          << type_helper<Arg1>::name() << ", "
                          << type_helper<Arg2>::name() << ")";
   }
-  KOKKOS_FUNCTION void operator()(int, int& e) const {
-    bool ar = compare(Func::eval(val1_, val2_), res_, Func::ulp_factor());
+  KOKKOS_FUNCTION void operator()(int i, int& e) const {
+    bool ar =
+        compare(Func::eval(val1_(i), val2_(i)), res_(i), Func::ulp_factor());
     if (!ar) {
       ++e;
       Kokkos::printf("value at %f, %f which is %f was expected to be %f\n",
-                     (double)val1_, (double)val2_,
-                     (double)Func::eval(val1_, val2_), (double)res_);
+                     (double)val1_(i), (double)val2_(i),
+                     (double)Func::eval(val1_(i), val2_(i)), (double)res_(i));
     }
   }
 };
 
-template <class Space, class... Func, class Arg1, class Arg2>
-void do_test_math_binary_int_function(Arg1 arg1, Arg2 arg2) {
-  (void)std::initializer_list<int>{
-      (TestMathBinaryIntFunction<Space, Func, Arg1, Arg2>(arg1, arg2), 0)...};
+template <class Space, class... Func, class Arg1, class Arg2, std::size_t N>
+void do_test_math_binary_int_function(const Arg1 (&arg1)[N],
+                                      const Arg2 (&arg2)[N]) {
+  (void)std::initializer_list<int>{(
+      TestMathBinaryIntFunction<Space, Func, Arg1, Arg2, N>(arg1, arg2), 0)...};
 }
 
-template <class Space, class Func, class Arg,
+template <class Space, class Func, class Arg, std::size_t N,
           class Ret = math_unary_function_return_type_t<Arg>>
 struct TestMathBinaryPtrFunction : KokkosTest::FloatingPointComparison {
-  Arg val_;
-  Ret res_frac_;
-  Ret res_int_;
+  Kokkos::View<Arg*, Space> val_;
+  Kokkos::View<Ret*, Space> res_frac_;
+  Kokkos::View<Ret*, Space> res_int_;
   const char* m_name;
-  TestMathBinaryPtrFunction(Arg val)
-      : val_(val), m_name(math_function_name<Func>::name) {
-    res_frac_ = Func::eval_std(val_, &res_int_);
+  TestMathBinaryPtrFunction(const Arg (&val)[N])
+      : val_(make_case_view<Space>(val)),
+        m_name(math_function_name<Func>::name) {
+    Ret res_frac[N], res_int[N];
+    for (std::size_t i = 0; i < N; ++i)
+      res_frac[i] = Func::eval_std(val[i], &res_int[i]);
+    res_frac_ = make_case_view<Space>(res_frac);
+    res_int_  = make_case_view<Space>(res_int);
     run();
   }
   void run() {
     int errors = 0;
-    Kokkos::parallel_reduce(Kokkos::RangePolicy<Space>(0, 1), *this, errors);
+    Kokkos::parallel_reduce(Kokkos::RangePolicy<Space>(0, N), *this, errors);
     ASSERT_EQ(errors, 0) << "Failed " << m_name << " check for "
                          << type_helper<Arg>::name();
   }
-  KOKKOS_FUNCTION void operator()(int, int& e) const {
+  KOKKOS_FUNCTION void operator()(int i, int& e) const {
     Ret iptr;
-    Ret frac     = Func::eval(val_, &iptr);
-    bool ar_frac = compare(frac, res_frac_, Func::ulp_factor());
-    bool ar_int  = compare(iptr, res_int_, Func::ulp_factor());
+    Ret frac     = Func::eval(val_(i), &iptr);
+    bool ar_frac = compare(frac, res_frac_(i), Func::ulp_factor());
+    bool ar_int  = compare(iptr, res_int_(i), Func::ulp_factor());
     if (!ar_frac || !ar_int) {
       ++e;
       Kokkos::printf("%s failed: Val %f -> Frac %f (exp %f), Int %f (exp %f)\n",
-                     m_name, (double)val_, (double)frac, (double)res_frac_,
-                     (double)iptr, (double)res_int_);
+                     m_name, (double)val_(i), (double)frac,
+                     (double)res_frac_(i), (double)iptr, (double)res_int_(i));
     }
   }
 };
 
-template <class Space, class... Func, class Arg>
-void do_test_math_binary_ptr_function(Arg x) {
+template <class Space, class... Func, class Arg, std::size_t N>
+void do_test_math_binary_ptr_function(const Arg (&x)[N]) {
   (void)std::initializer_list<int>{
-      (TestMathBinaryPtrFunction<Space, Func, Arg>(x), 0)...};
-  if constexpr (!std::is_same_v<Space, Kokkos::DefaultHostExecutionSpace>) {
-    (void)std::initializer_list<int>{(
-        TestMathBinaryPtrFunction<Kokkos::DefaultHostExecutionSpace, Func, Arg>(
-            x),
-        0)...};
-  }
-}
-
-template <class Space, class Func, class Arg1, class Arg2>
-struct TestMathBinaryPredicate {
-  Arg1 val1_;
-  Arg2 val2_;
-  bool res_;
-  TestMathBinaryPredicate(Arg1 val1, Arg2 val2)
-      : val1_(val1), val2_(val2), res_(Func::eval_std(val1, val2)) {
-    run();
-  }
-  void run() {
-    int errors = 0;
-    Kokkos::parallel_reduce(Kokkos::RangePolicy<Space>(0, 1), *this, errors);
-    ASSERT_EQ(errors, 0) << "Failed check no error for "
-                         << math_function_name<Func>::name << "("
-                         << type_helper<Arg1>::name() << ", "
-                         << type_helper<Arg2>::name() << ")";
-  }
-  KOKKOS_FUNCTION void operator()(int, int& e) const {
-    bool ar = Func::eval(val1_, val2_) == res_;
-    if (!ar) {
-      ++e;
-      Kokkos::printf("value at %f, %f which is %s was expected to be %s\n",
-                     (double)val1_, (double)val2_,
-                     Func::eval(val1_, val2_) ? "true" : "false",
-                     res_ ? "true" : "false");
-    }
-  }
-};
-
-template <class Space, class... Func, class Arg1, class Arg2>
-void do_test_math_binary_predicate(Arg1 arg1, Arg2 arg2) {
-  (void)std::initializer_list<int>{
-      (TestMathBinaryPredicate<Space, Func, Arg1, Arg2>(arg1, arg2), 0)...};
-}
-
-template <class Space, class Func, class Arg,
-          class Ret = math_unary_function_return_type_t<Arg>>
-struct TestMathBinaryIntPtrFunction : KokkosTest::FloatingPointComparison {
-  Arg val_;
-  int res1_;
-  Ret res2_;
-  TestMathBinaryIntPtrFunction(Arg val)
-      : val_(val), res2_(Func::eval_std(val, &res1_)) {
-    run();
-  }
-  void run() {
-    int errors = 0;
-    Kokkos::parallel_reduce(Kokkos::RangePolicy<Space>(0, 1), *this, errors);
-    ASSERT_EQ(errors, 0) << "Failed check no error for "
-                         << math_function_name<Func>::name << "("
-                         << type_helper<Arg>::name() << ")";
-  }
-  KOKKOS_FUNCTION void operator()(int, int& e) const {
-    int res1;
-    Ret res2 = Func::eval(val_, &res1);
-    bool ar1 = (res1 == res1_);
-    bool ar2 = compare(res2, res2_, Func::ulp_factor());
-    if (!(ar1 && ar2)) {
-      ++e;
-      Kokkos::printf(
-          "values at %f which are %f, %f were expected to be %f, %f\n",
-          (double)val_, (double)res1, (double)res2, (double)res1_,
-          (double)res2_);
-    }
-  }
-};
-
-template <class Space, class... Func, class Arg>
-void do_test_math_binary_int_ptr_function(Arg x) {
-  (void)std::initializer_list<int>{
-      (TestMathBinaryIntPtrFunction<Space, Func, Arg>(x), 0)...};
+      (TestMathBinaryPtrFunction<Space, Func, Arg, N>(x), 0)...};
   if constexpr (!std::is_same_v<Space, Kokkos::DefaultHostExecutionSpace>) {
     (void)std::initializer_list<int>{
-        (TestMathBinaryIntPtrFunction<Kokkos::DefaultHostExecutionSpace, Func,
-                                      Arg>(x),
+        (TestMathBinaryPtrFunction<Kokkos::DefaultHostExecutionSpace, Func, Arg,
+                                   N>(x),
          0)...};
   }
 }
 
-template <class Space, class Func, class Arg1, class Arg2,
-          class Ret = math_binary_function_return_type_t<Arg1, Arg2>>
-struct TestMathTernaryIntPtrFunction : KokkosTest::FloatingPointComparison {
-  Arg1 val1_;
-  Arg2 val2_;
-  int val_;
-  Ret res_;
-  TestMathTernaryIntPtrFunction(Arg1 val1, Arg2 val2)
-      : val1_(val1), val2_(val2), res_(Func::eval_std(val1, val2, &val_)) {
+template <class Space, class Func, class Arg1, class Arg2, std::size_t N>
+struct TestMathBinaryPredicate {
+  Kokkos::View<Arg1*, Space> val1_;
+  Kokkos::View<Arg2*, Space> val2_;
+  Kokkos::View<bool*, Space> res_;
+  TestMathBinaryPredicate(const Arg1 (&val1)[N], const Arg2 (&val2)[N])
+      : val1_(make_case_view<Space>(val1)), val2_(make_case_view<Space>(val2)) {
+    bool res[N];
+    std::transform(val1, val1 + N, val2, res,
+                   [](auto x, auto y) { return Func::eval_std(x, y); });
+    res_ = make_case_view<Space>(res);
     run();
   }
   void run() {
     int errors = 0;
-    Kokkos::parallel_reduce(Kokkos::RangePolicy<Space>(0, 1), *this, errors);
+    Kokkos::parallel_reduce(Kokkos::RangePolicy<Space>(0, N), *this, errors);
     ASSERT_EQ(errors, 0) << "Failed check no error for "
                          << math_function_name<Func>::name << "("
                          << type_helper<Arg1>::name() << ", "
                          << type_helper<Arg2>::name() << ")";
   }
-  KOKKOS_FUNCTION void operator()(int, int& e) const {
-    int val;
-    auto res  = Func::eval(val1_, val2_, &val);
-    bool ar_1 = compare(res, res_, Func::ulp_factor());
-    bool ar_2 = (val_ == val);
-    if (!(ar_1 && ar_2)) {
+  KOKKOS_FUNCTION void operator()(int i, int& e) const {
+    bool ar = Func::eval(val1_(i), val2_(i)) == res_(i);
+    if (!ar) {
       ++e;
-      Kokkos::printf(
-          "value at %f, %f which is %f and %i was expected to be %f and %i\n",
-          (double)val1_, (double)val2_, (double)res, val, (double)res_, val_);
+      Kokkos::printf("value at %f, %f which is %s was expected to be %s\n",
+                     (double)val1_(i), (double)val2_(i),
+                     Func::eval(val1_(i), val2_(i)) ? "true" : "false",
+                     res_(i) ? "true" : "false");
     }
   }
 };
 
-template <class Space, class... Func, class Arg1, class Arg2>
-void do_test_math_ternary_int_ptr_function(Arg1 arg1, Arg2 arg2) {
+template <class Space, class... Func, class Arg1, class Arg2, std::size_t N>
+void do_test_math_binary_predicate(const Arg1 (&arg1)[N],
+                                   const Arg2 (&arg2)[N]) {
   (void)std::initializer_list<int>{
-      (TestMathTernaryIntPtrFunction<Space, Func, Arg1, Arg2>(arg1, arg2),
-       0)...};
+      (TestMathBinaryPredicate<Space, Func, Arg1, Arg2, N>(arg1, arg2), 0)...};
 }
 
-template <class Space, class Func, class Arg1, class Arg2, class Arg3,
-          class Ret = math_ternary_function_return_type_t<Arg1, Arg2, Arg3>>
-struct TestMathTernaryFunction : KokkosTest::FloatingPointComparison {
-  Arg1 val1_;
-  Arg2 val2_;
-  Arg3 val3_;
-  Ret res_;
-  TestMathTernaryFunction(Arg1 val1, Arg2 val2, Arg3 val3)
-      : val1_(val1),
-        val2_(val2),
-        val3_(val3),
-        res_(Func::eval_std(val1, val2, val3)) {
+template <class Space, class Func, class Arg, std::size_t N,
+          class Ret = math_unary_function_return_type_t<Arg>>
+struct TestMathBinaryIntPtrFunction : KokkosTest::FloatingPointComparison {
+  Kokkos::View<Arg*, Space> val_;
+  Kokkos::View<int*, Space> res1_;
+  Kokkos::View<Ret*, Space> res2_;
+  TestMathBinaryIntPtrFunction(const Arg (&val)[N])
+      : val_(make_case_view<Space>(val)) {
+    int res1[N];
+    Ret res2[N];
+    for (std::size_t i = 0; i < N; ++i)
+      res2[i] = Func::eval_std(val[i], &res1[i]);
+    res1_ = make_case_view<Space>(res1);
+    res2_ = make_case_view<Space>(res2);
     run();
   }
   void run() {
     int errors = 0;
-    Kokkos::parallel_reduce(Kokkos::RangePolicy<Space>(0, 1), *this, errors);
+    Kokkos::parallel_reduce(Kokkos::RangePolicy<Space>(0, N), *this, errors);
+    ASSERT_EQ(errors, 0) << "Failed check no error for "
+                         << math_function_name<Func>::name << "("
+                         << type_helper<Arg>::name() << ")";
+  }
+  KOKKOS_FUNCTION void operator()(int i, int& e) const {
+    int res1;
+    Ret res2 = Func::eval(val_(i), &res1);
+    bool ar1 = (res1 == res1_(i));
+    bool ar2 = compare(res2, res2_(i), Func::ulp_factor());
+    if (!(ar1 && ar2)) {
+      ++e;
+      Kokkos::printf(
+          "values at %f which are %f, %f were expected to be %f, %f\n",
+          (double)val_(i), (double)res1, (double)res2, (double)res1_(i),
+          (double)res2_(i));
+    }
+  }
+};
+
+template <class Space, class... Func, class Arg, std::size_t N>
+void do_test_math_binary_int_ptr_function(const Arg (&x)[N]) {
+  (void)std::initializer_list<int>{
+      (TestMathBinaryIntPtrFunction<Space, Func, Arg, N>(x), 0)...};
+  if constexpr (!std::is_same_v<Space, Kokkos::DefaultHostExecutionSpace>) {
+    (void)std::initializer_list<int>{
+        (TestMathBinaryIntPtrFunction<Kokkos::DefaultHostExecutionSpace, Func,
+                                      Arg, N>(x),
+         0)...};
+  }
+}
+
+template <class Space, class Func, class Arg1, class Arg2, std::size_t N,
+          class Ret = math_binary_function_return_type_t<Arg1, Arg2>>
+struct TestMathTernaryIntPtrFunction : KokkosTest::FloatingPointComparison {
+  Kokkos::View<Arg1*, Space> val1_;
+  Kokkos::View<Arg2*, Space> val2_;
+  Kokkos::View<int*, Space> val_;
+  Kokkos::View<Ret*, Space> res_;
+  TestMathTernaryIntPtrFunction(const Arg1 (&val1)[N], const Arg2 (&val2)[N])
+      : val1_(make_case_view<Space>(val1)), val2_(make_case_view<Space>(val2)) {
+    int quo[N];
+    Ret res[N];
+    for (std::size_t i = 0; i < N; ++i)
+      res[i] = Func::eval_std(val1[i], val2[i], &quo[i]);
+    val_ = make_case_view<Space>(quo);
+    res_ = make_case_view<Space>(res);
+    run();
+  }
+  void run() {
+    int errors = 0;
+    Kokkos::parallel_reduce(Kokkos::RangePolicy<Space>(0, N), *this, errors);
+    ASSERT_EQ(errors, 0) << "Failed check no error for "
+                         << math_function_name<Func>::name << "("
+                         << type_helper<Arg1>::name() << ", "
+                         << type_helper<Arg2>::name() << ")";
+  }
+  KOKKOS_FUNCTION void operator()(int i, int& e) const {
+    int val;
+    auto res  = Func::eval(val1_(i), val2_(i), &val);
+    bool ar_1 = compare(res, res_(i), Func::ulp_factor());
+    bool ar_2 = (val_(i) == val);
+    if (!(ar_1 && ar_2)) {
+      ++e;
+      Kokkos::printf(
+          "value at %f, %f which is %f and %i was expected to be %f and %i\n",
+          (double)val1_(i), (double)val2_(i), (double)res, val, (double)res_(i),
+          val_(i));
+    }
+  }
+};
+
+template <class Space, class... Func, class Arg1, class Arg2, std::size_t N>
+void do_test_math_ternary_int_ptr_function(const Arg1 (&arg1)[N],
+                                           const Arg2 (&arg2)[N]) {
+  (void)std::initializer_list<int>{
+      (TestMathTernaryIntPtrFunction<Space, Func, Arg1, Arg2, N>(arg1, arg2),
+       0)...};
+}
+
+template <class Space, class Func, class Arg1, class Arg2, class Arg3,
+          std::size_t N,
+          class Ret = math_ternary_function_return_type_t<Arg1, Arg2, Arg3>>
+struct TestMathTernaryFunction : KokkosTest::FloatingPointComparison {
+  Kokkos::View<Arg1*, Space> val1_;
+  Kokkos::View<Arg2*, Space> val2_;
+  Kokkos::View<Arg3*, Space> val3_;
+  Kokkos::View<Ret*, Space> res_;
+  TestMathTernaryFunction(const Arg1 (&val1)[N], const Arg2 (&val2)[N],
+                          const Arg3 (&val3)[N])
+      : val1_(make_case_view<Space>(val1)),
+        val2_(make_case_view<Space>(val2)),
+        val3_(make_case_view<Space>(val3)) {
+    Ret res[N];
+    for (std::size_t i = 0; i < N; ++i)
+      res[i] = Func::eval_std(val1[i], val2[i], val3[i]);
+    res_ = make_case_view<Space>(res);
+    run();
+  }
+  void run() {
+    int errors = 0;
+    Kokkos::parallel_reduce(Kokkos::RangePolicy<Space>(0, N), *this, errors);
     ASSERT_EQ(errors, 0) << "Failed check no error for "
                          << math_function_name<Func>::name << "("
                          << type_helper<Arg1>::name() << ", "
                          << type_helper<Arg2>::name() << ", "
                          << type_helper<Arg3>::name() << ")";
   }
-  KOKKOS_FUNCTION void operator()(int, int& e) const {
-    bool ar =
-        compare(Func::eval(val1_, val2_, val3_), res_, Func::ulp_factor());
+  KOKKOS_FUNCTION void operator()(int i, int& e) const {
+    bool ar = compare(Func::eval(val1_(i), val2_(i), val3_(i)), res_(i),
+                      Func::ulp_factor());
     if (!ar) {
       ++e;
       Kokkos::printf("value at %f, %f, %f which is %f was expected to be %f\n",
-                     (double)val1_, (double)val2_, (double)val3_,
-                     (double)Func::eval(val1_, val2_, val3_), (double)res_);
+                     (double)val1_(i), (double)val2_(i), (double)val3_(i),
+                     (double)Func::eval(val1_(i), val2_(i), val3_(i)),
+                     (double)res_(i));
     }
   }
 };
 
-template <class Space, class... Func, class Arg1, class Arg2, class Arg3>
-void do_test_math_ternary_function(Arg1 arg1, Arg2 arg2, Arg3 arg3) {
+template <class Space, class... Func, class Arg1, class Arg2, class Arg3,
+          std::size_t N>
+void do_test_math_ternary_function(const Arg1 (&arg1)[N], const Arg2 (&arg2)[N],
+                                   const Arg3 (&arg3)[N]) {
   (void)std::initializer_list<int>{
-      (TestMathTernaryFunction<Space, Func, Arg1, Arg2, Arg3>(arg1, arg2, arg3),
+      (TestMathTernaryFunction<Space, Func, Arg1, Arg2, Arg3, N>(arg1, arg2,
+                                                                 arg3),
        0)...};
 }
 
@@ -1233,61 +1298,86 @@ TEST(TEST_CATEGORY, mathematical_functions_power_functions) {
   TEST_MATH_FUNCTION(cbrt)({-10.l, 20.l, -30.l, 40.l, -50.l});
 #endif
 
+  // Each call passes N >= 2 cases (see the note above TestMathBinaryFunction).
   do_test_math_binary_function<TEST_EXECSPACE, kk_pow>(
-      static_cast<KE::half_t>(2.f), static_cast<KE::half_t>(3.f));
+      {static_cast<KE::half_t>(2.f), static_cast<KE::half_t>(4.f)},
+      {static_cast<KE::half_t>(3.f), static_cast<KE::half_t>(0.5f)});
   do_test_math_binary_function<TEST_EXECSPACE, kk_pow>(
-      static_cast<KE::bhalf_t>(2.f), static_cast<KE::bhalf_t>(3.f));
-  do_test_math_binary_function<TEST_EXECSPACE, kk_pow>(2.f, 3.f);
-  do_test_math_binary_function<TEST_EXECSPACE, kk_pow>(2.f, 3.f);
-  do_test_math_binary_function<TEST_EXECSPACE, kk_pow>(2., 3.);
+      {static_cast<KE::bhalf_t>(2.f), static_cast<KE::bhalf_t>(4.f)},
+      {static_cast<KE::bhalf_t>(3.f), static_cast<KE::bhalf_t>(0.5f)});
+  do_test_math_binary_function<TEST_EXECSPACE, kk_pow>({2.f, -2.f, 9.f},
+                                                       {3.f, 3.f, 0.5f});
+  do_test_math_binary_function<TEST_EXECSPACE, kk_pow>({2., -2., 9.},
+                                                       {3., 3., 0.5});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
-  do_test_math_binary_function<TEST_EXECSPACE, kk_pow>(2.l, 3.l);
+  do_test_math_binary_function<TEST_EXECSPACE, kk_pow>({2.l, -2.l, 9.l},
+                                                       {3.l, 3.l, 0.5l});
 #endif
 
-  do_test_math_binary_int_function<TEST_EXECSPACE, kk_ldexp>(42.765f, 3);
-  do_test_math_binary_int_function<TEST_EXECSPACE, kk_ldexp>(-15.123, 3);
-  do_test_math_binary_int_function<TEST_EXECSPACE, kk_ldexp>(15, 3);
+  do_test_math_binary_int_function<TEST_EXECSPACE, kk_ldexp>({42.765f, -1.5f},
+                                                             {3, -2});
+  do_test_math_binary_int_function<TEST_EXECSPACE, kk_ldexp>({-15.123, 0.75},
+                                                             {3, -2});
+  do_test_math_binary_int_function<TEST_EXECSPACE, kk_ldexp>({15, -7}, {3, -2});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
-  do_test_math_binary_int_function<TEST_EXECSPACE, kk_ldexp>(1234.5678l, 3);
+  do_test_math_binary_int_function<TEST_EXECSPACE, kk_ldexp>(
+      {1234.5678l, -0.5l}, {3, -2});
 #endif
 
 #if !defined(KOKKOS_ENABLE_SYCL) || (defined(FLT_RADIX) && FLT_RADIX == 2)
-  do_test_math_binary_int_function<TEST_EXECSPACE, kk_scalbn>(42.765f, -4);
-  do_test_math_binary_int_function<TEST_EXECSPACE, kk_scalbn>(-15.123, -4);
-  do_test_math_binary_int_function<TEST_EXECSPACE, kk_scalbn>(15, -4);
+  do_test_math_binary_int_function<TEST_EXECSPACE, kk_scalbn>({42.765f, -1.5f},
+                                                              {-4, 2});
+  do_test_math_binary_int_function<TEST_EXECSPACE, kk_scalbn>({-15.123, 0.75},
+                                                              {-4, 2});
+  do_test_math_binary_int_function<TEST_EXECSPACE, kk_scalbn>({15, -7},
+                                                              {-4, 2});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
-  do_test_math_binary_int_function<TEST_EXECSPACE, kk_scalbn>(1234.5678l, -4);
+  do_test_math_binary_int_function<TEST_EXECSPACE, kk_scalbn>(
+      {1234.5678l, -0.5l}, {-4, 2});
 #endif
 #endif
 
 #ifndef KOKKOS_ENABLE_SYCL
-  do_test_math_binary_int_function<TEST_EXECSPACE, kk_scalbln>(42.765f, -4l);
-  do_test_math_binary_int_function<TEST_EXECSPACE, kk_scalbln>(-15.123, -4l);
-  do_test_math_binary_int_function<TEST_EXECSPACE, kk_scalbln>(15, -4l);
+  do_test_math_binary_int_function<TEST_EXECSPACE, kk_scalbln>({42.765f, -1.5f},
+                                                               {-4l, 2l});
+  do_test_math_binary_int_function<TEST_EXECSPACE, kk_scalbln>({-15.123, 0.75},
+                                                               {-4l, 2l});
+  do_test_math_binary_int_function<TEST_EXECSPACE, kk_scalbln>({15, -7},
+                                                               {-4l, 2l});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
-  do_test_math_binary_int_function<TEST_EXECSPACE, kk_scalbln>(1234.5678l, -4l);
+  do_test_math_binary_int_function<TEST_EXECSPACE, kk_scalbln>(
+      {1234.5678l, -0.5l}, {-4l, 2l});
 #endif
 #endif
 
   do_test_math_binary_function<TEST_EXECSPACE, kk_hypot>(
-      static_cast<KE::half_t>(2.f), static_cast<KE::half_t>(3.f));
+      {static_cast<KE::half_t>(2.f), static_cast<KE::half_t>(0.f)},
+      {static_cast<KE::half_t>(3.f), static_cast<KE::half_t>(5.f)});
   do_test_math_binary_function<TEST_EXECSPACE, kk_hypot>(
-      static_cast<KE::bhalf_t>(2.f), static_cast<KE::bhalf_t>(3.f));
-  do_test_math_binary_function<TEST_EXECSPACE, kk_hypot>(2.f, 3.f);
-  do_test_math_binary_function<TEST_EXECSPACE, kk_hypot>(2., 3.);
+      {static_cast<KE::bhalf_t>(2.f), static_cast<KE::bhalf_t>(0.f)},
+      {static_cast<KE::bhalf_t>(3.f), static_cast<KE::bhalf_t>(5.f)});
+  do_test_math_binary_function<TEST_EXECSPACE, kk_hypot>({2.f, 0.f, -3.f},
+                                                         {3.f, 5.f, 4.f});
+  do_test_math_binary_function<TEST_EXECSPACE, kk_hypot>({2., 0., -3.},
+                                                         {3., 5., 4.});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
 // FIXME: fails with gcc on Power platforms
 #if !(defined(KOKKOS_ARCH_POWER8) || defined(KOKKOS_ARCH_POWER9))
-  do_test_math_binary_function<TEST_EXECSPACE, kk_hypot>(2.l, 3.l);
+  do_test_math_binary_function<TEST_EXECSPACE, kk_hypot>({2.l, 0.l, -3.l},
+                                                         {3.l, 5.l, 4.l});
 #endif
 #endif
 
-  do_test_math_ternary_function<TEST_EXECSPACE, kk3_hypot>(2.f, 3.f, 4.f);
-  do_test_math_ternary_function<TEST_EXECSPACE, kk3_hypot>(2., 3., 4.);
-  do_test_math_ternary_function<TEST_EXECSPACE, kk3_hypot>(2, 3.f, 4.);
+  do_test_math_ternary_function<TEST_EXECSPACE, kk3_hypot>(
+      {2.f, 1.f}, {3.f, 2.f}, {4.f, 2.f});
+  do_test_math_ternary_function<TEST_EXECSPACE, kk3_hypot>({2., 1.}, {3., 2.},
+                                                           {4., 2.});
+  do_test_math_ternary_function<TEST_EXECSPACE, kk3_hypot>({2, 1}, {3.f, 2.f},
+                                                           {4., 2.});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
 #if !(defined(KOKKOS_ARCH_POWER8) || defined(KOKKOS_ARCH_POWER9))
-  do_test_math_ternary_function<TEST_EXECSPACE, kk3_hypot>(2.l, 3.l, 4.l);
+  do_test_math_ternary_function<TEST_EXECSPACE, kk3_hypot>(
+      {2.l, 1.l}, {3.l, 2.l}, {4.l, 2.l});
 #endif
 #endif
 }
@@ -1295,67 +1385,106 @@ TEST(TEST_CATEGORY, mathematical_functions_power_functions) {
 TEST(TEST_CATEGORY, mathematical_functions_modf) {
   using Func = MathBinaryPtrFunction_modf;
 
-  do_test_math_binary_ptr_function<TEST_EXECSPACE, Func>(42.765f);
-  do_test_math_binary_ptr_function<TEST_EXECSPACE, Func>(-15.123);
-  do_test_math_binary_ptr_function<TEST_EXECSPACE, Func>(15);
+  do_test_math_binary_ptr_function<TEST_EXECSPACE, Func>(
+      {42.765f, -3.75f, 0.f});
+  do_test_math_binary_ptr_function<TEST_EXECSPACE, Func>({-15.123, 0.5, 0.});
+  do_test_math_binary_ptr_function<TEST_EXECSPACE, Func>({15, -7});
 
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
-  do_test_math_binary_ptr_function<TEST_EXECSPACE, Func>(1234.5678l);
+  do_test_math_binary_ptr_function<TEST_EXECSPACE, Func>(
+      {1234.5678l, -0.25l, 0.l});
 #endif
 }
 
 TEST(TEST_CATEGORY, mathematical_functions_frexp) {
   using Func = MathBinaryIntPtrFunction_frexp;
 
-  do_test_math_binary_int_ptr_function<TEST_EXECSPACE, Func>(42.765f);
-  do_test_math_binary_int_ptr_function<TEST_EXECSPACE, Func>(-15.123);
-  do_test_math_binary_int_ptr_function<TEST_EXECSPACE, Func>(15);
+  do_test_math_binary_int_ptr_function<TEST_EXECSPACE, Func>(
+      {42.765f, -3.75f, 0.f});
+  do_test_math_binary_int_ptr_function<TEST_EXECSPACE, Func>(
+      {-15.123, 0.5, 0.});
+  do_test_math_binary_int_ptr_function<TEST_EXECSPACE, Func>({15, -7});
 
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
-  do_test_math_binary_int_ptr_function<TEST_EXECSPACE, Func>(1234.5678l);
+  do_test_math_binary_int_ptr_function<TEST_EXECSPACE, Func>(
+      {1234.5678l, -0.25l, 0.l});
 #endif
 }
 
 TEST(TEST_CATEGORY, mathematical_functions_fma) {
-  do_test_math_ternary_function<TEST_EXECSPACE, kk3_fma>(2.f, 3.f, 4.f);
-  do_test_math_ternary_function<TEST_EXECSPACE, kk3_fma>(2., 3., 4.);
-  do_test_math_ternary_function<TEST_EXECSPACE, kk3_fma>(2, 3.f, 4.);
+  do_test_math_ternary_function<TEST_EXECSPACE, kk3_fma>(
+      {2.f, -2.f, 0.5f}, {3.f, 3.f, 4.f}, {4.f, 4.f, -2.f});
+  do_test_math_ternary_function<TEST_EXECSPACE, kk3_fma>(
+      {2., -2., 0.5}, {3., 3., 4.}, {4., 4., -2.});
+  do_test_math_ternary_function<TEST_EXECSPACE, kk3_fma>(
+      {2, -2, 1}, {3.f, 3.f, 4.f}, {4., 4., -2.});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
-  do_test_math_ternary_function<TEST_EXECSPACE, kk3_fma>(2.l, 3.l, 4.l);
+  do_test_math_ternary_function<TEST_EXECSPACE, kk3_fma>(
+      {2.l, -2.l, 0.5l}, {3.l, 3.l, 4.l}, {4.l, 4.l, -2.l});
 #endif
 }
 
 TEST(TEST_CATEGORY, mathematical_functions_remquo) {
   do_test_math_ternary_int_ptr_function<TEST_EXECSPACE, kk3_remquo>(
-      static_cast<KE::half_t>(2.f), static_cast<KE::half_t>(3.f));
+      {static_cast<KE::half_t>(2.f), static_cast<KE::half_t>(7.f),
+       static_cast<KE::half_t>(-7.f)},
+      {static_cast<KE::half_t>(3.f), static_cast<KE::half_t>(3.f),
+       static_cast<KE::half_t>(3.f)});
   do_test_math_ternary_int_ptr_function<TEST_EXECSPACE, kk3_remquo>(
-      static_cast<KE::bhalf_t>(2.f), static_cast<KE::bhalf_t>(3.f));
-  do_test_math_ternary_int_ptr_function<TEST_EXECSPACE, kk3_remquo>(2.f, 3.f);
-  do_test_math_ternary_int_ptr_function<TEST_EXECSPACE, kk3_remquo>(2., 3.);
-  do_test_math_ternary_int_ptr_function<TEST_EXECSPACE, kk3_remquo>(2, 3);
+      {static_cast<KE::bhalf_t>(2.f), static_cast<KE::bhalf_t>(7.f),
+       static_cast<KE::bhalf_t>(-7.f)},
+      {static_cast<KE::bhalf_t>(3.f), static_cast<KE::bhalf_t>(3.f),
+       static_cast<KE::bhalf_t>(3.f)});
+  do_test_math_ternary_int_ptr_function<TEST_EXECSPACE, kk3_remquo>(
+      {2.f, 7.f, -7.f}, {3.f, 3.f, 3.f});
+  do_test_math_ternary_int_ptr_function<TEST_EXECSPACE, kk3_remquo>(
+      {2., 7., -7.}, {3., 3., 3.});
+  do_test_math_ternary_int_ptr_function<TEST_EXECSPACE, kk3_remquo>({2, 7, -7},
+                                                                    {3, 3, 3});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
-  do_test_math_ternary_int_ptr_function<TEST_EXECSPACE, kk3_remquo>(2.l, 3.l);
+  do_test_math_ternary_int_ptr_function<TEST_EXECSPACE, kk3_remquo>(
+      {2.l, 7.l, -7.l}, {3.l, 3.l, 3.l});
 #endif
 }
 
 TEST(TEST_CATEGORY, mathematical_functions_fmax_fmin) {
+  // Case 1 swaps the operands, so both fmax/fmin branches are taken.
   do_test_math_binary_function<TEST_EXECSPACE, kk_fmax>(
-      static_cast<KE::half_t>(2.f), static_cast<KE::half_t>(3.f));
+      {static_cast<KE::half_t>(2.f), static_cast<KE::half_t>(3.f)},
+      {static_cast<KE::half_t>(3.f), static_cast<KE::half_t>(2.f)});
   do_test_math_binary_function<TEST_EXECSPACE, kk_fmin>(
-      static_cast<KE::half_t>(2.f), static_cast<KE::half_t>(3.f));
+      {static_cast<KE::half_t>(2.f), static_cast<KE::half_t>(3.f)},
+      {static_cast<KE::half_t>(3.f), static_cast<KE::half_t>(2.f)});
   do_test_math_binary_function<TEST_EXECSPACE, kk_fmax>(
-      static_cast<KE::bhalf_t>(2.f), static_cast<KE::bhalf_t>(3.f));
+      {static_cast<KE::bhalf_t>(2.f), static_cast<KE::bhalf_t>(3.f)},
+      {static_cast<KE::bhalf_t>(3.f), static_cast<KE::bhalf_t>(2.f)});
   do_test_math_binary_function<TEST_EXECSPACE, kk_fmin>(
-      static_cast<KE::bhalf_t>(2.f), static_cast<KE::bhalf_t>(3.f));
-  do_test_math_binary_function<TEST_EXECSPACE, kk_fmax>(2.f, 3.f);
-  do_test_math_binary_function<TEST_EXECSPACE, kk_fmin>(2.f, 3.f);
-  do_test_math_binary_function<TEST_EXECSPACE, kk_fmax>(2., 3.);
-  do_test_math_binary_function<TEST_EXECSPACE, kk_fmin>(2., 3.);
-  do_test_math_binary_function<TEST_EXECSPACE, kk_fmax>(2, 3.f);
-  do_test_math_binary_function<TEST_EXECSPACE, kk_fmin>(2, 3.f);
+      {static_cast<KE::bhalf_t>(2.f), static_cast<KE::bhalf_t>(3.f)},
+      {static_cast<KE::bhalf_t>(3.f), static_cast<KE::bhalf_t>(2.f)});
+  do_test_math_binary_function<TEST_EXECSPACE, kk_fmax>({2.f, 3.f, -2.f},
+                                                        {3.f, 2.f, -3.f});
+  do_test_math_binary_function<TEST_EXECSPACE, kk_fmin>({2.f, 3.f, -2.f},
+                                                        {3.f, 2.f, -3.f});
+  do_test_math_binary_function<TEST_EXECSPACE, kk_fmax>({2., 3., -2.},
+                                                        {3., 2., -3.});
+  do_test_math_binary_function<TEST_EXECSPACE, kk_fmin>({2., 3., -2.},
+                                                        {3., 2., -3.});
+  do_test_math_binary_function<TEST_EXECSPACE, kk_fmax>({2, 3}, {3.f, 2.f});
+  do_test_math_binary_function<TEST_EXECSPACE, kk_fmin>({2, 3}, {3.f, 2.f});
+#if !__FINITE_MATH_ONLY__
+  // A NaN operand must be ignored in favor of the other operand.
+  constexpr float fnan  = std::numeric_limits<float>::quiet_NaN();
+  constexpr double dnan = std::numeric_limits<double>::quiet_NaN();
+  do_test_math_binary_function<TEST_EXECSPACE, kk_fmax>({fnan, 2.f},
+                                                        {2.f, fnan});
+  do_test_math_binary_function<TEST_EXECSPACE, kk_fmin>({fnan, 2.f},
+                                                        {2.f, fnan});
+  do_test_math_binary_function<TEST_EXECSPACE, kk_fmax>({dnan, 2.}, {2., dnan});
+  do_test_math_binary_function<TEST_EXECSPACE, kk_fmin>({dnan, 2.}, {2., dnan});
+#endif
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
-  do_test_math_binary_function<TEST_EXECSPACE, kk_fmax>(2.l, 3.l);
-  do_test_math_binary_function<TEST_EXECSPACE, kk_fmin>(2.l, 3.l);
+  do_test_math_binary_function<TEST_EXECSPACE, kk_fmax>({2.l, 3.l}, {3.l, 2.l});
+  do_test_math_binary_function<TEST_EXECSPACE, kk_fmin>({2.l, 3.l}, {3.l, 2.l});
 #endif
 }
 #endif
@@ -1593,7 +1722,7 @@ TEST(TEST_CATEGORY, mathematical_functions_non_standard) {
 }
 #endif
 
-#ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_2
+#ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_4
 
 TEST(TEST_CATEGORY, mathematical_functions_error_and_gamma_functions) {
   TEST_MATH_FUNCTION(erf)({-3, -2, -1, 0, 1});
@@ -1833,6 +1962,9 @@ TEST(TEST_CATEGORY,
 #endif
 #endif
 }
+#endif
+
+#ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_2
 
 TEST(TEST_CATEGORY,
      mathematical_functions_floating_point_manipulation_functions) {
@@ -1868,44 +2000,56 @@ TEST(TEST_CATEGORY,
 
 #if KOKKOS_HALF_T_IS_FLOAT
   do_test_math_binary_function<TEST_EXECSPACE, kk_nextafter>(
-      0, static_cast<KE::half_t>(1.f));
+      {0, 1}, {static_cast<KE::half_t>(1.f), static_cast<KE::half_t>(-2.f)});
   do_test_math_binary_function<TEST_EXECSPACE, kk_nextafter>(
-      1, static_cast<KE::half_t>(2.f));
+      {1, -1}, {static_cast<KE::half_t>(2.f), static_cast<KE::half_t>(-2.f)});
 #endif
 #if KOKKOS_BHALF_T_IS_FLOAT
   do_test_math_binary_function<TEST_EXECSPACE, kk_nextafter>(
-      0, static_cast<KE::bhalf_t>(1.f));
+      {0, 1}, {static_cast<KE::bhalf_t>(1.f), static_cast<KE::bhalf_t>(-2.f)});
   do_test_math_binary_function<TEST_EXECSPACE, kk_nextafter>(
-      1, static_cast<KE::bhalf_t>(2.f));
+      {1, -1}, {static_cast<KE::bhalf_t>(2.f), static_cast<KE::bhalf_t>(-2.f)});
 #endif
-  do_test_math_binary_function<TEST_EXECSPACE, kk_nextafter>(0, 1.f);
-  do_test_math_binary_function<TEST_EXECSPACE, kk_nextafter>(1, 2.f);
-  do_test_math_binary_function<TEST_EXECSPACE, kk_nextafter>(0.1, 0);
+  // Case 1 moves away from the target in the other direction.
+  do_test_math_binary_function<TEST_EXECSPACE, kk_nextafter>({0, 1},
+                                                             {1.f, -2.f});
+  do_test_math_binary_function<TEST_EXECSPACE, kk_nextafter>({1, -1},
+                                                             {2.f, -2.f});
+  do_test_math_binary_function<TEST_EXECSPACE, kk_nextafter>({0.1, -0.1},
+                                                             {0, 0});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
-  do_test_math_binary_function<TEST_EXECSPACE, kk_nextafter>(1, 2.l);
-  do_test_math_binary_function<TEST_EXECSPACE, kk_nextafter>(1.l, 2.l);
+  do_test_math_binary_function<TEST_EXECSPACE, kk_nextafter>({1, -1},
+                                                             {2.l, -2.l});
+  do_test_math_binary_function<TEST_EXECSPACE, kk_nextafter>({1.l, -1.l},
+                                                             {2.l, -2.l});
 #endif
 
+  // Case 1 flips the sign source so both signs are produced.
   do_test_math_binary_function<TEST_EXECSPACE, kk_copysign>(
-      0, static_cast<KE::half_t>(1.f));
+      {0, 1}, {static_cast<KE::half_t>(1.f), static_cast<KE::half_t>(-2.f)});
   do_test_math_binary_function<TEST_EXECSPACE, kk_copysign>(
-      1, static_cast<KE::half_t>(2.f));
+      {1, 2}, {static_cast<KE::half_t>(2.f), static_cast<KE::half_t>(-3.f)});
   do_test_math_binary_function<TEST_EXECSPACE, kk_copysign>(
-      0, static_cast<KE::bhalf_t>(1.f));
+      {0, 1}, {static_cast<KE::bhalf_t>(1.f), static_cast<KE::bhalf_t>(-2.f)});
   do_test_math_binary_function<TEST_EXECSPACE, kk_copysign>(
-      1, static_cast<KE::bhalf_t>(2.f));
-  do_test_math_binary_function<TEST_EXECSPACE, kk_copysign>(0, 1.f);
-  do_test_math_binary_function<TEST_EXECSPACE, kk_copysign>(1, 2.f);
-  do_test_math_binary_function<TEST_EXECSPACE, kk_copysign>(0.1, 0);
-  do_test_math_binary_function<TEST_EXECSPACE, kk_copysign>(1.f, +2.f);
-  do_test_math_binary_function<TEST_EXECSPACE, kk_copysign>(1.f, -2.f);
-  do_test_math_binary_function<TEST_EXECSPACE, kk_copysign>(1., +2.);
-  do_test_math_binary_function<TEST_EXECSPACE, kk_copysign>(1., -2.);
+      {1, 2}, {static_cast<KE::bhalf_t>(2.f), static_cast<KE::bhalf_t>(-3.f)});
+  do_test_math_binary_function<TEST_EXECSPACE, kk_copysign>({0, 1},
+                                                            {1.f, -2.f});
+  do_test_math_binary_function<TEST_EXECSPACE, kk_copysign>({1, 2},
+                                                            {2.f, -3.f});
+  do_test_math_binary_function<TEST_EXECSPACE, kk_copysign>({0.1, -0.1},
+                                                            {0, -1});
+  do_test_math_binary_function<TEST_EXECSPACE, kk_copysign>(
+      {1.f, 1.f, 1.f, 1.f}, {+2.f, -2.f, +0.f, -0.f});
+  do_test_math_binary_function<TEST_EXECSPACE, kk_copysign>(
+      {1., 1., 1., 1.}, {+2., -2., +0., -0.});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
-  do_test_math_binary_function<TEST_EXECSPACE, kk_copysign>(1, +2.l);
-  do_test_math_binary_function<TEST_EXECSPACE, kk_copysign>(1.l, +2);
-  do_test_math_binary_function<TEST_EXECSPACE, kk_copysign>(1.l, +2.l);
-  do_test_math_binary_function<TEST_EXECSPACE, kk_copysign>(1.l, -2.l);
+  do_test_math_binary_function<TEST_EXECSPACE, kk_copysign>({1, 1},
+                                                            {+2.l, -2.l});
+  do_test_math_binary_function<TEST_EXECSPACE, kk_copysign>({1.l, 1.l},
+                                                            {+2, -2});
+  do_test_math_binary_function<TEST_EXECSPACE, kk_copysign>({1.l, 1.l},
+                                                            {+2.l, -2.l});
 #endif
 }
 
@@ -2200,6 +2344,7 @@ struct TestIEEEFloatingPointRemainderFunction
 TEST(TEST_CATEGORY, mathematical_functions_ieee_remainder_function) {
   TestIEEEFloatingPointRemainderFunction<TEST_EXECSPACE>();
 }
+#endif
 
 // TODO: TestFpClassify, see https://github.com/kokkos/kokkos/issues/6279
 
@@ -2874,7 +3019,7 @@ TEST(TEST_CATEGORY, mathematical_functions_signbit) {
 }
 
 TEST(TEST_CATEGORY, mathematical_functions_binary_predicates) {
-  auto test_all_predicates = [](auto x, auto y) {
+  auto test_all_predicates = [](const auto& x, const auto& y) {
     do_test_math_binary_predicate<TEST_EXECSPACE, kk_isgreater>(x, y);
     do_test_math_binary_predicate<TEST_EXECSPACE, kk_isgreaterequal>(x, y);
     do_test_math_binary_predicate<TEST_EXECSPACE, kk_isless>(x, y);
@@ -2883,11 +3028,32 @@ TEST(TEST_CATEGORY, mathematical_functions_binary_predicates) {
     do_test_math_binary_predicate<TEST_EXECSPACE, kk_isunordered>(x, y);
   };
 
-  test_all_predicates(2.f, 3.f);
-  test_all_predicates(2., 3.);
-  test_all_predicates(2, 3.f);
+  // Cases cover less, greater and equal operands so every predicate sees both
+  // outcomes; the NaN/inf cases below add the unordered outcome.
+  const float fx[] = {2.f, 3.f, 2.f};
+  const float fy[] = {3.f, 2.f, 2.f};
+  test_all_predicates(fx, fy);
+  const double dx[] = {2., 3., 2.};
+  const double dy[] = {3., 2., 2.};
+  test_all_predicates(dx, dy);
+  const int ix[] = {2, 3, 2};
+  test_all_predicates(ix, fy);
+#if !__FINITE_MATH_ONLY__
+  constexpr float finf  = std::numeric_limits<float>::infinity();
+  constexpr float fnan  = std::numeric_limits<float>::quiet_NaN();
+  constexpr double dinf = std::numeric_limits<double>::infinity();
+  constexpr double dnan = std::numeric_limits<double>::quiet_NaN();
+  const float fx_nan[]  = {fnan, 2.f, fnan, finf, -finf};
+  const float fy_nan[]  = {2.f, fnan, fnan, 2.f, finf};
+  test_all_predicates(fx_nan, fy_nan);
+  const double dx_nan[] = {dnan, 2., dnan, dinf, -dinf};
+  const double dy_nan[] = {2., dnan, dnan, 2., dinf};
+  test_all_predicates(dx_nan, dy_nan);
+#endif
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
-  test_all_predicates(2.l, 3.l);
+  const long double lx[] = {2.l, 3.l, 2.l};
+  const long double ly[] = {3.l, 2.l, 2.l};
+  test_all_predicates(lx, ly);
 #endif
 }
 
@@ -2951,8 +3117,12 @@ DEFINE_UNARY_FUNCTION_EVAL_CUSTOM(test_fallback_bhalf, 0,
                                   ref_test_fallback_bhalf(x));
 
 TEST(TEST_CATEGORY, mathematical_functions_impl_half_fallback) {
+  // non-trivial destructor triggers linter warning
+  // NOLINTNEXTLINE(bugprone-unused-raii)
   TestMathUnaryFunction<TEST_EXECSPACE, MathUnaryFunction_test_fallback_half,
                         KE::half_t, 1>({KE::half_t(1.f)});
+  // non-trivial destructor triggers linter warning
+  // NOLINTNEXTLINE(bugprone-unused-raii)
   TestMathUnaryFunction<TEST_EXECSPACE, MathUnaryFunction_test_fallback_bhalf,
                         KE::bhalf_t, 1>({KE::bhalf_t(1.f)});
 }
@@ -3093,6 +3263,8 @@ TEST(TEST_CATEGORY, mathematical_functions_nextafter_fp16) {
 #endif
 }
 #endif
+
+#ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_2
 
 template <class T>
 struct TestNextToward {
