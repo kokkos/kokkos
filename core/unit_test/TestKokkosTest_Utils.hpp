@@ -14,10 +14,6 @@ import kokkos.core;
 
 #include "KokkosTest_Utils.hpp"
 
-// KOKKOS_FUNCTION void toto() {
-//   KOKKOS_EXPECT_NE(m_test_reporter, 1,1);
-// }
-
 #define TEST_UNARY_EXPECT(TESTER)                                        \
   template <typename Space, typename type>                               \
   struct Test_##TESTER {                                                 \
@@ -310,6 +306,102 @@ TEST(Test_Utils, test_expects) {
   // DO_TERNARY_TEST(KOKKOS_EXPECT_NEAR_ULPS, false,
   //                 Kokkos::bit_cast<double>(0xFFEFFFFFFFFFFFFFllu),
   //                 Kokkos::bit_cast<double>(0xFFEFFFFFFFFFFFFBllu), 3);
-
-  // toto();
 }
+
+#define TEST_STRING(N, ref, lambda)                                  \
+  do {                                                               \
+    using UnformatedString = KokkosTest::UnformatedString<N>;        \
+    UnformatedString ret;                                            \
+    Kokkos::single(                                                  \
+        KOKKOS_LAMBDA(UnformatedString& r) { lambda r = us; }, ret); \
+    nerrors += check(__LINE__, ret, ref);                            \
+  } while (0)
+
+struct TestUnformatedString {
+  TestUnformatedString() { EXPECT_EQ(run(), 0); }
+
+  int run() const {
+    int nerrors = 0;
+
+    // Empty constructor should return an empty valid cstring
+    TEST_STRING(10, "", UnformatedString us;);
+
+    // Constructor taking a cstring
+    TEST_STRING(10, "test", UnformatedString us("test"););
+
+    // Append cstring
+    TEST_STRING(12, "testtest", UnformatedString us("test"); us << "test";);
+
+    // Fill the string and try to append a cstring
+    TEST_STRING(10, "testtest...", UnformatedString us("testtest");
+                us << "test";);
+
+    // Exceed string capacity in constructor
+    TEST_STRING(10, "testtest...", UnformatedString us("testtesttest"););
+
+    // Append int
+    TEST_STRING(20, "test5", UnformatedString us("test"); us << 5;);
+
+    // Append several ints
+    TEST_STRING(50, "test567", UnformatedString us("test"); us << 5 << 6 << 7;);
+
+    // Fill the string and try to append an int
+    TEST_STRING(10, "testtest...", UnformatedString us("testtest"); us << 5;);
+
+    // Completely fill the string without exceeding the capacity
+    TEST_STRING(15, "testtest5", UnformatedString us("testtest"); us << 5;);
+
+    // Append Booleans
+    TEST_STRING(10, "TrueFalse", UnformatedString us; us << true << false;);
+
+    // Append Booleans without enough capacity
+    TEST_STRING(3, "True...", UnformatedString us; us << true << false;);
+
+    // Append Float
+    TEST_STRING(5, "1.5", UnformatedString us; us << 1.5f;);
+
+    // Append Double
+    TEST_STRING(9, "1.5", UnformatedString us; us << 1.5;);
+
+    // printable char
+    TEST_STRING(9, "'a' (97, 0x61)", UnformatedString us; us << 'a';);
+
+    // non printable char
+    TEST_STRING(9, "'0x0' (0)", UnformatedString us; us << '\0';);
+
+    // Append half_t
+#if defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
+    TEST_STRING(3, "1.5", UnformatedString us;
+                us << Kokkos::Experimental::half_t(1.5f););
+#endif
+
+    // Append bhalf_t
+#if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
+    TEST_STRING(3, "1.5", UnformatedString us;
+                us << Kokkos::Experimental::bhalf_t(1.5f););
+#endif
+
+    // Append long double
+#if !defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_ENABLE_HIP) && \
+    !defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ENABLE_OPENACC)
+    TEST_STRING(17, "1.5", UnformatedString us;
+                us << static_cast<long double>(1.5););
+#endif
+
+    return nerrors;
+  }
+
+  template <std::size_t capacity>
+  int check(int line, const KokkosTest::UnformatedString<capacity>& us,
+            const char* ref) const {
+    std::stringstream bs;
+    bs << us;
+    if (std::strcmp(bs.str().c_str(), ref) != 0) {
+      Kokkos::printf("Error line %i: %s != %s\n", line, bs.str().c_str(), ref);
+      return 1;
+    }
+    return 0;
+  }
+};
+
+TEST(TEST_CATEGORY, TestUnformatedString) { TestUnformatedString(); }

@@ -161,7 +161,6 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;NextSilicon)
       MathematicalFunctions2
       MathematicalFunctions3
       MathematicalSpecialFunctions
-      StringManipulationRuntime
       KokkosTest_Utils
     )
       set(file ${dir}/Test${Tag}_${Name}.cpp)
