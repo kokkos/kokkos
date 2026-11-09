@@ -8,97 +8,85 @@
 * NextSilicon backend (close to feature complete)
 * Introduce `DefaultMemorySpace` and `DefaultHostMemorySpace` type aliases [\#9560](https://github.com/kokkos/kokkos/pull/9560).
 * Introduce a new top level parallel construct: `single`. It allow users to execute non-parallel code on device, potentially returning a value [\#8123](https://github.com/kokkos/kokkos/pull/8123)
-* Add `ThreadHandle` concept and use of `RangePolicy` for `ThreadVectorRange` (limited to `parallel_for` for now) [\#8953](https://github.com/kokkos/kokkos/pull/8953)
+* Enable use of `RangePolicy` with `ThreadHandle` in place of `ThreadVectorRange` (limited to `parallel_for` for now) [\#8953](https://github.com/kokkos/kokkos/pull/8953)
 
 ### Backend and Architecture Enhancements:
 
 #### CUDA:
 * Add support for NVIDIA Rubin GPU architecture [\#9395](https://github.com/kokkos/kokkos/pull/9395)
-* Increase the grid size used for reductions with `MDRangePolicy` [\#9523](https://github.com/kokkos/kokkos/pull/9523)
+* Increase the grid size used for reductions with `MDRangePolicy` to improve performance [\#9523](https://github.com/kokkos/kokkos/pull/9523)
 * Fix response file handling of nvcc_wrapper by removing quotes [\#9573](https://github.com/kokkos/kokkos/pull/9573)
 
 #### HIP:
-* Increase the grid size used for reductions with `MDRangePolicy` [\#9535](https://github.com/kokkos/kokkos/pull/9535)
+* Increase the grid size used for reductions with `MDRangePolicy` to improve performance [\#9535](https://github.com/kokkos/kokkos/pull/9535)
 * Add Hygon DCU architecture support (`ARCH_HYGON_GFX936`) [\#9403](https://github.com/kokkos/kokkos/pull/9403)
-* Fix `parallel_reduce` memory fences for crayclang [\#9511](https://github.com/kokkos/kokkos/issues/9511)
 
 #### SYCL:
-* Introspect TeamPolicy kernels for maximum team size [\#9353](https://github.com/kokkos/kokkos/pull/9353)
+* Introspect TeamPolicy kernels for maximum team size avoiding invalid choices in the dispatch heuristic [\#9353](https://github.com/kokkos/kokkos/pull/9353)
 * Reduce device memory footprint of team scratch pads [\#9617](https://github.com/kokkos/kokkos/pull/9617)
-* Add Intel Battlemage as SYCL architecture [\#9410](https://github.com/kokkos/kokkos/pull/9410)
+* Add Intel Battlemage GPU architecture [\#9410](https://github.com/kokkos/kokkos/pull/9410)
 
 #### OpenACC:
-
-#### NextSilicon:
+* Remove the Clacc compiler and AMD GPU support [\#9608](https://github.com/kokkos/kokkos/pull/9608)
 
 #### HPX:
-* Reorder destruction of the default instance on `Kokkos::finalize` to prevent memory leaks [\#9443](https://github.com/kokkos/kokkos/pull/9443)
-
-#### Threads:
-
-#### OpenMP:
-
-#### Serial:
-
-#### Serial, OpenMP, Threads:
-
-* Aligning functor indices type with `MDRangePolicy::index_type` will encourage GCC auto-vectorization [\#9650](https://github.com/kokkos/kokkos/pull/9650)
+* Fix default instance destruction in `Kokkos::finalize` to prevent memory leaks [\#9443](https://github.com/kokkos/kokkos/pull/9443)
 
 ### General Enhancements
+* Use `MDRangePolicy::index_type` consistently in implementation to enable GCC auto-vectorization [\#9650](https://github.com/kokkos/kokkos/pull/9650)
 * Add NVIDIA Vera CPU architecture: Kokkos_ARCH_ARMV9_VERA [\#9630](https://github.com/kokkos/kokkos/pull/9630)
 * Make headers `<Kokkos_ScopeGuard.hpp>` and `<Kokkos_InitializeFinalize.hpp>` public [\#9309](https://github.com/kokkos/kokkos/pull/9309)
-* Use raw pointers instead of iterators for CUDA/HIP `sort_by_key` when possible [\#9466](https://github.com/kokkos/kokkos/pull/9466)
+* Use raw pointers instead of iterators for CUDA/HIP `sort_by_key` when possible improving performance in those cases [\#9466](https://github.com/kokkos/kokkos/pull/9466)
 * Make `push_finalize_hook` thread-safe [\#9512](https://github.com/kokkos/kokkos/pull/9512)
-* Support larger ranges for algorithms [\#9503](https://github.com/kokkos/kokkos/pull/9503)
-* Promote KOKKOS_IMPL_[B]HALF_TYPE_DEFINED to KOKKOS_HAS_NATIVE_[B]HALF_TYPE [\#9519](https://github.com/kokkos/kokkos/pull/9519)
-* Provide `std::common_type` specializations for half precision [\#9251](https://github.com/kokkos/kokkos/pull/9251)
+* Provide KOKKOS_HAS_NATIVE_[B]HALF_TYPE macros to detect true half-precision floating-point support [\#9519](https://github.com/kokkos/kokkos/pull/9519)
+* Provide `std::common_type` specializations for half-precision types (implements ISO C++ extended floating point rules) [\#9251](https://github.com/kokkos/kokkos/pull/9251)
 * Allow `full_extent` instead of `ALL` as `subview` slice parameter [\#9601](https://github.com/kokkos/kokkos/pull/9601)
-* Add `std::tuple_element`, `std::tuple_size` and get support to `Kokkos::pair` [\#9583](https://github.com/kokkos/kokkos/pull/9583)
-* Allow using `std::float16_t` and `std::bfloat16_t` in Kokkos::Experimental::[b]half_t [\#9253](https://github.com/kokkos/kokkos/pull/9253)
-* Add Kokkos::Experimental::Graph to modules [\#9673](https://github.com/kokkos/kokkos/pull/9673)
-* Avoid `TypeInfo` instantiation when label passed to `parallel_for`, `parallel_reduce` and `parallel_scan` [\#9653](https://github.com/kokkos/kokkos/pull/9653)
-* Check if flat extent of iteration space fits in `MDRangePolicy::index_type` [\#9650](https://github.com/kokkos/kokkos/pull/9650)
-* Add a fallback for `Kokkos::sort` on non-arithmetic data [\#9539](https://github.com/kokkos/kokkos/pull/9539)
-* Removal of legacy View implementation [\#9391](https://github.com/kokkos/kokkos/pull/9391)
+* Add `std::tuple_element`, `std::tuple_size` and `get` support to `Kokkos::pair` [\#9583](https://github.com/kokkos/kokkos/pull/9583)
+* Implement use of `std::[b]float16_t` in `Kokkos::Experimental::[b]half_t` when available [\#9253](https://github.com/kokkos/kokkos/pull/9253)
+* Add C++20 modules support for `Kokkos::Experimental::Graph` [\#9673](https://github.com/kokkos/kokkos/pull/9673)
+* Avoid `TypeInfo` instantiation when passing labels to `parallel_for`, `parallel_reduce` and `parallel_scan` improving compile time [\#9653](https://github.com/kokkos/kokkos/pull/9653)
+* Check that the product of extents is representable as `index_type` in `MDRangePolicy` constructor [\#9650](https://github.com/kokkos/kokkos/pull/9650)
+* Add `MDRangePolicy::lower()`, `::upper()` and `::tile_size()` accessors [\#9370](https://github.com/kokkos/kokkos/pull/9370)
+* Enable `Kokkos::sort` for non-arithmetic value types [\#9539](https://github.com/kokkos/kokkos/pull/9539)
 * Align `View::size_type` with the `mdspan` specification [\#9614](https://github.com/kokkos/kokkos/pull/9614)
 * Support `mdspan`-style template arguments for `DualView` [\#9638](https://github.com/kokkos/kokkos/pull/9638)
 * Allow kernels with block size smaller than warp size for HIP/CUDA/SYCL [\#9339](https://github.com/kokkos/kokkos/pull/9339)
-* Add CTAD for `std::pair` to `Kokkos::pair` conversion [\#9426](https://github.com/kokkos/kokkos/pull/9426)
+* Add CTAD for `Kokkos::pair` from `std::pair` [\#9426](https://github.com/kokkos/kokkos/pull/9426)
 
 ### Build System Changes
 * Update bundled GoogleTest version to 1.14.0 and use FetchContent to build it [\#8593](https://github.com/kokkos/kokkos/pull/8593)
-* Incorporate `mdspan` released based deployment aligned with Kokkos's Ecosystem releases
+* Vendored `mdspan` is now included via CMake FetchContent on local files [\#9604](https://github.com/kokkos/kokkos/pull/9604)
 
 ### Incompatibilities (i.e. breaking changes)
-* Closures passed to `parallel_for(TeamThreadRange)` taking the index by non-const reference no longer compile [\#8953](https://github.com/kokkos/kokkos/pull/8953) [\#9692](https://github.com/kokkos/kokkos/issues/9692)
-* Require Google Benchmark 1.9.5 when building with `Kokkos_ENABLE_BENCHMARKS=ON` [\#9562](https://github.com/kokkos/kokkos/pull/9562)
+* Remove legacy View implementation [\#9391](https://github.com/kokkos/kokkos/pull/9391)
+* Prevent functors taking indices as non-const references in `parallel_for(TeamThreadRange,)` [\#8953](https://github.com/kokkos/kokkos/pull/8953) [\#9692](https://github.com/kokkos/kokkos/issues/9692)
+* Bump Google Benchmark minimum required version to 1.9.5 when building with `Kokkos_ENABLE_BENCHMARKS=ON` [\#9562](https://github.com/kokkos/kokkos/pull/9562)
 * Drop workaround for invalid use of View of Views that causes program hang on destruction [\#9612](https://github.com/kokkos/kokkos/pull/9612)
-* Relax semantics of atomic floating-point min/max [\#9606](https://github.com/kokkos/kokkos/pull/9606)
-*  Default label from `TypeInfo` no longer provided when empty string is passed as label to `parallel_for`, `parallel_reduce`, and `parallel_scan` [\#9653](https://github.com/kokkos/kokkos/pull/9653)
+* Relax semantics of atomic floating-point min/max for values comparing equal [\#9606](https://github.com/kokkos/kokkos/pull/9606)
+*  Default label from `TypeInfo` no longer provided when empty string is explicitly passed as label to `parallel_for`, `parallel_reduce`, and `parallel_scan` [\#9653](https://github.com/kokkos/kokkos/pull/9653)
 * Remove `View::specialize` trait that was tied to legacy `View` [\#9478](https://github.com/kokkos/kokkos/pull/9478)
 
 ### Deprecations
 * Final removal of code guarded by `KOKKOS_ENABLE_DEPRECATED_CODE_4` [\#9386](https://github.com/kokkos/kokkos/pull/9386)
 * Remove deprecated AMD GPU architectures [\#9570](https://github.com/kokkos/kokkos/pull/9570)
 * Remove (deprecated) `KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION` macro [\#9571](https://github.com/kokkos/kokkos/pull/9571)
-* Remove the Clacc compiler support for the OpenACC backend and AMD GPU support by the OpenACC backend [\#9608](https://github.com/kokkos/kokkos/pull/9608)
-* Deprecate direct access to `MDRangePolicy` data members and add `lower()`, `upper()` and `tile_size()` accessors [\#9370](https://github.com/kokkos/kokkos/pull/9370)
 
 ### Bug Fixes
 
 * Fix missing and obsolete architecture defines in CMake configuration [\#9536](https://github.com/kokkos/kokkos/pull/9536)
 * Add support for building with clang++ using CUDA 13 underneath with CMake < 3.31 [\#9437](https://github.com/kokkos/kokkos/pull/9437)
-* Add support for querying the team and thread level scratch size on all backends [\#9344](https://github.com/kokkos/kokkos/pull/9344)
+* Add missing `TeamPolicy::{team,thread}_scratch_size` member functions for some backends [\#9344](https://github.com/kokkos/kokkos/pull/9344)
 * HIP: fix `Kokkos::abort` on Windows [\#9372](https://github.com/kokkos/kokkos/pull/9372)
 * Fix compile or runtime failures when using the `RangePolicy` version of `parallel_for` with a 16-bit `IndexType` [\#9373](https://github.com/kokkos/kokkos/pull/9373)
-* Fix undefined behavior in scalar_intra_warp_reduction [\#9572](https://github.com/kokkos/kokkos/pull/9572)
+* Avoid division by zero in CUDA & HIP reduction implementation [\#9572](https://github.com/kokkos/kokkos/pull/9572)
 * MSVC: fix race conditions if mixing 16-byte atomic compare exchange with other atomic operations [\#9553](https://github.com/kokkos/kokkos/pull/9553)
 * Fix masked unchecked_scatter_to / partial_scatter_to with simd_abi::scalar writing to the masked-off lane [\#9649](https://github.com/kokkos/kokkos/pull/9649)
-* Return the neutral element in `parallel_scan` with empty work range [\#9319](https://github.com/kokkos/kokkos/pull/9319)
-* Fix host `parallel_reduce` into view in shared space [\#9642](https://github.com/kokkos/kokkos/pull/9642)
+* Return the neutral element in `parallel_scan` with return value when the work range is empty [\#9319](https://github.com/kokkos/kokkos/pull/9319)
+* Fix compiling host `parallel_reduce` into `View` in `SharedSpace` [\#9642](https://github.com/kokkos/kokkos/pull/9642)
 * Fix compiling modules with clang++-22 [\#9495](https://github.com/kokkos/kokkos/pull/9495)
 * Fix `parallel_scan` with a non-zero start index on a `ThreadVectorRange` [\#9719](https://github.com/kokkos/kokkos/pull/9719)
-* Fix filling views with `NaN`s [\#9700](https://github.com/kokkos/kokkos/pull/9700)
+* Fix filling views with `NaN`s (avoiding floating point exception) [\#9700](https://github.com/kokkos/kokkos/pull/9700)
+* Fix using STL like parallel algorithms with ranges exceeding 32bit on GPUs [\#9503](https://github.com/kokkos/kokkos/pull/9503)
 
 ## 5.2.2
 
