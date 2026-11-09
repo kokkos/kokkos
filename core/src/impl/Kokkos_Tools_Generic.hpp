@@ -658,15 +658,15 @@ void end_parallel_reduce(
 #endif
 }
 
-template <class ExecPolicy, class FunctorType>
-void begin_single(const ExecPolicy& policy, const std::string& label,
+template <class ExecPolicy, class FunctorType, bool HasLabel>
+void begin_single(const ExecPolicy& policy,
+                  const Kokkos::Impl::OptionalLabelRef<HasLabel> optional_label,
                   uint64_t& kpID) {
   if (Kokkos::Tools::profileLibraryLoaded()) {
-    Kokkos::Impl::ParallelConstructName<FunctorType,
-                                        typename ExecPolicy::work_tag>
-        name(label);
+    const std::string name = Kokkos::Tools::Impl::construct_name<
+        FunctorType, typename ExecPolicy::work_tag>(optional_label);
     Kokkos::Tools::beginSingle(
-        name.get(), Kokkos::Profiling::Experimental::device_id(policy.space()),
+        name, Kokkos::Profiling::Experimental::device_id(policy.space()),
         &kpID);
   }
 }

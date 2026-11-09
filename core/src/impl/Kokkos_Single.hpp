@@ -17,20 +17,18 @@ static_assert(false,
 #include <impl/Kokkos_Tools_Generic.hpp>
 
 namespace Kokkos {
+namespace Impl {
 
-/** \brief Execute \c functor on a specific ExecutionSpace in a single thread.
- *
- */
-// single clause returning no value (based on parallel_for)
-template <class FunctorType, class... PolicyProperties>
-inline void single(const std::string& label,
-                   const SinglePolicy<PolicyProperties...>& single_policy,
-                   const FunctorType& functor) {
+template <bool HasLabel, class FunctorType, class... PolicyProperties>
+inline void single_dispatch(
+    const OptionalLabelRef<HasLabel> optional_label,
+    const SinglePolicy<PolicyProperties...>& single_policy,
+    const FunctorType& functor) {
   using ExecPolicy = SinglePolicy<PolicyProperties...>;
 
   uint64_t kpID = 0;
-  Kokkos::Tools::Impl::begin_single<ExecPolicy, FunctorType>(single_policy,
-                                                             label, kpID);
+  Kokkos::Tools::Impl::begin_single<ExecPolicy, FunctorType>(
+      single_policy, optional_label, kpID);
 
   auto closure = Impl::construct_with_shared_allocation_tracking_disabled<
       Impl::Single<FunctorType, ExecPolicy>>(functor, single_policy);
@@ -40,30 +38,12 @@ inline void single(const std::string& label,
   Kokkos::Tools::Impl::end_single<FunctorType>(kpID);
 }
 
-template <class FunctorType, class... PolicyProperties>
-inline void single(const SinglePolicy<PolicyProperties...>& single_policy,
-                   const FunctorType& functor) {
-  ::Kokkos::single("", single_policy, functor);
-}
-template <class FunctorType>
-inline void single(const std::string& label, const FunctorType& functor) {
-  using execution_space =
-      typename Impl::FunctorPolicyExecutionSpace<FunctorType,
-                                                 void>::execution_space;
-  using policy = SinglePolicy<execution_space>;
-  ::Kokkos::single(label, policy(), functor);
-}
-
-template <class FunctorType>
-inline void single(const FunctorType& functor) {
-  ::Kokkos::single("", functor);
-}
-
-// single clause returning values (based on parallel_reduce)
-template <class FunctorType, class ReturnType, class... PolicyProperties>
-inline void single(const std::string& label,
-                   const SinglePolicy<PolicyProperties...>& single_policy,
-                   const FunctorType& functor, ReturnType& return_value) {
+template <bool HasLabel, class FunctorType, class ReturnType,
+          class... PolicyProperties>
+inline void single_dispatch(
+    const OptionalLabelRef<HasLabel> optional_label,
+    const SinglePolicy<PolicyProperties...>& single_policy,
+    const FunctorType& functor, ReturnType& return_value) {
   using ExecPolicy = SinglePolicy<PolicyProperties...>;
 
   // We always pass a View to the implementation, wrap scalar values
@@ -81,8 +61,8 @@ inline void single(const std::string& label,
   }
 
   uint64_t kpID = 0;
-  Kokkos::Tools::Impl::begin_single<ExecPolicy, FunctorType>(single_policy,
-                                                             label, kpID);
+  Kokkos::Tools::Impl::begin_single<ExecPolicy, FunctorType>(
+      single_policy, optional_label, kpID);
 
   // Dispatch execution to either the default implementation or an
   // execution_space specific implementation if one is available
@@ -105,6 +85,51 @@ inline void single(const std::string& label,
   }
 }
 
+}  // namespace Impl
+
+/** \brief Execute \c functor on a specific ExecutionSpace in a single thread.
+ *
+ */
+// single clause returning no value (based on parallel_for)
+template <class FunctorType, class... PolicyProperties>
+inline void single(const std::string& label,
+                   const SinglePolicy<PolicyProperties...>& single_policy,
+                   const FunctorType& functor) {
+  Impl::single_dispatch(Impl::WithLabel{label}, single_policy, functor);
+}
+
+template <class FunctorType, class... PolicyProperties>
+inline void single(const SinglePolicy<PolicyProperties...>& single_policy,
+                   const FunctorType& functor) {
+  Impl::single_dispatch(Impl::NoLabel{}, single_policy, functor);
+}
+template <class FunctorType>
+inline void single(const std::string& label, const FunctorType& functor) {
+  using execution_space =
+      typename Impl::FunctorPolicyExecutionSpace<FunctorType,
+                                                 void>::execution_space;
+  using policy = SinglePolicy<execution_space>;
+  Impl::single_dispatch(Impl::WithLabel{label}, policy(), functor);
+}
+
+template <class FunctorType>
+inline void single(const FunctorType& functor) {
+  using execution_space =
+      typename Impl::FunctorPolicyExecutionSpace<FunctorType,
+                                                 void>::execution_space;
+  using policy = SinglePolicy<execution_space>;
+  Impl::single_dispatch(Impl::NoLabel{}, policy(), functor);
+}
+
+// single clause returning values (based on parallel_reduce)
+template <class FunctorType, class ReturnType, class... PolicyProperties>
+inline void single(const std::string& label,
+                   const SinglePolicy<PolicyProperties...>& single_policy,
+                   const FunctorType& functor, ReturnType& return_value) {
+  Impl::single_dispatch(Impl::WithLabel{label}, single_policy, functor,
+                        return_value);
+}
+
 template <class FunctorType, class ReturnType, class... PolicyProperties>
   requires(std::invocable<FunctorType, ReturnType&> ||
            (Kokkos::is_view<ReturnType>::value &&
@@ -112,7 +137,7 @@ template <class FunctorType, class ReturnType, class... PolicyProperties>
             ReturnType::rank == 0))
 inline void single(const SinglePolicy<PolicyProperties...>& single_policy,
                    const FunctorType& functor, ReturnType& return_value) {
-  ::Kokkos::single("", single_policy, functor, return_value);
+  Impl::single_dispatch(Impl::NoLabel{}, single_policy, functor, return_value);
 }
 
 template <class FunctorType, class ReturnType>
@@ -126,7 +151,8 @@ inline void single(const std::string label, const FunctorType& functor,
       typename Impl::FunctorPolicyExecutionSpace<FunctorType,
                                                  void>::execution_space;
   using policy = SinglePolicy<execution_space>;
-  ::Kokkos::single(label, policy(), functor, return_value);
+  Impl::single_dispatch(Impl::WithLabel{label}, policy(), functor,
+                        return_value);
 }
 
 template <class FunctorType, class ReturnType>
@@ -135,7 +161,11 @@ template <class FunctorType, class ReturnType>
             std::invocable<FunctorType, typename ReturnType::data_type&> &&
             ReturnType::rank == 0))
 inline void single(const FunctorType& functor, ReturnType& return_value) {
-  ::Kokkos::single("", functor, return_value);
+  using execution_space =
+      typename Impl::FunctorPolicyExecutionSpace<FunctorType,
+                                                 void>::execution_space;
+  using policy = SinglePolicy<execution_space>;
+  Impl::single_dispatch(Impl::NoLabel{}, policy(), functor, return_value);
 }
 }  // namespace Kokkos
 
