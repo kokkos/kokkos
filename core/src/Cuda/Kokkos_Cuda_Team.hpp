@@ -890,8 +890,6 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
 
 //----------------------------------------------------------------------------
 
-//----------------------------------------------------------------------------
-
 /** \brief  Intra-thread vector parallel scan with reducer.
  *
  *  Executes closure(iType i, ValueType & val, bool final) for each i=[0..N)
