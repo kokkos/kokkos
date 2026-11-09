@@ -619,40 +619,35 @@ void parallel_scan(const Impl::TeamThreadRangeBoundariesStruct<
   const auto team_rank = member.team_rank();
   const auto nchunk    = (end - start + team_size - 1) / team_size;
   ValueType accum      = 0;
+
+  auto const invoke = [&](iType i, ValueType& val, bool final_pass) {
+    if constexpr (std::is_invocable_v<FunctorType, iType, ValueType&, bool>) {
+      lambda(i, val, final_pass);
+    } else if constexpr (std::is_invocable_v<FunctorType,
+                                             thread_handle_t const&, iType,
+                                             ValueType&, bool>) {
+      lambda(thread_handle_t(member), i, val, final_pass);
+    } else {
+      static_assert(Kokkos::Impl::always_false<FunctorType>::value,
+                    "Kokkos::parallel_scan(TeamThreadRange) closure must be "
+                    "invocable with (iType, ValueType&, bool) or "
+                    "(ThreadHandleType, iType, ValueType&, bool)");
+    }
+  };
+
   // each team has to process one or more chunks of the prefix scan
   for (iType i = 0; i < nchunk; ++i) {
     auto ii = start + i * team_size + team_rank;
     // local accumulation for this chunk
     ValueType local_accum = 0;
     // user updates value with prefix value
-    if (ii < loop_bounds.end) {
-      if constexpr (std::is_invocable_v<FunctorType, iType, ValueType&, bool>) {
-        lambda(ii, local_accum, false);
-      } else if constexpr (std::is_invocable_v<FunctorType,
-                                               thread_handle_t const&, iType,
-                                               ValueType&, bool>) {
-        lambda(thread_handle_t(member), ii, local_accum, false);
-      } else {
-        static_assert(Kokkos::Impl::always_false<FunctorType>::value,
-                      "Kokkos::parallel_scan(TeamThreadRange) closure must be "
-                      "invocable with (iType, ValueType&, bool) or "
-                      "(ThreadHandleType, iType, ValueType&, bool)");
-      }
-    }
+    if (ii < loop_bounds.end) invoke(ii, local_accum, false);
     // perform team scan
     local_accum = member.team_scan(local_accum);
     // add this blocks accum to total accumulation
     ValueType val = accum + local_accum;
     // user updates their data with total accumulation
-    if (ii < loop_bounds.end) {
-      if constexpr (std::is_invocable_v<FunctorType, iType, ValueType&, bool>) {
-        lambda(ii, val, true);
-      } else if constexpr (std::is_invocable_v<FunctorType,
-                                               thread_handle_t const&, iType,
-                                               ValueType&, bool>) {
-        lambda(thread_handle_t(member), ii, val, true);
-      }
-    }
+    if (ii < loop_bounds.end) invoke(ii, val, true);
     // the last value needs to be propogated to next chunk
     if (team_rank == team_size - 1) accum = val;
     // broadcast last value to rest of the team
