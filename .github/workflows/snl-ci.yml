@@ -583,7 +583,7 @@ jobs:
         # FIXME_NEXTSILICON NextSilicon1A causes memory errors when configuring device
         run: |
           ulimit -c 0
-          ctest -V -E 'NextSilicon1A' --timeout 3600
+          ctest -V -E 'NextSilicon1A|Kokkos_CoreUnitTest_Default$' --timeout 3600
 
   SNL_Required_Checks:
     if: always()
