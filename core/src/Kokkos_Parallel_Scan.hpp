@@ -256,11 +256,21 @@ inline void parallel_scan(const std::string& str, const ExecutionPolicy& policy,
 
 template <Kokkos::ExecutionPolicy ExecutionPolicy, class FunctorType>
   requires Kokkos::ExecutionSpace<typename ExecutionPolicy::execution_type>
-inline void parallel_scan(const ExecutionPolicy& policy,
-                          const FunctorType& functor) {
+KOKKOS_INLINE_FUNCTION void parallel_scan(const ExecutionPolicy& policy,
+                                          const FunctorType& functor) {
+  KOKKOS_IF_ON_DEVICE(
+      Kokkos::abort(
+          "Kokkos::parallel_scan(ExecutionPolicy, functor) cannot be "
+          "called from device.\n");)
+
+  // Work around nvcc complaint about calling __host__ function from __host__
+  // __device__ function. Assert above that we are not actually calling on
+  // device.
+  KOKKOS_IMPL_DISABLE_CALLING_HOST_FROM_DEVICE_WARNINGS_PUSH()
   Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check("parallel_scan",
                                                               policy);
   Impl::parallel_scan_dispatch(Impl::NoLabel{}, policy, functor);
+  KOKKOS_IMPL_DISABLE_CALLING_HOST_FROM_DEVICE_WARNINGS_POP()
 }
 
 template <class FunctorType>
@@ -301,12 +311,22 @@ inline void parallel_scan(const std::string& str, const ExecutionPolicy& policy,
 template <Kokkos::ExecutionPolicy ExecutionPolicy, class FunctorType,
           class ReturnType>
   requires Kokkos::ExecutionSpace<typename ExecutionPolicy::execution_type>
-inline void parallel_scan(const ExecutionPolicy& policy,
-                          const FunctorType& functor,
-                          ReturnType& return_value) {
+KOKKOS_INLINE_FUNCTION void parallel_scan(const ExecutionPolicy& policy,
+                                          const FunctorType& functor,
+                                          ReturnType& return_value) {
+  KOKKOS_IF_ON_DEVICE(
+      Kokkos::abort(
+          "Kokkos::parallel_scan(ExecutionPolicy, functor, return) cannot be "
+          "called from device.\n");)
+
+  // Work around nvcc complaint about calling __host__ function from __host__
+  // __device__ function. Assert above that we are not actually calling on
+  // device.
+  KOKKOS_IMPL_DISABLE_CALLING_HOST_FROM_DEVICE_WARNINGS_PUSH()
   Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check("parallel_scan",
                                                               policy);
   Impl::parallel_scan_dispatch(Impl::NoLabel{}, policy, functor, return_value);
+  KOKKOS_IMPL_DISABLE_CALLING_HOST_FROM_DEVICE_WARNINGS_POP()
 }
 
 template <class FunctorType, class ReturnType>
