@@ -5,7 +5,6 @@ module;
 
 #include <Kokkos_SIMD.hpp>
 #include <Kokkos_SIMD_Modules_Macros.hpp>
-#include <Kokkos_SIMD_Impl_Modules_Macros.hpp>
 
 // This module exists so that kokkos.simd and kokkos.simd_impl don't both
 // include Kokkos_SIMD.hpp which turns out to be problematic when including

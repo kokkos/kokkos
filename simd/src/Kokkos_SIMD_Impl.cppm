@@ -3,7 +3,7 @@
 
 module;
 
-#include <Kokkos_SIMD_Impl_Modules_Macros.hpp>
+#include <Kokkos_SIMD_Modules_Macros.hpp>
 import kokkos.simd_detail;
 
 export module kokkos.simd_impl;
