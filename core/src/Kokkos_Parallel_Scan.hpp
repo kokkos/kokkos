@@ -259,9 +259,8 @@ template <Kokkos::ExecutionPolicy ExecutionPolicy, class FunctorType>
 KOKKOS_INLINE_FUNCTION void parallel_scan(const ExecutionPolicy& policy,
                                           const FunctorType& functor) {
   KOKKOS_IF_ON_DEVICE(
-      Kokkos::abort(
-          "Kokkos::parallel_scan(ExecutionPolicy, functor) cannot be "
-          "called from device.\n");)
+      Kokkos::abort("Kokkos::parallel_scan(ExecutionPolicy, functor) cannot be "
+                    "called from device.\n");)
 
   // Work around nvcc complaint about calling __host__ function from __host__
   // __device__ function. Assert above that we are not actually calling on
