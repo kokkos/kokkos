@@ -48,7 +48,7 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
   static_assert(std::is_same<lambda_value_type, ValueType>::value,
                 "Non-matching value types of lambda and return type");
 
-  ValueType accum;
+  ValueType accum{};
   parallel_scan(loop_boundaries, lambda, Kokkos::Sum<ValueType>(accum));
 
   return_val = accum;

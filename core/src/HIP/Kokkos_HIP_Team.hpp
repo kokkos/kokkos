@@ -951,7 +951,7 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
   static_assert(std::is_same_v<closure_value_type, ValueType>,
                 "Non-matching value types of closure and return type");
 
-  ValueType accum;
+  ValueType accum{};
   parallel_scan(loop_boundaries, closure, Kokkos::Sum<ValueType>(accum));
 
   return_val = accum;
