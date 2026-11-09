@@ -23,6 +23,7 @@ class NextSiliconTeamMember {
   using execution_space      = Kokkos::Experimental::NextSilicon;
   using scratch_memory_space = execution_space::scratch_memory_space;
   using team_handle          = NextSiliconTeamMember;
+  using thread_handle        = ThreadHandleType<team_handle>;
 
  private:
   scratch_memory_space m_team_shared;

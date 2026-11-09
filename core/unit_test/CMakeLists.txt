@@ -219,24 +219,19 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;NextSilicon)
     endforeach()
 
     # Add additional test(s) from subdirectory range_policy.
-    # Cases that do not use ThreadHandle run for every category. ThreadHandle
-    # cases are compiled only when TEST_CATEGORY is cuda.
-    # FIXME_NEXTSILICON: requires TeamPolicy.
-    if(NOT Tag STREQUAL "NextSilicon")
-      set(file ${dir}/Test${Tag}_RangePolicyNestedInvocation.cpp)
-      file(WRITE ${dir}/dummy.cpp "#include <Test${Tag}_Category.hpp>\n"
-                                  "#include <range_policy/TestRangePolicyNestedInvocation.hpp>\n"
-      )
-      configure_file(${dir}/dummy.cpp ${file})
-      list(APPEND ${Tag}_SOURCES1B ${file})
+    set(file ${dir}/Test${Tag}_RangePolicyNestedInvocation.cpp)
+    file(WRITE ${dir}/dummy.cpp "#include <Test${Tag}_Category.hpp>\n"
+                                "#include <range_policy/TestRangePolicyNestedInvocation.hpp>\n"
+    )
+    configure_file(${dir}/dummy.cpp ${file})
+    list(APPEND ${Tag}_SOURCES1B ${file})
 
-      set(file ${dir}/Test${Tag}_RangePolicyExecutionProperties.cpp)
-      file(WRITE ${dir}/dummy.cpp "#include <Test${Tag}_Category.hpp>\n"
-                                  "#include <range_policy/TestRangePolicyExecutionProperties.hpp>\n"
-      )
-      configure_file(${dir}/dummy.cpp ${file})
-      list(APPEND ${Tag}_SOURCES1B ${file})
-    endif()
+    set(file ${dir}/Test${Tag}_RangePolicyExecutionProperties.cpp)
+    file(WRITE ${dir}/dummy.cpp "#include <Test${Tag}_Category.hpp>\n"
+                                "#include <range_policy/TestRangePolicyExecutionProperties.hpp>\n"
+    )
+    configure_file(${dir}/dummy.cpp ${file})
+    list(APPEND ${Tag}_SOURCES1B ${file})
 
     set(${Tag}_SOURCES2A)
     set(${Tag}_TESTNAMES2A
@@ -772,6 +767,8 @@ if(Kokkos_ENABLE_NEXTSILICON)
       # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_Printf.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_QuadPrecisionMath.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_RangePolicyConstructors.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_RangePolicyExecutionProperties.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_RangePolicyNestedInvocation.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_RangePolicyRequire.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_ReducerCTADs.cpp
       # FIXME_NEXTSILICON segfaults and ecore panics 1.3.0-120
