@@ -96,7 +96,7 @@ constexpr Array to_array_potentially_narrowing(const U (&init)[M]) {
   // except that std::transform is not constexpr.
   for (std::size_t i = 0; i < M; ++i) {
     *ptr++ = checked_narrow_cast<T>(init[i], i);
-    if (!std::is_same_v<T, IndexType>) {  // see note above
+    if constexpr (!std::is_same_v<T, IndexType>) {  // see note above
       (void)checked_narrow_cast<IndexType>(init[i], i);
     }
   }
@@ -117,7 +117,7 @@ constexpr NVCC_WONT_LET_ME_CALL_YOU_Array to_array_potentially_narrowing(
   static_assert(M <= N);
   for (std::size_t i = 0; i < M; ++i) {
     a[i] = checked_narrow_cast<T>(other[i], i);
-    if (!std::is_same_v<T, IndexType>) {  // see note above
+    if constexpr (!std::is_same_v<T, IndexType>) {  // see note above
       (void)checked_narrow_cast<IndexType>(other[i], i);
     }
   }
