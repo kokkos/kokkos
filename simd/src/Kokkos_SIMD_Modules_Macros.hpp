@@ -4,6 +4,13 @@
 #ifndef KOKKOS_SIMD_MODULES_MACROS_HPP
 #define KOKKOS_SIMD_MODULES_MACROS_HPP
 
+// Make the relevant symbols for the kokkos.simd module (Kokkos_SIMD.cppm) and
+// kokkos.simd_impl module (Kokkos_SIMD_Impl.cppm) available through the
+// KOKKOS_SIMD_MODULES_SYMBOLS_COMMON and KOKKOS_SIMD_MODULES_IMPL_SYMBOLS
+// macros so that don't need to repeat all of them in those modules and in
+// kokkos.simd_detail (Kokkos_SIMD_Detail.cppm). See Kokkos_SIMD_Detail.cppm for
+// further explanations.
+
 #include <Kokkos_Macros.hpp>
 
 #define KOKKOS_SIMD_MODULES_SYMBOLS_COMMON                  \
