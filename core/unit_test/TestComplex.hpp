@@ -617,8 +617,8 @@ TEST(TEST_CATEGORY, complex_structured_bindings) {
 }
 
 TEST(TEST_CATEGORY, complex_mixed_precision) {
-  const auto res =
-      Kokkos::complex<double>{1., 1.} / Kokkos::complex<float>{1.f, 1.f};
+  const float a = 1.f + 0x1p-13f, b = 1.f - 0x1p-13f;
+  const auto res = Kokkos::complex<double>{a, b} / Kokkos::complex<float>{a, b};
   static_assert(std::same_as<decltype(res), const Kokkos::complex<double>>);
   ASSERT_EQ(res, (Kokkos::complex<double>{1., 0.}));
 }
