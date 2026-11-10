@@ -22,8 +22,8 @@ module;
 // here so that the module interface and implementation units use a
 // consistent set of declarations.
 //
-// Kokkos_SIMD.cppm and Kokkos_SIMD_Impl.cppm will re-export the respective symbols
-// from this module.
+// Kokkos_SIMD.cppm and Kokkos_SIMD_Impl.cppm will re-export the respective
+// symbols from this module.
 export module kokkos.simd_detail;
 
 export {
