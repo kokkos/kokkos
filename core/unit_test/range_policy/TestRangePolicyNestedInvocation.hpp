@@ -277,6 +277,9 @@ struct CheckScanViewsWithExecSpace {
   }
 };
 
+// FIXME_OPENACC: TeamThreadRange / ThreadVectorRange parallel_scan are not
+// implemented (team_scan aborts).
+#if !defined(KOKKOS_ENABLE_OPENACC)
 template <class ExecSpace>
 struct CheckScanViewsWithThreadHandle {
   void operator()() const {
@@ -351,6 +354,7 @@ struct CheckScanViewsWithConstructedThreadHandle {
     ASSERT_FLOAT_EQ(result, static_cast<float>(num_leagues) * expected);
   }
 };
+#endif  // !defined(KOKKOS_ENABLE_OPENACC)
 
 }  // namespace
 
@@ -379,6 +383,7 @@ TEST(TEST_CATEGORY, self_similar_scan_views_with_execution_space) {
   CheckScanViewsWithExecSpace<TEST_EXECSPACE>{}();
 }
 
+#if !defined(KOKKOS_ENABLE_OPENACC)
 TEST(TEST_CATEGORY, self_similar_scan_views_with_thread_handle) {
   CheckScanViewsWithThreadHandle<TEST_EXECSPACE>{}();
 }
@@ -386,3 +391,4 @@ TEST(TEST_CATEGORY, self_similar_scan_views_with_thread_handle) {
 TEST(TEST_CATEGORY, self_similar_scan_views_with_constructed_thread_handle) {
   CheckScanViewsWithConstructedThreadHandle<TEST_EXECSPACE>{}();
 }
+#endif  // !defined(KOKKOS_ENABLE_OPENACC)
