@@ -136,7 +136,7 @@ class basic_simd_mask<T, simd_abi::scalar> {
     return basic_simd_mask(static_cast<bool>(lhs) < static_cast<bool>(rhs));
   }
   KOKKOS_FORCEINLINE_FUNCTION
-  friend constexpr basic_simd_mask simd_select_impl(
+  friend constexpr basic_simd_mask impl_simd_select(
       basic_simd_mask const& mask, basic_simd_mask const& a,
       basic_simd_mask const& b) noexcept {
     return basic_simd_mask(static_cast<value_type>(mask)
@@ -341,7 +341,7 @@ class basic_simd<T, simd_abi::scalar> {
     return mask_type(lhs.m_value < rhs.m_value);
   }
   KOKKOS_FORCEINLINE_FUNCTION
-  friend constexpr basic_simd simd_select_impl(mask_type const& mask,
+  friend constexpr basic_simd impl_simd_select(mask_type const& mask,
                                                basic_simd const& a,
                                                basic_simd const& b) noexcept {
     return basic_simd(static_cast<bool>(mask) ? static_cast<T>(a)

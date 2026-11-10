@@ -339,7 +339,7 @@
 
 #define KOKKOS_SIMD_IMPL_BASE_MASK_SELECT_FN(IMPL_FN)                   \
   KOKKOS_FORCEINLINE_FUNCTION                                           \
-  constexpr friend Derived simd_select_impl(                            \
+  constexpr friend Derived impl_simd_select(                            \
       Derived const& mask, Derived const& a, Derived const& b) noexcept \
     requires requires { Derived::impl_ops::IMPL_FN(mask, a, b); }       \
   {                                                                     \
@@ -348,7 +348,7 @@
 
 #define KOKKOS_SIMD_IMPL_BASE_SELECT_FN(IMPL_FN)                         \
   template <typename MaskType, typename D = Derived>                     \
-  KOKKOS_FORCEINLINE_FUNCTION constexpr friend Derived simd_select_impl( \
+  KOKKOS_FORCEINLINE_FUNCTION constexpr friend Derived impl_simd_select( \
       MaskType const& mask, Derived const& a, Derived const& b) noexcept \
     requires std::same_as<MaskType, typename D::mask_type> &&            \
              requires { Derived::impl_ops::IMPL_FN(mask, a, b); }        \

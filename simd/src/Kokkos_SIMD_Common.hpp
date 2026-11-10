@@ -398,8 +398,8 @@ KOKKOS_FORCEINLINE_FUNCTION constexpr auto select(bool c, T const& a,
 template <typename T, typename Abi, typename U, typename V>
 KOKKOS_FORCEINLINE_FUNCTION constexpr auto select(
     basic_simd_mask<T, Abi> const& c, U const& a, V const& b) noexcept
-    -> decltype(simd_select_impl(c, a, b)) {
-  return simd_select_impl(c, a, b);
+    -> decltype(impl_simd_select(c, a, b)) {
+  return impl_simd_select(c, a, b);
 }
 
 }  // namespace Experimental
