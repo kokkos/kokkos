@@ -95,3 +95,17 @@ Please see the [following page](https://kokkos.org/kokkos-core-wiki/citation.htm
 
 The full license statement used in all headers is available [here](https://kokkos.org/kokkos-core-wiki/license.html) or
 [here](https://github.com/kokkos/kokkos/blob/develop/LICENSE).
+
+The repository follows the [REUSE specification](https://reuse.software/spec/):
+every file carries an [SPDX](https://spdx.dev/) license identifier, either in
+the file itself or in [`REUSE.toml`](REUSE.toml). The [`LICENSES`](LICENSES)
+directory contains the verbatim text of each license referenced by those
+identifiers:
+
+- `Apache-2.0.txt` and `LLVM-exception.txt`: the license of Kokkos itself
+  (`Apache-2.0 WITH LLVM-exception`), as reproduced in the top-level `LICENSE`.
+- `BSD-3-Clause.txt`: the license of bundled third-party code (`tpls/desul` and
+  `tpls/googletest-*`).
+
+The top-level `LICENSE` file remains the authoritative statement for Kokkos.
+Compliance can be checked with `reuse lint`.
