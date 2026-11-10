@@ -5,7 +5,7 @@ version: 'v0.0.3'
 workflows:
     '.github/workflows/codeql.yml':
         - 'actions/checkout@v7.0.1'
-        - 'github/codeql-action@v4.39.1'
+        - 'github/codeql-action@v4.39.3'
     '.github/workflows/continuous-integration-linux.yml':
         - 'actions/cache@v6.1.0'
         - 'actions/checkout@v7.0.1'
@@ -45,7 +45,7 @@ workflows:
     '.github/workflows/scorecard.yml':
         - 'actions/checkout@v7.0.1'
         - 'actions/upload-artifact@v7.0.2'
-        - 'github/codeql-action@v4.39.1'
+        - 'github/codeql-action@v4.39.3'
         - 'ossf/scorecard-action@v2.5.0'
     '.github/workflows/snl-ci.yml':
         - 'actions/checkout@v7.0.1'
@@ -93,9 +93,9 @@ dependencies:
         commit: 'sha1-ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d'
         owner_id: 1588572
         repo_id: 265601040
-    'github/codeql-action@v4.39.1':
-        ref: 'v4.39.1'
-        commit: 'sha1-9b3254085494b55a0f7c4c2b3d2d52cc712ce370'
+    'github/codeql-action@v4.39.3':
+        ref: 'v4.39.3'
+        commit: 'sha1-33d7b85da1a04171e211befe2c739303b9a4c066'
         owner_id: 9919
         repo_id: 259445878
     'ilammy/msvc-dev-cmd@v1.13.0':
