@@ -946,10 +946,15 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
   static_assert(std::is_same_v<closure_value_type, ValueType>,
                 "Non-matching value types of closure and return type");
 
-  ValueType accum{};
-  parallel_scan(loop_boundaries, closure, Kokkos::Sum<ValueType>(accum));
-
-  return_val = accum;
+  // Device assigns accum through the reducer but host does not so
+  // value-initialize only the host result.
+  (void)loop_boundaries;
+  (void)closure;
+  KOKKOS_IF_ON_DEVICE(
+      (ValueType accum;
+       parallel_scan(loop_boundaries, closure, Kokkos::Sum<ValueType>(accum));
+       return_val = accum;))
+  KOKKOS_IF_ON_HOST((return_val = ValueType{};))
 }
 
 }  // namespace Kokkos
