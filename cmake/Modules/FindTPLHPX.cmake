@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+# SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
+
 find_package(HPX REQUIRED 1.8.0)
 #as of right now, HPX doesn't export correctly
 #so let's convert it to an interface target

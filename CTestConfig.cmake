@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+# SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
+
 set(CTEST_PROJECT_NAME Kokkos)
 set(CTEST_NIGHTLY_START_TIME 01:00:00 UTC)
 set(CTEST_SUBMIT_URL https://my.cdash.org/submit.php?project=Kokkos)

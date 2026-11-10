@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+# SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
+
 kokkos_cfg_depends(TPLS OPTIONS)
 kokkos_cfg_depends(TPLS DEVICES)
 kokkos_cfg_depends(TPLS COMPILER_ID)

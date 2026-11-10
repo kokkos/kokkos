@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+# SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
+
 ########################## NOTES ###############################################
 #  List the options for configuring kokkos using CMake method of doing it.
 

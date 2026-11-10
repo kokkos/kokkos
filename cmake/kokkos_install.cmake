@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+# SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
+
 include(CMakePackageConfigHelpers)
 if(NOT Kokkos_INSTALL_TESTING)
   include(GNUInstallDirs)

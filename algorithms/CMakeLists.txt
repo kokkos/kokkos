@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+# SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
+
 if(NOT Kokkos_INSTALL_TESTING)
   add_subdirectory(src)
 endif()

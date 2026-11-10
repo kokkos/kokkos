@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+# SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
+
 # No need for policy push/pop. CMake also manages a new entry for scripts
 # loaded by include() and find_package() commands except when invoked with
 # the NO_POLICY_SCOPE option

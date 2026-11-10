@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+# SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
+
 # Kokkos minimally requires 3.25.2 for Cuda Language builds,
 # but your project can set it higher
 cmake_minimum_required(VERSION 3.25.2)
