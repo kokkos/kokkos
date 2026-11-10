@@ -139,7 +139,7 @@ class basic_simd_mask<T, simd_abi::avx512_fixed_size<8>> {
       basic_simd_mask const& lhs, basic_simd_mask const& rhs) noexcept {
     return basic_simd_mask(lhs.m_value != rhs.m_value);
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd_mask simd_select_impl(
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd_mask impl_simd_select(
       basic_simd_mask const& mask, basic_simd_mask const& a,
       basic_simd_mask const& b) noexcept {
     return basic_simd_mask(_kor_mask8(_kand_mask8(mask.m_value, a.m_value),
@@ -291,7 +291,7 @@ class basic_simd_mask<T, simd_abi::avx512_fixed_size<16>> {
       basic_simd_mask const& lhs, basic_simd_mask const& rhs) noexcept {
     return basic_simd_mask(lhs.m_value != rhs.m_value);
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd_mask simd_select_impl(
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd_mask impl_simd_select(
       basic_simd_mask const& mask, basic_simd_mask const& a,
       basic_simd_mask const& b) noexcept {
     return basic_simd_mask(_kor_mask16(_kand_mask16(mask.m_value, a.m_value),
@@ -440,7 +440,7 @@ class basic_simd<double, simd_abi::avx512_fixed_size<8>> {
     return mask_type(_mm512_cmp_pd_mask(static_cast<__m512d>(lhs),
                                         static_cast<__m512d>(rhs), _CMP_LT_OS));
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd simd_select_impl(
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd impl_simd_select(
       mask_type const& mask, basic_simd const& a,
       basic_simd const& b) noexcept {
     return basic_simd(_mm512_mask_blend_pd(static_cast<__mmask8>(mask),
@@ -843,7 +843,7 @@ class basic_simd<float, simd_abi::avx512_fixed_size<8>> {
       basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return mask_type(_mm256_cmp_ps_mask(lhs.m_value, rhs.m_value, _CMP_LT_OS));
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd simd_select_impl(
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd impl_simd_select(
       mask_type const& mask, basic_simd const& a,
       basic_simd const& b) noexcept {
     return basic_simd(_mm256_mask_blend_ps(static_cast<__mmask8>(mask),
@@ -1234,7 +1234,7 @@ class basic_simd<float, simd_abi::avx512_fixed_size<16>> {
       basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return mask_type(_mm512_cmp_ps_mask(lhs.m_value, rhs.m_value, _CMP_LT_OS));
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd simd_select_impl(
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd impl_simd_select(
       mask_type const& mask, basic_simd const& a,
       basic_simd const& b) noexcept {
     return basic_simd(_mm512_mask_blend_ps(static_cast<__mmask16>(mask),
@@ -1677,7 +1677,7 @@ class basic_simd<std::int32_t, simd_abi::avx512_fixed_size<8>> {
     return mask_type(_mm256_cmplt_epi32_mask(static_cast<__m256i>(lhs),
                                              static_cast<__m256i>(rhs)));
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd simd_select_impl(
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd impl_simd_select(
       mask_type const& mask, basic_simd const& a,
       basic_simd const& b) noexcept {
     return basic_simd(_mm256_mask_blend_epi32(static_cast<__mmask8>(mask),
@@ -2063,7 +2063,7 @@ class basic_simd<std::int32_t, simd_abi::avx512_fixed_size<16>> {
     return mask_type(_mm512_cmplt_epi32_mask(static_cast<__m512i>(lhs),
                                              static_cast<__m512i>(rhs)));
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd simd_select_impl(
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd impl_simd_select(
       mask_type const& mask, basic_simd const& a,
       basic_simd const& b) noexcept {
     return basic_simd(_mm512_mask_blend_epi32(static_cast<__mmask16>(mask),
@@ -2445,7 +2445,7 @@ class basic_simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> {
     return mask_type(_mm256_cmplt_epu32_mask(static_cast<__m256i>(lhs),
                                              static_cast<__m256i>(rhs)));
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd simd_select_impl(
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd impl_simd_select(
       mask_type const& mask, basic_simd const& a,
       basic_simd const& b) noexcept {
     return basic_simd(_mm256_mask_blend_epi32(static_cast<__mmask8>(mask),
@@ -2825,7 +2825,7 @@ class basic_simd<std::uint32_t, simd_abi::avx512_fixed_size<16>> {
     return mask_type(_mm512_cmplt_epu32_mask(static_cast<__m512i>(lhs),
                                              static_cast<__m512i>(rhs)));
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd simd_select_impl(
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd impl_simd_select(
       mask_type const& mask, basic_simd const& a,
       basic_simd const& b) noexcept {
     return basic_simd(_mm512_mask_blend_epi32(static_cast<__mmask16>(mask),
@@ -3203,7 +3203,7 @@ class basic_simd<std::int64_t, simd_abi::avx512_fixed_size<8>> {
     return mask_type(_mm512_cmplt_epi64_mask(static_cast<__m512i>(lhs),
                                              static_cast<__m512i>(rhs)));
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd simd_select_impl(
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd impl_simd_select(
       mask_type const& mask, basic_simd const& a,
       basic_simd const& b) noexcept {
     return basic_simd(_mm512_mask_blend_epi64(static_cast<__mmask8>(mask),
@@ -3578,7 +3578,7 @@ class basic_simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> {
     return mask_type(_mm512_cmplt_epu64_mask(static_cast<__m512i>(lhs),
                                              static_cast<__m512i>(rhs)));
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd simd_select_impl(
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd impl_simd_select(
       mask_type const& mask, basic_simd const& a,
       basic_simd const& b) noexcept {
     return basic_simd(_mm512_mask_blend_epi64(static_cast<__mmask8>(mask),

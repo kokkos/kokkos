@@ -219,7 +219,7 @@ class sve_mask<Derived, 64> {
       sve_mask const& lhs, sve_mask const& rhs) noexcept {
     return !operator!=(lhs, rhs);
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend Derived simd_select_impl(
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend Derived impl_simd_select(
       sve_mask const& mask, sve_mask const& a, sve_mask const& b) noexcept {
     return Derived(static_cast<implementation_type>(
         svsel(mask.m_value, a.m_value, b.m_value)));
@@ -355,7 +355,7 @@ class sve_mask<Derived, 32> {
       sve_mask const& lhs, sve_mask const& rhs) noexcept {
     return !operator!=(lhs, rhs);
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend Derived simd_select_impl(
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend Derived impl_simd_select(
       sve_mask const& mask, sve_mask const& a, sve_mask const& b) noexcept {
     return Derived(static_cast<implementation_type>(
         svsel(mask.m_value, a.m_value, b.m_value)));
@@ -584,7 +584,7 @@ class basic_simd<double, simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> {
       basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return !(operator==(lhs, rhs));
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd simd_select_impl(
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd impl_simd_select(
       mask_type const& mask, basic_simd const& a,
       basic_simd const& b) noexcept {
     return basic_simd(static_cast<vls_float64_t>(
@@ -1035,7 +1035,7 @@ class basic_simd<float, simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>> {
       basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return !(operator==(lhs, rhs));
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd simd_select_impl(
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd impl_simd_select(
       mask_type const& mask, basic_simd const& a,
       basic_simd const& b) noexcept {
     return basic_simd(static_cast<vls_float32_t>(
@@ -1529,7 +1529,7 @@ class basic_simd<std::int32_t, simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>> {
         svreinterpret_u32(
             (to_sve_vla<value_type>)static_cast<implementation_type>(rhs)))));
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd simd_select_impl(
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd impl_simd_select(
       mask_type const& mask, basic_simd const& a,
       basic_simd const& b) noexcept {
     return basic_simd(static_cast<vls_int32_t>(
@@ -2036,7 +2036,7 @@ class basic_simd<std::uint32_t, simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>> {
         svreinterpret_u32(
             (to_sve_vla<value_type>)static_cast<implementation_type>(rhs)))));
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd simd_select_impl(
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd impl_simd_select(
       mask_type const& mask, basic_simd const& a,
       basic_simd const& b) noexcept {
     return basic_simd(static_cast<vls_uint32_t>(
@@ -2507,7 +2507,7 @@ class basic_simd<std::int64_t,
         svreinterpret_u64(
             (to_sve_vla<value_type>)static_cast<implementation_type>(rhs)))));
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd simd_select_impl(
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd impl_simd_select(
       mask_type const& mask, basic_simd const& a,
       basic_simd const& b) noexcept {
     return basic_simd(static_cast<vls_int64_t>(
@@ -2999,7 +2999,7 @@ class basic_simd<std::uint64_t,
         svreinterpret_u64(
             (to_sve_vla<value_type>)static_cast<implementation_type>(rhs)))));
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd simd_select_impl(
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd impl_simd_select(
       mask_type const& mask, basic_simd const& a,
       basic_simd const& b) noexcept {
     return basic_simd(static_cast<vls_uint64_t>(
@@ -3380,11 +3380,12 @@ class basic_simd<std::int32_t, simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>
 #endif
     return dindex;
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd simd_select_impl(
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd impl_simd_select(
       base_type::mask_type const& mask, basic_simd const& a,
       basic_simd const& b) noexcept {
-    return basic_simd(
-        [=](Impl::simd_size_t i) { return mask[i] ? a[i] : b[i]; });
+    return basic_simd(static_cast<implementation_type>(
+        impl_simd_select(mask, static_cast<base_type const&>(a),
+                         static_cast<base_type const&>(b))));
   }
 };
 
