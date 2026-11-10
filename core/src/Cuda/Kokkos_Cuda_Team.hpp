@@ -709,6 +709,27 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
       Impl::cuda_team_vector_barrier();))
 }
 
+/** \brief  Serial parallel_for nested under a thread handle.
+ *
+ *  Executes closure(iType i) for each i in [start, end) on vector lane 0.
+ */
+template <typename iType, class Closure>
+KOKKOS_INLINE_FUNCTION void parallel_for(
+    const Impl::InlineRangeBoundariesStruct<iType, Impl::CudaTeamMember>&
+        loop_boundaries,
+    const Closure& closure) {
+  (void)loop_boundaries;
+  (void)closure;
+  KOKKOS_IF_ON_DEVICE((if (threadIdx.x == 0) {
+    for (iType i = loop_boundaries.start; i < loop_boundaries.end; ++i) {
+      closure(i);
+    }
+  } __syncwarp(blockDim.x == 32
+                   ? 0xffffffff
+                   : ((1 << blockDim.x) - 1)
+                         << (threadIdx.y % (32 / blockDim.x)) * blockDim.x);))
+}
+
 //----------------------------------------------------------------------------
 
 /** \brief  Intra-thread vector parallel_reduce.
