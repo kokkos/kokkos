@@ -87,3 +87,8 @@ if(KOKKOS_ENABLE_SYCL)
 endif()
 
 kokkos_device_option(NEXTSILICON OFF DEVICE "Whether to build NextSilicon backend")
+
+## NextSilicon has extra setup requirements, turn on Kokkos_Setup_NextSilicon.hpp in macros
+if(KOKKOS_ENABLE_NEXTSILICON)
+  list(APPEND DEVICE_SETUP_LIST NextSilicon)
+endif()

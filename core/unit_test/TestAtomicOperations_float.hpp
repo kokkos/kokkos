@@ -9,11 +9,10 @@ TEST(TEST_CATEGORY, atomic_operations_float) {
   const int end   = 11;
   for (int i = start; i < end; ++i) {
     for (int t = 0; t < 7; t++) {
-      if (t == 5 && sizeof(void*) == 4) {
-        // 32-bit x86 may do reference division in 80-bit x87, so allow up to
-        // one ULP.
+      if (t == 5 && TestAtomicOperations::division_may_differ_by_one_ulp<
+                        TEST_EXECSPACE>) {
         ASSERT_TRUE((TestAtomicOperations::AtomicOperationsTestNonIntegralType<
-                     double, TEST_EXECSPACE, true>(i, end - i + start, t)));
+                     float, TEST_EXECSPACE, true>(i, end - i + start, t)));
       } else {
         ASSERT_TRUE((TestAtomicOperations::AtomicOperationsTestNonIntegralType<
                      float, TEST_EXECSPACE>(i, end - i + start, t)));

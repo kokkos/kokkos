@@ -517,9 +517,6 @@ if(Kokkos_ENABLE_NEXTSILICON)
     Serial_SOURCES1
     #FIXME_NEXTSILICON: requires long double support
     ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_MathematicalConstants.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_MathematicalFunctions1.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_MathematicalFunctions2.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_MathematicalFunctions3.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_NumericTraits.cpp
   )
 endif()
