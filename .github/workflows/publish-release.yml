@@ -77,7 +77,7 @@ jobs:
         with:
           name: release-artifacts
       - name: Upload assets
-        uses: softprops/action-gh-release@v3.0.3
+        uses: softprops/action-gh-release@v3.0.4
         with:
           body: |
             tag: ${{ github.ref_name }}
