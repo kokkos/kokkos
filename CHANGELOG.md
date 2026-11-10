@@ -72,7 +72,6 @@
 * Remove (deprecated) `KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION` macro [\#9571](https://github.com/kokkos/kokkos/pull/9571)
 
 ### Bug Fixes
-
 * Fix missing and obsolete architecture defines in CMake configuration [\#9536](https://github.com/kokkos/kokkos/pull/9536)
 * Add support for building with clang++ using CUDA 13 underneath with CMake < 3.31 [\#9437](https://github.com/kokkos/kokkos/pull/9437)
 * Add missing `TeamPolicy::{team,thread}_scratch_size` member functions for some backends [\#9344](https://github.com/kokkos/kokkos/pull/9344)
