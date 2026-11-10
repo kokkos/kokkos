@@ -1,0 +1,19 @@
+# Costly checks on top of .clang-tidy. Use with clang-tidy --config-file=<this file>
+# or -DCMAKE_CXX_CLANG_TIDY="clang-tidy;--config-file=${PWD}/.clang-tidy-extra"
+InheritParentConfig: true
+Checks: >
+  clang-analyzer*,
+  -clang-analyzer-core.BitwiseShift,
+  -clang-analyzer-core.CallAndMessage,
+  -clang-analyzer-core.DivideZero,
+  -clang-analyzer-core.NullDereference,
+  -clang-analyzer-core.UndefinedBinaryOperatorResult,
+  -clang-analyzer-core.uninitialized.Assign,
+  -clang-analyzer-cplusplus.NewDelete,
+  -clang-analyzer-cplusplus.NewDeleteLeaks,
+  -clang-analyzer-deadcode.DeadStores,
+  -clang-analyzer-optin.cplusplus.UninitializedObject,
+  -clang-analyzer-optin.performance.Padding,
+  -clang-analyzer-security.ArrayBound,
+  -clang-analyzer-security.insecureAPI.rand,
+  -clang-analyzer-security.insecureAPI.strcpy
