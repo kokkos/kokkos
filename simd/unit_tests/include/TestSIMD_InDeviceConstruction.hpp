@@ -10,6 +10,7 @@ import kokkos.simd;
 #else
 #include <Kokkos_SIMD.hpp>
 #endif
+#include <impl/Kokkos_SIMD_Impl_Macros.hpp>
 #include <SIMDTesting_Utilities.hpp>
 
 namespace {
