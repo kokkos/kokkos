@@ -41,6 +41,8 @@ class basic_simd_mask_base {
   KOKKOS_SIMD_IMPL_BASE_MASK_COMPARISON_OP(<=, le)
   KOKKOS_SIMD_IMPL_BASE_MASK_COMPARISON_OP(>, gt)
   KOKKOS_SIMD_IMPL_BASE_MASK_COMPARISON_OP(<, lt)
+
+  KOKKOS_SIMD_IMPL_BASE_MASK_SELECT_FN(select)
 };
 
 template <typename Derived>
@@ -86,6 +88,8 @@ class basic_simd_base {
   KOKKOS_SIMD_IMPL_BASE_COMPARISON_OP(<=, le)
   KOKKOS_SIMD_IMPL_BASE_COMPARISON_OP(>, gt)
   KOKKOS_SIMD_IMPL_BASE_COMPARISON_OP(<, lt)
+
+  KOKKOS_SIMD_IMPL_BASE_SELECT_FN(select)
 };
 
 }  // namespace Kokkos::Experimental::Impl

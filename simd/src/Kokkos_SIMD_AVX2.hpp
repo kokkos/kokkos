@@ -169,7 +169,9 @@ KOKKOS_SIMD_IMPL_DEFINE_LOAD_STORE_FN_AVX2(std::int64_t,
 KOKKOS_SIMD_IMPL_DEFINE_LOAD_STORE_FN_AVX2(std::uint64_t,
                                            simd_abi::avx2_fixed_size<4>)
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
 KOKKOS_SIMD_IMPL_DEFINE_MASKED_FN_AVX2(condition)
+#endif
 
 KOKKOS_SIMD_IMPL_DEFINE_MEMORY_PERMUTE_FN_AVX2(double, double,
                                                simd_abi::avx2_fixed_size<4>)

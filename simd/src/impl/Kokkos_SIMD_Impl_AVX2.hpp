@@ -95,6 +95,9 @@ struct simd_mask_native_ops<double, simd_abi::avx2_fixed_size<4>,
 
   KOKKOS_SIMD_IMPL_DEFINE_BINARY_OP_DEVICE(vector_type, eq, vector_type{})
   KOKKOS_SIMD_IMPL_DEFINE_BINARY_OP_DEVICE(vector_type, neq, vector_type{})
+
+  KOKKOS_SIMD_IMPL_DEFINE_TERNARY_MATH_OP_DEVICE(vector_type, select,
+                                                 vector_type{})
 };
 
 template <>
@@ -127,6 +130,9 @@ struct simd_mask_native_ops<float, simd_abi::avx2_fixed_size<4>,
 
   KOKKOS_SIMD_IMPL_DEFINE_BINARY_OP_DEVICE(vector_type, eq, vector_type{})
   KOKKOS_SIMD_IMPL_DEFINE_BINARY_OP_DEVICE(vector_type, neq, vector_type{})
+
+  KOKKOS_SIMD_IMPL_DEFINE_TERNARY_MATH_OP_DEVICE(vector_type, select,
+                                                 vector_type{})
 };
 
 template <>
@@ -159,6 +165,9 @@ struct simd_mask_native_ops<float, simd_abi::avx2_fixed_size<8>,
 
   KOKKOS_SIMD_IMPL_DEFINE_BINARY_OP_DEVICE(vector_type, eq, vector_type{})
   KOKKOS_SIMD_IMPL_DEFINE_BINARY_OP_DEVICE(vector_type, neq, vector_type{})
+
+  KOKKOS_SIMD_IMPL_DEFINE_TERNARY_MATH_OP_DEVICE(vector_type, select,
+                                                 vector_type{})
 };
 
 template <>
@@ -191,6 +200,9 @@ struct simd_mask_native_ops<std::int32_t, simd_abi::avx2_fixed_size<4>,
 
   KOKKOS_SIMD_IMPL_DEFINE_BINARY_OP_DEVICE(vector_type, eq, vector_type{})
   KOKKOS_SIMD_IMPL_DEFINE_BINARY_OP_DEVICE(vector_type, neq, vector_type{})
+
+  KOKKOS_SIMD_IMPL_DEFINE_TERNARY_MATH_OP_DEVICE(vector_type, select,
+                                                 vector_type{})
 };
 
 template <>
@@ -223,6 +235,9 @@ struct simd_mask_native_ops<std::int32_t, simd_abi::avx2_fixed_size<8>,
 
   KOKKOS_SIMD_IMPL_DEFINE_BINARY_OP_DEVICE(vector_type, eq, vector_type{})
   KOKKOS_SIMD_IMPL_DEFINE_BINARY_OP_DEVICE(vector_type, neq, vector_type{})
+
+  KOKKOS_SIMD_IMPL_DEFINE_TERNARY_MATH_OP_DEVICE(vector_type, select,
+                                                 vector_type{})
 };
 
 template <>
@@ -255,6 +270,9 @@ struct simd_mask_native_ops<std::int64_t, simd_abi::avx2_fixed_size<4>,
 
   KOKKOS_SIMD_IMPL_DEFINE_BINARY_OP_DEVICE(vector_type, eq, vector_type{})
   KOKKOS_SIMD_IMPL_DEFINE_BINARY_OP_DEVICE(vector_type, neq, vector_type{})
+
+  KOKKOS_SIMD_IMPL_DEFINE_TERNARY_MATH_OP_DEVICE(vector_type, select,
+                                                 vector_type{})
 };
 
 template <>
@@ -288,6 +306,9 @@ struct simd_mask_native_ops<std::uint64_t, simd_abi::avx2_fixed_size<4>,
 
   KOKKOS_SIMD_IMPL_DEFINE_BINARY_OP_DEVICE(vector_type, eq, vector_type{})
   KOKKOS_SIMD_IMPL_DEFINE_BINARY_OP_DEVICE(vector_type, neq, vector_type{})
+
+  KOKKOS_SIMD_IMPL_DEFINE_TERNARY_MATH_OP_DEVICE(vector_type, select,
+                                                 vector_type{})
 };
 
 KOKKOS_SIMD_IMPL_DEFINE_CONVERSION_FALLBACK_DEFN_DEVICE(
@@ -358,6 +379,9 @@ struct simd_mask_native_ops<double, simd_abi::avx2_fixed_size<4>,
                                          (_mm256_movemask_pd(lhs) ==
                                           _mm256_movemask_pd(rhs)))
   KOKKOS_SIMD_IMPL_DEFINE_BINARY_OP_HOST(value_type, neq, !eq(lhs, rhs))
+
+  KOKKOS_SIMD_IMPL_DEFINE_TERNARY_MATH_OP_HOST(vector_type, select,
+                                               _mm256_blendv_pd(c, b, a))
 };
 
 template <>
@@ -405,6 +429,9 @@ struct simd_mask_native_ops<float, simd_abi::avx2_fixed_size<4>,
                                          (_mm_movemask_ps(lhs) ==
                                           _mm_movemask_ps(rhs)))
   KOKKOS_SIMD_IMPL_DEFINE_BINARY_OP_HOST(value_type, neq, !eq(lhs, rhs))
+
+  KOKKOS_SIMD_IMPL_DEFINE_TERNARY_MATH_OP_HOST(vector_type, select,
+                                               _mm_blendv_ps(c, b, a))
 };
 
 template <>
@@ -457,6 +484,9 @@ struct simd_mask_native_ops<float, simd_abi::avx2_fixed_size<8>,
                                          (_mm256_movemask_ps(lhs) ==
                                           _mm256_movemask_ps(rhs)))
   KOKKOS_SIMD_IMPL_DEFINE_BINARY_OP_HOST(value_type, neq, !eq(lhs, rhs))
+
+  KOKKOS_SIMD_IMPL_DEFINE_TERNARY_MATH_OP_HOST(vector_type, select,
+                                               _mm256_blendv_ps(c, b, a))
 };
 
 template <>
@@ -504,6 +534,11 @@ struct simd_mask_native_ops<std::int32_t, simd_abi::avx2_fixed_size<4>,
       (_mm_movemask_ps(_mm_castsi128_ps(lhs)) ==
        _mm_movemask_ps(_mm_castsi128_ps(rhs))))
   KOKKOS_SIMD_IMPL_DEFINE_BINARY_OP_HOST(value_type, neq, !eq(lhs, rhs))
+
+  KOKKOS_SIMD_IMPL_DEFINE_TERNARY_MATH_OP_HOST(
+      vector_type, select,
+      _mm_castps_si128(_mm_blendv_ps(_mm_castsi128_ps(c), _mm_castsi128_ps(b),
+                                     _mm_castsi128_ps(a))))
 };
 
 template <>
@@ -555,6 +590,12 @@ struct simd_mask_native_ops<std::int32_t, simd_abi::avx2_fixed_size<8>,
       (_mm256_movemask_ps(_mm256_castsi256_ps(lhs)) ==
        _mm256_movemask_ps(_mm256_castsi256_ps(rhs))))
   KOKKOS_SIMD_IMPL_DEFINE_BINARY_OP_HOST(value_type, neq, !eq(lhs, rhs))
+
+  KOKKOS_SIMD_IMPL_DEFINE_TERNARY_MATH_OP_HOST(
+      vector_type, select,
+      _mm256_castps_si256(_mm256_blendv_ps(_mm256_castsi256_ps(c),
+                                           _mm256_castsi256_ps(b),
+                                           _mm256_castsi256_ps(a))))
 };
 
 template <>
@@ -607,6 +648,12 @@ struct simd_mask_native_ops<std::int64_t, simd_abi::avx2_fixed_size<4>,
       (_mm256_movemask_pd(_mm256_castsi256_pd(lhs)) ==
        _mm256_movemask_pd(_mm256_castsi256_pd(rhs))))
   KOKKOS_SIMD_IMPL_DEFINE_BINARY_OP_HOST(value_type, neq, !eq(lhs, rhs))
+
+  KOKKOS_SIMD_IMPL_DEFINE_TERNARY_MATH_OP_HOST(
+      vector_type, select,
+      _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(c),
+                                           _mm256_castsi256_pd(b),
+                                           _mm256_castsi256_pd(a))))
 };
 
 template <>
@@ -660,6 +707,12 @@ struct simd_mask_native_ops<std::uint64_t, simd_abi::avx2_fixed_size<4>,
       (_mm256_movemask_pd(_mm256_castsi256_pd(lhs)) ==
        _mm256_movemask_pd(_mm256_castsi256_pd(rhs))))
   KOKKOS_SIMD_IMPL_DEFINE_BINARY_OP_HOST(value_type, neq, !eq(lhs, rhs))
+
+  KOKKOS_SIMD_IMPL_DEFINE_TERNARY_MATH_OP_HOST(
+      vector_type, select,
+      _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(c),
+                                           _mm256_castsi256_pd(b),
+                                           _mm256_castsi256_pd(a))))
 };
 
 KOKKOS_SIMD_IMPL_DEFINE_CONVERSION_FALLBACK_DEFN_HOST(
@@ -747,6 +800,8 @@ struct simd_native_ops<double, simd_abi::avx2_fixed_size<4>, simd_device_tag> {
   KOKKOS_SIMD_IMPL_DEFINE_BINARY_MATH_OP_DEVICE(vector_type, min, vector_type{})
   KOKKOS_SIMD_IMPL_DEFINE_TERNARY_MATH_OP_DEVICE(vector_type, condition,
                                                  vector_type{})
+  KOKKOS_SIMD_IMPL_DEFINE_TERNARY_MATH_OP_DEVICE(vector_type, select,
+                                                 vector_type{})
 
   KOKKOS_SIMD_IMPL_DEFINE_GATHER_FROM_FN_DEVICE(vector_type, unchecked,
                                                 vector_type{})
@@ -822,6 +877,8 @@ struct simd_native_ops<float, simd_abi::avx2_fixed_size<4>, simd_device_tag> {
   KOKKOS_SIMD_IMPL_DEFINE_BINARY_MATH_OP_DEVICE(vector_type, min, vector_type{})
   KOKKOS_SIMD_IMPL_DEFINE_TERNARY_MATH_OP_DEVICE(vector_type, condition,
                                                  vector_type{})
+  KOKKOS_SIMD_IMPL_DEFINE_TERNARY_MATH_OP_DEVICE(vector_type, select,
+                                                 vector_type{})
 
   KOKKOS_SIMD_IMPL_DEFINE_GATHER_FROM_FN_DEVICE(vector_type, unchecked,
                                                 vector_type{})
@@ -896,6 +953,8 @@ struct simd_native_ops<float, simd_abi::avx2_fixed_size<8>, simd_device_tag> {
   KOKKOS_SIMD_IMPL_DEFINE_BINARY_MATH_OP_DEVICE(vector_type, max, vector_type{})
   KOKKOS_SIMD_IMPL_DEFINE_BINARY_MATH_OP_DEVICE(vector_type, min, vector_type{})
   KOKKOS_SIMD_IMPL_DEFINE_TERNARY_MATH_OP_DEVICE(vector_type, condition,
+                                                 vector_type{})
+  KOKKOS_SIMD_IMPL_DEFINE_TERNARY_MATH_OP_DEVICE(vector_type, select,
                                                  vector_type{})
 
   KOKKOS_SIMD_IMPL_DEFINE_GATHER_FROM_FN_DEVICE(vector_type, unchecked,
@@ -978,6 +1037,8 @@ struct simd_native_ops<std::int32_t, simd_abi::avx2_fixed_size<4>,
   KOKKOS_SIMD_IMPL_DEFINE_BINARY_MATH_OP_DEVICE(vector_type, min, vector_type{})
   KOKKOS_SIMD_IMPL_DEFINE_TERNARY_MATH_OP_DEVICE(vector_type, condition,
                                                  vector_type{})
+  KOKKOS_SIMD_IMPL_DEFINE_TERNARY_MATH_OP_DEVICE(vector_type, select,
+                                                 vector_type{})
 
   KOKKOS_SIMD_IMPL_DEFINE_GATHER_FROM_FN_DEVICE(vector_type, unchecked,
                                                 vector_type{})
@@ -1058,6 +1119,8 @@ struct simd_native_ops<std::int32_t, simd_abi::avx2_fixed_size<8>,
   KOKKOS_SIMD_IMPL_DEFINE_BINARY_MATH_OP_DEVICE(vector_type, max, vector_type{})
   KOKKOS_SIMD_IMPL_DEFINE_BINARY_MATH_OP_DEVICE(vector_type, min, vector_type{})
   KOKKOS_SIMD_IMPL_DEFINE_TERNARY_MATH_OP_DEVICE(vector_type, condition,
+                                                 vector_type{})
+  KOKKOS_SIMD_IMPL_DEFINE_TERNARY_MATH_OP_DEVICE(vector_type, select,
                                                  vector_type{})
 
   KOKKOS_SIMD_IMPL_DEFINE_GATHER_FROM_FN_DEVICE(vector_type, unchecked,
@@ -1140,6 +1203,8 @@ struct simd_native_ops<std::int64_t, simd_abi::avx2_fixed_size<4>,
   KOKKOS_SIMD_IMPL_DEFINE_BINARY_MATH_OP_DEVICE(vector_type, min, vector_type{})
   KOKKOS_SIMD_IMPL_DEFINE_TERNARY_MATH_OP_DEVICE(vector_type, condition,
                                                  vector_type{})
+  KOKKOS_SIMD_IMPL_DEFINE_TERNARY_MATH_OP_DEVICE(vector_type, select,
+                                                 vector_type{})
 
   KOKKOS_SIMD_IMPL_DEFINE_GATHER_FROM_FN_DEVICE(vector_type, unchecked,
                                                 vector_type{})
@@ -1221,6 +1286,8 @@ struct simd_native_ops<std::uint64_t, simd_abi::avx2_fixed_size<4>,
   KOKKOS_SIMD_IMPL_DEFINE_BINARY_MATH_OP_DEVICE(vector_type, max, vector_type{})
   KOKKOS_SIMD_IMPL_DEFINE_BINARY_MATH_OP_DEVICE(vector_type, min, vector_type{})
   KOKKOS_SIMD_IMPL_DEFINE_TERNARY_MATH_OP_DEVICE(vector_type, condition,
+                                                 vector_type{})
+  KOKKOS_SIMD_IMPL_DEFINE_TERNARY_MATH_OP_DEVICE(vector_type, select,
                                                  vector_type{})
 
   KOKKOS_SIMD_IMPL_DEFINE_GATHER_FROM_FN_DEVICE(vector_type, unchecked,
@@ -1365,6 +1432,8 @@ struct simd_native_ops<double, simd_abi::avx2_fixed_size<4>, simd_host_tag> {
 
   KOKKOS_SIMD_IMPL_DEFINE_TERNARY_MATH_OP_HOST(vector_type, condition,
                                                _mm256_blendv_pd(c, b, a))
+  KOKKOS_SIMD_IMPL_DEFINE_TERNARY_MATH_OP_HOST(vector_type, select,
+                                               _mm256_blendv_pd(c, b, a))
 
   KOKKOS_SIMD_IMPL_DEFINE_GATHER_FROM_FN_HOST(
       vector_type, unchecked, _mm256_i32gather_pd(Ranges::data(in), indices, 8))
@@ -1491,6 +1560,8 @@ struct simd_native_ops<float, simd_abi::avx2_fixed_size<4>, simd_host_tag> {
                                               _mm_min_ps(lhs, rhs))
 
   KOKKOS_SIMD_IMPL_DEFINE_TERNARY_MATH_OP_HOST(vector_type, condition,
+                                               _mm_blendv_ps(c, b, a))
+  KOKKOS_SIMD_IMPL_DEFINE_TERNARY_MATH_OP_HOST(vector_type, select,
                                                _mm_blendv_ps(c, b, a))
 
   KOKKOS_SIMD_IMPL_DEFINE_GATHER_FROM_FN_HOST(vector_type, unchecked,
@@ -1623,6 +1694,8 @@ struct simd_native_ops<float, simd_abi::avx2_fixed_size<8>, simd_host_tag> {
                                               _mm256_min_ps(lhs, rhs))
 
   KOKKOS_SIMD_IMPL_DEFINE_TERNARY_MATH_OP_HOST(vector_type, condition,
+                                               _mm256_blendv_ps(c, b, a))
+  KOKKOS_SIMD_IMPL_DEFINE_TERNARY_MATH_OP_HOST(vector_type, select,
                                                _mm256_blendv_ps(c, b, a))
 
   KOKKOS_SIMD_IMPL_DEFINE_GATHER_FROM_FN_HOST(
@@ -1771,6 +1844,10 @@ struct simd_native_ops<std::int32_t, simd_abi::avx2_fixed_size<4>,
       vector_type, condition,
       _mm_castps_si128(_mm_blendv_ps(_mm_castsi128_ps(c), _mm_castsi128_ps(b),
                                      _mm_castsi128_ps(a))))
+  KOKKOS_SIMD_IMPL_DEFINE_TERNARY_MATH_OP_HOST(
+      vector_type, select,
+      _mm_castps_si128(_mm_blendv_ps(_mm_castsi128_ps(c), _mm_castsi128_ps(b),
+                                     _mm_castsi128_ps(a))))
 
   KOKKOS_SIMD_IMPL_DEFINE_GATHER_FROM_FN_HOST(
       vector_type, unchecked, _mm_i32gather_epi32(Ranges::data(in), indices, 4))
@@ -1917,6 +1994,11 @@ struct simd_native_ops<std::int32_t, simd_abi::avx2_fixed_size<8>,
 
   KOKKOS_SIMD_IMPL_DEFINE_TERNARY_MATH_OP_HOST(
       vector_type, condition,
+      _mm256_castps_si256(_mm256_blendv_ps(_mm256_castsi256_ps(c),
+                                           _mm256_castsi256_ps(b),
+                                           _mm256_castsi256_ps(a))))
+  KOKKOS_SIMD_IMPL_DEFINE_TERNARY_MATH_OP_HOST(
+      vector_type, select,
       _mm256_castps_si256(_mm256_blendv_ps(_mm256_castsi256_ps(c),
                                            _mm256_castsi256_ps(b),
                                            _mm256_castsi256_ps(a))))
@@ -2101,6 +2183,11 @@ struct simd_native_ops<std::int64_t, simd_abi::avx2_fixed_size<4>,
 
   KOKKOS_SIMD_IMPL_DEFINE_TERNARY_MATH_OP_HOST(
       vector_type, condition,
+      _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(c),
+                                           _mm256_castsi256_pd(b),
+                                           _mm256_castsi256_pd(a))))
+  KOKKOS_SIMD_IMPL_DEFINE_TERNARY_MATH_OP_HOST(
+      vector_type, select,
       _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(c),
                                            _mm256_castsi256_pd(b),
                                            _mm256_castsi256_pd(a))))
@@ -2292,6 +2379,11 @@ struct simd_native_ops<std::uint64_t, simd_abi::avx2_fixed_size<4>,
 
   KOKKOS_SIMD_IMPL_DEFINE_TERNARY_MATH_OP_HOST(
       vector_type, condition,
+      _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(c),
+                                           _mm256_castsi256_pd(b),
+                                           _mm256_castsi256_pd(a))))
+  KOKKOS_SIMD_IMPL_DEFINE_TERNARY_MATH_OP_HOST(
+      vector_type, select,
       _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(c),
                                            _mm256_castsi256_pd(b),
                                            _mm256_castsi256_pd(a))))
