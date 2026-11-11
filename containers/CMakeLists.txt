@@ -6,5 +6,5 @@ endif()
 # FIXME_NEXTSILICON: unimplemented features
 if(NOT (KOKKOS_ENABLE_OPENACC OR KOKKOS_ENABLE_NEXTSILICON))
   kokkos_add_test_directories(unit_tests)
-  kokkos_add_test_directories(performance_tests)
+  kokkos_add_benchmark_directories(performance_tests)
 endif()
