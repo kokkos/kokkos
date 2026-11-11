@@ -141,16 +141,29 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 namespace Kokkos {
 
 // Hierarchical Parallelism -> Team thread level implementation
+// If the closure accepts (thread_handle, iType), the thread handle is passed
+// so the body can use the vector lanes.
 template <typename iType, class Lambda>
 KOKKOS_INLINE_FUNCTION void parallel_for(
     const Impl::TeamThreadRangeBoundariesStruct<
         iType, Impl::NextSiliconTeamMember>& loop_boundaries,
     const Lambda& lambda) {
+  using thread_handle_t = Impl::ThreadHandleType<Impl::NextSiliconTeamMember>;
+
   iType j_start = loop_boundaries.start + loop_boundaries.team.team_rank();
   iType j_end   = loop_boundaries.end;
   iType j_step  = loop_boundaries.team.team_size();
   for (iType j = j_start; j < j_end; j += j_step) {
-    lambda(j);
+    if constexpr (std::is_invocable_v<Lambda, iType>) {
+      lambda(j);
+    } else if constexpr (std::is_invocable_v<Lambda, thread_handle_t const&,
+                                             iType>) {
+      lambda(thread_handle_t(loop_boundaries.team), j);
+    } else {
+      static_assert(Kokkos::Impl::always_false<Lambda>::value,
+                    "Kokkos::parallel_for(TeamThreadRange) closure must be "
+                    "invocable with (iType) or (ThreadHandleType, iType)");
+    }
   }
 }
 
