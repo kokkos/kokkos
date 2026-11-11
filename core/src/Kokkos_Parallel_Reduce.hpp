@@ -386,12 +386,13 @@ inline void parallel_reduce_dispatch(
 // ReturnValue is scalar or array: take by reference
 template <Kokkos::ExecutionPolicy PolicyType, class FunctorType,
           class ReturnType>
-  requires Kokkos::ExecutionSpace<typename PolicyType::execution_type>
-inline std::enable_if_t<!(Kokkos::is_view<ReturnType>::value ||
-                          Kokkos::is_reducer<ReturnType>::value ||
-                          std::is_pointer_v<ReturnType>)>
-parallel_reduce(const std::string& label, const PolicyType& policy,
-                const FunctorType& functor, ReturnType& return_value) {
+  requires(Kokkos::ExecutionSpace<typename PolicyType::execution_type> &&
+           !(Kokkos::is_view<ReturnType>::value ||
+             Kokkos::is_reducer<ReturnType>::value ||
+             std::is_pointer_v<ReturnType>))
+inline void parallel_reduce(const std::string& label, const PolicyType& policy,
+                            const FunctorType& functor,
+                            ReturnType& return_value) {
   Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check(
       "parallel_reduce", policy, label.c_str());
   Impl::parallel_reduce_dispatch(Impl::WithLabel{label}, policy, functor,
@@ -400,12 +401,13 @@ parallel_reduce(const std::string& label, const PolicyType& policy,
 
 template <Kokkos::ExecutionPolicy PolicyType, class FunctorType,
           class ReturnType>
-  requires Kokkos::ExecutionSpace<typename PolicyType::execution_type>
-KOKKOS_INLINE_FUNCTION std::enable_if_t<
-    !(Kokkos::is_view<ReturnType>::value ||
-      Kokkos::is_reducer<ReturnType>::value || std::is_pointer_v<ReturnType>)>
-parallel_reduce(const PolicyType& policy, const FunctorType& functor,
-                ReturnType& return_value) {
+  requires(Kokkos::ExecutionSpace<typename PolicyType::execution_type> &&
+           !(Kokkos::is_view<ReturnType>::value ||
+             Kokkos::is_reducer<ReturnType>::value ||
+             std::is_pointer_v<ReturnType>))
+KOKKOS_INLINE_FUNCTION void parallel_reduce(const PolicyType& policy,
+                                            const FunctorType& functor,
+                                            ReturnType& return_value) {
   KOKKOS_IF_ON_DEVICE(
       Kokkos::abort(
           "Kokkos::parallel_reduce with an ExecutionSpace policy cannot be "
@@ -455,12 +457,13 @@ parallel_reduce(const size_t& work_count, const FunctorType& functor,
 // ReturnValue as View or Reducer: take by copy to allow for inline construction
 template <Kokkos::ExecutionPolicy PolicyType, class FunctorType,
           class ReturnType>
-  requires Kokkos::ExecutionSpace<typename PolicyType::execution_type>
-inline std::enable_if_t<Kokkos::is_view<ReturnType>::value ||
-                        Kokkos::is_reducer<ReturnType>::value ||
-                        std::is_pointer_v<ReturnType>>
-parallel_reduce(const std::string& label, const PolicyType& policy,
-                const FunctorType& functor, const ReturnType& return_value) {
+  requires(Kokkos::ExecutionSpace<typename PolicyType::execution_type> &&
+           (Kokkos::is_view<ReturnType>::value ||
+            Kokkos::is_reducer<ReturnType>::value ||
+            std::is_pointer_v<ReturnType>))
+inline void parallel_reduce(const std::string& label, const PolicyType& policy,
+                            const FunctorType& functor,
+                            const ReturnType& return_value) {
   Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check(
       "parallel_reduce", policy, label.c_str());
   Impl::parallel_reduce_dispatch(Impl::WithLabel{label}, policy, functor,
@@ -469,12 +472,13 @@ parallel_reduce(const std::string& label, const PolicyType& policy,
 
 template <Kokkos::ExecutionPolicy PolicyType, class FunctorType,
           class ReturnType>
-  requires Kokkos::ExecutionSpace<typename PolicyType::execution_type>
-KOKKOS_INLINE_FUNCTION std::enable_if_t<Kokkos::is_view<ReturnType>::value ||
-                                        Kokkos::is_reducer<ReturnType>::value ||
-                                        std::is_pointer_v<ReturnType>>
-parallel_reduce(const PolicyType& policy, const FunctorType& functor,
-                const ReturnType& return_value) {
+  requires(Kokkos::ExecutionSpace<typename PolicyType::execution_type> &&
+           (Kokkos::is_view<ReturnType>::value ||
+            Kokkos::is_reducer<ReturnType>::value ||
+            std::is_pointer_v<ReturnType>))
+KOKKOS_INLINE_FUNCTION void parallel_reduce(const PolicyType& policy,
+                                            const FunctorType& functor,
+                                            const ReturnType& return_value) {
   KOKKOS_IF_ON_DEVICE(
       Kokkos::abort(
           "Kokkos::parallel_reduce with an ExecutionSpace policy cannot be "
