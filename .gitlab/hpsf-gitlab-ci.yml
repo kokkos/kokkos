@@ -38,7 +38,6 @@ HPX-GCC-15:
   image: fedora:rawhide
   variables:
     HPX_HANDLE_FAILED_NEW: "0"
-    KOKKOS_NUM_THREADS: "64"
   script:
     - dnf install -y
       cmake
@@ -61,7 +60,6 @@ HPX-GCC-15:
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_EXAMPLES=ON"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_COMPILER_WARNINGS=ON"
     - export CTEST_BUILD_NAME="HPX-GCC-15"
-    - export KOKKOS_NUM_THREADS=8
     - ctest -VV
         -D CDASH_MODEL=${CDASH_MODEL}
         -D GITHUB_PR_ID="${GITHUB_PR_ID}"
