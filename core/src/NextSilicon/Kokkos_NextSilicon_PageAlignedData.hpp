@@ -4,6 +4,9 @@
 #ifndef KOKKOS_NEXTSILICON_PAGE_ALIGNED_DATA_HPP
 #define KOKKOS_NEXTSILICON_PAGE_ALIGNED_DATA_HPP
 
+#include <NextSilicon/Kokkos_NextSilicon_InitializationCallbacks.hpp>
+
+#include <cstddef>
 #include <type_traits>
 #include <utility>
 
@@ -18,7 +21,12 @@ enum class PageLocation {
 };
 
 template <PageLocation>
-void migrate_after_initialize(void* obj, size_t size);
+NextSiliconInitializationCallbackHandle migrate_after_initialize(
+    void* obj, std::size_t size);
+
+template <PageLocation>
+void release_page_migration(NextSiliconInitializationCallbackHandle handle,
+                            void* obj, std::size_t size);
 
 // This struct is aligned to 4096 bytes (page size) to work around
 // issues with NextSilicon page migration. It can be pinned to the host
@@ -29,6 +37,8 @@ struct alignas(PAGE_SIZE) PageAlignedData {
   static constexpr PageLocation location = Location;
 
   T data;
+  NextSiliconInitializationCallbackHandle initialization_callback_handle =
+      invalid_nextsilicon_initialization_callback_handle;
 
   operator T&() { return data; }
   operator const T&() const { return data; }
@@ -37,12 +47,18 @@ struct alignas(PAGE_SIZE) PageAlignedData {
     requires(!(sizeof...(Args) == 1 &&
                (std::is_same_v<std::decay_t<Args>, PageAlignedData> && ...)))
   PageAlignedData(Args&&... args) : data{std::forward<Args>(args)...} {
-    migrate_after_initialize<location>(this, sizeof(*this));
+    initialization_callback_handle =
+        migrate_after_initialize<location>(this, sizeof(*this));
   }
 
   PageAlignedData& operator=(const T& data_) {
     data = data_;
     return *this;
+  }
+
+  ~PageAlignedData() {
+    release_page_migration<location>(initialization_callback_handle, this,
+                                     sizeof(*this));
   }
 
   PageAlignedData(const PageAlignedData&)            = delete;
