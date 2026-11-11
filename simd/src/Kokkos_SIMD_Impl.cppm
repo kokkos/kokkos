@@ -3,26 +3,12 @@
 
 module;
 
-#include <Kokkos_SIMD.hpp>
+// See Kokkos_SIMD_Detail.cppm for an explanation for
+// re-exporting symbols from kokkos.simd_detail.
+
+#include <Kokkos_SIMD_Modules_Macros.hpp>
+import kokkos.simd_detail;
 
 export module kokkos.simd_impl;
 
-export {
-  namespace Kokkos::Experimental {
-  namespace simd_abi::Impl {
-  using ::Kokkos::Experimental::simd_abi::Impl::host_fixed_native;
-  using ::Kokkos::Experimental::simd_abi::Impl::native_abi;
-  using ::Kokkos::Experimental::simd_abi::Impl::native_fixed_abi;
-  }  // namespace simd_abi::Impl
-
-  namespace Impl {
-  using ::Kokkos::Experimental::Impl::abi_set;
-  using ::Kokkos::Experimental::Impl::data_type_set;
-  using ::Kokkos::Experimental::Impl::data_types;
-  using ::Kokkos::Experimental::Impl::device_abi_set;
-  using ::Kokkos::Experimental::Impl::host_abi_set;
-  using ::Kokkos::Experimental::Impl::Identity;
-  using ::Kokkos::Experimental::Impl::simd_size_t;
-  }  // namespace Impl
-  }  // namespace Kokkos::Experimental
-}
+export { KOKKOS_SIMD_MODULES_IMPL_SYMBOLS }

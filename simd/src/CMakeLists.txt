@@ -59,7 +59,7 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/Kokkos_SIMD.hpp" "${CMAKE_CURRENT_BIN
         DESTINATION ${KOKKOS_HEADER_DIR}
 )
 
-set(SIMD_MODULES Kokkos_SIMD.cppm Kokkos_SIMD_Impl.cppm)
+set(SIMD_MODULES Kokkos_SIMD.cppm Kokkos_SIMD_Impl.cppm Kokkos_SIMD_Detail.cppm)
 
 #-----------------------------------------------------------------------------
 
