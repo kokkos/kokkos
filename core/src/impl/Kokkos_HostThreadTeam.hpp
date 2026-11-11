@@ -728,19 +728,18 @@ ThreadVectorRange(
  * The range [0..N) is mapped to all threads of the the calling thread team.
  */
 template <typename iType, class Closure, class Member>
-KOKKOS_INLINE_FUNCTION void parallel_for(
+  requires Impl::is_host_thread_team_member<Member>::value
+KOKKOS_INLINE_FUNCTION void parallel_for_impl(
     Impl::TeamThreadRangeBoundariesStruct<iType, Member> const& loop_boundaries,
-    Closure const& closure,
-    std::enable_if_t<Impl::is_host_thread_team_member<Member>::value> const** =
-        nullptr) {
+    Closure const& closure) {
   using thread_handle_t = Impl::ThreadHandleType<Member>;
 
   for (iType i = loop_boundaries.start; i < loop_boundaries.end;
        i += loop_boundaries.increment) {
-    if constexpr (std::is_invocable_v<Closure, iType>) {
+    if constexpr (Impl::is_invocable_normal_functor<iType, Closure>) {
       closure(i);
-    } else if constexpr (std::is_invocable_v<Closure, thread_handle_t const&,
-                                             iType>) {
+    } else if constexpr (Impl::is_invocable_member_functor<iType, Closure,
+                                                           Member>) {
       closure(thread_handle_t(loop_boundaries.member), i);
     } else {
       static_assert(Kokkos::Impl::always_false<Closure>::value,
@@ -751,20 +750,72 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
 }
 
 template <typename iType, class Closure, class Member>
+// Remove constraint for better static_assert error message
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
+  requires Impl::is_invocable_functor<iType, Closure, Member>
+#endif
 KOKKOS_INLINE_FUNCTION void parallel_for(
+    Impl::TeamThreadRangeBoundariesStruct<iType, Member> const& loop_boundaries,
+    Closure const& closure) {
+  parallel_for_impl<iType, Closure, Member>(loop_boundaries, closure);
+}
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
+template <typename iType, class Closure, class Member>
+  requires(!Impl::is_invocable_functor<iType, Closure, Member>)
+KOKKOS_DEPRECATED_WITH_COMMENT("Do not take indices by non-const reference")
+    KOKKOS_INLINE_FUNCTION void parallel_for(
+        Impl::TeamThreadRangeBoundariesStruct<iType, Member> const&
+            loop_boundaries,
+        Closure const& closure) {
+  parallel_for_impl<iType, Closure, Member>(loop_boundaries, closure);
+}
+#endif
+
+template <typename iType, class Closure, class Member>
+  requires Impl::is_host_thread_team_member<Member>::value
+KOKKOS_INLINE_FUNCTION void parallel_for_impl(
     Impl::ThreadVectorRangeBoundariesStruct<iType, Member> const&
         loop_boundaries,
-    Closure const& closure,
-    std::enable_if_t<Impl::is_host_thread_team_member<Member>::value> const** =
-        nullptr) {
+    Closure const& closure) {
 #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
 #pragma ivdep
 #endif
   for (iType i = loop_boundaries.start; i < loop_boundaries.end;
        i += loop_boundaries.increment) {
-    closure(i);
+    if constexpr (Impl::is_invocable_normal_functor<iType, Closure>) {
+      closure(i);
+    } else {
+      static_assert(Kokkos::Impl::always_false<Closure>::value,
+                    "Kokkos::parallel_for(ThreadVectorRange) closure must be "
+                    "invocable with (iType) or (const iType&)");
+    }
   }
 }
+
+template <typename iType, class Closure, class Member>
+// Remove constraint for better static_assert error message
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
+  requires Impl::is_invocable_functor<iType, Closure, Member>
+#endif
+KOKKOS_INLINE_FUNCTION void parallel_for(
+    Impl::ThreadVectorRangeBoundariesStruct<iType, Member> const&
+        loop_boundaries,
+    Closure const& closure) {
+  parallel_for_impl(loop_boundaries, closure);
+}
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
+template <typename iType, class Closure, class Member>
+  requires(!Impl::is_invocable_functor<iType, Closure, Member>)
+KOKKOS_DEPRECATED_WITH_COMMENT("Do not take indices by non-const reference")
+    KOKKOS_INLINE_FUNCTION void parallel_for(
+        Impl::ThreadVectorRangeBoundariesStruct<iType, Member> const&
+            loop_boundaries,
+        Closure const& closure) {
+  parallel_for_impl(loop_boundaries, closure);
+}
+#endif
 
 //----------------------------------------------------------------------------
 
