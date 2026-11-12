@@ -63,6 +63,18 @@ class minus_eq {
   }
 };
 
+class negate {
+ public:
+  template <typename T>
+  auto on_host(T const& a) const {
+    return -a;
+  }
+  template <typename T>
+  KOKKOS_INLINE_FUNCTION auto on_device(T const& a) const {
+    return -a;
+  }
+};
+
 class multiplies {
  public:
   template <class T, class U>
