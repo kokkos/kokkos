@@ -10,34 +10,10 @@ SPDX-License-Identifier: (BSD-3-Clause)
 
 #include <algorithm>  // min, max
 #include <desul/atomics/Common.hpp>
-#include <type_traits>
+#include <desul/atomics/OpenACC_Traits.hpp>
 
 namespace desul {
 namespace Impl {
-
-#ifdef __NVCOMPILER
-
-template <class T>
-inline constexpr bool is_openacc_integral_type_v =
-    std::is_same_v<T, int> || std::is_same_v<T, unsigned int> ||
-    std::is_same_v<T, unsigned long long>;
-
-template <class T>
-inline constexpr bool is_openacc_arithmetic_type_v = std::is_same_v<T, float> ||
-#ifndef DESUL_CUDA_ARCH_IS_PRE_PASCAL
-                                                     std::is_same_v<T, double> ||
-#endif
-                                                     is_openacc_integral_type_v<T>;
-
-#else
-
-template <class T>
-inline constexpr bool is_openacc_integral_type_v = std::is_integral_v<T>;
-
-template <class T>
-inline constexpr bool is_openacc_arithmetic_type_v = std::is_arithmetic_v<T>;
-
-#endif
 
 //<editor-fold
 // desc="device_atomic_fetch_{add,sub,mul,div,lshift,rshift,mod,max,min,and,or,xor}">
@@ -374,54 +350,6 @@ std::enable_if_t<is_openacc_integral_type_v<T>, T> device_atomic_xor_fetch(
     tmp = *ptr;
   }
   return tmp;
-}
-//</editor-fold>
-
-//<editor-fold desc="device_atomic_{store,load}">
-#pragma acc routine seq
-template <class T>
-std::enable_if_t<is_openacc_arithmetic_type_v<T>, void> device_atomic_store(
-    T* const ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
-#pragma acc atomic write
-  *ptr = val;
-}
-
-#pragma acc routine seq
-template <class T>
-std::enable_if_t<is_openacc_arithmetic_type_v<T>, void> device_atomic_store(
-    T* const ptr, const T val, MemoryOrderRelease, MemoryScopeDevice) {
-  if (acc_on_device(acc_device_not_host)) {
-    printf(
-        "DESUL error in device_atomic_store(MemoryOrderRelease): Not supported atomic "
-        "operation in the OpenACC backend\n");
-  }
-#pragma acc atomic write
-  *ptr = val;
-}
-
-#pragma acc routine seq
-template <class T>
-std::enable_if_t<is_openacc_arithmetic_type_v<T>, T> device_atomic_load(
-    const T* const ptr, MemoryOrderRelaxed, MemoryScopeDevice) {
-  T retval;
-#pragma acc atomic read
-  retval = *ptr;
-  return retval;
-}
-
-#pragma acc routine seq
-template <class T>
-std::enable_if_t<is_openacc_arithmetic_type_v<T>, T> device_atomic_load(
-    const T* const ptr, MemoryOrderAcquire, MemoryScopeDevice) {
-  if (acc_on_device(acc_device_not_host)) {
-    printf(
-        "DESUL error in device_atomic_load(MemoryOrderAcquire): Not supported atomic "
-        "operation in the OpenACC backend\n");
-  }
-  T retval;
-#pragma acc atomic read
-  retval = *ptr;
-  return retval;
 }
 //</editor-fold>
 
