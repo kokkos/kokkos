@@ -720,6 +720,17 @@ Kokkos::View<T*, Space> make_case_view(const T (&x)[N]) {
 template <class Space, class Func, class Arg, std::size_t N,
           class Ret = math_unary_function_return_type_t<Arg>>
 struct TestMathUnaryFunction : KokkosTest::FloatingPointComparison {
+  // clang-tidy-15 segfaults inferring CUDA target for implicit special members
+  // with View members; explicitly default them as workaround.
+  KOKKOS_DEFAULTED_FUNCTION TestMathUnaryFunction(
+      const TestMathUnaryFunction&) = default;
+  KOKKOS_DEFAULTED_FUNCTION TestMathUnaryFunction(TestMathUnaryFunction&&) =
+      default;
+  KOKKOS_DEFAULTED_FUNCTION TestMathUnaryFunction& operator=(
+      const TestMathUnaryFunction&) = default;
+  KOKKOS_DEFAULTED_FUNCTION TestMathUnaryFunction& operator=(
+      TestMathUnaryFunction&&)                       = default;
+  KOKKOS_DEFAULTED_FUNCTION ~TestMathUnaryFunction() = default;
   Kokkos::View<Arg*, Space> val_;
   Kokkos::View<Ret*, Space> res_;
   TestMathUnaryFunction(const Arg (&val)[N])
@@ -783,6 +794,17 @@ void do_test_half_math_unary_function(const Arg (&x)[N]) {
 
 template <class Space, class Func, class Arg, std::size_t N>
 struct TestIntMathUnaryFunction : KokkosTest::IntegerComparison {
+  // clang-tidy-15 segfaults inferring CUDA target for implicit special members
+  // with View members; explicitly default them as workaround.
+  KOKKOS_DEFAULTED_FUNCTION TestIntMathUnaryFunction(
+      const TestIntMathUnaryFunction&) = default;
+  KOKKOS_DEFAULTED_FUNCTION TestIntMathUnaryFunction(
+      TestIntMathUnaryFunction&&) = default;
+  KOKKOS_DEFAULTED_FUNCTION TestIntMathUnaryFunction& operator=(
+      const TestIntMathUnaryFunction&) = default;
+  KOKKOS_DEFAULTED_FUNCTION TestIntMathUnaryFunction& operator=(
+      TestIntMathUnaryFunction&&)                       = default;
+  KOKKOS_DEFAULTED_FUNCTION ~TestIntMathUnaryFunction() = default;
   Kokkos::View<Arg*, Space> val_;
   Kokkos::View<int*, Space> res_;
   TestIntMathUnaryFunction(const Arg (&val)[N])
@@ -848,6 +870,17 @@ void do_test_int_half_math_unary_function(const Arg (&x)[N]) {
 template <class Space, class Func, class Arg1, class Arg2, std::size_t N,
           class Ret = math_binary_function_return_type_t<Arg1, Arg2>>
 struct TestMathBinaryFunction : KokkosTest::FloatingPointComparison {
+  // clang-tidy-15 segfaults inferring CUDA target for implicit special members
+  // with View members; explicitly default them as workaround.
+  KOKKOS_DEFAULTED_FUNCTION TestMathBinaryFunction(
+      const TestMathBinaryFunction&) = default;
+  KOKKOS_DEFAULTED_FUNCTION TestMathBinaryFunction(TestMathBinaryFunction&&) =
+      default;
+  KOKKOS_DEFAULTED_FUNCTION TestMathBinaryFunction& operator=(
+      const TestMathBinaryFunction&) = default;
+  KOKKOS_DEFAULTED_FUNCTION TestMathBinaryFunction& operator=(
+      TestMathBinaryFunction&&)                       = default;
+  KOKKOS_DEFAULTED_FUNCTION ~TestMathBinaryFunction() = default;
   Kokkos::View<Arg1*, Space> val1_;
   Kokkos::View<Arg2*, Space> val2_;
   Kokkos::View<Ret*, Space> res_;
@@ -889,6 +922,17 @@ void do_test_math_binary_function(const Arg1 (&arg1)[N],
 template <class Space, class Func, class Arg1, class Arg2, std::size_t N,
           class Ret = math_unary_function_return_type_t<Arg1>>
 struct TestMathBinaryIntFunction : KokkosTest::FloatingPointComparison {
+  // clang-tidy-15 segfaults inferring CUDA target for implicit special members
+  // with View members; explicitly default them as workaround.
+  KOKKOS_DEFAULTED_FUNCTION TestMathBinaryIntFunction(
+      const TestMathBinaryIntFunction&) = default;
+  KOKKOS_DEFAULTED_FUNCTION TestMathBinaryIntFunction(
+      TestMathBinaryIntFunction&&) = default;
+  KOKKOS_DEFAULTED_FUNCTION TestMathBinaryIntFunction& operator=(
+      const TestMathBinaryIntFunction&) = default;
+  KOKKOS_DEFAULTED_FUNCTION TestMathBinaryIntFunction& operator=(
+      TestMathBinaryIntFunction&&)                       = default;
+  KOKKOS_DEFAULTED_FUNCTION ~TestMathBinaryIntFunction() = default;
   Kokkos::View<Arg1*, Space> val1_;
   Kokkos::View<Arg2*, Space> val2_;
   Kokkos::View<Ret*, Space> res_;
@@ -930,6 +974,17 @@ void do_test_math_binary_int_function(const Arg1 (&arg1)[N],
 template <class Space, class Func, class Arg, std::size_t N,
           class Ret = math_unary_function_return_type_t<Arg>>
 struct TestMathBinaryPtrFunction : KokkosTest::FloatingPointComparison {
+  // clang-tidy-15 segfaults inferring CUDA target for implicit special members
+  // with View members; explicitly default them as workaround.
+  KOKKOS_DEFAULTED_FUNCTION TestMathBinaryPtrFunction(
+      const TestMathBinaryPtrFunction&) = default;
+  KOKKOS_DEFAULTED_FUNCTION TestMathBinaryPtrFunction(
+      TestMathBinaryPtrFunction&&) = default;
+  KOKKOS_DEFAULTED_FUNCTION TestMathBinaryPtrFunction& operator=(
+      const TestMathBinaryPtrFunction&) = default;
+  KOKKOS_DEFAULTED_FUNCTION TestMathBinaryPtrFunction& operator=(
+      TestMathBinaryPtrFunction&&)                       = default;
+  KOKKOS_DEFAULTED_FUNCTION ~TestMathBinaryPtrFunction() = default;
   Kokkos::View<Arg*, Space> val_;
   Kokkos::View<Ret*, Space> res_frac_;
   Kokkos::View<Ret*, Space> res_int_;
@@ -978,6 +1033,17 @@ void do_test_math_binary_ptr_function(const Arg (&x)[N]) {
 
 template <class Space, class Func, class Arg1, class Arg2, std::size_t N>
 struct TestMathBinaryPredicate {
+  // clang-tidy-15 segfaults inferring CUDA target for implicit special members
+  // with View members; explicitly default them as workaround.
+  KOKKOS_DEFAULTED_FUNCTION TestMathBinaryPredicate(
+      const TestMathBinaryPredicate&) = default;
+  KOKKOS_DEFAULTED_FUNCTION TestMathBinaryPredicate(TestMathBinaryPredicate&&) =
+      default;
+  KOKKOS_DEFAULTED_FUNCTION TestMathBinaryPredicate& operator=(
+      const TestMathBinaryPredicate&) = default;
+  KOKKOS_DEFAULTED_FUNCTION TestMathBinaryPredicate& operator=(
+      TestMathBinaryPredicate&&)                       = default;
+  KOKKOS_DEFAULTED_FUNCTION ~TestMathBinaryPredicate() = default;
   Kokkos::View<Arg1*, Space> val1_;
   Kokkos::View<Arg2*, Space> val2_;
   Kokkos::View<bool*, Space> res_;
@@ -1019,6 +1085,17 @@ void do_test_math_binary_predicate(const Arg1 (&arg1)[N],
 template <class Space, class Func, class Arg, std::size_t N,
           class Ret = math_unary_function_return_type_t<Arg>>
 struct TestMathBinaryIntPtrFunction : KokkosTest::FloatingPointComparison {
+  // clang-tidy-15 segfaults inferring CUDA target for implicit special members
+  // with View members; explicitly default them as workaround.
+  KOKKOS_DEFAULTED_FUNCTION TestMathBinaryIntPtrFunction(
+      const TestMathBinaryIntPtrFunction&) = default;
+  KOKKOS_DEFAULTED_FUNCTION TestMathBinaryIntPtrFunction(
+      TestMathBinaryIntPtrFunction&&) = default;
+  KOKKOS_DEFAULTED_FUNCTION TestMathBinaryIntPtrFunction& operator=(
+      const TestMathBinaryIntPtrFunction&) = default;
+  KOKKOS_DEFAULTED_FUNCTION TestMathBinaryIntPtrFunction& operator=(
+      TestMathBinaryIntPtrFunction&&)                       = default;
+  KOKKOS_DEFAULTED_FUNCTION ~TestMathBinaryIntPtrFunction() = default;
   Kokkos::View<Arg*, Space> val_;
   Kokkos::View<int*, Space> res1_;
   Kokkos::View<Ret*, Space> res2_;
@@ -1069,6 +1146,17 @@ void do_test_math_binary_int_ptr_function(const Arg (&x)[N]) {
 template <class Space, class Func, class Arg1, class Arg2, std::size_t N,
           class Ret = math_binary_function_return_type_t<Arg1, Arg2>>
 struct TestMathTernaryIntPtrFunction : KokkosTest::FloatingPointComparison {
+  // clang-tidy-15 segfaults inferring CUDA target for implicit special members
+  // with View members; explicitly default them as workaround.
+  KOKKOS_DEFAULTED_FUNCTION TestMathTernaryIntPtrFunction(
+      const TestMathTernaryIntPtrFunction&) = default;
+  KOKKOS_DEFAULTED_FUNCTION TestMathTernaryIntPtrFunction(
+      TestMathTernaryIntPtrFunction&&) = default;
+  KOKKOS_DEFAULTED_FUNCTION TestMathTernaryIntPtrFunction& operator=(
+      const TestMathTernaryIntPtrFunction&) = default;
+  KOKKOS_DEFAULTED_FUNCTION TestMathTernaryIntPtrFunction& operator=(
+      TestMathTernaryIntPtrFunction&&)                       = default;
+  KOKKOS_DEFAULTED_FUNCTION ~TestMathTernaryIntPtrFunction() = default;
   Kokkos::View<Arg1*, Space> val1_;
   Kokkos::View<Arg2*, Space> val2_;
   Kokkos::View<int*, Space> val_;
@@ -1118,6 +1206,17 @@ template <class Space, class Func, class Arg1, class Arg2, class Arg3,
           std::size_t N,
           class Ret = math_ternary_function_return_type_t<Arg1, Arg2, Arg3>>
 struct TestMathTernaryFunction : KokkosTest::FloatingPointComparison {
+  // clang-tidy-15 segfaults inferring CUDA target for implicit special members
+  // with View members; explicitly default them as workaround.
+  KOKKOS_DEFAULTED_FUNCTION TestMathTernaryFunction(
+      const TestMathTernaryFunction&) = default;
+  KOKKOS_DEFAULTED_FUNCTION TestMathTernaryFunction(TestMathTernaryFunction&&) =
+      default;
+  KOKKOS_DEFAULTED_FUNCTION TestMathTernaryFunction& operator=(
+      const TestMathTernaryFunction&) = default;
+  KOKKOS_DEFAULTED_FUNCTION TestMathTernaryFunction& operator=(
+      TestMathTernaryFunction&&)                       = default;
+  KOKKOS_DEFAULTED_FUNCTION ~TestMathTernaryFunction() = default;
   Kokkos::View<Arg1*, Space> val1_;
   Kokkos::View<Arg2*, Space> val2_;
   Kokkos::View<Arg3*, Space> val3_;
