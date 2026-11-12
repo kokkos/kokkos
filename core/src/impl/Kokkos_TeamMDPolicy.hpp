@@ -98,31 +98,31 @@ struct AcceleratorBasedNestLevel {
   static constexpr int invalid = -2;
 };
 
-template <typename TeamHandle>
+template <typename TeamHandle, typename IndexType>
 KOKKOS_INLINE_FUNCTION auto nested_policy(
     TeamMDRangeMode<TeamMDRangeLastNestLevel::NotLastNestLevel,
                     TeamMDRangeParThread::ParThread,
                     TeamMDRangeParVector::NotParVector>,
-    TeamHandle const& team, int count) {
-  return TeamThreadRange(team, count);
+    TeamHandle const& team, IndexType begin, IndexType end) {
+  return TeamThreadRange(team, begin, end);
 }
 
-template <typename TeamHandle>
+template <typename TeamHandle, typename IndexType>
 KOKKOS_INLINE_FUNCTION auto nested_policy(
     TeamMDRangeMode<TeamMDRangeLastNestLevel::NotLastNestLevel,
                     TeamMDRangeParThread::NotParThread,
                     TeamMDRangeParVector::ParVector>,
-    TeamHandle const& team, int count) {
-  return ThreadVectorRange(team, count);
+    TeamHandle const& team, IndexType begin, IndexType end) {
+  return ThreadVectorRange(team, begin, end);
 }
 
-template <typename TeamHandle>
+template <typename TeamHandle, typename IndexType>
 KOKKOS_INLINE_FUNCTION auto nested_policy(
     TeamMDRangeMode<TeamMDRangeLastNestLevel::NotLastNestLevel,
                     TeamMDRangeParThread::ParThread,
                     TeamMDRangeParVector::ParVector>,
-    TeamHandle const& team, int count) {
-  return TeamVectorRange(team, count);
+    TeamHandle const& team, IndexType begin, IndexType end) {
+  return TeamVectorRange(team, begin, end);
 }
 
 // TeamMDRangeNestingTracker is only needed to deduce template parameters
@@ -171,7 +171,8 @@ KOKKOS_INLINE_FUNCTION void nested_loop(
                                 next_nest_level>;
   using TeamMDNextMode = typename NextNestingTracker::RangeMode;
 
-  for (int i = 0; i != policy.boundaries[CurrentNestLevel]; ++i) {
+  for (auto i = policy.lower[CurrentNestLevel];
+       i < policy.upper[CurrentNestLevel]; ++i) {
     // FIXME
     // NOLINTBEGIN(bugprone-use-after-move)
     if constexpr (Rank::outer_direction == Iterate::Right) {
@@ -204,10 +205,12 @@ KOKKOS_INLINE_FUNCTION void nested_loop(
   using TeamMDNextMode = typename NextNestingTracker::RangeMode;
 
   // This recursively processes ranks from [0..TotalNestLevel-1]
-  // args... is passed by value because it should always be ints
+  // args... is passed by value because it should always be inexpensive index
+  // values
   parallel_for(
-      nested_policy(mode, policy.team, policy.boundaries[CurrentNestLevel]),
-      [&](int const& i) {
+      nested_policy(mode, policy.team, policy.lower[CurrentNestLevel],
+                    policy.upper[CurrentNestLevel]),
+      [&](auto const& i) {
         if constexpr (Rank::outer_direction == Iterate::Right) {
           nested_loop(TeamMDNextMode(), NextNestingTracker(), policy, lambda,
                       std::forward<ReducerValueType>(val), args..., i);
