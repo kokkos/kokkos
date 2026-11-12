@@ -591,6 +591,45 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), node_lifetime) {
   ASSERT_EQ(data.use_count(), 1);
 }
 
+template <typename ViewType>
+struct SumInto {
+  typename ViewType::const_type data;
+
+  template <std::integral T, typename U>
+  KOKKOS_FUNCTION void operator()(const T index, U& value) const noexcept {
+    value += data(index);
+  }
+};
+
+// Check that parallel_reduce nodes properly extend the lifetime of the
+// reduction target when it is a managed view.
+TEST_F(TEST_CATEGORY_FIXTURE(graph),
+       parallel_reduce_reduction_target_lifetime) {
+  using view_t    = Kokkos::View<unsigned short int[3], TEST_EXECSPACE>;
+  using view_um_t = Kokkos::View<unsigned short int[3], TEST_EXECSPACE,
+                                 Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
+
+  view_t data(Kokkos::view_alloc("data", ex));
+
+  Kokkos::deep_copy(ex, Kokkos::subview(data, 0), 42);
+
+  auto graph = Kokkos::Experimental::create_graph(
+      Kokkos::Experimental::get_device_handle(ex), [&](const auto& root) {
+        view_t buffer(Kokkos::view_alloc("internal buffer", ex));
+        auto pred = root.then_parallel_reduce(3, SumInto<view_t>{data},
+                                              Kokkos::subview(buffer, 0));
+        auto pfor = pred.then_parallel_reduce(3, SumInto<view_um_t>{buffer},
+                                              Kokkos::subview(data, 2));
+        EXPECT_EQ(buffer.use_count(), 2);
+      });
+
+  graph.submit(ex);
+
+  ASSERT_TRUE(contains(ex, Kokkos::subview(data, 0), 42));
+  ASSERT_TRUE(contains(ex, Kokkos::subview(data, 1), 0));
+  ASSERT_TRUE(contains(ex, Kokkos::subview(data, 2), 42));
+}
+
 template <typename ViewType, size_t TargetIndex, size_t NumIndices = 0>
 struct FetchValuesAndContribute {
   static_assert(std::is_same_v<typename ViewType::value_type,
