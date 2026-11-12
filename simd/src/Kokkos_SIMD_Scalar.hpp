@@ -533,7 +533,7 @@ template <Impl::SimdVecType V, Impl::Ranges::contiguous_range R,
 KOKKOS_FORCEINLINE_FUNCTION constexpr void unchecked_scatter_to(
     const V& v, R&& out, const typename I::mask_type& mask, const I& indices,
     simd_flags<Flags...> = simd_flag_default) {
-  out[indices[0]] = (mask[0]) ? v[0] : typename V::value_type{};
+  if (mask[0]) out[indices[0]] = v[0];
 }
 
 template <Impl::SimdVecType V, Impl::Ranges::contiguous_range R,

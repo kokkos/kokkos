@@ -1,8 +1,10 @@
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+# SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
+
 find_package(NextAPI REQUIRED COMPONENTS Core)
-set_target_properties(NextAPI::Core PROPERTIES SYSTEM TRUE)
 
 kokkos_create_imported_tpl(NEXTAPI INTERFACE LINK_LIBRARIES NextAPI::Core)
-kokkos_export_cmake_tpl(NEXTAPI REQUIRED)
+kokkos_export_cmake_tpl(NextAPI REQUIRED COMPONENTS Core)
 
 # $ORIGIN-relative RUNPATHs matching the NEXT_HOME layout so packages
 # stay relocatable.  Mirrors the convention in nextutils/CMakeLists.txt.

@@ -4,6 +4,14 @@
 #ifndef KOKKOS_SIMD_IMPL_MACROS_HPP
 #define KOKKOS_SIMD_IMPL_MACROS_HPP
 
+// FIXME Temporary flag to identify which simd types have not yet been modified
+// to be device constructible. To be removed when the rest of simd types are
+// device constructible
+#if defined(KOKKOS_ARCH_AVX512XEON) || defined(KOKKOS_ARCH_ARM_SVE) || \
+    defined(KOKKOS_ARCH_ARM_NEON) || defined(KOKKOS_ENABLE_OPENACC)
+#define KOKKOS_IMPL_SIMD_DEVICE_COMPAT_TRANSITION
+#endif
+
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
 // FIXME Temporarily disabling for OpenACC; there isn't a
 // reliable, portable compile-time flag to detect the device compilation context

@@ -8,10 +8,13 @@
 #include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
 import kokkos.core;
+import kokkos.core_impl;
 #else
 #include <Kokkos_Core.hpp>
 #endif
 #include <Kokkos_TypeInfo.hpp>
+
+#include <tools/include/ToolTestingUtilities.hpp>
 
 #include <cmath>
 #include <random>
@@ -884,6 +887,138 @@ TEST(TEST_CATEGORY, reduction_identity_bitwise_and_or_integral_types) {
   TestReductionIdentityBitwiseAndOr<unsigned long>();
   TestReductionIdentityBitwiseAndOr<long long>();
   TestReductionIdentityBitwiseAndOr<unsigned long long>();
+}
+
+using namespace Kokkos::Test::Tools;
+
+class TEST_CATEGORY_FIXTURE(ReduceCountFencesTest) : public testing::Test {
+ protected:
+  template <int ExptValue, typename ViewType>
+  void check_value(const ViewType& view) const {
+    static_assert(ViewType::rank() == 0);
+    const auto mirror = Kokkos::create_mirror_view_and_copy(view);
+    ASSERT_EQ(mirror(), ExptValue);
+  }
+
+ public:
+  struct SumIndices {
+    KOKKOS_FUNCTION
+    void operator()(const typename TEST_EXECSPACE::index_type index,
+                    int& current) const noexcept {
+      current += index;
+    }
+  };
+
+ public:
+  void SetUp() override final {
+    listen_tool_events(Config::DisableAll(), Config::EnableFences());
+  }
+
+  void TearDown() override { listen_tool_events(Config::DisableAll()); }
+
+ protected:
+  TEST_EXECSPACE exec{};
+};
+
+// Reducing to a scalar automatically introduces one fence.
+TEST_F(TEST_CATEGORY_FIXTURE(ReduceCountFencesTest), reduce_to_scalar) {
+  int value = 0;
+
+  const auto fences = get_event_set([&] {
+    Kokkos::parallel_reduce(Kokkos::RangePolicy(exec, 42, 43), SumIndices{},
+                            value);
+  });
+
+  ASSERT_EQ(value, 42);
+
+// FIXME_CUDA
+#if defined(KOKKOS_ENABLE_CUDA)
+  if constexpr (std::same_as<TEST_EXECSPACE, Kokkos::Cuda>) {
+    GTEST_SKIP() << "More fences reported.";
+  }
+#endif
+// FIXME_SYCL
+#if defined(KOKKOS_ENABLE_SYCL)
+  if constexpr (std::same_as<TEST_EXECSPACE, Kokkos::SYCL>) {
+    GTEST_SKIP() << "More fences reported.";
+  }
+#endif
+// FIXME_THREADS
+#if defined(KOKKOS_ENABLE_THREADS)
+  if constexpr (std::same_as<TEST_EXECSPACE, Kokkos::Threads>) {
+    GTEST_SKIP() << "More fences reported.";
+  }
+#endif
+
+  ASSERT_EQ(fences.size(), 2);
+
+  ASSERT_EQ(
+      std::static_pointer_cast<BeginFenceEvent>(fences.at(0))->name,
+      "Kokkos::parallel_reduce: fence due to result being value, not view");
+  ASSERT_TRUE(Kokkos::Test::Tools::is_a<EndFenceEvent>(fences.at(1)));
+}
+
+// Reducing to a managed view does not introduce any fence. Proper
+// synchronization falls to the user.
+TEST_F(TEST_CATEGORY_FIXTURE(ReduceCountFencesTest), reduce_to_managed_view) {
+  Kokkos::View<int, TEST_EXECSPACE> view(Kokkos::view_alloc(exec));
+
+  const auto fences = get_event_set([&] {
+    Kokkos::parallel_reduce(Kokkos::RangePolicy(exec, 42, 43), SumIndices{},
+                            view);
+  });
+
+  exec.fence("user fence");
+
+  check_value<42>(view);
+
+// FIXME_CUDA
+#if defined(KOKKOS_ENABLE_CUDA)
+  if constexpr (std::same_as<TEST_EXECSPACE, Kokkos::Cuda>) {
+    GTEST_SKIP() << "More fences reported.";
+  }
+#endif
+// FIXME_THREADS
+#if defined(KOKKOS_ENABLE_THREADS)
+  if constexpr (std::same_as<TEST_EXECSPACE, Kokkos::Threads>) {
+    GTEST_SKIP() << "More fences reported.";
+  }
+#endif
+
+  ASSERT_EQ(fences.size(), 0);
+}
+
+// Reducing to an unmanaged view does not introduce any fence. Proper
+// synchronization falls to the user.
+TEST_F(TEST_CATEGORY_FIXTURE(ReduceCountFencesTest), reduce_to_unmanaged_view) {
+  Kokkos::View<int, TEST_EXECSPACE> view(Kokkos::view_alloc(exec));
+
+  Kokkos::View<int, TEST_EXECSPACE, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+      view_um(view);
+
+  const auto fences = get_event_set([&] {
+    Kokkos::parallel_reduce(Kokkos::RangePolicy(exec, 42, 43), SumIndices{},
+                            view_um);
+  });
+
+  exec.fence("user fence");
+
+  check_value<42>(view);
+
+// FIXME_CUDA
+#if defined(KOKKOS_ENABLE_CUDA)
+  if constexpr (std::same_as<TEST_EXECSPACE, Kokkos::Cuda>) {
+    GTEST_SKIP() << "More fences reported.";
+  }
+#endif
+// FIXME_THREADS
+#if defined(KOKKOS_ENABLE_THREADS)
+  if constexpr (std::same_as<TEST_EXECSPACE, Kokkos::Threads>) {
+    GTEST_SKIP() << "More fences reported.";
+  }
+#endif
+
+  ASSERT_EQ(fences.size(), 0);
 }
 
 }  // namespace Test

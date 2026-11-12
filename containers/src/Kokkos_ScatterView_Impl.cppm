@@ -8,8 +8,8 @@ module;
 export module kokkos.scatter_view_impl;
 
 export {
-  namespace Kokkos::Impl::Experimental {
-  using ::Kokkos::Impl::Experimental::DefaultContribution;
-  using ::Kokkos::Impl::Experimental::DefaultDuplication;
-  }  // namespace Kokkos::Impl::Experimental
+  namespace Kokkos::Experimental::Impl {
+  using ::Kokkos::Experimental::Impl::DefaultContribution;
+  using ::Kokkos::Experimental::Impl::DefaultDuplication;
+  }  // namespace Kokkos::Experimental::Impl
 }

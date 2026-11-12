@@ -255,6 +255,22 @@ TEST(TEST_CATEGORY, view_customization_extra_int_arg) {
     ASSERT_EQ(a.accessor().size, 5lu);
     ASSERT_EQ(a.accessor().stride, size_t(3 * 7 * 11));
   }
+  // Wrapping a pointer with accessor arg (unmanaged)
+  {
+    // Same as above, but for the constructor taking a pointer: the last
+    // argument (11) is an extent, not an accessor arg, so the rank is 3
+    // (this is what Sacado::createViewWithType does for Fad types)
+    view_t a("A", 3, 7, 11, 5);
+    view_t b(Kokkos::view_wrap(a.data(), Kokkos::Impl::AccessorArg_t{5ul}), 3,
+             7, 11);
+    ASSERT_EQ(b.rank(), 3lu);
+    ASSERT_EQ(b.extent(0), 3lu);
+    ASSERT_EQ(b.extent(1), 7lu);
+    ASSERT_EQ(b.extent(2), 11lu);
+    ASSERT_EQ(b.accessor().size, 5lu);
+    ASSERT_EQ(b.accessor().stride, size_t(3 * 7 * 11));
+    ASSERT_EQ(b.data(), a.data());
+  }
   // Create mirror
   {
     view_t a("A", 3, 7, 11, 5);

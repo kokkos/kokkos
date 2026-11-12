@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+# SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
+
 kokkos_add_example_directories(01_hello_world)
 kokkos_add_example_directories(02_simple_reduce)
 kokkos_add_example_directories(03_simple_view)

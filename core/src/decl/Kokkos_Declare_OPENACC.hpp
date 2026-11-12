@@ -9,7 +9,6 @@
 #include <OpenACC/Kokkos_OpenACC_Instance.hpp>
 #include <OpenACC/Kokkos_OpenACCSpace.hpp>
 #include <OpenACC/Kokkos_OpenACC_DeepCopy.hpp>
-#include <OpenACC/Kokkos_OpenACC_SharedAllocationRecord.hpp>
 #include <OpenACC/Kokkos_OpenACC_ParallelFor_Range.hpp>
 #include <OpenACC/Kokkos_OpenACC_ParallelReduce_Range.hpp>
 #include <OpenACC/Kokkos_OpenACC_ParallelScan_Range.hpp>

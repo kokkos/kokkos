@@ -22,6 +22,7 @@ struct SpaceHandle {
 const int parallel_for_id    = 0;
 const int parallel_reduce_id = 1;
 const int parallel_scan_id   = 2;
+const int single_id          = 3;
 
 extern "C" void kokkosp_init_library(
     const int /*loadSeq*/, const uint64_t /*interfaceVer*/,
@@ -78,6 +79,17 @@ extern "C" void kokkosp_begin_parallel_reduce(const char* name,
 
 extern "C" void kokkosp_end_parallel_reduce(const uint64_t kID) {
   std::cout << "kokkosp_end_parallel_reduce:" << kID << "::";
+}
+
+extern "C" void kokkosp_begin_single(const char* name, const uint32_t devID,
+                                     uint64_t* kID) {
+  *kID = single_id;
+  std::cout << "kokkosp_begin_single:" << name << ":" << devID << ":" << *kID
+            << "::";
+}
+
+extern "C" void kokkosp_end_single(const uint64_t kID) {
+  std::cout << "kokkosp_end_single:" << kID << "::";
 }
 
 extern "C" void kokkosp_push_profile_region(const char* regionName) {

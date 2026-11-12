@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+# SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
+
 # If CLANG_FORMAT_EXE exists in the environment,
 # it is used instead of 'clang-format'.
 CLANG_FORMAT_EXECUTABLE=${CLANG_FORMAT_EXE:-clang-format}

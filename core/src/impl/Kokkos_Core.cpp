@@ -619,6 +619,8 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
   declare_configuration_metadata("architecture", "CPU architecture", "ARMV8_THUNDERX2");
 #elif defined(KOKKOS_ARCH_ARMV9_GRACE)
   declare_configuration_metadata("architecture", "CPU architecture", "ARMV9_GRACE");
+#elif defined(KOKKOS_ARCH_ARMV9_VERA)
+  declare_configuration_metadata("architecture", "CPU architecture", "ARMV9_VERA");
 #elif defined(KOKKOS_ARCH_BDW)
   declare_configuration_metadata("architecture", "CPU architecture", "BDW");
 #elif defined(KOKKOS_ARCH_HSW)
@@ -724,6 +726,8 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
   declare_configuration_metadata("architecture", "GPU architecture", "AMD_GFX908");
 #elif defined(KOKKOS_ARCH_AMD_GFX90A)
   declare_configuration_metadata("architecture", "GPU architecture", "AMD_GFX90A");
+#elif defined(KOKKOS_ARCH_HYGON_GFX936)
+  declare_configuration_metadata("architecture", "GPU architecture", "HYGON_GFX936");
 #elif defined(KOKKOS_ARCH_AMD_GFX940)
   declare_configuration_metadata("architecture", "GPU architecture", "AMD_GFX940");
 #elif defined(KOKKOS_ARCH_AMD_GFX942_APU)

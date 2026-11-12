@@ -40,9 +40,15 @@ class ParallelFor<FunctorType, Kokkos::WorkGraphPolicy<Traits...>,
 
   void execute() const {
     const int num_worker_threads = m_policy.space().concurrency();
-    Kokkos::Experimental::HPX().impl_bulk_plain(
-        true, is_light_weight_policy<Policy>(), *this, num_worker_threads,
-        hpx::threads::thread_stacksize::nostack);
+    // FIXME_HPX Investigate if the execution space instance should be taken
+    // from the policy and if the fence is really needed.
+    const Kokkos::Experimental::HPX exec{};
+    exec.impl_bulk_plain(is_light_weight_policy<Policy>(), *this,
+                         num_worker_threads,
+                         hpx::threads::thread_stacksize::nostack);
+#if defined(KOKKOS_ENABLE_IMPL_HPX_ASYNC_DISPATCH)
+    exec.impl_instance_fence_locked("forced synchronization in WorkGraph");
+#endif
   }
 
   inline ParallelFor(const FunctorType &arg_functor, const Policy &arg_policy)

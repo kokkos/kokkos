@@ -6,6 +6,13 @@
 namespace Test {
 
 TEST(TEST_CATEGORY, mdrange_6d) {
+// FIXME_NEXTSILICON hangs or very slow on 1.4.0-136
+#ifdef KOKKOS_ENABLE_NEXTSILICON
+  if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::NextSilicon>) {
+    GTEST_SKIP() << "low performance on 1.4.0-136";
+  }
+#endif
+
   TestMDRange_6D<TEST_EXECSPACE>::test_reduce6(100, 10, 10, 10, 5, 5);
   TestMDRange_6D<TEST_EXECSPACE>::test_for6(10, 10, 10, 10, 5, 5);
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \

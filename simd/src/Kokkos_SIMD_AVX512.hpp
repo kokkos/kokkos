@@ -1280,7 +1280,7 @@ sqrt(Experimental::basic_simd<
       _mm512_sqrt_ps(static_cast<__m512>(a)));
 }
 
-#ifdef __INTEL_COMPILER
+#ifdef KOKKOS_HAVE_INTEL_SVML
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 Experimental::basic_simd<float, Experimental::simd_abi::avx512_fixed_size<16>>

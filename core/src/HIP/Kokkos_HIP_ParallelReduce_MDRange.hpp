@@ -40,8 +40,8 @@ class ParallelReduce<CombinedFunctorReducerType,
   using reducer_type   = ReducerType;
   using size_type      = HIP::size_type;
 
-  // Conditionally set word_size_type to int16_t or int8_t if value_type is
-  // smaller than int32_t (Kokkos::HIP::size_type)
+  // Conditionally set word_size_type to uint16_t or uint8_t if value_type is
+  // smaller than 32 bits (width of Kokkos::HIP::size_type)
   // word_size_type is used to determine the word count, shared memory buffer
   // size, and global memory buffer size before the reduction is performed.
   // Within the reduction, the word count is recomputed based on word_size_type
@@ -55,7 +55,8 @@ class ParallelReduce<CombinedFunctorReducerType,
   static_assert(sizeof(size_type) == 4);
   using word_size_type = std::conditional_t<
       sizeof(value_type) < 4,
-      std::conditional_t<sizeof(value_type) == 2, int16_t, int8_t>, size_type>;
+      std::conditional_t<sizeof(value_type) == 2, uint16_t, uint8_t>,
+      size_type>;
 
   // Algorithmic constraints: blockSize is a power of two AND blockDim.y ==
   // blockDim.z == 1
@@ -79,9 +80,8 @@ class ParallelReduce<CombinedFunctorReducerType,
   inline __device__ void operator()() const {
     const ReducerType& reducer = m_functor_reducer.get_reducer();
 
-    const integral_nonzero_constant<word_size_type,
-                                    ReducerType::static_value_size() /
-                                        sizeof(word_size_type)>
+    const integral_nonzero_constant<
+        size_type, ReducerType::static_value_size() / sizeof(word_size_type)>
         word_count(reducer.value_size() / sizeof(word_size_type));
 
     {
@@ -149,10 +149,11 @@ class ParallelReduce<CombinedFunctorReducerType,
   }
 
   inline void execute() {
-    ReducerType reducer = m_functor_reducer.get_reducer();
+    ReducerType reducer        = m_functor_reducer.get_reducer();
+    const index_type num_tiles = m_policy.impl_num_tiles();
 
-    if (m_policy.m_num_tiles) {
-      int block_size = m_policy.m_prod_tile_dims;
+    if (num_tiles) {
+      int block_size = m_policy.impl_prod_tile_dims();
       // CONSTRAINT: Algorithm requires block_size >= product of tile dimensions
       // Nearest power of two
       int exponent_pow_two = std::ceil(std::log2(block_size));
@@ -169,7 +170,7 @@ class ParallelReduce<CombinedFunctorReducerType,
       dim3 block(1, block_size, 1);
       // use a slightly less constrained, but still well bounded limit for
       // scratch
-      const index_type nwork = m_policy.m_num_tiles * m_policy.m_prod_tile_dims;
+      const index_type nwork = num_tiles * m_policy.impl_prod_tile_dims();
       index_type nblocks     = (nwork + block.y - 1) / block.y;
       // Heuristic deciding the value of nblocks.
       // The general idea here is we want to:

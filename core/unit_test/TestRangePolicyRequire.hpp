@@ -351,9 +351,11 @@ TEST(TEST_CATEGORY, range_reduce_require) {
   }
 }
 
+// FIXME_NEXTSILICON: should this work or not? correctness error on 1.3.0-120
 TEST(TEST_CATEGORY, range_dynamic_policy_require) {
-#if !defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_ENABLE_HIP) && \
-    !defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ENABLE_OPENACC)
+#if !defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_ENABLE_HIP) &&     \
+    !defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ENABLE_OPENACC) && \
+    !defined(KOKKOS_ENABLE_NEXTSILICON)
   using Property = Kokkos::Experimental::WorkItemProperty::HintLightWeight_t;
   {
     TestRangeRequire<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>,

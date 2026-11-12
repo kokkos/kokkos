@@ -36,13 +36,18 @@ pipeline {
                           rm -rf spack && \
                           git clone https://github.com/spack/spack.git && \
                           . ./spack/share/spack/setup-env.sh && \
-                          spack install -v --only=dependencies kokkos@develop+tests && \
-                          spack install -v --only=package ${CDASH_ARGS} kokkos@develop+tests cxxstd=20 && \
+                          spack install -v --only=dependencies --test=root kokkos@develop && \
+                          spack install -v --only=package --test=root ${CDASH_ARGS} kokkos@develop cxxstd=20 && \
                           spack load cmake && \
                           spack test run ${CDASH_ARGS} kokkos && \
                           spack test results -l
                           '''
                     }
+                    post {
+                        always {
+                            cleanWs()
+                               }
+                         }
                 }
                 stage('spack-cuda') {
                     agent {
@@ -70,19 +75,24 @@ pipeline {
                           rm -rf spack && \
                           git clone https://github.com/spack/spack.git --depth=1 && \
                           . ./spack/share/spack/setup-env.sh && \
-                          spack install -v --only=dependencies kokkos@develop+cuda+wrapper+tests cuda_arch=80 ^cuda@12.9.0 && \
-                          spack install -v --only=package ${CDASH_ARGS} kokkos@develop+cuda+wrapper+tests cuda_arch=80 ^cuda@12.9.0 && \
+                          spack install -v --only=dependencies --test=root kokkos@develop+cuda+wrapper cuda_arch=80 ^cuda@12.9.0 && \
+                          spack install -v --only=package --test=root ${CDASH_ARGS} kokkos@develop+cuda+wrapper cuda_arch=80 ^cuda@12.9.0 && \
                           spack load cmake  && \
                           spack load kokkos-nvcc-wrapper && \
                           spack load cuda && \
                           spack load kokkos
                           '''
                     }
+                    post {
+                        always {
+                            cleanWs()
+                               }
+                         }
                 }
-                stage('GCC-15-CXX26') {
+                stage('GCC-16-CXX26') {
                     agent {
                         docker {
-                            image 'gcc:15.1'
+                            image 'gcc:16.2'
                             label 'docker'
                             registryCredentialsId 'dockerhub'
                         }
@@ -91,6 +101,8 @@ pipeline {
                         sh '''
                           wget https://github.com/Kitware/CMake/releases/download/v3.30.0/cmake-3.30.0-linux-x86_64.sh && \
                           chmod +x cmake-3.30.0-linux-x86_64.sh && ./cmake-3.30.0-linux-x86_64.sh --skip-license --prefix=/usr
+
+                          ulimit -c 0
 
                           export CMAKE_BUILD_PARALLEL_LEVEL=8 && \
                           export ENV_CMAKE_OPTIONS="" && \
@@ -104,12 +116,13 @@ pipeline {
                           export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_TESTS=ON" && \
                           export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_DEPRECATED_CODE_5=ON" && \
                           export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_SERIAL=ON" && \
-                          ctest -VV -D CDASH_MODEL="Nightly" -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}" -S scripts/CTestRun.cmake -D CTEST_SITE="ornl-jenkins" -D CTEST_BUILD_NAME="GCC-15-CXX26"
+                          ctest -VV -D CDASH_MODEL="Nightly" -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}" -S scripts/CTestRun.cmake -D CTEST_SITE="ornl-jenkins" -D CTEST_BUILD_NAME="GCC-16-CXX26"
                           '''
                     }
                     post {
                         always {
                             xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                            cleanWs()
                         }
                     }
                 }
@@ -126,7 +139,9 @@ pipeline {
                     }
                     steps {
                         sh 'ccache --zero-stats'
-                        sh '''export CMAKE_BUILD_PARALLEL_LEVEL=16 && \
+                        sh '''ulimit -c 0
+
+                              export CMAKE_BUILD_PARALLEL_LEVEL=16 && \
                               export ENV_CMAKE_OPTIONS="" && \
                               export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_BUILD_TYPE=RelWithDebInfo" && \
                               export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_CXX_COMPILER=hipcc" && \
@@ -148,6 +163,7 @@ pipeline {
                         always {
                             sh 'ccache --show-stats'
                             xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                            cleanWs()
                         }
                     }
                 }
@@ -164,7 +180,9 @@ pipeline {
                     }
                     steps {
                         sh 'ccache --zero-stats'
-                        sh '''export CMAKE_BUILD_PARALLEL_LEVEL=16 && \
+                        sh '''ulimit -c 0
+
+                              export CMAKE_BUILD_PARALLEL_LEVEL=16 && \
                               export ENV_CMAKE_OPTIONS="" && \
                               export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_BUILD_TYPE=RelWithDebInfo" && \
                               export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_CXX_COMPILER=hipcc" && \
@@ -185,6 +203,7 @@ pipeline {
                         always {
                             sh 'ccache --show-stats'
                             xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                            cleanWs()
                         }
                     }
                 }

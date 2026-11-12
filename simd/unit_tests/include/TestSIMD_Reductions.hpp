@@ -13,6 +13,8 @@ import kokkos.simd_impl;
 #endif
 #include <SIMDTesting_Utilities.hpp>
 
+namespace {
+
 template <typename T, typename ReductionOp>
 struct get_identity {
   KOKKOS_INLINE_FUNCTION T operator()() { return T(); }
@@ -224,25 +226,19 @@ KOKKOS_INLINE_FUNCTION void device_check_reductions_all_abis(
 class simd_device_reduction_functor {
  public:
   KOKKOS_INLINE_FUNCTION void operator()(int) const {
-    device_check_reductions_all_abis(
-        Kokkos::Experimental::Impl::device_abi_set());
+    device_check_reductions_all_abis(test_device_abi_set());
   }
 };
 
-TEST(simd, host_reductions) {
-  host_check_reductions_all_abis(Kokkos::Experimental::Impl::host_abi_set());
+TEST(KOKKOS_SIMD_TEST_SUITE, host_reductions) {
+  host_check_reductions_all_abis(test_host_abi_set());
 }
 
-TEST(simd, device_reductions) {
-#if defined(KOKKOS_ENABLE_OPENACC) && \
-    defined(KOKKOS_COMPILER_CLANG)  // FIXME_CLACC
-  GTEST_SKIP()
-      << "skipping because of a non-deterministic failure reporting: "
-         "Failure to synchronize stream (nil): Error in "
-         "cuStreamSynchronize: an illegal memory access was encountered";
-#endif
+KOKKOS_SIMD_DEVICE_TEST(KOKKOS_SIMD_TEST_SUITE, device_reductions) {
   Kokkos::parallel_for(1, simd_device_reduction_functor());
   Kokkos::fence();
 }
+
+}  // namespace
 
 #endif

@@ -47,6 +47,7 @@ void HIP::impl_initialize(InitializationSettings const& settings) {
   // Check that we are running on the expected architecture. We print a warning
   // instead of erroring out because AMD does not guarantee that gcnArchName
   // will always contain the gfx flag.
+#ifdef KOKKOS_ARCH_AMD_GPU
   if (Kokkos::show_warnings()) {
     if (std::string_view arch_name =
             Impl::HIPInternal::m_deviceProp.gcnArchName;
@@ -56,6 +57,7 @@ void HIP::impl_initialize(InitializationSettings const& settings) {
           << KOKKOS_ARCH_AMD_GPU << " on " << arch_name << " device.\n";
     }
   }
+#endif
 
   // Print a warning if the user did not select the right GFX942 architecture
 #ifdef KOKKOS_ARCH_AMD_GFX942

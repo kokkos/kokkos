@@ -156,7 +156,7 @@ TEST(TEST_CATEGORY, interact_with_sycl_node) {
   // node updates will take effect immediately for nodes in modifiable
   // command graphs.
   auto sycl_node = node.sycl_node();
-  sycl_node.update_range(sycl::range<1>(0));
+  sycl_node.update_range(sycl::range<2>(0, 0));
 
   constexpr int value = 0;
 #else

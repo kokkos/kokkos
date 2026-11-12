@@ -948,7 +948,7 @@ struct Functor_TestHalfOperators {
     // expected_lhs(PASS_BY_REF).
     expected_lhs(PASS_BY_REF) = accept_ref_expected(h_lhs);
 
-    half_tmp = static_cast<float>(h_lhs);
+    half_tmp = static_cast<half_impl_type>(h_lhs);
     tmp_ptr  = &(tmp_lhs = half_tmp);
     if (tmp_ptr != &tmp_lhs)
       Kokkos::abort("Error in half_type address-of operator");
@@ -1037,7 +1037,23 @@ void test_bhalf_operators() {
   }
 }
 
-TEST(TEST_CATEGORY, half_operators) { test_half_operators(); }
-TEST(TEST_CATEGORY, bhalf_operators) { test_bhalf_operators(); }
+TEST(TEST_CATEGORY, half_operators) {
+// FIXME_NEXTSILICON: projection errors in 1.3.0-120
+#ifdef KOKKOS_ENABLE_NEXTSILICON
+  if (std::is_same_v<Kokkos::DefaultExecutionSpace,
+                     Kokkos::Experimental::NextSilicon>)
+    GTEST_SKIP() << "projection errors in 1.3.0-120";
+#endif
+  test_half_operators();
+}
+TEST(TEST_CATEGORY, bhalf_operators) {
+// FIXME_NEXTSILICON: projection errors in 1.3.0-120
+#ifdef KOKKOS_ENABLE_NEXTSILICON
+  if (std::is_same_v<Kokkos::DefaultExecutionSpace,
+                     Kokkos::Experimental::NextSilicon>)
+    GTEST_SKIP() << "projection errors in 1.3.0-120";
+#endif
+  test_bhalf_operators();
+}
 }  // namespace Test
 #endif  // TESTHALFOPERATOR_HPP_

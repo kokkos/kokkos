@@ -62,6 +62,7 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #endif
 
 // ONLY use GNUC atomics if not explicitly say to use OpenMP atomics
+// NextSilicon devices also use GCC (host) atomics
 #if !defined(DESUL_HAVE_OPENMP_ATOMICS) && defined(__GNUC__)
 #define DESUL_HAVE_GCC_ATOMICS
 #endif
@@ -160,6 +161,8 @@ static constexpr bool desul_impl_omp_on_host() { return false; }
 #define DESUL_IF_ON_HOST(CODE) \
   {}
 #else
+// This is the fallback that only calls host code. Note: NextSilicon devices
+// also use host atomics
 #define DESUL_IF_ON_DEVICE(CODE) \
   {}
 #define DESUL_IF_ON_HOST(CODE) \

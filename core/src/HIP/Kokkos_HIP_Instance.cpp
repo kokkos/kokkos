@@ -295,7 +295,7 @@ void *HIPInternal::resize_team_scratch_space(int scratch_pool_id,
   // and invalidate the m_team_scratch_ptr. We use a pool to avoid any race
   // condition.
   auto mem_space = Kokkos::HIPSpace::impl_create(m_hipDev, m_stream);
-  if (m_team_scratch_current_size[scratch_pool_id] == 0) {
+  if (m_team_scratch_current_size[scratch_pool_id] == 0 && bytes > 0) {
     m_team_scratch_current_size[scratch_pool_id] = bytes;
     m_team_scratch_ptr[scratch_pool_id] =
         mem_space.allocate("Kokkos::HIPSpace::TeamScratchMemory",

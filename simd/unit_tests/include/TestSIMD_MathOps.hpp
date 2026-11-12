@@ -13,6 +13,8 @@ import kokkos.simd_impl;
 #endif
 #include <SIMDTesting_Utilities.hpp>
 
+namespace {
+
 template <class Abi, class Loader, class TernaryOp, class T>
 void host_check_math_op_one_loader(TernaryOp ternary_op,
                                    Kokkos::Experimental::Impl::simd_size_t n,
@@ -519,16 +521,15 @@ KOKKOS_INLINE_FUNCTION void device_check_math_ops_all_abis(
 class simd_device_math_ops_functor {
  public:
   KOKKOS_INLINE_FUNCTION void operator()(int) const {
-    device_check_math_ops_all_abis(
-        Kokkos::Experimental::Impl::device_abi_set());
+    device_check_math_ops_all_abis(test_device_abi_set());
   }
 };
 
-TEST(simd, host_math_ops) {
-  host_check_math_ops_all_abis(Kokkos::Experimental::Impl::host_abi_set());
+TEST(KOKKOS_SIMD_TEST_SUITE, host_math_ops) {
+  host_check_math_ops_all_abis(test_host_abi_set());
 }
 
-TEST(simd, device_math_ops) {
+KOKKOS_SIMD_DEVICE_TEST(KOKKOS_SIMD_TEST_SUITE, device_math_ops) {
 #if defined(KOKKOS_IMPL_32BIT)
   // FIXME_GCC: Floating point comparisons fail in a 32-bit build
   // See https://github.com/kokkos/kokkos/pull/7912#issuecomment-2747713935
@@ -536,15 +537,10 @@ TEST(simd, device_math_ops) {
       << "skipping due to a GCC bug associated with the computation of "
          "floating-point values in a 32-bit build.";
 #endif
-#if defined(KOKKOS_ENABLE_OPENACC) && \
-    defined(KOKKOS_COMPILER_CLANG)  // FIXME_CLACC
-  GTEST_SKIP()
-      << "skipping because of a non-deterministic failure reporting: "
-         "Failure to synchronize stream (nil): Error in "
-         "cuStreamSynchronize: an illegal memory access was encountered";
-#endif
   Kokkos::parallel_for(1, simd_device_math_ops_functor());
   Kokkos::fence();
 }
+
+}  // namespace
 
 #endif

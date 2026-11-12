@@ -2,8 +2,6 @@ name: SNL-CI
 
 on:
   pull_request:
-    paths-ignore:
-    - '**/*.md'
     types: [ opened, reopened, synchronize ]
 
 permissions:
@@ -15,21 +13,54 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  CUDA_12_2_CPP20:
+  SNL_NeedChecks:
+    name: SNL_NeedChecks
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+    steps:
+      - uses: dorny/paths-filter@v4.0.3
+        id: filter
+        with:
+          filters: |
+            code:
+              - '!**/*.md'
+
+  SNL_CUDA_NVCC_12_2_CPP20:
     name: SNL_CUDA_NVCC_12_2_CPP20
+    needs: SNL_NeedChecks
+    if: needs.SNL_NeedChecks.outputs.code == 'true'
     runs-on: [snl-kk-env-cuda-12.2.0-gcc-11.3.0-latest]
-    continue-on-error: true
 
     strategy:
+      fail-fast: false
       matrix:
         dep_code_5: [ON, OFF]
 
     steps:
       - name: checkout_kokkos
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7.0.1
         with:
           repository: kokkos/kokkos
           path: kokkos
+
+      - name: store_kokkos_mdspan_hash_to_env
+        run: |
+          echo "KOKKOS_MDSPAN_HASH=$(cat kokkos/tpls/mdspan-hash.txt)" >> $GITHUB_ENV
+
+      - name: checkout_mdspan
+        uses: actions/checkout@v7.0.1
+        with:
+          repository: kokkos/mdspan
+          path: mdspan
+          ref: ${{ env.KOKKOS_MDSPAN_HASH }}
+
+      - name: configure_mdspan
+        run: cmake -B mdspan/build -DCMAKE_CXX_STANDARD=20 -DCMAKE_INSTALL_PREFIX=/tmp/mdspan-install -S mdspan
+
+      - name: build_and_install_mdspan
+        working-directory: mdspan
+        run: cmake --build build --target install
 
       - name: configure_kokkos
         run: |
@@ -50,6 +81,8 @@ jobs:
             -DKokkos_ENABLE_LARGE_MEM_TESTS=ON \
             -DKokkos_ENABLE_BENCHMARKS=ON \
             -DKokkos_ENABLE_BENCHMARKS_HEAVY=ON \
+            -DKokkos_ENABLE_MDSPAN_EXTERNAL=ON \
+            -Dmdspan_ROOT=/tmp/mdspan-install \
             ./
 
       - name: build_and_install_kokkos
@@ -75,14 +108,15 @@ jobs:
         working-directory: kokkos/build_examples
         run: ctest --output-on-failure
 
-  HIP_6_2_1_CPP23:
+  SNL_HIP_ROCM_6_2_1_CPP23:
     name: SNL_HIP_ROCM_6_2_1_CPP23
+    needs: SNL_NeedChecks
+    if: needs.SNL_NeedChecks.outputs.code == 'true'
     runs-on: [rocm-6.2.1_openblas-0.3.28_zen3_gfx90a-latest-latest]
-    continue-on-error: true
 
     steps:
       - name: checkout_kokkos
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7.0.1
         with:
           repository: kokkos/kokkos
           path: kokkos
@@ -130,14 +164,15 @@ jobs:
         working-directory: kokkos/build_examples
         run: ctest --output-on-failure
 
-  HIP_6_2_1:
-    name: SNL_HIP_ROCM_6_2_1
-    runs-on: [rocm-6.2.1_openblas-0.3.28_zen3_gfx90a-latest-latest]
-    continue-on-error: true
+  SNL_HIP_ROCM_10_0:
+    name: SNL_HIP_ROCM_10_0
+    needs: SNL_NeedChecks
+    if: needs.SNL_NeedChecks.outputs.code == 'true'
+    runs-on: [rocm-10.0_openblas-0.3.28_zen3_gfx90a]
 
     steps:
       - name: checkout_kokkos
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7.0.1
         with:
           repository: kokkos/kokkos
           path: kokkos
@@ -160,7 +195,7 @@ jobs:
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
             -DKokkos_ENABLE_LARGE_MEM_TESTS=ON \
-            -DKokkos_ENABLE_BENCHMARKS=ON
+            -DKokkos_ENABLE_BENCHMARKS=OFF
 
       - name: build_and_install_kokkos
         working-directory: kokkos
@@ -186,18 +221,20 @@ jobs:
         working-directory: kokkos/build_examples
         run: ctest --output-on-failure
 
-  INTEL_2024_2_1_SPR:
+  SNL_OPENMP_SERIAL_INTEL_2024_2_1:
     name: SNL_OPENMP_SERIAL_INTEL_2024_2_1
+    needs: SNL_NeedChecks
+    if: needs.SNL_NeedChecks.outputs.code == 'true'
     runs-on: [inteloneapi-basekit-2024.2.1-0-devel-ubuntu22.04-latest-spr]
-    continue-on-error: true
 
     strategy:
+      fail-fast: false
       matrix:
         dep_code_5: [ON, OFF]
 
     steps:
       - name: checkout_kokkos
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7.0.1
         with:
           repository: kokkos/kokkos
           path: kokkos
@@ -244,14 +281,15 @@ jobs:
         working-directory: kokkos/build_examples
         run: ctest --output-on-failure
 
-  INTEL_2024_2_1_PVC:
+  SNL_SYCL_INTEL_2024_2_1:
     name: SNL_SYCL_INTEL_2024_2_1
+    needs: SNL_NeedChecks
+    if: needs.SNL_NeedChecks.outputs.code == 'true'
     runs-on: [inteloneapi-basekit-2024.2.1-0-devel-ubuntu22.04-latest-pv]
-    continue-on-error: true
 
     steps:
       - name: checkout_kokkos
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7.0.1
         with:
           repository: kokkos/kokkos
           path: kokkos
@@ -297,14 +335,15 @@ jobs:
         working-directory: kokkos/build_examples
         run: ONEAPI_DEVICE_SELECTOR=level_zero:gpu ctest --output-on-failure
 
-  LLVM_14_0_6:
+  SNL_SERIAL_LLVM_14_0_6:
     name: SNL_SERIAL_LLVM_14_0_6
+    needs: SNL_NeedChecks
+    if: needs.SNL_NeedChecks.outputs.code == 'true'
     runs-on: [llvm-14.0.6_x86-64-latest-latest]
-    continue-on-error: true
 
     steps:
       - name: checkout_kokkos
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7.0.1
         with:
           repository: kokkos/kokkos
           path: kokkos
@@ -332,14 +371,15 @@ jobs:
         working-directory: kokkos/build
         run: ctest --output-on-failure --timeout 3600
 
-  CLANG_19_MODULES:
+  SNL_SERIAL_CLANG_19_MODULES:
     name: SNL_SERIAL_CLANG_19_MODULES
+    needs: SNL_NeedChecks
+    if: needs.SNL_NeedChecks.outputs.code == 'true'
     runs-on: [clang-19_gcc-15.1_x86-64-latest]
-    continue-on-error: true
 
     steps:
       - name: checkout_kokkos
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7.0.1
         with:
           repository: kokkos/kokkos
           path: kokkos
@@ -371,14 +411,15 @@ jobs:
         run: ctest --output-on-failure --timeout 3600
 
 # FIXME_HPX: workaround for standard library calling OOM handler for failing nothrow new, remove once fixed
-  HPX_GCC_15_1_1:
+  SNL_HPX_GCC_15_1_1:
     name: SNL_HPX_GCC_15_1_1
+    needs: SNL_NeedChecks
+    if: needs.SNL_NeedChecks.outputs.code == 'true'
     runs-on: [ci-containersfedora-latest-latest]
-    continue-on-error: true
 
     steps:
       - name: checkout_kokkos
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7.0.1
         with:
           repository: kokkos/kokkos
           path: kokkos
@@ -418,14 +459,15 @@ jobs:
         working-directory: kokkos/build
         run: KOKKOS_NUM_THREADS=64 ctest --output-on-failure --timeout 3600
 
-  OPENACC_CUDA_12_2_NVHPC_23_7_CPP20:
+  SNL_OPENACC_CUDA_12_2_NVHPC_23_7_CPP20:
     name: SNL_OPENACC_CUDA_12_2_NVHPC_23_7_CPP20
+    needs: SNL_NeedChecks
+    if: needs.SNL_NeedChecks.outputs.code == 'true'
     runs-on: [cuda-12.2_nvhpc-23.7_x86-64-latest]
-    continue-on-error: true
 
     steps:
       - name: checkout_kokkos
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7.0.1
         with:
           repository: kokkos/kokkos
           path: kokkos
@@ -458,10 +500,11 @@ jobs:
         working-directory: kokkos/build
         run: ctest --output-on-failure --timeout 3600
 
-  NextSilicon_Latest:
+  SNL_NextSilicon_Latest:
     name: SNL_NextSilicon_Latest
+    needs: SNL_NeedChecks
+    if: needs.SNL_NeedChecks.outputs.code == 'true'
     runs-on: [next-latest]
-    continue-on-error: true
 
     steps:
       - name: Environment Information
@@ -481,7 +524,7 @@ jobs:
           nextcli system terminate
 
       - name: checkout_kokkos
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7.0.1
         with:
           repository: kokkos/kokkos
           path: kokkos
@@ -532,6 +575,46 @@ jobs:
           __TINYALLOC_HEAP_SIZE: 1073741824
           __TINYALLOC_HEAP_MAX_CHUNKS: 4194304
         # FIXME_NEXTSILICON: disable core dumps for now
+        # FIXME_NEXTSILICON: NextSilicon1A takes 36 minutes to project on 64-core node (1.3.0-84)
+        # so on the SNL CI runner, we'd expect around 2.5 hours.
+        # Kokkos_CoreUnitTest_NextSilicon_SmokeTests: 427 slots, ~34min
+        # Kokkos_CoreUnitTest_NextSilicon2A: 158 slots, ~30min
+        # Kokkos_CoreUnitTest_NextSilicon1A: 723 slots, ~36 minutes to project on 64-core node.
+        # FIXME_NEXTSILICON NextSilicon1A causes memory errors when configuring device
         run: |
           ulimit -c 0
-          ctest -V --timeout 1800
+          ctest -V -E 'NextSilicon1A|Kokkos_CoreUnitTest_Default$' --timeout 3600
+
+  SNL_Required_Checks:
+    if: always()
+    name: SNL_Required_Checks
+    # bash command to collect this: [grep "name: SNL_" snl-ci.yml | awk '{print "      - "$3}']
+    needs:
+      - SNL_NeedChecks
+      - SNL_CUDA_NVCC_12_2_CPP20
+      - SNL_HIP_ROCM_6_2_1_CPP23
+      - SNL_HIP_ROCM_10_0
+      - SNL_OPENMP_SERIAL_INTEL_2024_2_1
+      - SNL_SYCL_INTEL_2024_2_1
+      - SNL_SERIAL_LLVM_14_0_6
+      - SNL_SERIAL_CLANG_19_MODULES
+      - SNL_HPX_GCC_15_1_1
+      - SNL_OPENACC_CUDA_12_2_NVHPC_23_7_CPP20
+      - SNL_NextSilicon_Latest
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require all checks to pass
+        run: |
+          if [[ "${{ needs.SNL_NeedChecks.outputs.code }}" == "true" ]]; then
+            # code changed: no job should be skipped/failed/cancelled
+            if [[ \
+              "${{ contains(needs.*.result, 'failure') }}" == "true" || \
+              "${{ contains(needs.*.result, 'cancelled') }}" == "true" || \
+              "${{ contains(needs.*.result, 'skipped') }}" == "true" \
+            ]]; then
+              echo "At least one required SNL job did not succeed."
+              exit 1
+            fi
+          fi
+
+          echo "All required SNL jobs succeeded."

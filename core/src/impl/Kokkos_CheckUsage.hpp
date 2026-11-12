@@ -21,7 +21,7 @@ template <typename... Args>
 class RangePolicy;
 
 template <typename... Args>
-struct MDRangePolicy;
+class MDRangePolicy;
 
 template <typename... Args>
 class TeamPolicy;

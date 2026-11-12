@@ -555,20 +555,5 @@ struct DeepCopy<HostSpace, MemSpace, ExecutionSpace,
 }  // namespace Impl
 }  // namespace Kokkos
 
-//----------------------------------------------------------------------------
-//----------------------------------------------------------------------------
-
-#if !defined(KOKKOS_ENABLE_IMPL_CUDA_UNIFIED_MEMORY)
-KOKKOS_IMPL_HOST_INACCESSIBLE_SHARED_ALLOCATION_SPECIALIZATION(
-    Kokkos::CudaSpace);
-#else
-KOKKOS_IMPL_SHARED_ALLOCATION_SPECIALIZATION(Kokkos::CudaSpace);
-#endif
-KOKKOS_IMPL_SHARED_ALLOCATION_SPECIALIZATION(Kokkos::CudaUVMSpace);
-KOKKOS_IMPL_SHARED_ALLOCATION_SPECIALIZATION(Kokkos::CudaHostPinnedSpace);
-
-//----------------------------------------------------------------------------
-//----------------------------------------------------------------------------
-
 #endif /* #if defined( KOKKOS_ENABLE_CUDA ) */
 #endif /* #define KOKKOS_CUDASPACE_HPP */

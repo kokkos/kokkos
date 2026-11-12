@@ -1,5 +1,8 @@
 #! /bin/bash
 
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+# SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
+
 # This script has two different modes of operation:
 # if KOKKOS_NEXTSILICON_TEST_TELEMETRYLESS is anything, we run in a telemetry-less mode, where any projection error counts as a failure
 # else, we run the two-pass telemetry-based flow
@@ -44,6 +47,8 @@ if [[ -n "${KOKKOS_NEXTSILICON_TEST_TELEMETRYLESS:-}" ]]; then
     # configure nextsystemd
     tee ${patch_dir}/kokkos.patch <<EOF
 optimizer-pi:
+  ebbm-enabled: true
+  max-automatic-migration-move-count: 18446744073709551615 # MAX_UINT64
   # switch to telemetry-less mode
   enable-telemetry-less: true
 projection:
@@ -76,6 +81,12 @@ else
     # configure nextsystemd
     tee ${patch_dir}/kokkos.patch <<EOF
 optimizer-pi:
+  ebbm-enabled: true
+  max-automatic-migration-move-count: 18446744073709551615 # MAX_UINT64
+  # FIXME_NEXTSILICON: use one tile, some unit test binaries cause configuration error for full device
+  numa-regions-per-device: 1
+  numa-regions-width: 1
+  numa-regions-height: 1
   mlc:
     # try to offload every parallel region
     acceleration-threshold: 1
@@ -107,9 +118,9 @@ EOF
     # wait for optimization to start
     sleep 15
 
-    # wait for optimization/projection to finish, up to 30 minutes
+    # wait for optimization/projection to finish, up to 1 hour
     SECONDS=0
-    while [ $SECONDS -lt 1800 ]; do
+    while [ $SECONDS -lt 7200 ]; do
         # check current state
         ret=0
         status="$(nextcli application status | grep 'Optimization state:')"

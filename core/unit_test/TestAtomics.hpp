@@ -165,7 +165,7 @@ struct CASFunctor {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(int) const {
-    T old = data();
+    T old = Kokkos::atomic_load(&data());
     T newval, assumed;
 
     do {

@@ -153,7 +153,29 @@ class ParallelScanSYCLBase {
         *space.impl_internal_space_instance();
     sycl::queue& q = space.sycl_queue();
 
+    pointer_type result_ptr;
+    if (!m_result_ptr_device_accessible) {
+      m_scratch_host = static_cast<sycl::global_ptr<value_type>>(
+          instance.scratch_host(sizeof(value_type)));
+      result_ptr = static_cast<pointer_type>(m_scratch_host);
+    } else {
+      result_ptr = m_result_ptr;
+    }
+
     const auto size = m_policy.end() - m_policy.begin();
+
+    if (size == 0) {
+      auto single_event = q.submit([&](sycl::handler& cgh) {
+        cgh.single_task([=]() {
+          const CombinedFunctorReducer<FunctorType, typename Analysis::Reducer>&
+              functor_reducer = functor_wrapper.get_functor();
+          const typename Analysis::Reducer& reducer =
+              functor_reducer.get_reducer();
+          reducer.init(result_ptr);
+        });
+      });
+      return single_event;
+    }
 
     auto scratch_flags = static_cast<sycl::global_ptr<unsigned int>>(
         instance.scratch_flags(sizeof(unsigned int)));
@@ -166,7 +188,7 @@ class ParallelScanSYCLBase {
             sycl::local_accessor<unsigned int> num_teams_done,
             sycl::global_ptr<value_type> global_mem_,
             sycl::global_ptr<value_type> group_results_) {
-          auto lambda = [=](sycl::nd_item<1> item) {
+          auto lambda = [=](sycl::nd_item<2> item) {
             auto global_mem    = global_mem_;
             auto group_results = group_results_;
 
@@ -280,8 +302,6 @@ class ParallelScanSYCLBase {
       global_mem =
           static_cast<sycl::global_ptr<value_type>>(instance.scratch_space(
               n_wgroups * (wgroup_size + 1) * sizeof(value_type)));
-      m_scratch_host = static_cast<sycl::global_ptr<value_type>>(
-          instance.scratch_host(sizeof(value_type)));
 
       group_results = global_mem + n_wgroups * wgroup_size;
 
@@ -303,25 +323,22 @@ class ParallelScanSYCLBase {
 
       auto scan_lambda = scan_lambda_factory(local_mem, num_teams_done,
                                              global_mem, group_results);
-      cgh.parallel_for(sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
-                       scan_lambda);
+      cgh.parallel_for(
+          sycl::nd_range<2>(sycl::range<2>(n_wgroups * wgroup_size, 1),
+                            sycl::range<2>(wgroup_size, 1)),
+          scan_lambda);
     });
 
     // Write results to global memory
     auto update_global_results = q.submit([&](sycl::handler& cgh) {
-      // The compiler failed with CL_INVALID_ARG_VALUE if using m_result_ptr
-      // directly.
-      pointer_type result_ptr = m_result_ptr_device_accessible
-                                    ? m_result_ptr
-                                    : static_cast<pointer_type>(m_scratch_host);
-
 #ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
       cgh.depends_on(perform_work_group_scans);
 #endif
 
       cgh.parallel_for(
-          sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
-          [=](sycl::nd_item<1> item) {
+          sycl::nd_range<2>(sycl::range<2>(n_wgroups * wgroup_size, 1),
+                            sycl::range<2>(wgroup_size, 1)),
+          [=](sycl::nd_item<2> item) {
             const index_type global_id = item.get_global_linear_id();
             const CombinedFunctorReducer<
                 FunctorType, typename Analysis::Reducer>& functor_reducer =
@@ -354,8 +371,6 @@ class ParallelScanSYCLBase {
  public:
   template <typename PostFunctor>
   void impl_execute(const PostFunctor& post_functor) {
-    if (m_policy.begin() == m_policy.end()) return;
-
     auto& instance = *m_policy.space().impl_internal_space_instance();
 
     Kokkos::Impl::SYCLInternal::IndirectKernelMem& indirectKernelMem =
@@ -424,8 +439,7 @@ class Kokkos::Impl::ParallelScanWithTotal<
             ->m_mutexScratchSpace);
 
     Base::impl_execute([&]() {
-      const long long nwork = Base::m_policy.end() - Base::m_policy.begin();
-      if (nwork > 0 && !Base::m_result_ptr_device_accessible) {
+      if (!Base::m_result_ptr_device_accessible) {
         // Using DeepCopy instead of fence+memcpy turned out to be up to 2x
         // slower.
         m_exec.fence(

@@ -76,7 +76,7 @@ struct GraphNodeImpl<ExecutionSpace, Kokkos::Experimental::TypeErasedTag,
   // </editor-fold> end no other constructors }}}2
   //----------------------------------------------------------------------------
 
-  device_handle_t get_device_handle() const {
+  const device_handle_t& get_device_handle() const {
     return this->device_handle_storage_base_t::instance();
   }
 

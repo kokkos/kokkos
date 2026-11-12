@@ -13,6 +13,8 @@ import kokkos.simd_impl;
 #endif
 #include <SIMDTesting_Utilities.hpp>
 
+namespace {
+
 using Kokkos::Experimental::all_of;
 
 template <typename Abi, typename DataTypeA, typename DataTypeB>
@@ -119,18 +121,19 @@ KOKKOS_INLINE_FUNCTION void device_check_conversions_all_abis(
 class simd_device_conversions_functor {
  public:
   KOKKOS_INLINE_FUNCTION void operator()(int) const {
-    device_check_conversions_all_abis(
-        Kokkos::Experimental::Impl::device_abi_set());
+    device_check_conversions_all_abis(test_device_abi_set());
   }
 };
 
-TEST(simd, host_conversions) {
-  host_check_conversions_all_abis(Kokkos::Experimental::Impl::host_abi_set());
+TEST(KOKKOS_SIMD_TEST_SUITE, host_conversions) {
+  host_check_conversions_all_abis(test_host_abi_set());
 }
 
-TEST(simd, device_conversions) {
+KOKKOS_SIMD_DEVICE_TEST(KOKKOS_SIMD_TEST_SUITE, device_conversions) {
   Kokkos::parallel_for(1, simd_device_conversions_functor());
   Kokkos::fence();
 }
+
+}  // namespace
 
 #endif

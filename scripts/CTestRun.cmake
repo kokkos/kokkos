@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+# SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
+
 cmake_minimum_required(VERSION 3.22)
 
 set(CTEST_BINARY_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/build)

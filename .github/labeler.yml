@@ -1,0 +1,115 @@
+# Configuration for https://github.com/actions/labeler
+# Label names must match the repository labels exactly.
+
+"Backend - CUDA":
+  - changed-files:
+      - any-glob-to-any-file:
+          - core/src/Cuda/**
+          - core/unit_test/cuda/**
+          - core/unit_test/category_files/TestCuda*
+
+"Backend - HIP":
+  - changed-files:
+      - any-glob-to-any-file:
+          - core/src/HIP/**
+          - core/unit_test/hip/**
+          - core/unit_test/category_files/TestHIP*
+
+"Backend - HPX":
+  - changed-files:
+      - any-glob-to-any-file:
+          - core/src/HPX/**
+          - core/unit_test/hpx/**
+          - core/unit_test/category_files/TestHPX*
+
+"Backend - OpenMP":
+  - changed-files:
+      - any-glob-to-any-file:
+          - core/src/OpenMP/**
+          - core/unit_test/openmp/**
+          - core/unit_test/category_files/TestOpenMP_*
+
+"Backend - SYCL":
+  - changed-files:
+      - any-glob-to-any-file:
+          - core/src/SYCL/**
+          - core/unit_test/sycl/**
+          - core/unit_test/category_files/TestSYCL*
+
+"Backend - OpenACC":
+  - changed-files:
+      - any-glob-to-any-file:
+          - core/src/OpenACC/**
+          - core/unit_test/category_files/TestOpenACC*
+
+"Backend - NextSilicon":
+  - changed-files:
+      - any-glob-to-any-file:
+          - core/src/NextSilicon/**
+          - core/unit_test/nextsilicon/**
+          - core/unit_test/category_files/TestNextSilicon*
+
+"Backend - Threads":
+  - changed-files:
+      - any-glob-to-any-file:
+          - core/src/Threads/**
+          - core/unit_test/category_files/TestThreads*
+
+# Umbrella label for the host backends (Serial has no label of its own).
+"Backend - Host":
+  - changed-files:
+      - any-glob-to-any-file:
+          - core/src/{Serial,Threads,OpenMP,HPX}/**
+          - core/unit_test/openmp/**
+          - core/unit_test/hpx/**
+          - core/unit_test/category_files/Test{Serial,Threads,OpenMP,HPX}*
+
+"Kokkos-Core":
+  - changed-files:
+      - any-glob-to-any-file: core/**
+
+"Kokkos-Containers":
+  - changed-files:
+      - any-glob-to-any-file: containers/**
+
+"Kokkos-Algorithms":
+  - changed-files:
+      - any-glob-to-any-file: algorithms/**
+
+"Kokkos-SIMD":
+  - changed-files:
+      - any-glob-to-any-file: simd/**
+
+"CMake":
+  - changed-files:
+      - any-glob-to-any-file:
+          - CMakeLists.txt
+          - "**/CMakeLists.txt"
+          - cmake/**
+          - "**/*.cmake"
+          - "**/*.cmake.in"
+
+"Documentation":
+  - changed-files:
+      - any-glob-to-any-file:
+          - docs/**
+          - README.md
+
+"Continuous Integration":
+  - changed-files:
+      - any-glob-to-any-file:
+          - .github/workflows/**
+          - .jenkins/**
+          - .gitlab/**
+
+"PerfTest/Benchmark":
+  - changed-files:
+      - any-glob-to-any-file:
+          - benchmarks/**
+          - "**/perf_test/**"
+          - "**/perf_tests/**"
+          - "**/performance_tests/**"
+
+"TPL":
+  - changed-files:
+      - any-glob-to-any-file: tpls/**

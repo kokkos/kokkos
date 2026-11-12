@@ -18,9 +18,11 @@
 #ifdef KOKKOS_ENABLE_SYCL
 #include <SYCL/Kokkos_SYCL_Half_Conversion.hpp>
 #endif
+#include <impl/Kokkos_STD_Half_Conversion.hpp>
 #include <impl/Kokkos_Half_NumericTraits.hpp>
 #include <impl/Kokkos_Half_ReductionIdentity.hpp>
 #include <impl/Kokkos_Half_MathematicalFunctions.hpp>
+#include <impl/Kokkos_Half_CommonType.hpp>
 
 #ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_HALF
 #undef KOKKOS_IMPL_PUBLIC_INCLUDE

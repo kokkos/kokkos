@@ -19,6 +19,8 @@ import kokkos.sort;
 #endif
 
 #include <algorithm>
+#include <type_traits>
+#include <vector>
 
 namespace Test {
 namespace SortImpl {
@@ -203,6 +205,164 @@ void test_sort_integer_overflow() {
       << "view (" << vh[0] << ", " << vh[1] << ") is not sorted";
 }
 
+// -----------------------------------------------------------------------
+// Test that Kokkos::sort (no comparator) works for a custom struct type
+// via operator<, exercising the non-arithmetic fallback path that copies
+// to host, runs std::sort, and copies back.
+// -----------------------------------------------------------------------
+
+struct SortCustomTypeItem {
+  unsigned int key;
+  unsigned int value;
+
+  KOKKOS_FUNCTION bool operator<(const SortCustomTypeItem& other) const {
+    if (key != other.key) return key < other.key;
+    return value < other.value;
+  }
+};
+
+template <class ExecutionSpace>
+void test_sort_custom_type_impl() {
+  using ViewType = Kokkos::View<SortCustomTypeItem*, ExecutionSpace>;
+
+  // Deliberately unsorted input covering duplicate keys (to exercise
+  // the secondary sort on value) and duplicate (key, value) pairs.
+  const int N                     = 10;
+  SortCustomTypeItem host_data[N] = {{3, 2}, {1, 9}, {2, 1}, {1, 3}, {3, 1},
+                                     {2, 7}, {1, 0}, {4, 0}, {2, 4}, {3, 1}};
+
+  ViewType d_view("SortCustomType", N);
+  {
+    auto h_view = Kokkos::create_mirror_view(d_view);
+    for (int i = 0; i < N; ++i) h_view(i) = host_data[i];
+    Kokkos::deep_copy(d_view, h_view);
+  }
+
+  ExecutionSpace exec;
+  Kokkos::sort(exec, d_view);
+
+  auto h_result =
+      Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), d_view);
+
+  // Verify the output is in non-descending lexicographic order.
+  for (int i = 0; i < N - 1; ++i) {
+    ASSERT_FALSE(h_result(i + 1) < h_result(i))
+        << "Sort order violated at index " << i << ": "
+        << "(" << h_result(i).key << "," << h_result(i).value << ") > "
+        << "(" << h_result(i + 1).key << "," << h_result(i + 1).value << ")";
+  }
+}
+
+template <class ExecutionSpace>
+void test_sort_custom_type_subrange_impl() {
+  using ViewType = Kokkos::View<SortCustomTypeItem*, ExecutionSpace>;
+
+  const int N                     = 10;
+  SortCustomTypeItem host_data[N] = {{3, 2}, {1, 9}, {2, 1}, {1, 3}, {3, 1},
+                                     {2, 7}, {1, 0}, {4, 0}, {2, 4}, {3, 1}};
+
+  ViewType d_view("SortCustomTypeSubrange", N);
+  {
+    auto h_view = Kokkos::create_mirror_view(d_view);
+    for (int i = 0; i < N; ++i) h_view(i) = host_data[i];
+    Kokkos::deep_copy(d_view, h_view);
+  }
+
+  // Sort only the middle subrange [2, 8), leaving [0,2) and [8,10) untouched.
+  const int begin = 2, end = 8;
+  ExecutionSpace exec;
+  Kokkos::sort(exec, d_view, begin, end);
+
+  auto h_result =
+      Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), d_view);
+
+  // Elements outside the subrange must be unchanged.
+  for (int i = 0; i < begin; ++i) {
+    ASSERT_EQ(h_result(i).key, host_data[i].key);
+    ASSERT_EQ(h_result(i).value, host_data[i].value);
+  }
+  for (int i = end; i < N; ++i) {
+    ASSERT_EQ(h_result(i).key, host_data[i].key);
+    ASSERT_EQ(h_result(i).value, host_data[i].value);
+  }
+
+  // Elements within the subrange must be sorted.
+  for (int i = begin; i < end - 1; ++i) {
+    ASSERT_FALSE(h_result(i + 1) < h_result(i))
+        << "Sort order violated at index " << i << ": "
+        << "(" << h_result(i).key << "," << h_result(i).value << ") > "
+        << "(" << h_result(i + 1).key << "," << h_result(i + 1).value << ")";
+  }
+}
+
+// -----------------------------------------------------------------------
+// Kokkos::sort for a value type that is not default constructible (#9676).
+// thrust::sort, which Kokkos uses for CUDA and HIP, does not compile for such
+// types, so Kokkos sorts an index permutation instead.
+// -----------------------------------------------------------------------
+
+struct SortNonDefaultConstructible {
+  int value;
+
+  KOKKOS_FUNCTION explicit SortNonDefaultConstructible(int v) : value(v) {}
+
+  KOKKOS_FUNCTION bool operator<(
+      const SortNonDefaultConstructible& other) const {
+    return value < other.value;
+  }
+};
+
+static_assert(!std::is_default_constructible_v<SortNonDefaultConstructible>);
+
+// Values in [0, 1009) in scrambled order, repeated once n exceeds 1009.
+KOKKOS_INLINE_FUNCTION int non_default_constructible_test_value(int i) {
+  return static_cast<int>((static_cast<int64_t>(i) * 7919) % 1009);
+}
+
+template <class ViewType>
+struct FillNonDefaultConstructible {
+  ViewType m_view;
+  KOKKOS_FUNCTION void operator()(int i) const {
+    m_view(i) =
+        SortNonDefaultConstructible(non_default_constructible_test_value(i));
+  }
+};
+
+struct GreaterNonDefaultConstructible {
+  KOKKOS_FUNCTION bool operator()(const SortNonDefaultConstructible& a,
+                                  const SortNonDefaultConstructible& b) const {
+    return b < a;
+  }
+};
+
+template <class ExecutionSpace>
+void test_sort_non_default_constructible_impl(int n, bool use_comparator) {
+  using view_type = Kokkos::View<SortNonDefaultConstructible*, ExecutionSpace>;
+  ExecutionSpace exec;
+  view_type v(Kokkos::view_alloc(exec, "v", Kokkos::WithoutInitializing), n);
+  Kokkos::parallel_for(Kokkos::RangePolicy<ExecutionSpace>(exec, 0, n),
+                       FillNonDefaultConstructible<view_type>{v});
+
+  if (use_comparator) {
+    Kokkos::sort(exec, v, GreaterNonDefaultConstructible{});
+  } else {
+    Kokkos::sort(exec, v);
+  }
+
+  std::vector<int> expected(n);
+  for (int i = 0; i < n; ++i) {
+    expected[i] = non_default_constructible_test_value(i);
+  }
+  std::sort(expected.begin(), expected.end());
+  if (use_comparator) std::reverse(expected.begin(), expected.end());
+
+  auto h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), v);
+  for (int i = 0; i < n; ++i) {
+    ASSERT_EQ(h(i).value, expected[i])
+        << "n = " << n << ", comparator = " << use_comparator << ", i = " << i;
+  }
+}
+
 }  // namespace SortImpl
 
 TEST(TEST_CATEGORY, SortUnsignedValueType) {
@@ -227,6 +387,22 @@ TEST(TEST_CATEGORY, SortEmptyView) {
   // TODO check the synchronous behavior of the calls below
   Kokkos::sort(ExecutionSpace(), v);
   Kokkos::sort(v);
+}
+
+TEST(TEST_CATEGORY, SortCustomType) {
+  SortImpl::test_sort_custom_type_impl<TEST_EXECSPACE>();
+}
+
+TEST(TEST_CATEGORY, SortCustomTypeSubrange) {
+  SortImpl::test_sort_custom_type_subrange_impl<TEST_EXECSPACE>();
+}
+
+TEST(TEST_CATEGORY, SortNonDefaultConstructible) {
+  for (int n : {0, 1, 2, 1009, 5000}) {
+    SortImpl::test_sort_non_default_constructible_impl<TEST_EXECSPACE>(n,
+                                                                       false);
+    SortImpl::test_sort_non_default_constructible_impl<TEST_EXECSPACE>(n, true);
+  }
 }
 
 }  // namespace Test

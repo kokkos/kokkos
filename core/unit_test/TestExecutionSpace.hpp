@@ -12,6 +12,13 @@ import kokkos.core;
 
 #include "tools/include/ToolTestingUtilities.hpp"
 
+static_assert(
+    std::is_same_v<typename Kokkos::DefaultExecutionSpace::memory_space,
+                   Kokkos::DefaultMemorySpace>);
+static_assert(
+    std::is_same_v<typename Kokkos::DefaultHostExecutionSpace::memory_space,
+                   Kokkos::DefaultHostMemorySpace>);
+
 namespace {
 
 template <class ExecutionSpace>

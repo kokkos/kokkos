@@ -62,7 +62,7 @@ class TypeInfo {
 
 }  // namespace Kokkos::Impl
 
-#else  // out of luck, using Intel C++ Compiler Classic
+#else
 
 namespace Kokkos::Impl {
 

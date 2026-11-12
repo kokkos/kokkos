@@ -111,19 +111,29 @@ SYCLInternal::SYCLInternal(const sycl::queue& q) : m_queue(q) {
   for (auto& usm_mem : m_indirectKernelMem) {
     usm_mem.reset(m_queue, m_instance_id);
   }
+
+  m_num_scratch_locks = m_maxConcurrency;
+  m_scratch_locks = sycl::malloc_device<int32_t>(m_num_scratch_locks, m_queue);
+  auto memset_event =
+      m_queue.memset(m_scratch_locks, 0, sizeof(int32_t) * m_num_scratch_locks);
+#ifdef KOKKOS_IMPL_SYCL_OUT_OF_ORDER_QUEUES
+  m_queue.ext_oneapi_submit_barrier(std::vector{memset_event});
+#endif
 }
 
 int SYCLInternal::acquire_team_scratch_space() {
-  // Grab the next scratch memory allocation. We must make sure that the last
-  // kernel using the allocation has completed, so we wait for the event that
-  // was registered with that kernel.
-  int current_team_scratch = desul::atomic_fetch_inc_mod(
-      &m_current_team_scratch, m_n_team_scratch - 1,
-      desul::MemoryOrderRelaxed(), desul::MemoryScopeDevice());
-
-  m_team_scratch_event[current_team_scratch].wait_and_throw();
+  int current_team_scratch = 0;
+  int zero                 = 0;
+  while (!m_team_scratch_pool[current_team_scratch].compare_exchange_weak(
+      zero, 1, std::memory_order_release, std::memory_order_relaxed)) {
+    current_team_scratch = (current_team_scratch + 1) % m_n_team_scratch;
+  }
 
   return current_team_scratch;
+}
+
+void SYCLInternal::release_team_scratch_space(int scratch_pool_id) {
+  m_team_scratch_pool[scratch_pool_id] = 0;
 }
 
 sycl::global_ptr<void> SYCLInternal::resize_team_scratch_space(
@@ -151,11 +161,6 @@ sycl::global_ptr<void> SYCLInternal::resize_team_scratch_space(
   return m_team_scratch_ptr[scratch_pool_id];
 }
 
-void SYCLInternal::register_team_scratch_event(int scratch_pool_id,
-                                               sycl::event event) {
-  m_team_scratch_event[scratch_pool_id] = event;
-}
-
 uint32_t SYCLInternal::impl_get_instance_id() const { return m_instance_id; }
 
 SYCLInternal::~SYCLInternal() {
@@ -180,6 +185,8 @@ SYCLInternal::~SYCLInternal() {
                                   m_team_scratch_current_size[i]);
     }
   }
+
+  sycl::free(m_scratch_locks, m_queue);
 
   for (auto& usm_mem : m_indirectKernelMem) usm_mem.reset();
   // guard erasing from all_queues

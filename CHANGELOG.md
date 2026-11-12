@@ -1,4 +1,11 @@
 # CHANGELOG
+## 5.2.2
+
+[Full Changelog](https://github.com/kokkos/kokkos/compare/5.2.1...5.2.2)
+
+### Bug Fixes
+* Workaround warnings with std::pair as subview slice specifiers in relaxed constexpr mode [\#9467](https://github.com/kokkos/kokkos/pull/9467)
+
 ## 5.2.1
 
 [Full Changelog](https://github.com/kokkos/kokkos/compare/5.2.0...5.2.1)

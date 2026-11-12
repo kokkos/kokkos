@@ -279,9 +279,7 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
   value_type tmp;
   wrapped_reducer.init(&tmp);
 
-  iType j_start = loop_boundaries.member.team_rank() %
-                  loop_boundaries.member.vector_length();
-  if (j_start == 0) {
+  if (loop_boundaries.member.team_rank() == 0) {
 #pragma acc loop seq
     for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) {
       lambda(i, tmp);

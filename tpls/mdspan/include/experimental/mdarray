@@ -1,0 +1,15 @@
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
+
+#pragma once
+
+#ifndef MDSPAN_IMPL_STANDARD_NAMESPACE
+  #define MDSPAN_IMPL_STANDARD_NAMESPACE std
+#endif
+
+#ifndef MDSPAN_IMPL_PROPOSED_NAMESPACE
+  #define MDSPAN_IMPL_PROPOSED_NAMESPACE experimental
+#endif
+
+#include "mdspan"
+#include "../mdspan/mdarray.hpp"

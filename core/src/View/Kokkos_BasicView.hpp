@@ -58,28 +58,16 @@ constexpr inline struct SubViewCtorTag {
   explicit SubViewCtorTag() = default;
 } subview_ctor_tag{};
 
-template <class T>
-struct KokkosSliceToMDSpanSliceImpl {
-  using type = T;
-  KOKKOS_FUNCTION
-  static constexpr decltype(auto) transform(const T &s) { return s; }
-};
-
-template <>
-struct KokkosSliceToMDSpanSliceImpl<ALL_t> {
-  using type = full_extent_t;
-  KOKKOS_FUNCTION
-  static constexpr decltype(auto) transform(ALL_t) { return full_extent; }
-};
-
-template <class T>
-using kokkos_slice_to_mdspan_slice =
-    typename KokkosSliceToMDSpanSliceImpl<T>::type;
-
-template <class T>
+template <class IndexType, class T>
 KOKKOS_INLINE_FUNCTION constexpr decltype(auto)
-transform_kokkos_slice_to_mdspan_slice(const T &s) {
-  return KokkosSliceToMDSpanSliceImpl<T>::transform(s);
+transform_kokkos_slice_to_mdspan_canonical_slice(const T &s) {
+  return Kokkos::detail::canonical_slice<IndexType>(s);
+}
+
+template <class IndexType>
+KOKKOS_INLINE_FUNCTION constexpr full_extent_t
+transform_kokkos_slice_to_mdspan_canonical_slice(const ALL_t &) {
+  return full_extent;
 }
 
 // Default implementation for computing allocation size (in #of elements)
@@ -536,6 +524,11 @@ class BasicView {
     return true;
   }
 
+  KOKKOS_INLINE_FUNCTION static bool is_in_bounds(size_t /*extent*/,
+                                                  const Kokkos::full_extent_t) {
+    return true;
+  }
+
   template <class RT, class... RP, size_t... Idx, class... Args>
   KOKKOS_INLINE_FUNCTION static bool subview_extents_valid(
       const BasicView<RT, RP...> &src_view, std::index_sequence<Idx...>,
@@ -566,6 +559,11 @@ class BasicView {
     ss << "Kokkos::ALL";
   }
 
+  static void append_error_message(std::stringstream &ss, size_t /*extent*/,
+                                   const Kokkos::full_extent_t) {
+    ss << "Kokkos::full_extent";
+  }
+
   template <class RT, class... RP, size_t... Idx, class Arg0, class... Args>
   static std::stringstream generate_error_message(
       const BasicView<RT, RP...> &src_view, std::index_sequence<Idx...>,
@@ -593,8 +591,8 @@ class BasicView {
     // Avoid calling submdspan to not create temporary mdspan objects.
     // Instead do what submdspan does: calling submdspan_mapping.
     const auto sub_mapping_result = submdspan_mapping(
-        src_view.m_map,
-        Impl::transform_kokkos_slice_to_mdspan_slice(slices)...);
+        src_view.m_map, Impl::transform_kokkos_slice_to_mdspan_canonical_slice<
+                            typename OtherExtents::index_type>(slices)...);
 
     // Kokkos View precondition should happen in release build,
     // and before any checks happen inside mdspan mapping ctor itself.

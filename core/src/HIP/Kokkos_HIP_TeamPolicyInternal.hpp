@@ -189,7 +189,7 @@ class TeamPolicyInternal<HIP, Properties...>
     return m_thread_scratch_size[level];
   }
 
-  typename traits::execution_space space() const { return m_space; }
+  const typename traits::execution_space& space() const { return m_space; }
 
   TeamPolicyInternal()
       : m_space(),
@@ -395,7 +395,7 @@ __device__ inline int64_t hip_get_scratch_index(HIP::size_type league_size,
         Kokkos::min(int64_t(league_size),
                     int64_t(num_scratch_locks) /
                         static_cast<int64_t>(blockDim.x * blockDim.y));
-    threadid = (blockIdx.x * blockDim.z + threadIdx.z) % wraparound_len;
+    threadid = blockIdx.x % wraparound_len;
     threadid *= static_cast<int64_t>(blockDim.x * blockDim.y);
     int done = 0;
     while (!done) {

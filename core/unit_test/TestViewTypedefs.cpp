@@ -45,7 +45,7 @@ struct data_analysis<DataType[N]> {
 };
 
 template<class ViewType, class ViewTraitsType, class DataType, class Layout, class Space, class MemoryTraitsType,
-         class HostMirrorSpace, class ValueType, class ReferenceType>
+         class HostMirrorSpace, class ValueType, class ReferenceType, class IndexType, bool UsesMDSpanStyleArgs>
 constexpr bool test_view_typedefs_impl() {
   // ========================
   // inherited from ViewTraits
@@ -68,6 +68,7 @@ constexpr bool test_view_typedefs_impl() {
 
   // FIXME: value_type definition conflicts with mdspan value_type
   static_assert(std::is_same_v<typename ViewType::value_type, ValueType>);
+  // static_assert(std::is_same_v<typename ViewType::value_type, std::remove_const_t<typename ViewType::element_type>>);
   static_assert(std::is_same_v<typename ViewType::const_value_type, const ValueType>);
   static_assert(std::is_same_v<typename ViewType::non_const_value_type, std::remove_const_t<ValueType>>);
 
@@ -85,7 +86,6 @@ constexpr bool test_view_typedefs_impl() {
   static_assert(std::is_same_v<typename ViewType::host_mirror_space::device_type, host_mirror_device_type>);
   static_assert(std::is_same_v<typename ViewType::memory_traits, MemoryTraitsType>);
   static_assert(std::is_same_v<typename ViewType::host_mirror_space::memory_space, typename HostMirrorSpace::memory_space>);
-  static_assert(std::is_same_v<typename ViewType::size_type, typename ViewType::memory_space::size_type>);
 
   // FIXME: should be deprecated in favor of reference
   static_assert(std::is_same_v<typename ViewType::reference_type, ReferenceType>);
@@ -95,6 +95,9 @@ constexpr bool test_view_typedefs_impl() {
   // =========================================
   // in Legacy View: some helper View variants
   // =========================================
+
+  // TODO: add a branch for MDSpanStyleArgs
+  if constexpr (!UsesMDSpanStyleArgs) {
   static_assert(std::is_same_v<typename ViewType::traits, ViewTraitsType>);
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
 KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
@@ -150,14 +153,14 @@ KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
   static_assert(std::is_same_v<typename ViewType::uniform_runtime_const_nomemspace_type,
                                Kokkos::View<typename data_analysis<DataType>::runtime_const_data_type, uniform_layout_type,
                                             anonymous_device_type, Kokkos::MemoryTraits<>>>);
-
+  } // !UsesMDSpanStyleArgs
 
   // ==================================
   // mdspan compatibility
   // ==================================
 
   static_assert(std::is_same_v<typename ViewType::layout_type, typename Kokkos::Impl::LayoutFromArrayLayout<Layout>::type>);
-  static_assert(std::is_same_v<typename ViewType::extents_type, typename Kokkos::Impl::ExtentsFromDataType<size_t, DataType>::type>);
+  static_assert(std::is_same_v<typename ViewType::extents_type, typename Kokkos::Impl::ExtentsFromDataType<IndexType, DataType>::type>);
   static_assert(std::is_same_v<typename ViewType::mapping_type, typename ViewType::layout_type::template mapping<typename ViewType::extents_type>>);
   static_assert(std::is_same_v<typename ViewType::accessor_type, Kokkos::Experimental::Accessor<ValueType, typename Space::memory_space, MemoryTraitsType>>);
   static_assert(std::is_same_v<typename ViewType::mdspan_type,
@@ -166,10 +169,8 @@ KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
   static_assert(std::is_same_v<typename ViewType::element_type, ValueType>);
   // FIXME: should be remove_const_t<element_type>
   static_assert(std::is_same_v<typename ViewType::value_type, ValueType>);
-  static_assert(std::is_same_v<typename ViewType::size_type, typename Space::memory_space::size_type>);
-  static_assert(std::is_same_v<typename ViewType::index_type, size_t>);
-  // FIXME: this isn't given in View since for example SYCL has "int" as its size_type
-  // static_assert(std::is_same_v<typename ViewType::size_type, std::make_unsigned_t<typename ViewType::index_type>>);
+  static_assert(std::is_same_v<typename ViewType::index_type, IndexType>);
+  static_assert(std::is_same_v<typename ViewType::size_type, std::make_unsigned_t<typename ViewType::index_type>>);
   static_assert(std::is_same_v<typename ViewType::rank_type, size_t>);
 
   static_assert(std::is_same_v<typename ViewType::reference, typename ViewType::reference_type>);
@@ -180,10 +181,31 @@ KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
 template<class T, class ... ViewArgs>
 struct ViewParams {};
 
+// Helper to test with different index_type than the default size_t
+template<class NewIndexType, class OldIndexType, size_t ... Extents>
+constexpr auto replace_index_type(Kokkos::extents<OldIndexType, Extents...>) {
+  return Kokkos::extents<NewIndexType, Extents...>();
+}
+
 template<class L, class S, class M, class HostMirrorSpace, class ValueType, class ReferenceType, class T, class ... ViewArgs>
 constexpr bool test_view_typedefs(ViewParams<T, ViewArgs...>) {
-  return test_view_typedefs_impl<Kokkos::View<T, ViewArgs...>, Kokkos::ViewTraits<T, ViewArgs...>,
-                                 T, L, S, M, HostMirrorSpace, ValueType, ReferenceType>();
+  using old_view_t = Kokkos::View<T, ViewArgs...>;
+
+  // for the mdspan-style template args, test different index_type so we won't just
+  // have size_t for both index_type and size_type.
+  using new_view_t = Kokkos::View<typename old_view_t::element_type,
+                                  decltype(replace_index_type<int>(typename old_view_t::extents_type())),
+                                  typename old_view_t::layout_type,
+                                  typename old_view_t::accessor_type>;
+  using new_view_traits_t = Kokkos::ViewTraits<T,
+                                               typename old_view_t::array_layout,
+                                               typename old_view_t::memory_space,
+                                               typename old_view_t::memory_traits>;
+
+  return test_view_typedefs_impl<old_view_t, Kokkos::ViewTraits<T, ViewArgs...>,
+                                 T, L, S, M, HostMirrorSpace, ValueType, ReferenceType, size_t, false>() &&
+         test_view_typedefs_impl<new_view_t, new_view_traits_t,
+                                 T, L, S, M, HostMirrorSpace, ValueType, ReferenceType, int, true>();
 }
 
 

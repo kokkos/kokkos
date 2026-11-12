@@ -83,16 +83,15 @@ class GraphNodeKernelImpl<Kokkos::HIP, PolicyType, Functor, PatternTag, Args...>
 
  public:
   template <typename PolicyDeduced, typename... ArgsDeduced>
-  GraphNodeKernelImpl(std::string label_, HIP const&, Functor arg_functor,
+  GraphNodeKernelImpl(std::string label_, Functor arg_functor,
                       PolicyDeduced&& arg_policy, ArgsDeduced&&... args)
       : base_t(std::move(arg_functor), (PolicyDeduced&&)arg_policy,
                (ArgsDeduced&&)args...),
         label(std::move(label_)) {}
 
   template <typename PolicyDeduced>
-  GraphNodeKernelImpl(Kokkos::HIP const& exec_space, Functor arg_functor,
-                      PolicyDeduced&& arg_policy)
-      : GraphNodeKernelImpl("[unlabeled]", exec_space, std::move(arg_functor),
+  GraphNodeKernelImpl(Functor arg_functor, PolicyDeduced&& arg_policy)
+      : GraphNodeKernelImpl("[unlabeled]", std::move(arg_functor),
                             (PolicyDeduced&&)arg_policy) {}
 
   void set_hip_graph_ptr(hipGraph_t* arg_graph_ptr) {

@@ -861,7 +861,7 @@ struct TestViewMirror {
 
     Kokkos::parallel_for(
         Kokkos::RangePolicy<typename DeviceType::execution_space>(0, int(10)),
-        // decltype required for Intel classics, that doesn't recognize the CTAD
+        // decltype required for Intel LLVM, that doesn't recognize the CTAD
         CopyUnInit<decltype(a_d)>(a_d));
 
     Kokkos::deep_copy(a_h, a_d);
