@@ -77,12 +77,15 @@ class basic_simd_mask<T, simd_abi::avx2_fixed_size<N>>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd_mask(
       impl_host_vector_type const& value_in) noexcept
     requires(!std::same_as<impl_vector_type, impl_host_vector_type>)
-      : m_value(reinterpret_cast<impl_vector_type const&>(value_in)) {}
+      : m_value(reinterpret_cast<impl_vector_type const&>(value_in)) {
+    Kokkos::abort("Unexpected invocation of host-only conversion constructor.");
+  }
 
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION operator impl_host_vector_type()
       const noexcept
     requires(!std::same_as<impl_vector_type, impl_host_vector_type>)
   {
+    Kokkos::abort("Unexpected invocation of host-only conversion operator.");
     return reinterpret_cast<impl_host_vector_type const&>(m_value);
   }
 };
@@ -158,12 +161,15 @@ class basic_simd<T, simd_abi::avx2_fixed_size<N>>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
       impl_host_vector_type const& value_in) noexcept
     requires(!std::same_as<impl_vector_type, impl_host_vector_type>)
-      : m_value(reinterpret_cast<impl_vector_type const&>(value_in)) {}
+      : m_value(reinterpret_cast<impl_vector_type const&>(value_in)) {
+    Kokkos::abort("Unexpected invocation of host-only conversion constructor.");
+  }
 
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION operator impl_host_vector_type()
       const noexcept
     requires(!std::same_as<impl_vector_type, impl_host_vector_type>)
   {
+    Kokkos::abort("Unexpected invocation of host-only conversion operator.");
     return reinterpret_cast<impl_host_vector_type const&>(m_value);
   }
 };
