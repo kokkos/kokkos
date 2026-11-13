@@ -14,6 +14,7 @@ SPDX-License-Identifier = "Apache-2.0 WITH LLVM-exception"
 path = [
   "**/.clang-format",
   "**/.clang-tidy",
+  "**/.clang-tidy-extra",
   "**/.cmake-format.py",
   ".git-blame-ignore-revs",
   ".gitattributes",
