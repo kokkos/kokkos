@@ -229,4 +229,4 @@ void ErrorReporter_test_resize() {
 TEST(TEST_CATEGORY, ErrorReporter_resize) { ErrorReporter_test_resize(); }
 
 }  // namespace Test
-#endif  // #ifndef KOKKOS_TEST_ERROR_REPORTING_HPP
+#endif  // #ifndef KOKKOS_TEST_EXPERIMENTAL_ERROR_REPORTER_HPP
