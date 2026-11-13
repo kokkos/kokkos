@@ -401,6 +401,113 @@ TEST(TEST_CATEGORY, complex_special_funtions) {
   test.testit();
 }
 
+template <class ExecSpace, class RealType>
+void testComplexTanLargeArguments() {
+  const RealType large    = sizeof(RealType) == sizeof(float) ? 100 : 1000;
+  const RealType moderate = sizeof(RealType) == sizeof(float) ? 40 : 350;
+  const Kokkos::Array<RealType, 3> magnitudes = {
+      moderate, large, Kokkos::finite_max_v<RealType>};
+  Kokkos::View<Kokkos::complex<RealType> **, ExecSpace> results(
+      "TestComplexTanLargeArguments", 18, 2);
+  Kokkos::parallel_for(
+      Kokkos::RangePolicy<ExecSpace>(0, 18), KOKKOS_LAMBDA(int i) {
+        const RealType r  = (i % 2 == 0 ? 1 : -1) * magnitudes[i / 6];
+        const RealType im = RealType(i / 2 % 3 - 1) / 2;
+        results(i, 0)     = Kokkos::tanh(Kokkos::complex<RealType>(r, im));
+        results(i, 1)     = Kokkos::tan(Kokkos::complex<RealType>(im, r));
+      });
+  Kokkos::fence();
+  auto h_results =
+      Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), results);
+  for (int i = 0; i < 18; ++i) {
+    const RealType r  = (i % 2 == 0 ? 1 : -1) * magnitudes[i / 6];
+    const RealType im = RealType(i / 2 % 3 - 1) / 2;
+    SCOPED_TRACE(::testing::Message()
+                 << "input " << std::complex<RealType>(r, im)
+                 << ", sizeof(RealType) " << sizeof(RealType));
+    const std::complex<RealType> expected[] = {
+        std::tanh(std::complex<RealType>(r, im)),
+        std::tan(std::complex<RealType>(im, r))};
+    for (int j = 0; j < 2; ++j) {
+      const RealType tol = 8 * Kokkos::epsilon_v<RealType>;
+      EXPECT_NEAR(h_results(i, j).real(), expected[j].real(),
+                  tol * std::abs(expected[j].real()));
+      EXPECT_NEAR(h_results(i, j).imag(), expected[j].imag(),
+                  tol * std::abs(expected[j].imag()));
+    }
+  }
+}
+
+TEST(TEST_CATEGORY, complex_tan_large_arguments) {
+  testComplexTanLargeArguments<TEST_EXECSPACE, float>();
+  testComplexTanLargeArguments<TEST_EXECSPACE, double>();
+}
+
+template <class ExecSpace, class RealType>
+void testComplexSinCosLargeArguments() {
+  const bool is_float = sizeof(RealType) == sizeof(float);
+  const Kokkos::Array<RealType, 7> magnitudes = {
+      RealType(is_float ? 88 : 709),   RealType(is_float ? 89.5 : 710.6),
+      RealType(is_float ? 100 : 1000), RealType(is_float ? 180 : 1440),
+      RealType(is_float ? 192 : 1450), RealType(is_float ? 200 : 1500),
+      Kokkos::finite_max_v<RealType>};
+  const Kokkos::Array<RealType, 7> angles = {RealType(0),
+                                             RealType(-0.0),
+                                             RealType(0.5),
+                                             RealType(-0.5),
+                                             RealType(0.7853981633974483),
+                                             Kokkos::denorm_min_v<RealType>,
+                                             Kokkos::finite_min_v<RealType>};
+  constexpr int n = 2 * magnitudes.size() * angles.size();
+  Kokkos::View<Kokkos::complex<RealType> **, ExecSpace> results(
+      "TestComplexSinCosLargeArguments", n, 4);
+  Kokkos::parallel_for(
+      Kokkos::RangePolicy<ExecSpace>(0, n), KOKKOS_LAMBDA(int i) {
+        const RealType a = (i % 2 == 0 ? 1 : -1) * magnitudes[i / 14];
+        const RealType b = angles[i / 2 % 7];
+        results(i, 0)    = Kokkos::sin(Kokkos::complex<RealType>(b, a));
+        results(i, 1)    = Kokkos::cos(Kokkos::complex<RealType>(b, a));
+        results(i, 2)    = Kokkos::sinh(Kokkos::complex<RealType>(a, b));
+        results(i, 3)    = Kokkos::cosh(Kokkos::complex<RealType>(a, b));
+      });
+  auto h_results =
+      Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), results);
+  for (int i = 0; i < n; ++i) {
+    const RealType a = (i % 2 == 0 ? 1 : -1) * magnitudes[i / 14];
+    const RealType b = angles[i / 2 % 7];
+    SCOPED_TRACE(::testing::Message()
+                 << "magnitude " << a << ", angle " << b
+                 << ", sizeof(RealType) " << sizeof(RealType));
+    const std::complex<RealType> expected[] = {
+        std::sin(std::complex<RealType>(b, a)),
+        std::cos(std::complex<RealType>(b, a)),
+        std::sinh(std::complex<RealType>(a, b)),
+        std::cosh(std::complex<RealType>(a, b))};
+    for (int j = 0; j < 4; ++j) {
+      for (int k = 0; k < 2; ++k) {
+        SCOPED_TRACE(::testing::Message()
+                     << "function " << j << ", component " << k);
+        const RealType ref = k == 0 ? expected[j].real() : expected[j].imag();
+        const RealType got =
+            k == 0 ? h_results(i, j).real() : h_results(i, j).imag();
+        if (std::isinf(ref)) {
+          EXPECT_EQ(got, ref);
+        } else {
+          EXPECT_TRUE(std::isfinite(got));
+          EXPECT_NEAR(got, ref,
+                      8 * Kokkos::epsilon_v<RealType> * std::abs(ref));
+          if (ref == 0) EXPECT_EQ(std::signbit(got), std::signbit(ref));
+        }
+      }
+    }
+  }
+}
+
+TEST(TEST_CATEGORY, complex_sin_cos_large_arguments) {
+  testComplexSinCosLargeArguments<TEST_EXECSPACE, float>();
+  testComplexSinCosLargeArguments<TEST_EXECSPACE, double>();
+}
+
 TEST(TEST_CATEGORY, complex_io) { testComplexIO(); }
 
 static_assert(std::is_trivially_copyable_v<Kokkos::complex<float>>);
