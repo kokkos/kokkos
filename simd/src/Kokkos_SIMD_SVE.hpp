@@ -1883,7 +1883,8 @@ class basic_simd<std::uint32_t, simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>> {
     return m_value;
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd operator-() const noexcept {
-    return basic_simd(static_cast<implementation_type>(svundef_u32()));
+    return basic_simd(static_cast<implementation_type>(
+        svsub_m(svptrue_b32(), svdup_u32(0), m_value)));
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd operator~() const noexcept {
     return basic_simd(static_cast<implementation_type>(
@@ -2826,7 +2827,8 @@ class basic_simd<std::uint64_t,
     return m_value;
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd operator-() const noexcept {
-    return basic_simd(static_cast<implementation_type>(svundef_u64()));
+    return basic_simd(static_cast<implementation_type>(
+        svsub_m(svptrue_b64(), svdup_u64(0), m_value)));
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd operator~() const noexcept {
     return basic_simd(static_cast<implementation_type>(
