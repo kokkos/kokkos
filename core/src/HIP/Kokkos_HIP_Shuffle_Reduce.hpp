@@ -27,7 +27,7 @@ __device__ inline void hip_intra_warp_shuffle_reduction(
   unsigned int shift = 1;
 
   // Reduce over values from threads with different threadIdx.y
-  constexpr unsigned int warp_size = HIPTraits::WarpSize;
+  const unsigned int warp_size = HIPTraits::WarpSize();
   while (blockDim.x * shift < warp_size) {
     ValueType const tmp = shfl_down(result, blockDim.x * shift, warp_size);
     // Only join if upper thread is active (this allows non power of two for
@@ -46,8 +46,8 @@ template <typename ValueType, typename ReducerType>
 __device__ inline void hip_inter_warp_shuffle_reduction(
     ValueType& value, const ReducerType& reducer,
     const int max_active_thread = blockDim.y) {
-  constexpr unsigned int warp_size = HIPTraits::WarpSize;
-  constexpr int step_width         = 8;
+  const unsigned int warp_size = HIPTraits::WarpSize();
+  constexpr int step_width     = 8;
   // Depending on the ValueType __shared__ memory must be aligned up to 8 byte
   // boundaries. The reason not to use ValueType directly is that for types with
   // constructors it could lead to race conditions.
@@ -98,7 +98,7 @@ __device__ inline bool hip_inter_block_shuffle_reduction(
   // reduction and static shared memory for the inter warp reduction
   hip_intra_block_shuffle_reduction(value, reducer, max_active_thread);
 
-  int const id = threadIdx.y * blockDim.x + threadIdx.x;
+  const unsigned int id = threadIdx.y * blockDim.x + threadIdx.x;
 
   // One thread in the block writes block result to global scratch_memory
   if (id == 0) {
@@ -111,7 +111,7 @@ __device__ inline bool hip_inter_block_shuffle_reduction(
   // block values from global scratch_memory
   bool last_block = false;
   __syncthreads();
-  constexpr int warp_size = HIPTraits::WarpSize;
+  const unsigned int warp_size = static_cast<unsigned>(HIPTraits::WarpSize());
   if (id < warp_size) {
     HIP::size_type count;
 
@@ -129,10 +129,10 @@ __device__ inline bool hip_inter_block_shuffle_reduction(
       pointer_type const global = m_scratch_space;
 
       // Reduce all global values with splitting work over threads in one warp
-      const int step_size = blockDim.x * blockDim.y < warp_size
-                                ? blockDim.x * blockDim.y
-                                : warp_size;
-      for (int i = id; i < static_cast<int>(gridDim.x); i += step_size) {
+      const unsigned int step_size = (blockDim.x * blockDim.y) < warp_size
+                                         ? (blockDim.x * blockDim.y)
+                                         : warp_size;
+      for (unsigned int i = id; i < gridDim.x; i += step_size) {
         value_type tmp = global[i];
         reducer.join(&value, &tmp);
       }

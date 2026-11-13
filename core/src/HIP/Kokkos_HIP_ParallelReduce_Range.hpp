@@ -37,7 +37,7 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
   using size_type      = Kokkos::HIP::size_type;
   using index_type     = typename Policy::index_type;
   // Conditionally set word_size_type to uint16_t or uint8_t if value_type is
-  // smaller than 32 bits (width of Kokkos::HIP::size_type)
+  // smaller than 32 bits (width of Kokkos::HIP::size_type).
   // word_size_type is used to determine the word count, shared memory buffer
   // size, and global memory buffer size before the scan is performed.
   // Within the scan, the word count is recomputed based on word_size_type
@@ -139,7 +139,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
         reducer.final(reinterpret_cast<value_type*>(shared));
       }
 
-      if (::Kokkos::Impl::HIPTraits::WarpSize < word_count.value) {
+      if (static_cast<unsigned>(::Kokkos::Impl::HIPTraits::WarpSize()) <
+          word_count.value) {
         __syncthreads();
       }
 
@@ -225,12 +226,12 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
                                  !m_result_ptr_host_accessible ||
                                  !std::is_same<ReducerType, InvalidType>::value;
     if ((nwork > 0) || need_device_set) {
-      const int block_size = local_block_size(m_functor_reducer.get_functor());
+      int block_size = local_block_size(m_functor_reducer.get_functor());
       if (block_size == 0) {
         const unsigned int shared_memory_required =
             hip_single_inter_block_reduce_scan_shmem<false, WorkTag,
                                                      value_type>(
-                m_functor_reducer.get_functor(), HIPTraits::WarpSize);
+                m_functor_reducer.get_functor(), HIPTraits::WarpSize());
         const unsigned int shared_memory_available =
             m_policy.space()
                 .impl_internal_space_instance()
@@ -242,6 +243,9 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
                         " bytes of shared memory per block but only " +
                         std::to_string(shared_memory_available) +
                         " bytes per block are available."));
+      }
+      if constexpr (std::is_integral_v<value_type> && sizeof(value_type) == 1) {
+        block_size = 1;
       }
 
       // REQUIRED ( 1 , N , 1 )

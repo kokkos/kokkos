@@ -18,6 +18,7 @@
 #include <hip/hip_runtime_api.h>
 
 #include <iostream>
+#include <sstream>
 
 namespace {
 
@@ -49,44 +50,43 @@ void HIP::impl_initialize(InitializationSettings const& settings) {
   // will always contain the gfx flag.
 #ifdef KOKKOS_ARCH_AMD_GPU
   if (Kokkos::show_warnings()) {
-    if (std::string_view arch_name =
-            Impl::HIPInternal::m_deviceProp.gcnArchName;
-        arch_name.find(KOKKOS_ARCH_AMD_GPU) != 0) {
-      std::cerr
-          << "Kokkos::HIP::initialize WARNING: running kernels compiled for "
-          << KOKKOS_ARCH_AMD_GPU << " on " << arch_name << " device.\n";
+    std::string const enabled_arches = KOKKOS_ARCH_AMD_GPU;
+    // GCNSPIRV is intentionally architecture-agnostic at runtime.
+    if (enabled_arches != "amdgcnspirv") {
+      bool found_matching_arch = false;
+      std::stringstream enabled_arch_stream(enabled_arches);
+      std::string enabled_arch;
+      std::string_view const arch_name =
+          Impl::HIPInternal::m_deviceProp.gcnArchName;
+      while (std::getline(enabled_arch_stream, enabled_arch, ',')) {
+        if (!enabled_arch.empty() && arch_name.starts_with(enabled_arch)) {
+          found_matching_arch = true;
+          break;
+        }
+      }
+      if (!found_matching_arch) {
+        std::cerr
+            << "Kokkos::HIP::initialize WARNING: running kernels compiled for "
+            << KOKKOS_ARCH_AMD_GPU << " on " << arch_name << " device.\n";
+      }
     }
   }
 #endif
 
-  // Print a warning if the user did not select the right GFX942 architecture
-#ifdef KOKKOS_ARCH_AMD_GFX942
-  if ((Kokkos::show_warnings()) &&
-      (Impl::HIPInternal::m_deviceProp.integrated == 1)) {
-    std::cerr << "Kokkos::HIP::initialize WARNING: running kernels for MI300X "
-                 "(discrete GPU) on a MI300A (APU).\n";
-  }
-#endif
-#ifdef KOKKOS_ARCH_AMD_GFX942_APU
-  if (!Kokkos::Impl::xnack_environment_enabled()) {
+  if (Kokkos::show_warnings() &&
+      (Impl::HIPInternal::m_deviceProp.integrated == 1) &&
+      !Kokkos::Impl::xnack_environment_enabled()) {
     std::cerr << R"warning(
 Kokkos::HIP::initialize WARNING: Could not determine that xnack is enabled.
-                                 Kokkos requires xnack to be enabled for
-                                 ARCH_AMD_GFX942_APU (MI300A) to access host
-                                 allocations from the device. Set HSA_XNACK=1
-                                 in your environment. For further information
-                                 on HMM support call `Kokkos::print_configuration`,
-                                 or run with KOKKOS_PRINT_CONFIGURATION=1 in your
+                                 Integrated AMD GPUs may require HSA_XNACK=1
+                                 to access host allocations from the device.
+                                 Set HSA_XNACK=1 in your environment. For
+                                 further information on HMM support call
+                                 `Kokkos::print_configuration`, or run with
+                                 KOKKOS_PRINT_CONFIGURATION=1 in your
                                  environment.
 )warning";
   }
-
-  if ((Kokkos::show_warnings()) &&
-      (Impl::HIPInternal::m_deviceProp.integrated == 0)) {
-    std::cerr << "Kokkos::HIP::initialize WARNING: running kernels for MI300A "
-                 "(APU) on a MI300X (discrete GPU).\n";
-  }
-#endif
 
   // theoretically on GFX 9XX GPUs, we can get 40 WF's / CU, but only can
   // sustain 32 see
@@ -94,9 +94,9 @@ Kokkos::HIP::initialize WARNING: Could not determine that xnack is enabled.
   const int maxWavesPerCU =
       Impl::HIPInternal::m_deviceProp.major <= 9 ? 32 : 64;
   Impl::HIPInternal::m_maxThreadsPerSM =
-      maxWavesPerCU * Impl::HIPTraits::WarpSize;
+      maxWavesPerCU * Impl::HIPTraits::WarpSize();
 
-  // Init the array for used for arbitrarily sized atomics
+  // Init the arrays used for arbitrarily sized atomics
   desul::Impl::init_lock_arrays();  // FIXME
 
   // Create the default instance.
