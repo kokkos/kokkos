@@ -56,6 +56,58 @@ KOKKOS_INLINE_FUNCTION void sum_views(const Handle& handle, const X& x,
       });
 }
 
+//----------------------------------------------------------------------------
+// scan_views: parallel_scan(RangePolicy(handle, ...), ..., result)
+//----------------------------------------------------------------------------
+
+template <class Handle, class X>
+  requires(X::rank == 2)
+KOKKOS_INLINE_FUNCTION void scan_views(const Handle& handle, const X& x,
+                                       float& result) {
+  Kokkos::parallel_scan(
+      Kokkos::RangePolicy(handle, 0, x.extent_int(0)),
+      KOKKOS_LAMBDA(const int i, float& update, const bool /*final*/) {
+        for (int j = 0; j < x.extent_int(1); ++j) {
+          update += x(i, j);
+        }
+      },
+      result);
+}
+
+template <class Handle, class X>
+  requires(X::rank == 3)
+KOKKOS_INLINE_FUNCTION void scan_views(const Handle& handle, const X& x,
+                                       float& result) {
+  Kokkos::parallel_scan(
+      Kokkos::RangePolicy(handle, 0, x.extent_int(0)),
+      KOKKOS_LAMBDA(const int i, float& update, const bool /*final*/) {
+        for (int j = 0; j < x.extent_int(1); ++j) {
+          for (int k = 0; k < x.extent_int(2); ++k) {
+            update += x(i, j, k);
+          }
+        }
+      },
+      result);
+}
+
+template <class Handle, class X>
+  requires(X::rank == 4)
+KOKKOS_INLINE_FUNCTION void scan_views(const Handle& handle, const X& x,
+                                       float& result) {
+  Kokkos::parallel_scan(
+      Kokkos::RangePolicy(handle, 0, x.extent_int(0)),
+      KOKKOS_LAMBDA(const int i, float& update, const bool /*final*/) {
+        for (int j = 0; j < x.extent_int(1); ++j) {
+          for (int k = 0; k < x.extent_int(2); ++k) {
+            for (int l = 0; l < x.extent_int(3); ++l) {
+              update += x(i, j, k, l);
+            }
+          }
+        }
+      },
+      result);
+}
+
 template <class ExecSpace>
 void verify(const float_tensor4_t<ExecSpace>& M, const float expected,
             const char* label) {
@@ -205,6 +257,105 @@ struct CheckRangePolicyWithConstructedThreadHandleInSingle {
         M, 5.f, "check_range_policy_with_constructed_thread_handle_in_single");
   }
 };
+
+//----------------------------------------------------------------------------
+// parallel_scan / scan_views nesting
+//----------------------------------------------------------------------------
+
+template <class ExecSpace>
+struct CheckScanViewsWithExecSpace {
+  void operator()() const {
+    float_tensor4_t<ExecSpace> M("M");
+    Kokkos::deep_copy(M, 1.f);
+
+    float result = 0.f;
+    scan_views(ExecSpace{}, M, result);
+
+    const float expected = static_cast<float>(
+        M.extent_int(0) * M.extent_int(1) * M.extent_int(2) * M.extent_int(3));
+    ASSERT_FLOAT_EQ(result, expected);
+  }
+};
+
+// FIXME_OPENACC: TeamThreadRange / ThreadVectorRange parallel_scan are not
+// implemented (team_scan aborts).
+#if !defined(KOKKOS_ENABLE_OPENACC)
+template <class ExecSpace>
+struct CheckScanViewsWithThreadHandle {
+  void operator()() const {
+    float_tensor4_t<ExecSpace> M("M");
+    Kokkos::deep_copy(M, 1.f);
+
+    using team_t          = team_member_t<ExecSpace>;
+    using thread_handle   = typename team_t::thread_handle;
+    const int num_leagues = M.extent_int(0);
+    const int num_threads = M.extent_int(1);
+    const float expected =
+        static_cast<float>(M.extent_int(2) * M.extent_int(3));
+
+    float result = 0.f;
+    Kokkos::parallel_reduce(
+        "check_scan_views_with_thread_handle",
+        Kokkos::TeamPolicy<ExecSpace>(num_leagues, Kokkos::AUTO()),
+        KOKKOS_LAMBDA(const team_t& team, float& update) {
+          auto M_sub = Kokkos::subview(M, team.league_rank(), Kokkos::ALL(),
+                                       Kokkos::ALL(), Kokkos::ALL());
+          // TeamThreadRange parallel_scan nests
+          // scan_views(th, ...) -> RangePolicy(ThreadHandle) scan.
+          float team_total = 0.f;
+          Kokkos::parallel_scan(
+              Kokkos::TeamThreadRange(team, num_threads),
+              [&](const thread_handle& th, int i, float& team_update,
+                  bool /*final*/) {
+                auto M_sub_sub =
+                    Kokkos::subview(M_sub, i, Kokkos::ALL(), Kokkos::ALL());
+                float local = 0.f;
+                scan_views(th, M_sub_sub, local);
+                team_update += local;
+              },
+              team_total);
+          Kokkos::single(Kokkos::PerTeam(team),
+                         [&]() { update += team_total; });
+        },
+        result);
+
+    ASSERT_FLOAT_EQ(result,
+                    static_cast<float>(num_leagues * num_threads) * expected);
+  }
+};
+
+template <class ExecSpace>
+struct CheckScanViewsWithConstructedThreadHandle {
+  void operator()() const {
+    float_tensor4_t<ExecSpace> M("M");
+    Kokkos::deep_copy(M, 1.f);
+
+    using team_t          = team_member_t<ExecSpace>;
+    using thread_handle   = typename team_t::thread_handle;
+    const int num_leagues = M.extent_int(0);
+    const float expected =
+        static_cast<float>(M.extent_int(1) * M.extent_int(2) * M.extent_int(3));
+
+    float result = 0.f;
+    Kokkos::parallel_reduce(
+        "check_scan_views_with_constructed_thread_handle",
+        Kokkos::TeamPolicy<ExecSpace>(num_leagues, Kokkos::AUTO()),
+        KOKKOS_LAMBDA(const team_t& team, float& update) {
+          auto M_sub = Kokkos::subview(M, team.league_rank(), Kokkos::ALL(),
+                                       Kokkos::ALL(), Kokkos::ALL());
+          Kokkos::single(Kokkos::PerTeam(team), [&]() {
+            float local = 0.f;
+            scan_views(thread_handle(team), M_sub, local);
+            update += local;
+          });
+        },
+        result);
+
+    ASSERT_FLOAT_EQ(result, static_cast<float>(num_leagues) * expected);
+  }
+};
+#endif  // !defined(KOKKOS_ENABLE_OPENACC)
+
 }  // namespace
 
 TEST(TEST_CATEGORY, self_similar_range_policy_with_execution_space) {
@@ -227,3 +378,17 @@ TEST(TEST_CATEGORY,
      self_similar_range_policy_with_constructed_thread_handle_in_single) {
   CheckRangePolicyWithConstructedThreadHandleInSingle<TEST_EXECSPACE>{}();
 }
+
+TEST(TEST_CATEGORY, self_similar_scan_views_with_execution_space) {
+  CheckScanViewsWithExecSpace<TEST_EXECSPACE>{}();
+}
+
+#if !defined(KOKKOS_ENABLE_OPENACC)
+TEST(TEST_CATEGORY, self_similar_scan_views_with_thread_handle) {
+  CheckScanViewsWithThreadHandle<TEST_EXECSPACE>{}();
+}
+
+TEST(TEST_CATEGORY, self_similar_scan_views_with_constructed_thread_handle) {
+  CheckScanViewsWithConstructedThreadHandle<TEST_EXECSPACE>{}();
+}
+#endif  // !defined(KOKKOS_ENABLE_OPENACC)

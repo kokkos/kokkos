@@ -56,6 +56,8 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
 
 /** \brief  Inter-thread parallel exclusive prefix sum. Executes
  * lambda(iType i, ValueType & val, bool final) for each i=0..N-1.
+ * If the closure accepts (thread_handle, iType, ValueType&, bool), the thread
+ * handle is passed so the body can use the vector lanes.
  * FIXME_NEXTSILICON: Implement multiple threads.
  */
 template <typename iType, class FunctorType, typename ValueType>
@@ -70,11 +72,28 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
   static_assert(std::is_same_v<closure_value_type, ValueType>,
                 "Non-matching value types of closure and return type");
 
+  using thread_handle_t = Impl::ThreadHandleType<Impl::NextSiliconTeamMember>;
+
+  auto const invoke = [&](iType i, ValueType& val, bool final_pass) {
+    if constexpr (std::is_invocable_v<FunctorType, iType, ValueType&, bool>) {
+      lambda(i, val, final_pass);
+    } else if constexpr (std::is_invocable_v<FunctorType,
+                                             thread_handle_t const&, iType,
+                                             ValueType&, bool>) {
+      lambda(thread_handle_t(loop_bounds.team), i, val, final_pass);
+    } else {
+      static_assert(Kokkos::Impl::always_false<FunctorType>::value,
+                    "Kokkos::parallel_scan(TeamThreadRange) closure must be "
+                    "invocable with (iType, ValueType&, bool) or "
+                    "(ThreadHandleType, iType, ValueType&, bool)");
+    }
+  };
+
   // FIXME_NEXTSILICON: team size always 1
   auto scan_val = ValueType{};
 
   for (iType i = loop_bounds.start; i < loop_bounds.end; i++)
-    lambda(i, scan_val, true);
+    invoke(i, scan_val, true);
 
   loop_bounds.team.team_broadcast(scan_val, loop_bounds.team.team_size() - 1);
   return_val = scan_val;

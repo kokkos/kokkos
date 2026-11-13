@@ -570,6 +570,8 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
   static_assert(std::is_same_v<functor_value_type, ValueType>,
                 "Non-matching value types of functor and return type");
 
+  using thread_handle_t = Impl::ThreadHandleType<Impl::HIPTeamMember>;
+
   const auto start     = loop_bounds.start;
   const auto end       = loop_bounds.end;
   auto& member         = loop_bounds.member;
@@ -577,19 +579,35 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
   const auto team_rank = member.team_rank();
   const auto nchunk    = (end - start + team_size - 1) / team_size;
   ValueType accum      = {};
+
+  auto const invoke = [&](iType i, ValueType& val, bool final_pass) {
+    if constexpr (std::is_invocable_v<FunctorType, iType, ValueType&, bool>) {
+      lambda(i, val, final_pass);
+    } else if constexpr (std::is_invocable_v<FunctorType,
+                                             thread_handle_t const&, iType,
+                                             ValueType&, bool>) {
+      lambda(thread_handle_t(member), i, val, final_pass);
+    } else {
+      static_assert(Kokkos::Impl::always_false<FunctorType>::value,
+                    "Kokkos::parallel_scan(TeamThreadRange) closure must be "
+                    "invocable with (iType, ValueType&, bool) or "
+                    "(ThreadHandleType, iType, ValueType&, bool)");
+    }
+  };
+
   // each team has to process one or more chunks of the prefix scan
   for (iType i = 0; i < nchunk; ++i) {
     auto ii = start + i * team_size + team_rank;
     // local accumulation for this chunk
     ValueType local_accum = 0;
     // user updates value with prefix value
-    if (ii < loop_bounds.end) lambda(ii, local_accum, false);
+    if (ii < loop_bounds.end) invoke(ii, local_accum, false);
     // perform team scan
     local_accum = member.team_scan(local_accum);
     // add this blocks accum to total accumulation
     ValueType val = accum + local_accum;
     // user updates their data with total accumulation
-    if (ii < loop_bounds.end) lambda(ii, val, true);
+    if (ii < loop_bounds.end) invoke(ii, val, true);
     // the last value needs to be propogated to next chunk
     if (team_rank == team_size - 1) accum = val;
     // broadcast last value to rest of the team
@@ -928,10 +946,15 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
   static_assert(std::is_same_v<closure_value_type, ValueType>,
                 "Non-matching value types of closure and return type");
 
-  ValueType accum;
-  parallel_scan(loop_boundaries, closure, Kokkos::Sum<ValueType>(accum));
-
-  return_val = accum;
+  // Device assigns accum through the reducer but host does not so
+  // value-initialize only the host result.
+  (void)loop_boundaries;
+  (void)closure;
+  KOKKOS_IF_ON_DEVICE(
+      (ValueType accum;
+       parallel_scan(loop_boundaries, closure, Kokkos::Sum<ValueType>(accum));
+       return_val = accum;))
+  KOKKOS_IF_ON_HOST((return_val = ValueType{};))
 }
 
 }  // namespace Kokkos
