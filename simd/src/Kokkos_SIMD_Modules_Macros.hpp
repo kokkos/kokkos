@@ -124,7 +124,7 @@
 #define KOKKOS_SIMD_MODULES_SYMBOLS KOKKOS_SIMD_MODULES_SYMBOLS_COMMON
 #endif
 
-#define KOKKOS_SIMD_MODULES_IMPL_SYMBOLS                           \
+#define KOKKOS_SIMD_MODULES_IMPL_COMMON_SYMBOLS                    \
   namespace Kokkos::Experimental {                                 \
   namespace simd_abi::Impl {                                       \
   using ::Kokkos::Experimental::simd_abi::Impl::host_fixed_native; \
@@ -141,5 +141,16 @@
   using ::Kokkos::Experimental::Impl::simd_size_t;                 \
   }                                                                \
   }
+
+#if defined(KOKKOS_ARCH_AVX2)
+#define KOKKOS_SIMD_MODULES_IMPL_SYMBOLS             \
+  KOKKOS_SIMD_MODULES_IMPL_COMMON_SYMBOLS            \
+  namespace Kokkos::Experimental::Impl {             \
+  using ::Kokkos::Experimental::Impl::simd_host_tag; \
+  using ::Kokkos::Experimental::Impl::simd_vector_t; \
+  }
+#else
+#define KOKKOS_SIMD_MODULES_IMPL_SYMBOLS KOKKOS_SIMD_MODULES_IMPL_COMMON_SYMBOLS
+#endif
 
 #endif

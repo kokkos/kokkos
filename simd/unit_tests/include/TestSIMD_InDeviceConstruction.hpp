@@ -157,6 +157,42 @@ TEST(KOKKOS_SIMD_TEST_SUITE, host_simd_construction_in_device) {
 #endif
 }
 
+#if !defined(KOKKOS_SIMD_TEST_SCALAR) && \
+    !defined(KOKKOS_IMPL_SIMD_DEVICE_COMPAT_TRANSITION)
+template <typename Abi, typename DataType>
+void test_host_native_conversion() {
+  using simd_type = Kokkos::Experimental::basic_simd<DataType, Abi>;
+  using mask_type = Kokkos::Experimental::basic_simd_mask<DataType, Abi>;
+
+  if constexpr (is_simd_avail_v<DataType, Abi>) {
+    using native_type = Kokkos::Experimental::Impl::simd_vector_t<
+        DataType, Abi, Kokkos::Experimental::Impl::simd_host_tag>;
+    native_type native_vec  = static_cast<native_type>(simd_type{});
+    native_type native_mask = static_cast<native_type>(mask_type{});
+
+    [[maybe_unused]] simd_type vec(native_vec);
+    [[maybe_unused]] mask_type mask(native_mask);
+  }
+}
+
+template <typename Abi, typename... DataTypes>
+void check_host_native_conversion_all_types(
+    Kokkos::Experimental::Impl::data_types<DataTypes...>) {
+  (test_host_native_conversion<Abi, DataTypes>(), ...);
+}
+
+template <typename... Abis>
+void check_host_native_conversion_all_abis(
+    Kokkos::Experimental::Impl::abi_set<Abis...>) {
+  using DataTypes = Kokkos::Experimental::Impl::data_type_set;
+  (check_host_native_conversion_all_types<Abis>(DataTypes()), ...);
+}
+
+TEST(KOKKOS_SIMD_TEST_SUITE, host_native_conversion) {
+  check_host_native_conversion_all_abis(test_host_abi_set());
+}
+#endif
+
 }  // namespace
 
 #endif
