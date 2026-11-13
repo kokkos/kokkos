@@ -3994,7 +3994,7 @@ KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
     double, simd_abi::avx512_fixed_size<8>, {
       __m256i idx = static_cast<__m256i>(
           basic_simd<std::int32_t, simd_abi::avx512_fixed_size<8>>{indices});
-      return V(_mm512_mask_i32gather_pd(_mm512_set1_pd({}),
+      return V(_mm512_mask_i32gather_pd(_mm512_setzero_pd(),
                                         static_cast<__mmask8>(mask), idx,
                                         Impl::Ranges::data(in), 8));
     })
@@ -4045,7 +4045,7 @@ KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
           basic_simd<std::int32_t, simd_abi::avx512_fixed_size<8>>{indices});
       __m256 on = _mm256_castsi256_ps(_mm256_set1_epi32(-1));
       __m256 m  = _mm256_maskz_mov_ps(static_cast<__mmask8>(mask), on);
-      return V(_mm256_mask_i32gather_ps(_mm256_set1_ps({}),
+      return V(_mm256_mask_i32gather_ps(_mm256_setzero_ps(),
                                         Impl::Ranges::data(in), idx, m, 4));
     })
 
@@ -4093,7 +4093,7 @@ KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
     float, simd_abi::avx512_fixed_size<16>, {
       __m512i idx = static_cast<__m512i>(
           basic_simd<std::int32_t, simd_abi::avx512_fixed_size<16>>{indices});
-      return V(_mm512_mask_i32gather_ps(_mm512_set1_ps({}),
+      return V(_mm512_mask_i32gather_ps(_mm512_setzero_ps(),
                                         static_cast<__mmask16>(mask), idx,
                                         Impl::Ranges::data(in), 4));
     })
@@ -4142,7 +4142,7 @@ KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
     std::int32_t, simd_abi::avx512_fixed_size<8>, {
       __m256i idx = static_cast<__m256i>(
           basic_simd<std::int32_t, simd_abi::avx512_fixed_size<8>>{indices});
-      return V(_mm256_mmask_i32gather_epi32(_mm256_set1_epi32({}),
+      return V(_mm256_mmask_i32gather_epi32(_mm256_setzero_si256(),
                                             static_cast<__mmask8>(mask), idx,
                                             Impl::Ranges::data(in), 4));
     })
@@ -4191,7 +4191,7 @@ KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
     std::int32_t, simd_abi::avx512_fixed_size<16>, {
       __m512i idx = static_cast<__m512i>(
           basic_simd<std::int32_t, simd_abi::avx512_fixed_size<16>>{indices});
-      return V(_mm512_mask_i32gather_epi32(_mm512_set1_epi32({}),
+      return V(_mm512_mask_i32gather_epi32(_mm512_setzero_si512(),
                                            static_cast<__mmask16>(mask), idx,
                                            Impl::Ranges::data(in), 4));
     })
@@ -4241,7 +4241,7 @@ KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
     std::uint32_t, simd_abi::avx512_fixed_size<8>, {
       __m256i idx = static_cast<__m256i>(
           basic_simd<std::int32_t, simd_abi::avx512_fixed_size<8>>{indices});
-      return V(_mm256_mmask_i32gather_epi32(_mm256_set1_epi32({}),
+      return V(_mm256_mmask_i32gather_epi32(_mm256_setzero_si256(),
                                             static_cast<__mmask8>(mask), idx,
                                             Impl::Ranges::data(in), 4));
     })
@@ -4290,7 +4290,7 @@ KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
     std::uint32_t, simd_abi::avx512_fixed_size<16>, {
       __m512i idx = static_cast<__m512i>(
           basic_simd<std::int32_t, simd_abi::avx512_fixed_size<16>>{indices});
-      return V(_mm512_mask_i32gather_epi32(_mm512_set1_epi32({}),
+      return V(_mm512_mask_i32gather_epi32(_mm512_setzero_si512(),
                                            static_cast<__mmask16>(mask), idx,
                                            Impl::Ranges::data(in), 4));
     })
@@ -4339,7 +4339,7 @@ KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
     std::int64_t, simd_abi::avx512_fixed_size<8>, {
       __m256i idx = static_cast<__m256i>(
           basic_simd<std::int32_t, simd_abi::avx512_fixed_size<8>>{indices});
-      return V(_mm512_mask_i32gather_epi64(_mm512_set1_epi64({}),
+      return V(_mm512_mask_i32gather_epi64(_mm512_setzero_si512(),
                                            static_cast<__mmask8>(mask), idx,
                                            Impl::Ranges::data(in), 8));
     })
@@ -4388,7 +4388,7 @@ KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
     std::uint64_t, simd_abi::avx512_fixed_size<8>, {
       __m256i idx = static_cast<__m256i>(
           basic_simd<std::int32_t, simd_abi::avx512_fixed_size<8>>{indices});
-      return V(_mm512_mask_i32gather_epi64(_mm512_set1_epi64({}),
+      return V(_mm512_mask_i32gather_epi64(_mm512_setzero_si512(),
                                            static_cast<__mmask8>(mask), idx,
                                            Impl::Ranges::data(in), 8));
     })
