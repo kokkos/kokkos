@@ -21,19 +21,13 @@ namespace Impl {
   template <class T>                                                                                 \
   std::enable_if_t<CONSTRAINT<T>::value && host_atomic_always_lock_free<T>, T>                       \
   host_atomic_fetch##_OP  (T* const dest, T value, MEMORY_ORDER, MEMORY_SCOPE) {                     \
-    T result{};                                                                                      \
-    DESUL_IMPL_IF_HOST_BUILTIN                                                                       \
-    result = __atomic_fetch##_OP  (dest, value, GCCMemoryOrder<MEMORY_ORDER>::value);                \
-    return result;                                                                                   \
+    return __atomic_fetch##_OP  (dest, value, GCCMemoryOrder<MEMORY_ORDER>::value);                  \
   }                                                                                                  \
   DESUL_IMPL_ACC_ROUTINE_DIRECTIVE                                                                   \
   template <class T>                                                                                 \
   std::enable_if_t<CONSTRAINT<T>::value && host_atomic_always_lock_free<T>, T>                       \
   host_atomic##_OP##_fetch(T* const dest, T value, MEMORY_ORDER, MEMORY_SCOPE) {                     \
-    T result{};                                                                                      \
-    DESUL_IMPL_IF_HOST_BUILTIN                                                                       \
-    result = __atomic##_OP##_fetch(dest, value, GCCMemoryOrder<MEMORY_ORDER>::value);                \
-    return result;                                                                                   \
+    return __atomic##_OP##_fetch(dest, value, GCCMemoryOrder<MEMORY_ORDER>::value);                  \
   }
 
 #define DESUL_IMPL_GCC_HOST_ATOMIC_FETCH_OP(_OP, CONSTRAINT)                                               \
