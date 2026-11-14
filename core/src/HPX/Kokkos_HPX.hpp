@@ -29,7 +29,6 @@ static_assert(false,
 
 #include <KokkosExp_MDRangePolicy.hpp>
 
-#include <hpx/barrier.hpp>
 #include <hpx/condition_variable.hpp>
 #include <hpx/execution.hpp>
 #include <hpx/future.hpp>
@@ -303,9 +302,14 @@ class HPX {
               ex::ensure_started();
       } else {
         sen = std::move(sen) |
+#if HPX_VERSION_MAJOR >= 2
+              ex::continues_on(
+                  ex::with_stacksize(ex::thread_pool_scheduler{}, stacksize))
+#else
               ex::transfer(
-                  ex::with_stacksize(ex::thread_pool_scheduler{}, stacksize)) |
-              ex::bulk(n, std::move(f)) |
+                  ex::with_stacksize(ex::thread_pool_scheduler{}, stacksize))
+#endif
+              | ex::bulk(n, std::move(f)) |
               ex::then(Kokkos::Experimental::HPX::
                            impl_decrement_active_parallel_region_count) |
               ex::ensure_started();
@@ -358,9 +362,14 @@ class HPX {
               ex::ensure_started();
       } else {
         sen = std::move(sen) |
+#if HPX_VERSION_MAJOR >= 2
+              ex::continues_on(
+                  ex::with_stacksize(ex::thread_pool_scheduler{}, stacksize))
+#else
               ex::transfer(
-                  ex::with_stacksize(ex::thread_pool_scheduler{}, stacksize)) |
-              ex::then(std::move(f_setup)) | ex::bulk(n, std::move(f)) |
+                  ex::with_stacksize(ex::thread_pool_scheduler{}, stacksize))
+#endif
+              | ex::then(std::move(f_setup)) | ex::bulk(n, std::move(f)) |
               ex::then(std::move(f_finalize)) |
               ex::then(Kokkos::Experimental::HPX::
                            impl_decrement_active_parallel_region_count) |
@@ -384,6 +393,50 @@ class HPX {
         {[functor](Index i) { functor.execute_range(i); }},
         {[functor]() { functor.setup(); }},
         {[functor]() { functor.finalize(); }}, n, stacksize);
+  }
+
+  // Scans need all partial results before the final pass. Bulk operations do
+  // not guarantee that their indices run concurrently (HPX >= 2 lets a single
+  // worker process several of them), so synchronize by chaining two bulk
+  // operations instead of blocking on a barrier inside one.
+  template <typename Functor>
+  void impl_bulk_scan(Functor const &functor, int const n,
+                      hpx::threads::thread_stacksize stacksize =
+                          hpx::threads::thread_stacksize::default_) const {
+    Kokkos::Experimental::HPX::impl_increment_active_parallel_region_count();
+
+    namespace ex = hpx::execution::experimental;
+
+    auto &sen = impl_get_sender();
+    auto &mut = impl_get_sender_mutex();
+
+    std::lock_guard<hpx::spinlock> l(mut);
+    hpx::util::ignore_lock(&mut);
+
+    auto const scheduler =
+        ex::with_stacksize(ex::thread_pool_scheduler{}, stacksize);
+    auto const hop = [&scheduler](auto &&s) {
+#if HPX_VERSION_MAJOR >= 2
+      return ex::continues_on(std::forward<decltype(s)>(s), scheduler);
+#else
+      return ex::transfer(std::forward<decltype(s)>(s), scheduler);
+#endif
+    };
+
+    auto setup_s =
+        hop(std::move(sen)) | ex::then([functor]() { functor.setup(); });
+    auto partial_s = hop(std::move(setup_s)) |
+                     ex::bulk(n, std::function<void(int)>([functor](int i) {
+                                functor.execute_range_partial(i);
+                              })) |
+                     ex::then([functor]() { functor.join_partial_results(); });
+    sen = hop(std::move(partial_s)) |
+          ex::bulk(n, std::function<void(int)>([functor](int i) {
+                     functor.execute_range_final(i);
+                   })) |
+          ex::then(Kokkos::Experimental::HPX::
+                       impl_decrement_active_parallel_region_count) |
+          ex::ensure_started();
   }
 
   static constexpr const char *name() noexcept { return "HPX"; }
@@ -1249,7 +1302,6 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
   using pointer_type   = typename Analysis::pointer_type;
   using reference_type = typename Analysis::reference_type;
   using value_type     = typename Analysis::value_type;
-  using barrier_type   = hpx::barrier<>;
 
   const FunctorType m_functor;
   const Policy m_policy;
@@ -1260,9 +1312,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
     const std::size_t value_size = Analysis::value_size(m_functor);
 
     hpx_thread_buffer &buffer = m_policy.space().impl_get_buffer();
-    buffer.resize(num_worker_threads, 2 * value_size, sizeof(barrier_type));
-
-    new (buffer.get_extra_space()) barrier_type(num_worker_threads);
+    buffer.resize(num_worker_threads, 2 * value_size);
   }
 
   void execute_chunk(const Member i_begin, const Member i_end,
@@ -1276,44 +1326,51 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
     }
   }
 
-  void execute_range(int t) const {
+  void execute_range_partial(int t) const {
+    const int num_worker_threads = m_policy.space().concurrency();
+
+    hpx_thread_buffer &buffer = m_policy.space().impl_get_buffer();
+    typename Analysis::Reducer final_reducer(m_functor);
+    reference_type update_sum =
+        final_reducer.init(reinterpret_cast<pointer_type>(buffer.get(t)));
+
+    const WorkRange range(m_policy, t, num_worker_threads);
+    execute_chunk(range.begin(), range.end(), update_sum, false);
+  }
+
+  void join_partial_results() const {
     const int num_worker_threads = m_policy.space().concurrency();
     const int value_count        = Analysis::value_count(m_functor);
     const std::size_t value_size = Analysis::value_size(m_functor);
 
     hpx_thread_buffer &buffer = m_policy.space().impl_get_buffer();
     typename Analysis::Reducer final_reducer(m_functor);
-    barrier_type &barrier =
-        *static_cast<barrier_type *>(buffer.get_extra_space());
-    reference_type update_sum =
-        final_reducer.init(reinterpret_cast<pointer_type>(buffer.get(t)));
 
-    const WorkRange range(m_policy, t, num_worker_threads);
-    execute_chunk(range.begin(), range.end(), update_sum, false);
+    final_reducer.init(reinterpret_cast<pointer_type>(
+        static_cast<char *>(buffer.get(0)) + value_size));
 
-    barrier.arrive_and_wait();
+    for (int i = 1; i < num_worker_threads; ++i) {
+      pointer_type ptr_1_prev =
+          reinterpret_cast<pointer_type>(buffer.get(i - 1));
+      pointer_type ptr_2_prev = reinterpret_cast<pointer_type>(
+          static_cast<char *>(buffer.get(i - 1)) + value_size);
+      pointer_type ptr_2 = reinterpret_cast<pointer_type>(
+          static_cast<char *>(buffer.get(i)) + value_size);
 
-    if (t == 0) {
-      final_reducer.init(reinterpret_cast<pointer_type>(
-          static_cast<char *>(buffer.get(0)) + value_size));
-
-      for (int i = 1; i < num_worker_threads; ++i) {
-        pointer_type ptr_1_prev =
-            reinterpret_cast<pointer_type>(buffer.get(i - 1));
-        pointer_type ptr_2_prev = reinterpret_cast<pointer_type>(
-            static_cast<char *>(buffer.get(i - 1)) + value_size);
-        pointer_type ptr_2 = reinterpret_cast<pointer_type>(
-            static_cast<char *>(buffer.get(i)) + value_size);
-
-        for (int j = 0; j < value_count; ++j) {
-          ptr_2[j] = ptr_2_prev[j];
-        }
-
-        final_reducer.join(ptr_2, ptr_1_prev);
+      for (int j = 0; j < value_count; ++j) {
+        ptr_2[j] = ptr_2_prev[j];
       }
-    }
 
-    barrier.arrive_and_wait();
+      final_reducer.join(ptr_2, ptr_1_prev);
+    }
+  }
+
+  void execute_range_final(int t) const {
+    const int num_worker_threads = m_policy.space().concurrency();
+    const std::size_t value_size = Analysis::value_size(m_functor);
+
+    hpx_thread_buffer &buffer = m_policy.space().impl_get_buffer();
+    const WorkRange range(m_policy, t, num_worker_threads);
 
     reference_type update_base =
         Analysis::Reducer::reference(reinterpret_cast<pointer_type>(
@@ -1322,16 +1379,10 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
     execute_chunk(range.begin(), range.end(), update_base, true);
   }
 
-  void finalize() const {
-    hpx_thread_buffer &buffer = m_policy.space().impl_get_buffer();
-    static_cast<barrier_type *>(buffer.get_extra_space())->~barrier_type();
-  }
-
   void execute() const {
     const int num_worker_threads = m_policy.space().concurrency();
-    m_policy.space().impl_bulk_setup_finalize(
-        is_light_weight_policy<Policy>(), *this, num_worker_threads,
-        hpx::threads::thread_stacksize::small_);
+    m_policy.space().impl_bulk_scan(*this, num_worker_threads,
+                                    hpx::threads::thread_stacksize::small_);
   }
 
   inline ParallelScan(const FunctorType &arg_functor, const Policy &arg_policy)
@@ -1351,7 +1402,6 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   using pointer_type   = typename Analysis::pointer_type;
   using reference_type = typename Analysis::reference_type;
   using value_type     = typename Analysis::value_type;
-  using barrier_type   = hpx::barrier<>;
 
   const FunctorType m_functor;
   const Policy m_policy;
@@ -1363,9 +1413,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
     const std::size_t value_size = Analysis::value_size(m_functor);
 
     hpx_thread_buffer &buffer = m_policy.space().impl_get_buffer();
-    buffer.resize(num_worker_threads, 2 * value_size, sizeof(barrier_type));
-
-    new (buffer.get_extra_space()) barrier_type(num_worker_threads);
+    buffer.resize(num_worker_threads, 2 * value_size);
   }
 
   void execute_chunk(const Member i_begin, const Member i_end,
@@ -1379,44 +1427,51 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
     }
   }
 
-  void execute_range(int t) const {
+  void execute_range_partial(int t) const {
+    const int num_worker_threads = m_policy.space().concurrency();
+
+    hpx_thread_buffer &buffer = m_policy.space().impl_get_buffer();
+    typename Analysis::Reducer final_reducer(m_functor);
+    reference_type update_sum =
+        final_reducer.init(reinterpret_cast<pointer_type>(buffer.get(t)));
+
+    const WorkRange range(m_policy, t, num_worker_threads);
+    execute_chunk(range.begin(), range.end(), update_sum, false);
+  }
+
+  void join_partial_results() const {
     const int num_worker_threads = m_policy.space().concurrency();
     const int value_count        = Analysis::value_count(m_functor);
     const std::size_t value_size = Analysis::value_size(m_functor);
 
     hpx_thread_buffer &buffer = m_policy.space().impl_get_buffer();
     typename Analysis::Reducer final_reducer(m_functor);
-    barrier_type &barrier =
-        *static_cast<barrier_type *>(buffer.get_extra_space());
-    reference_type update_sum =
-        final_reducer.init(reinterpret_cast<pointer_type>(buffer.get(t)));
 
-    const WorkRange range(m_policy, t, num_worker_threads);
-    execute_chunk(range.begin(), range.end(), update_sum, false);
+    final_reducer.init(reinterpret_cast<pointer_type>(
+        static_cast<char *>(buffer.get(0)) + value_size));
 
-    barrier.arrive_and_wait();
+    for (int i = 1; i < num_worker_threads; ++i) {
+      pointer_type ptr_1_prev =
+          reinterpret_cast<pointer_type>(buffer.get(i - 1));
+      pointer_type ptr_2_prev = reinterpret_cast<pointer_type>(
+          static_cast<char *>(buffer.get(i - 1)) + value_size);
+      pointer_type ptr_2 = reinterpret_cast<pointer_type>(
+          static_cast<char *>(buffer.get(i)) + value_size);
 
-    if (t == 0) {
-      final_reducer.init(reinterpret_cast<pointer_type>(
-          static_cast<char *>(buffer.get(0)) + value_size));
-
-      for (int i = 1; i < num_worker_threads; ++i) {
-        pointer_type ptr_1_prev =
-            reinterpret_cast<pointer_type>(buffer.get(i - 1));
-        pointer_type ptr_2_prev = reinterpret_cast<pointer_type>(
-            static_cast<char *>(buffer.get(i - 1)) + value_size);
-        pointer_type ptr_2 = reinterpret_cast<pointer_type>(
-            static_cast<char *>(buffer.get(i)) + value_size);
-
-        for (int j = 0; j < value_count; ++j) {
-          ptr_2[j] = ptr_2_prev[j];
-        }
-
-        final_reducer.join(ptr_2, ptr_1_prev);
+      for (int j = 0; j < value_count; ++j) {
+        ptr_2[j] = ptr_2_prev[j];
       }
-    }
 
-    barrier.arrive_and_wait();
+      final_reducer.join(ptr_2, ptr_1_prev);
+    }
+  }
+
+  void execute_range_final(int t) const {
+    const int num_worker_threads = m_policy.space().concurrency();
+    const std::size_t value_size = Analysis::value_size(m_functor);
+
+    hpx_thread_buffer &buffer = m_policy.space().impl_get_buffer();
+    const WorkRange range(m_policy, t, num_worker_threads);
 
     reference_type update_base =
         Analysis::Reducer::reference(reinterpret_cast<pointer_type>(
@@ -1429,16 +1484,10 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
     }
   }
 
-  void finalize() const {
-    hpx_thread_buffer &buffer = m_policy.space().impl_get_buffer();
-    static_cast<barrier_type *>(buffer.get_extra_space())->~barrier_type();
-  }
-
   void execute() const {
     const int num_worker_threads = m_policy.space().concurrency();
-    m_policy.space().impl_bulk_setup_finalize(
-        is_light_weight_policy<Policy>(), *this, num_worker_threads,
-        hpx::threads::thread_stacksize::small_);
+    m_policy.space().impl_bulk_scan(*this, num_worker_threads,
+                                    hpx::threads::thread_stacksize::small_);
   }
 
   template <class ViewType>
