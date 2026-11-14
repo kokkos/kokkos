@@ -1908,37 +1908,37 @@ class basic_simd<std::int32_t, simd_abi::avx512_fixed_size<16>> {
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
       G&& gen) noexcept
       : m_value(_mm512_setr_epi32(
-            static_cast<int32_t>(
+            static_cast<value_type>(
                 gen(std::integral_constant<Impl::simd_size_t, 0>())),
-            static_cast<int32_t>(
+            static_cast<value_type>(
                 gen(std::integral_constant<Impl::simd_size_t, 1>())),
-            static_cast<int32_t>(
-                gen(std::integral_constant<Impl::simd_size_t, 2>())),
-            static_cast<int32_t>(
+            static_cast<value_type>(
+                gen(std::integral_constant<Impl::simd_size_t, 2>())), 
+            static_cast<value_type>(
                 gen(std::integral_constant<Impl::simd_size_t, 3>())),
-            static_cast<int32_t>(
+            static_cast<value_type>(
                 gen(std::integral_constant<Impl::simd_size_t, 4>())),
-            static_cast<int32_t>(
+            static_cast<value_type>(
                 gen(std::integral_constant<Impl::simd_size_t, 5>())),
-            static_cast<int32_t>(
+            static_cast<value_type>(
                 gen(std::integral_constant<Impl::simd_size_t, 6>())),
-            static_cast<int32_t>(
+            static_cast<value_type>(
                 gen(std::integral_constant<Impl::simd_size_t, 7>())),
-            static_cast<int32_t>(
+            static_cast<value_type>(
                 gen(std::integral_constant<Impl::simd_size_t, 8>())),
-            static_cast<int32_t>(
+            static_cast<value_type>(
                 gen(std::integral_constant<Impl::simd_size_t, 9>())),
-            static_cast<int32_t>(
+            static_cast<value_type>(
                 gen(std::integral_constant<Impl::simd_size_t, 10>())),
-            static_cast<int32_t>(
+            static_cast<value_type>(
                 gen(std::integral_constant<Impl::simd_size_t, 11>())),
-            static_cast<int32_t>(
+            static_cast<value_type>(
                 gen(std::integral_constant<Impl::simd_size_t, 12>())),
-            static_cast<int32_t>(
+            static_cast<value_type>(
                 gen(std::integral_constant<Impl::simd_size_t, 13>())),
-            static_cast<int32_t>(
+            static_cast<value_type>(
                 gen(std::integral_constant<Impl::simd_size_t, 14>())),
-            static_cast<int32_t>(
+            static_cast<value_type>(
                 gen(std::integral_constant<Impl::simd_size_t, 15>())))) {}
   template <typename... Flags>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
@@ -2680,37 +2680,37 @@ class basic_simd<std::uint32_t, simd_abi::avx512_fixed_size<16>> {
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
       G&& gen) noexcept
       : m_value(_mm512_setr_epi32(
-            static_cast<int32_t>(
+            static_cast<value_type>(
                 gen(std::integral_constant<Impl::simd_size_t, 0>())),
-            static_cast<int32_t>(
+            static_cast<value_type>(
                 gen(std::integral_constant<Impl::simd_size_t, 1>())),
-            static_cast<int32_t>(
+            static_cast<value_type>(
                 gen(std::integral_constant<Impl::simd_size_t, 2>())),
-            static_cast<int32_t>(
+            static_cast<value_type>(
                 gen(std::integral_constant<Impl::simd_size_t, 3>())),
-            static_cast<int32_t>(
+            static_cast<value_type>(
                 gen(std::integral_constant<Impl::simd_size_t, 4>())),
-            static_cast<int32_t>(
+            static_cast<value_type>(
                 gen(std::integral_constant<Impl::simd_size_t, 5>())),
-            static_cast<int32_t>(
-                gen(std::integral_constant<Impl::simd_size_t, 6>())),
-            static_cast<int32_t>(
+            static_cast<value_type>(
+                gen(std::integral_constant<Impl::simd_size_t, 6>())), 
+            static_cast<value_type>(
                 gen(std::integral_constant<Impl::simd_size_t, 7>())),
-            static_cast<int32_t>(
+            static_cast<value_type>(
                 gen(std::integral_constant<Impl::simd_size_t, 8>())),
-            static_cast<int32_t>(
+            static_cast<value_type>(
                 gen(std::integral_constant<Impl::simd_size_t, 9>())),
-            static_cast<int32_t>(
+            static_cast<value_type>(
                 gen(std::integral_constant<Impl::simd_size_t, 10>())),
-            static_cast<int32_t>(
+            static_cast<value_type>(
                 gen(std::integral_constant<Impl::simd_size_t, 11>())),
-            static_cast<int32_t>(
+            static_cast<value_type>(
                 gen(std::integral_constant<Impl::simd_size_t, 12>())),
-            static_cast<int32_t>(
+            static_cast<value_type>(
                 gen(std::integral_constant<Impl::simd_size_t, 13>())),
-            static_cast<int32_t>(
+            static_cast<value_type>(
                 gen(std::integral_constant<Impl::simd_size_t, 14>())),
-            static_cast<int32_t>(
+            static_cast<value_type>(
                 gen(std::integral_constant<Impl::simd_size_t, 15>())))) {}
   template <typename... Flags>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
