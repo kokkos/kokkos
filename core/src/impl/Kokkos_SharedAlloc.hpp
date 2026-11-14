@@ -656,9 +656,9 @@ union SharedAllocationTracker {
   KOKKOS_FORCEINLINE_FUNCTION
   SharedAllocationTracker& operator=(SharedAllocationTracker&& rhs) {
     if (&rhs == this) return *this;
-    auto swap_tmp     = m_record_bits;
-    m_record_bits     = rhs.m_record_bits;
-    rhs.m_record_bits = swap_tmp;
+    KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT
+    this->m_record_bits = rhs.m_record_bits;
+    rhs.m_record_bits   = DO_NOT_DEREF_FLAG;
     return *this;
   }
 
