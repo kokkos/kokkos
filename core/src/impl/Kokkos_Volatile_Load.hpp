@@ -30,7 +30,7 @@ namespace Kokkos {
 template <typename T>
 KOKKOS_FORCEINLINE_FUNCTION T volatile_load(T const volatile* const src_ptr) {
   KOKKOS_IF_ON_HOST(
-      (return desul::Impl::device_atomic_fetch_oper(
+      (return desul::Impl::host_atomic_fetch_oper(
                   desul::Impl::_load_fetch_operator<T, const T>(),
                   const_cast<T*>(src_ptr), T(), desul::MemoryOrderRelaxed(),
                   desul::MemoryScopeDevice());))
