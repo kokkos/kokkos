@@ -241,6 +241,12 @@ void host_shared_ptr_test_reference_counting() {
 TEST(TEST_CATEGORY, host_shared_ptr_tracking) {
   host_shared_ptr_test_reference_counting<typename TEST_EXECSPACE::memory_space,
                                           Kokkos::HostSpace>();
+#ifdef KOKKOS_ENABLE_OPENACC
+  if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenACC>)
+    host_shared_ptr_test_reference_counting<
+        Kokkos::Experimental::OpenACCSpace,
+        Kokkos::Experimental::OpenACCSpace>();
+#endif
 #ifdef KOKKOS_ENABLE_CUDA
   if (std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda>)
     host_shared_ptr_test_reference_counting<Kokkos::CudaUVMSpace,
