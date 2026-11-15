@@ -45,7 +45,7 @@ amdclang:
     - export CRAYPE_LINK_TYPE=dynamic
     - export ENV_CMAKE_OPTIONS=""
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_CXX_COMPILER=amdclang++"
-    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_CXX_CLANG_TIDY=/opt/rocm-6.2.4/llvm/bin/clang-tidy\;-warnings-as-errors=*"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_CXX_CLANG_TIDY=/opt/rocm-6.2.4/llvm/bin/clang-tidy\;--config-file=${CI_PROJECT_DIR}/.clang-tidy-extra\;-warnings-as-errors=*"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_CXX_STANDARD=20"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_HIP=ON"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_COMPILER_WARNINGS=ON"
