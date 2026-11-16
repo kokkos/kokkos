@@ -212,6 +212,7 @@ struct SpaceAwareAccessor<AnonymousSpace, NestedAccessor> {
 template <class ElementType, class MemoryScope = desul::MemoryScopeDevice>
 struct AtomicAccessorRelaxed {
   using element_type = ElementType;
+  using memory_scope = MemoryScope;
   using reference =
       desul::AtomicRef<ElementType, desul::MemoryOrderRelaxed, MemoryScope>;
   using data_handle_type = ElementType*;
@@ -397,6 +398,15 @@ template <class T>
 constexpr bool IsReferenceCountedAccessorV =
     IsReferenceCountedAccessor<T>::value;
 
+// Helper to check memory-scope compatibility
+template <class NestedAccessor, class OtherMemoryScope>
+struct IsCompatibleMemoryScope : std::true_type {};
+
+template <class NestedAccessor, class OtherMemoryScope>
+  requires requires { typename NestedAccessor::memory_scope; }
+struct IsCompatibleMemoryScope<NestedAccessor, OtherMemoryScope>
+    : std::is_same<OtherMemoryScope, typename NestedAccessor::memory_scope> {};
+
 template <class MemorySpace, class NestedAccessor>
 class ReferenceCountedAccessor {
  public:
@@ -455,6 +465,23 @@ class ReferenceCountedAccessor {
                 OtherElementType (*)[], element_type (*)[]>>>
   KOKKOS_FUNCTION constexpr ReferenceCountedAccessor(
       const default_accessor<OtherElementType>&) {}
+
+  // Allow converting between memory scopes.
+  // Must be explicit when scopes are present but not the same.
+  // As long as accessors are stateless, default construction is okay.
+  template <class OtherElementType, class OtherMemoryScope>
+    requires(
+        std::is_convertible_v<OtherElementType (*)[], element_type (*)[]> &&
+        IsCompatibleMemoryScope<NestedAccessor, OtherMemoryScope>::value)
+  KOKKOS_FUNCTION constexpr ReferenceCountedAccessor(
+      const AtomicAccessorRelaxed<OtherElementType, OtherMemoryScope>&) {}
+
+  template <class OtherElementType, class OtherMemoryScope>
+    requires(
+        std::is_convertible_v<OtherElementType (*)[], element_type (*)[]> &&
+        !IsCompatibleMemoryScope<NestedAccessor, OtherMemoryScope>::value)
+  KOKKOS_FUNCTION explicit constexpr ReferenceCountedAccessor(
+      const AtomicAccessorRelaxed<OtherElementType, OtherMemoryScope>&) {}
 
   template <class DstAccessor,
             typename = std::enable_if_t<
