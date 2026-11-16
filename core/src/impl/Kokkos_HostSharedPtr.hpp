@@ -113,7 +113,7 @@ class HostSharedPtr {
   // returns the number of HostSharedPtr instances managing the current object
   // or 0 if there is no managed object.
   int use_count() const noexcept {
-    return m_control ? m_control->m_counter : 0;
+    return m_control ? Kokkos::atomic_load(&m_control->m_counter) : 0;
   }
 
  private:
