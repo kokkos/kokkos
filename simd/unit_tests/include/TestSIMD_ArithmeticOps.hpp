@@ -382,7 +382,10 @@ KOKKOS_INLINE_FUNCTION void device_check_all_arithmetic_ops(
                                               second_args);
   device_check_arithmetic_op_all_loaders<Abi>(minus_eq(), n, first_args,
                                               second_args);
+// FIXME_NVHPC NVC++-F-0155-Compiler failed to translate accelerator region
+#ifndef KOKKOS_COMPILER_NVHPC
   device_check_arithmetic_op_all_loaders<Abi>(negate(), n, first_args);
+#endif
   device_check_arithmetic_op_all_loaders<Abi>(multiplies(), n, first_args,
                                               second_args);
   device_check_arithmetic_op_all_loaders<Abi>(multiplies_eq(), n, first_args,

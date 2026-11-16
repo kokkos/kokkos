@@ -210,13 +210,7 @@ class basic_simd<T, simd_abi::scalar> {
   }
 
   KOKKOS_FORCEINLINE_FUNCTION constexpr basic_simd operator-() const noexcept {
-    // FIXME_OPENACC: NVHPC fails to generate device code for unary operator- on
-    // unsigned types; use 0 - x as a workaround
-    if constexpr (std::is_unsigned_v<value_type>) {
-      return basic_simd(value_type(0) - m_value);
-    } else {
-      return basic_simd(-m_value);
-    }
+    return basic_simd(-m_value);
   }
 
   KOKKOS_FORCEINLINE_FUNCTION constexpr basic_simd operator~() const noexcept {
