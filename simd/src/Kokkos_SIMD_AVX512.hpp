@@ -4344,7 +4344,7 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::int32_t reduce_max(
     basic_simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const&
         v) noexcept {
   return _mm512_mask_reduce_max_epi32(
-      _cvtu32_mask16((1u << 16) - 1),
+      _cvtu32_mask16((1u << 8) - 1),
       _mm512_castsi256_si512(static_cast<__m256i>(v)));
 }
 
@@ -4352,7 +4352,7 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::int32_t reduce_min(
     basic_simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const&
         v) noexcept {
   return _mm512_mask_reduce_min_epi32(
-      _cvtu32_mask16((1u << 16) - 1),
+      _cvtu32_mask16((1u << 8) - 1),
       _mm512_castsi256_si512(static_cast<__m256i>(v)));
 }
 
@@ -4372,7 +4372,7 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::uint32_t reduce_max(
     basic_simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> const&
         v) noexcept {
   return _mm512_mask_reduce_max_epu32(
-      _cvtu32_mask16((1u << 16) - 1),
+      _cvtu32_mask16((1u << 8) - 1),
       _mm512_castsi256_si512(static_cast<__m256i>(v)));
 }
 
@@ -4380,7 +4380,7 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::uint32_t reduce_min(
     basic_simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> const&
         v) noexcept {
   return _mm512_mask_reduce_min_epu32(
-      _cvtu32_mask16((1u << 16) - 1),
+      _cvtu32_mask16((1u << 8) - 1),
       _mm512_castsi256_si512(static_cast<__m256i>(v)));
 }
 
@@ -4433,14 +4433,14 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION double reduce_min(
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION float reduce_max(
     basic_simd<float, simd_abi::avx512_fixed_size<8>> const& v) noexcept {
   return _mm512_mask_reduce_max_ps(
-      _cvtu32_mask16((1u << 16) - 1),
+      _cvtu32_mask16((1u << 8) - 1),
       _mm512_castps256_ps512(static_cast<__m256>(v)));
 }
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION float reduce_min(
     basic_simd<float, simd_abi::avx512_fixed_size<8>> const& v) noexcept {
   return _mm512_mask_reduce_min_ps(
-      _cvtu32_mask16((1u << 16) - 1),
+      _cvtu32_mask16((1u << 8) - 1),
       _mm512_castps256_ps512(static_cast<__m256>(v)));
 }
 
