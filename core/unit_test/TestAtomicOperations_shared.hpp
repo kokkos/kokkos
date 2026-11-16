@@ -35,8 +35,8 @@ TEST(TEST_CATEGORY, atomic_shared) {
   // FIXME_OPENACC Test builds but does not pass yet.
 #if defined(KOKKOS_ENABLE_OPENACC) && defined(KOKKOS_COMPILER_NVHPC)
   GTEST_SKIP() << "OpenACC: Team + atomic interactions don't work yet";
-#endif
-  TEST_EXECSPACE exec;
+#else
+  [[maybe_unused]] TEST_EXECSPACE exec;
   Kokkos::View<int, typename TEST_EXECSPACE::memory_space> view("ref_value");
   auto team_size =
       Kokkos::TeamPolicy<TEST_EXECSPACE>(exec, 1, Kokkos::AUTO)
@@ -49,6 +49,7 @@ TEST(TEST_CATEGORY, atomic_shared) {
   int i = 0;
   Kokkos::deep_copy(i, view);
   ASSERT_EQ(i, team_size);
+#endif
 }
 #endif
 }  // namespace Test
