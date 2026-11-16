@@ -67,11 +67,10 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
              iwork < static_cast<Member>(work_end - work_stride * batch_size)
                  ? iwork + work_stride * batch_size
                  : work_end) {
-// FIXME: batch_size == 1 can be treated without nested loops but faced issue
-// with cuda-12.6.2 on Hopper90 GPU (compiler hangs) when implementing that
-#if defined(KOKKOS_COMPILER_NVCC)
+// cicc from CUDA 12.6.x hangs on some Trilinos (Panzer) translation units;
+// keep the original loop there so behavior is unchanged on those compilers.
+#if defined(KOKKOS_COMPILER_NVCC) && (KOKKOS_COMPILER_NVCC < 1280)
 #pragma unroll
-#endif
       for (Member i = 0; i < static_cast<Member>(work_stride * batch_size) &&
                          i < work_end - iwork;
            i = (i < static_cast<Member>(work_end - work_stride - iwork))
@@ -79,6 +78,15 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
                    : work_end - iwork) {
         this->template exec_range<WorkTag>(iwork + i);
       }
+#else
+#pragma unroll
+      for (Member b = 0; b < batch_size; ++b) {
+        const Member offset = b * static_cast<Member>(work_stride);
+        if (offset < work_end - iwork) {
+          this->template exec_range<WorkTag>(iwork + offset);
+        }
+      }
+#endif
     }
   }
 
