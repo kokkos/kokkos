@@ -4644,7 +4644,7 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::int32_t reduce(
     basic_simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& v,
     std::plus<>) noexcept {
   return _mm512_reduce_add_epi32(
-      _mm512_inserti32x8(_mm512_setzero_epi32(), static_cast<__m256i>(v), 0));
+      _mm512_zextsi256_si512(static_cast<__m256i>(v)));
 }
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::int32_t reduce(
@@ -4656,8 +4656,8 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::int32_t reduce(
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::uint32_t reduce(
     basic_simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> const& v,
     std::plus<>) noexcept {
-  return static_cast<std::uint32_t>(_mm512_reduce_add_epi32(
-      _mm512_inserti32x8(_mm512_setzero_epi32(), static_cast<__m256i>(v), 0)));
+  return static_cast<std::uint32_t>(
+      _mm512_reduce_add_epi32(_mm512_zextsi256_si512(static_cast<__m256i>(v))));
 }
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::uint32_t reduce(
@@ -4689,8 +4689,7 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION double reduce(
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION float reduce(
     basic_simd<float, simd_abi::avx512_fixed_size<8>> const& v,
     std::plus<>) noexcept {
-  return _mm512_reduce_add_ps(
-      _mm512_insertf32x8(_mm512_setzero_ps(), static_cast<__m256>(v), 0));
+  return _mm512_reduce_add_ps(_mm512_zextps256_ps512(static_cast<__m256>(v)));
 }
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION float reduce(
