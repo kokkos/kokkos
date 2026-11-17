@@ -69,7 +69,7 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
                  : work_end) {
 // cicc from CUDA 12.6.x hangs on some Trilinos (Panzer) translation units;
 // keep the original loop there so behavior is unchanged on those compilers.
-#if defined(KOKKOS_COMPILER_NVCC) && (KOKKOS_COMPILER_NVCC < 1280)
+#if defined(KOKKOS_COMPILER_NVCC) && (KOKKOS_COMPILER_NVCC <= 1269)
 #pragma unroll
       for (Member i = 0; i < static_cast<Member>(work_stride * batch_size) &&
                          i < work_end - iwork;
