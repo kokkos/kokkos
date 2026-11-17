@@ -438,10 +438,9 @@ struct EndParallelScanEvent final : public EndOperation<EndParallelScanEvent> {
 
   EndParallelScanEvent(uint64_t k) : EndOperation<EndParallelScanEvent>(k) {}
 };
-struct EndSingleEvent final : public EndOperation<EndSingleEvent> {
-};
 
 struct EndSingleEvent final : public EndOperation<EndSingleEvent> {
+  static const std::string& end_op_name() {
     static std::string value = "EndSingle";
     return value;
   }
