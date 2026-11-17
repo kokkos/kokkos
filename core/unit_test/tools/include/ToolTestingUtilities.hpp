@@ -392,6 +392,14 @@ struct BeginParallelScanEvent final
   BeginParallelScanEvent(std::string n, const uint32_t devID, uint64_t k)
       : BeginOperation<BeginParallelScanEvent>(n, devID, k) {}
 };
+struct BeginSingleEvent final : public BeginOperation<BeginSingleEvent> {
+  static const std::string& begin_op_name() {
+    static std::string value = "BeginSingle";
+    return value;
+  }
+  BeginSingleEvent(std::string n, const uint32_t devID, uint64_t k)
+      : BeginOperation<BeginSingleEvent>(n, devID, k) {}
+};
 struct BeginFenceEvent final : public BeginOperation<BeginFenceEvent> {
   static const std::string& begin_op_name() {
     static std::string value = "BeginFence";
@@ -427,6 +435,14 @@ struct EndParallelScanEvent final : public EndOperation<EndParallelScanEvent> {
   }
 
   EndParallelScanEvent(uint64_t k) : EndOperation<EndParallelScanEvent>(k) {}
+};
+struct EndSingleEvent final : public EndOperation<EndSingleEvent> {
+  static const std::string& end_op_name() {
+    static std::string value = "EndSingle";
+    return value;
+  }
+
+  EndSingleEvent(uint64_t k) : EndOperation<EndSingleEvent>(k) {}
 };
 struct EndFenceEvent final : public EndOperation<EndFenceEvent> {
   static const std::string& end_op_name() {
@@ -1007,6 +1023,12 @@ static inline void set_tool_events_impl(
           found_events.push_back(
               std::make_shared<BeginParallelScanEvent>(std::string(n), d, *k));
         });
+    Kokkos::Tools::Experimental::set_begin_single_callback(
+        [](const char* n, const uint32_t d, uint64_t* k) {
+          *k = ++last_kernel_id;
+          found_events.push_back(
+              std::make_shared<BeginSingleEvent>(std::string(n), d, *k));
+        });
     Kokkos::Tools::Experimental::set_end_parallel_for_callback(
         [](const uint64_t k) {
           found_events.push_back(std::make_shared<EndParallelForEvent>(k));
@@ -1019,6 +1041,9 @@ static inline void set_tool_events_impl(
         [](const uint64_t k) {
           found_events.push_back(std::make_shared<EndParallelScanEvent>(k));
         });
+    Kokkos::Tools::Experimental::set_end_single_callback([](uint64_t k) {
+      found_events.push_back(std::make_shared<EndSingleEvent>(k));
+    });
   }  // if profiling.kernels
   if (config.profiling.regions) {
     Kokkos::Tools::Experimental::set_push_region_callback([](const char* name) {

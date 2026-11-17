@@ -438,6 +438,28 @@ TEST(kokkosp, parallel_scan_no_fence_view) {
 }
 #endif
 
+TEST(kokkosp, single) {
+  using namespace Kokkos::Test::Tools;
+  Kokkos::View<int> val("single_result");
+
+  listen_tool_events(Config::DisableAll(), Config::EnableKernels());
+  auto success = validate_event_set(
+      [=]() {
+        Kokkos::single(
+            "dogs", Kokkos::SinglePolicy<>(), KOKKOS_LAMBDA() { val() = 1; });
+      },
+      [=](BeginSingleEvent begin_event, EndSingleEvent end_event) {
+        if (begin_event.name != "dogs") {
+          return MatchDiagnostic{false, {"No match on BeginSingle name"}};
+        }
+        if (end_event.kID != ((begin_event.kID))) {
+          return MatchDiagnostic{false, {"No match on kID's"}};
+        }
+        return MatchDiagnostic{true};
+      });
+  ASSERT_TRUE(success);
+}
+
 TEST(kokkosp, regions) {
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableRegions());
