@@ -79,7 +79,11 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
         this->template exec_range<WorkTag>(iwork + i);
       }
 #else
+// clang-tidy 17 reports '#pragma unroll' as an unknown pragma in C++20 mode
+#if !defined(KOKKOS_COMPILER_CLANG) || defined(KOKKOS_COMPILER_NVCC) || \
+    (KOKKOS_COMPILER_CLANG >= 1800)
 #pragma unroll
+#endif
       for (Member b = 0; b < batch_size; ++b) {
         const Member offset = b * static_cast<Member>(work_stride);
         if (offset < work_end - iwork) {
