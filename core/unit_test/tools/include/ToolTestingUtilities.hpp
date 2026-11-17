@@ -397,9 +397,11 @@ struct BeginSingleEvent final : public BeginOperation<BeginSingleEvent> {
     static std::string value = "BeginSingle";
     return value;
   }
+
   BeginSingleEvent(std::string n, const uint32_t devID, uint64_t k)
       : BeginOperation<BeginSingleEvent>(n, devID, k) {}
 };
+
 struct BeginFenceEvent final : public BeginOperation<BeginFenceEvent> {
   static const std::string& begin_op_name() {
     static std::string value = "BeginFence";
@@ -437,13 +439,16 @@ struct EndParallelScanEvent final : public EndOperation<EndParallelScanEvent> {
   EndParallelScanEvent(uint64_t k) : EndOperation<EndParallelScanEvent>(k) {}
 };
 struct EndSingleEvent final : public EndOperation<EndSingleEvent> {
-  static const std::string& end_op_name() {
+};
+
+struct EndSingleEvent final : public EndOperation<EndSingleEvent> {
     static std::string value = "EndSingle";
     return value;
   }
 
   EndSingleEvent(uint64_t k) : EndOperation<EndSingleEvent>(k) {}
 };
+
 struct EndFenceEvent final : public EndOperation<EndFenceEvent> {
   static const std::string& end_op_name() {
     static std::string value = "EndFence";
