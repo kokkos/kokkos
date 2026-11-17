@@ -42,7 +42,9 @@ namespace Impl {
 #elif defined(KOKKOS_ENABLE_HIP) && defined(__HIP_DEVICE_COMPILE__)
 // HIP aborts
 #define KOKKOS_IMPL_ABORT_NORETURN [[noreturn]]
-#elif defined(KOKKOS_ENABLE_SYCL) && defined(__SYCL_DEVICE_ONLY__)
+#elif defined(KOKKOS_ENABLE_SYCL) && \
+    (defined(__SYCL_DEVICE_ONLY__) || defined(__ACPP__))
+// AdaptiveCpp compiles host and device code in a single pass
 // FIXME_SYCL SYCL doesn't abort
 #define KOKKOS_IMPL_ABORT_NORETURN
 #elif defined(KOKKOS_ENABLE_NEXTSILICON)
