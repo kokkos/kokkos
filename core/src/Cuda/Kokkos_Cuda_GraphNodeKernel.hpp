@@ -107,18 +107,21 @@ class GraphNodeKernelImpl<Kokkos::Cuda, PolicyType, Functor, PatternTag,
   using graph_kernel = GraphNodeKernelImpl;
 
   // TODO @graph kernel name info propagation
-  template <class PolicyDeduced, class... ArgsDeduced>
-  GraphNodeKernelImpl(std::string label_, Functor arg_functor,
+  template <class PolicyDeduced, class FunctorDeduced, class... ArgsDeduced>
+    requires std::same_as<std::remove_cvref_t<FunctorDeduced>, Functor>
+  GraphNodeKernelImpl(std::string label_, FunctorDeduced&& arg_functor,
                       PolicyDeduced&& arg_policy, ArgsDeduced&&... args)
       // This is super ugly, but it works for now and is the most minimal change
       // to the codebase for now...
-      : base_t(std::move(arg_functor), (PolicyDeduced&&)arg_policy,
-               (ArgsDeduced&&)args...),
+      : base_t(std::forward<FunctorDeduced>(arg_functor),
+               (PolicyDeduced&&)arg_policy, (ArgsDeduced&&)args...),
         label(std::move(label_)) {}
 
-  template <class PolicyDeduced>
-  GraphNodeKernelImpl(Functor arg_functor, PolicyDeduced&& arg_policy)
-      : GraphNodeKernelImpl("[unlabeled]", std::move(arg_functor),
+  template <class PolicyDeduced, class FunctorDeduced>
+    requires std::same_as<std::remove_cvref_t<FunctorDeduced>, Functor>
+  GraphNodeKernelImpl(FunctorDeduced&& arg_functor, PolicyDeduced&& arg_policy)
+      : GraphNodeKernelImpl("[unlabeled]",
+                            std::forward<FunctorDeduced>(arg_functor),
                             (PolicyDeduced&&)arg_policy) {}
 
   void set_cuda_graph_ptr(cudaGraph_t* arg_graph_ptr) {

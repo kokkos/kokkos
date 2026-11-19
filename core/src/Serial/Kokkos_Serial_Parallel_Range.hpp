@@ -48,8 +48,12 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Serial> {
     this->template exec<typename Policy::work_tag>();
   }
 
-  inline ParallelFor(const FunctorType& arg_functor, const Policy& arg_policy)
-      : m_functor(arg_functor), m_policy(arg_policy) {}
+  template <class Fun, class Pol>
+    requires(std::same_as<std::remove_cvref_t<Fun>, FunctorType> &&
+             std::same_as<std::remove_cvref_t<Pol>, Policy>)
+  ParallelFor(Fun&& arg_functor, Pol&& arg_policy)
+      : m_functor(std::forward<Fun>(arg_functor)),
+        m_policy(std::forward<Pol>(arg_policy)) {}
 };
 
 /*--------------------------------------------------------------------------*/

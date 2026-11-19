@@ -81,15 +81,19 @@ class GraphNodeKernelImpl<Kokkos::SYCL, PolicyType, Functor, PatternTag,
                                                 Args..., Kokkos::SYCL>::type;
 
   // TODO use the name
-  template <typename PolicyDeduced, typename... ArgsDeduced>
-  GraphNodeKernelImpl(std::string, Functor arg_functor,
+  template <typename PolicyDeduced, typename FunctorDeduced,
+            typename... ArgsDeduced>
+    requires std::same_as<std::remove_cvref_t<FunctorDeduced>, Functor>
+  GraphNodeKernelImpl(std::string, FunctorDeduced&& arg_functor,
                       PolicyDeduced&& arg_policy, ArgsDeduced&&... args)
-      : base_t(std::move(arg_functor), (PolicyDeduced&&)arg_policy,
-               (ArgsDeduced&&)args...) {}
+      : base_t(std::forward<FunctorDeduced>(arg_functor),
+               (PolicyDeduced&&)arg_policy, (ArgsDeduced&&)args...) {}
 
-  template <typename PolicyDeduced>
-  GraphNodeKernelImpl(Functor arg_functor, PolicyDeduced&& arg_policy)
-      : GraphNodeKernelImpl("[unlabeled]", std::move(arg_functor),
+  template <typename PolicyDeduced, typename FunctorDeduced>
+    requires std::same_as<std::remove_cvref_t<FunctorDeduced>, Functor>
+  GraphNodeKernelImpl(FunctorDeduced arg_functor, PolicyDeduced&& arg_policy)
+      : GraphNodeKernelImpl("[unlabeled]",
+                            std::forward<FunctorDeduced>(arg_functor),
                             (PolicyDeduced&&)arg_policy) {}
 
   void set_sycl_graph_ptr(

@@ -70,19 +70,21 @@ class GraphNodeKernelImpl
   using graph_kernel = GraphNodeKernelImpl;
 
   // TODO @graph kernel name info propagation
-  template <class PolicyDeduced, class... ArgsDeduced>
-  GraphNodeKernelImpl(std::string const &, Functor arg_functor,
+  template <class PolicyDeduced, class FunctorDeduced, class... ArgsDeduced>
+    requires std::same_as<std::remove_cvref_t<FunctorDeduced>, Functor>
+  GraphNodeKernelImpl(std::string const &, FunctorDeduced &&arg_functor,
                       PolicyDeduced &&arg_policy, ArgsDeduced &&...args)
       : execute_kernel_vtable_base_t(arg_policy.space()),
-        base_t(std::move(arg_functor), (PolicyDeduced &&)arg_policy,
-               (ArgsDeduced &&)args...) {}
+        base_t(std::forward<FunctorDeduced>(arg_functor),
+               (PolicyDeduced &&)arg_policy, (ArgsDeduced &&)args...) {}
 
-  template <class PolicyDeduced, class... ArgsDeduced>
-  GraphNodeKernelImpl(Functor arg_functor, PolicyDeduced &&arg_policy,
+  template <class PolicyDeduced, class FunctorDeduced, class... ArgsDeduced>
+    requires std::same_as<std::remove_cvref_t<FunctorDeduced>, Functor>
+  GraphNodeKernelImpl(FunctorDeduced &&arg_functor, PolicyDeduced &&arg_policy,
                       ArgsDeduced &&...args)
-      : GraphNodeKernelImpl("[unlabeled]", std::move(arg_functor),
-                            (PolicyDeduced &&)arg_policy,
-                            (ArgsDeduced &&)args...) {
+      : GraphNodeKernelImpl(
+            "[unlabeled]", std::forward<FunctorDeduced>(arg_functor),
+            (PolicyDeduced &&)arg_policy, (ArgsDeduced &&)args...) {
     // FIXME This constructor seem unused.
   }
 
