@@ -129,10 +129,13 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::OpenMP> {
 #endif
   }
 
-  inline ParallelFor(const FunctorType& arg_functor, Policy arg_policy)
+  template <class Fun, class Pol>
+    requires(std::same_as<std::remove_cvref_t<Fun>, FunctorType> &&
+             std::same_as<std::remove_cvref_t<Pol>, Policy>)
+  ParallelFor(Fun&& arg_functor, Pol&& arg_policy)
       : m_instance(nullptr),
-        m_functor(arg_functor),
-        m_policy(std::move(arg_policy)) {
+        m_functor(std::forward<Fun>(arg_functor)),
+        m_policy(std::forward<Pol>(arg_policy)) {
     m_instance = m_policy.space().impl_internal_space_instance();
   }
 };

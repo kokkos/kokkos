@@ -1695,4 +1695,98 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), node_device_handle) {
       device_handle_D);
 }
 
+//! Count construction, move/copy construction, move/copy assignment and
+//! destruction atomically on host.
+struct Counter {
+  static inline std::atomic<unsigned int> default_constructions{0};
+  static inline std::atomic<unsigned int> destructions{0};
+  static inline std::atomic<unsigned int> copy_constructions{0};
+  static inline std::atomic<unsigned int> copy_assignments{0};
+  static inline std::atomic<unsigned int> move_constructions{0};
+  static inline std::atomic<unsigned int> move_assignments{0};
+
+  static inline std::atomic<unsigned int> next_id{0};
+
+  unsigned int id{0};
+
+  Counter() noexcept : id(next_id.fetch_add(1, std::memory_order_relaxed)) {
+    default_constructions.fetch_add(1, std::memory_order_relaxed);
+  }
+
+  ~Counter() noexcept { destructions.fetch_add(1, std::memory_order_relaxed); }
+
+  Counter(const Counter&) noexcept
+      : id(next_id.fetch_add(1, std::memory_order_relaxed)) {
+    copy_constructions.fetch_add(1, std::memory_order_relaxed);
+  }
+
+  Counter& operator=(const Counter&) noexcept {
+    copy_assignments.fetch_add(1, std::memory_order_relaxed);
+    return *this;
+  }
+
+  Counter(Counter&&) noexcept
+      : id(next_id.fetch_add(1, std::memory_order_relaxed)) {
+    move_constructions.fetch_add(1, std::memory_order_relaxed);
+  }
+
+  Counter& operator=(Counter&&) noexcept {
+    move_assignments.fetch_add(1, std::memory_order_relaxed);
+    return *this;
+  }
+
+  template <typename... Args>
+  KOKKOS_FUNCTION void operator()(Args&&...) const noexcept {}
+
+  static void reset() {
+    default_constructions = 0;
+    destructions          = 0;
+    copy_constructions    = 0;
+    copy_assignments      = 0;
+    move_constructions    = 0;
+    move_assignments      = 0;
+  }
+};
+
+TEST_F(TEST_CATEGORY_FIXTURE(graph), copies_and_moves) {
+  Counter counter;
+
+  Counter::reset();
+
+  [[maybe_unused]] const auto graph_from_lvalue_functor =
+      Kokkos::Experimental::create_graph(
+          Kokkos::Experimental::get_device_handle(ex),
+          [&](const auto& root) { root.then_parallel_for(42, counter); });
+
+  EXPECT_EQ(Counter::copy_assignments, 0);
+  EXPECT_EQ(Counter::copy_constructions, 2);
+  EXPECT_EQ(Counter::move_assignments, 0);
+  EXPECT_EQ(Counter::move_constructions, 0);
+
+  Counter::reset();
+
+  [[maybe_unused]] const auto graph_from_xvalue_functor =
+      Kokkos::Experimental::create_graph(
+          Kokkos::Experimental::get_device_handle(ex), [&](const auto& root) {
+            root.then_parallel_for(42, std::move(counter));
+          });
+
+  EXPECT_EQ(Counter::copy_assignments, 0);
+  EXPECT_EQ(Counter::copy_constructions, 1);
+  EXPECT_EQ(Counter::move_assignments, 0);
+  EXPECT_EQ(Counter::move_constructions, 1);
+
+  Counter::reset();
+
+  [[maybe_unused]] const auto graph_from_prvalue_functor =
+      Kokkos::Experimental::create_graph(
+          Kokkos::Experimental::get_device_handle(ex),
+          [](const auto& root) { root.then_parallel_for(42, Counter{}); });
+
+  EXPECT_EQ(Counter::copy_assignments, 0);
+  EXPECT_EQ(Counter::copy_constructions, 1);
+  EXPECT_EQ(Counter::move_assignments, 0);
+  EXPECT_EQ(Counter::move_constructions, 1);
+}
+
 }  // end namespace Test
