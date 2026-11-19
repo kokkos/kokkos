@@ -726,4 +726,17 @@
 #define KOKKOS_HAS_SHARED_HOST_PINNED_SPACE
 #endif
 
+// CCCL 3.1.0-3.3.x Clang's CUDA frontend rejects _CCCL_HOST in
+// cuda/std/string_view. Fixed in CCCL 3.4.0 (NVIDIA/cccl#7896,
+// NVIDIA/cccl#7904).
+#if defined(KOKKOS_ENABLE_CUDA)
+#if defined(__clang__) && __has_include(<cuda/std/__cccl/version.h>)
+#include <cuda/std/__cccl/version.h>
+#endif
+#if !(defined(__clang__) && defined(CCCL_VERSION) && \
+      (CCCL_VERSION >= 3001000) && (CCCL_VERSION < 3004000))
+#define KOKKOS_IMPL_ENABLE_CUDATHRUST
+#endif
+#endif
+
 #endif  // #ifndef KOKKOS_MACROS_HPP
