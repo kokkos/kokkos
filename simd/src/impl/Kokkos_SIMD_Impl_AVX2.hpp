@@ -327,11 +327,12 @@ struct simd_mask_native_ops<double, simd_abi::avx2_fixed_size<4>,
           -std::int64_t(v(std::integral_constant<simd_size_t, 2>())),
           -std::int64_t(v(std::integral_constant<simd_size_t, 3>())))))
 
-  KOKKOS_SIMD_IMPL_DEFINE_CONVERSION_FN_HOST(vector_type, convert_from, float,
-                                             abi_type, _mm256_cvtps_pd(v))
-  KOKKOS_SIMD_IMPL_DEFINE_CONVERSION_FN_HOST(vector_type, convert_from,
-                                             std::int32_t, abi_type,
-                                             _mm256_cvtepi32_pd(v))
+  KOKKOS_SIMD_IMPL_DEFINE_CONVERSION_FN_HOST(
+      vector_type, convert_from, float, abi_type,
+      _mm256_castsi256_pd(_mm256_cvtepi32_epi64(_mm_castps_si128(v))))
+  KOKKOS_SIMD_IMPL_DEFINE_CONVERSION_FN_HOST(
+      vector_type, convert_from, std::int32_t, abi_type,
+      _mm256_castsi256_pd(_mm256_cvtepi32_epi64(v)))
   KOKKOS_SIMD_IMPL_DEFINE_CONVERSION_FN_HOST(vector_type, convert_from,
                                              std::int64_t, abi_type,
                                              _mm256_castsi256_pd(v))
@@ -382,7 +383,7 @@ struct simd_mask_native_ops<float, simd_abi::avx2_fixed_size<4>,
 
   KOKKOS_SIMD_IMPL_DEFINE_CONVERSION_FN_HOST(vector_type, convert_from,
                                              std::int32_t, abi_type,
-                                             _mm_cvtepi32_ps(v))
+                                             _mm_castsi128_ps(v))
   KOKKOS_SIMD_IMPL_DEFINE_CONVERSION_FALLBACK_DECL_HOST(abi_type)
 
   KOKKOS_SIMD_IMPL_DEFINE_EXTRACT_FN_HOST(value_type, extract,

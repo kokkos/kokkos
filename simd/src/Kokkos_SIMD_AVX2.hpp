@@ -19,6 +19,21 @@ namespace Kokkos {
 
 namespace Experimental {
 
+namespace Impl {
+// Selects the native conversion between mask types where one is defined.
+// Calling convert_from<U>() with an explicit template argument only ever finds
+// the element-wise fallback, since the native conversions are not templates.
+template <typename Ops, typename U, typename Abi, typename From>
+KOKKOS_FORCEINLINE_FUNCTION auto simd_mask_convert_from(From const& other) {
+  using from_vector_type = simd_vector_t<U, Abi, simd_backend_t>;
+  if constexpr (requires(from_vector_type v) { Ops::convert_from(v); }) {
+    return Ops::convert_from(static_cast<from_vector_type>(other));
+  } else {
+    return Ops::template convert_from<U>(other);
+  }
+}
+}  // namespace Impl
+
 template <typename T, Impl::simd_size_t N>
   requires Impl::IsValidSimdType<T, simd_abi::avx2_fixed_size<N>>
 class basic_simd_mask<T, simd_abi::avx2_fixed_size<N>>
@@ -53,7 +68,7 @@ class basic_simd_mask<T, simd_abi::avx2_fixed_size<N>>
   template <typename U>
   KOKKOS_FORCEINLINE_FUNCTION explicit(Impl::needs_explicit_conversion_v<U, T>)
       basic_simd_mask(basic_simd_mask<U, abi_type> const& other) noexcept
-      : m_value(impl_ops::template convert_from<U>(other)) {}
+      : m_value(Impl::simd_mask_convert_from<impl_ops, U, abi_type>(other)) {}
 
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd_mask(
       impl_vector_type const& value_in) noexcept
