@@ -11,7 +11,10 @@ import kokkos.core_impl;
 #include <Kokkos_Core.hpp>
 #endif
 
+#include <cstdint>
+#include <limits>
 #include <regex>
+#include <type_traits>
 
 namespace {
 
@@ -345,6 +348,63 @@ TEST(TEST_CATEGORY, md_range_policy_impl_set_space) {
   ASSERT_EQ(policy_new.space(), exec_new);
   ASSERT_EQ(policy_new.lower(), (typename policy_t::point_type{42, 47}));
   ASSERT_EQ(policy_new.upper(), (typename policy_t::point_type{666, 999}));
+}
+
+TEST(TEST_CATEGORY, md_range_policy_recommendation_near_int_max) {
+  using index_type               = std::int32_t;
+  constexpr index_type max_index = std::numeric_limits<index_type>::max();
+  using policy_type =
+      Kokkos::MDRangePolicy<Kokkos::DefaultHostExecutionSpace, Kokkos::Rank<2>,
+                            Kokkos::IndexType<index_type>>;
+
+  // Explicit tiles must not trigger overflow in the unused recommendation.
+  policy_type explicit_tiles({0, 0}, {1, max_index - 1}, {1, 1});
+  EXPECT_EQ(explicit_tiles.impl_num_tiles(), max_index - 1);
+  EXPECT_EQ(explicit_tiles.tile_size()[0], 1);
+  EXPECT_EQ(explicit_tiles.tile_size()[1], 1);
+  const auto recommendation = explicit_tiles.tile_size_recommended();
+  EXPECT_EQ(recommendation[0], 1);
+  EXPECT_EQ(recommendation[1], max_index - 1);
+
+  // The automatically chosen tile must also avoid overflow during ceil-div.
+  policy_type automatic_tiles({0, 0}, {1, max_index - 1});
+  EXPECT_EQ(automatic_tiles.tile_size()[0], 1);
+  EXPECT_EQ(automatic_tiles.tile_size()[1], max_index - 1);
+  EXPECT_EQ(automatic_tiles.impl_num_tiles(), 1);
+  EXPECT_EQ(automatic_tiles.impl_prod_tile_dims(), max_index - 1);
+  EXPECT_TRUE(automatic_tiles.impl_tune_tile_size());
+
+  // Iterate::Left must apply the same shrinking guard in reverse order.
+  using left_policy_type = Kokkos::MDRangePolicy<
+      Kokkos::DefaultHostExecutionSpace,
+      Kokkos::Rank<2, Kokkos::Iterate::Left, Kokkos::Iterate::Left>,
+      Kokkos::IndexType<index_type>>;
+  left_policy_type left_tiles({0, 0}, {max_index - 1, 1});
+  EXPECT_EQ(left_tiles.tile_size()[0], max_index - 1);
+  EXPECT_EQ(left_tiles.tile_size()[1], 1);
+  EXPECT_EQ(left_tiles.impl_prod_tile_dims(), max_index - 1);
+  EXPECT_EQ(left_tiles.impl_num_tiles(), 1);
+}
+
+TEST(TEST_CATEGORY, md_range_policy_tile_product_at_int_limit) {
+  using policy_type =
+      Kokkos::MDRangePolicy<Kokkos::DefaultHostExecutionSpace, Kokkos::Rank<2>>;
+  constexpr int max_tile_product = std::numeric_limits<int>::max();
+
+  // Equality with the maximum is valid; only an excess must be rejected.
+  policy_type policy({0, 0}, {1, 1}, {max_tile_product, 1});
+  EXPECT_EQ(policy.impl_prod_tile_dims(), max_tile_product);
+  EXPECT_EQ(policy.impl_num_tiles(), 1);
+}
+
+TEST(TEST_CATEGORY_DEATH, md_range_policy_explicit_tile_product_overflow) {
+  using policy_type =
+      Kokkos::MDRangePolicy<Kokkos::DefaultHostExecutionSpace, Kokkos::Rank<2>>;
+  ASSERT_DEATH(
+      {
+        (void)policy_type({0, 0}, {2, 2}, {46341, 46341});
+      },
+      "Product of tile dimensions is greater than the maximum total tile size");
 }
 
 }  // namespace
