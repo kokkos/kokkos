@@ -54,7 +54,6 @@ constexpr bool test_equivalence() {
   CHECK_SAME(const_data_type);
   CHECK_SAME(non_const_data_type);
   // Not currently the same
-  // CHECK_SAME(view_tracker_type);
   CHECK_SAME(array_layout);
   CHECK_SAME(device_type);
   CHECK_SAME(execution_space);

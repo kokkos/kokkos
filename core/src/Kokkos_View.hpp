@@ -45,8 +45,6 @@ namespace Impl {
 template <class ViewType, int Traits>
 struct ViewUniformType;
 
-template <class ParentView>
-struct ViewTracker;
 } /* namespace Impl */
 
 namespace Impl {
@@ -329,8 +327,6 @@ class View
  private:
   template <class, class...>
   friend class View;
-  template <typename V>
-  friend struct Kokkos::Impl::ViewTracker;
 
   using basic_view_from_traits =
       Impl::BasicViewFromTraits<DataOrElementType, Properties...>;
@@ -352,7 +348,6 @@ class View
   using data_type            = typename basic_view_from_traits::data_type;
   using const_data_type      = typename traits::const_data_type;
   using non_const_data_type  = typename traits::non_const_data_type;
-  using view_tracker_type    = Impl::ViewTracker<View>;
   using array_layout         = typename traits::array_layout;
   using device_type          = typename traits::device_type;
   using execution_space      = typename traits::execution_space;
