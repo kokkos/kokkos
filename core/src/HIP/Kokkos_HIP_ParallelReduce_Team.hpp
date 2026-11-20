@@ -34,7 +34,7 @@ class ParallelReduce<CombinedFunctorReducerType,
  public:
   using functor_type = FunctorType;
   // Conditionally set word_size_type to uint16_t or uint8_t if value_type is
-  // smaller than 32 bits (width of Kokkos::HIP::size_type)
+  // smaller than 32 bits (width of Kokkos::HIP::size_type).
   // word_size_type is used to determine the word count, shared memory buffer
   // size, and global memory buffer size before the reduction is performed.
   // Within the reduction, the word count is recomputed based on word_size_type
@@ -201,7 +201,8 @@ class ParallelReduce<CombinedFunctorReducerType,
         reducer.final(reinterpret_cast<value_type*>(shared));
       }
 
-      if (HIPTraits::WarpSize < word_count.value) {
+      if (static_cast<word_size_type>(HIPTraits::WarpSize()) <
+          word_count.value) {
         __syncthreads();
       }
 
@@ -368,7 +369,7 @@ class ParallelReduce<CombinedFunctorReducerType,
           "greater than 1 is not currently supported for HIP for dynamic "
           "sized reduction types.");
 
-    if ((m_team_size < HIPTraits::WarpSize) && !UseShflReduction)
+    if ((m_team_size < HIPTraits::WarpSize()) && !UseShflReduction)
       Impl::throw_runtime_exception(
           "Kokkos::parallel_reduce with a TeamPolicy using a team_size smaller "
           "than 64 is not currently supported with HIP for dynamic sized "

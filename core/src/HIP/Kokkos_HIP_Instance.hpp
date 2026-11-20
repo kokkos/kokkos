@@ -20,24 +20,23 @@
 namespace Kokkos {
 namespace Impl {
 
+int hip_warp_size_host();
+
 struct HIPTraits {
-#if defined(KOKKOS_ARCH_AMD_GFX906) || defined(KOKKOS_ARCH_AMD_GFX908) ||     \
-    defined(KOKKOS_ARCH_AMD_GFX90A) || defined(KOKKOS_ARCH_AMD_GFX940) ||     \
-    defined(KOKKOS_ARCH_AMD_GFX942) || defined(KOKKOS_ARCH_AMD_GFX942_APU) || \
-    defined(KOKKOS_ARCH_HYGON_GFX936) || defined(KOKKOS_ARCH_AMD_GFX950)
-  static constexpr int WarpSize       = 64;
-  static constexpr int WarpIndexMask  = 0x003f; /* hexadecimal for 63 */
-  static constexpr int WarpIndexShift = 6;      /* WarpSize == 1 << WarpShift*/
-#elif defined(KOKKOS_ARCH_AMD_GFX1030) || defined(KOKKOS_ARCH_AMD_GFX1100) || \
-    defined(KOKKOS_ARCH_AMD_GFX1101) || defined(KOKKOS_ARCH_AMD_GFX1103) ||   \
-    defined(KOKKOS_ARCH_AMD_GFX1151) || defined(KOKKOS_ARCH_AMD_GFX1152) ||   \
-    defined(KOKKOS_ARCH_AMD_GFX1201)
-  static constexpr int WarpSize       = 32;
-  static constexpr int WarpIndexMask  = 0x001f; /* hexadecimal for 31 */
-  static constexpr int WarpIndexShift = 5;      /* WarpSize == 1 << WarpShift*/
+  KOKKOS_FUNCTION static int WarpSize() {
+#ifdef __HIP_DEVICE_COMPILE__
+    return warpSize;
 #else
-#error "Unexpected AMD GFX architecture!"
+    return hip_warp_size_host();
 #endif
+  }
+
+  KOKKOS_FUNCTION static int WarpIndexMask() { return WarpSize() - 1; }
+
+  KOKKOS_FUNCTION static int WarpIndexShift() {
+    return static_cast<int>(
+        Kokkos::countr_zero(static_cast<unsigned int>(WarpSize())));
+  }
   static constexpr int ConservativeThreadsPerBlock =
       256;  // conservative fallback blocksize in case of spills
   static constexpr int MaxThreadsPerBlock =
