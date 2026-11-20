@@ -79,10 +79,10 @@ constexpr To checked_narrow_cast(From arg, std::size_t idx) {
 }
 // NOTE prefer C array U[M] to std::initalizer_list<U> so that the number of
 // elements can be deduced (https://stackoverflow.com/q/40241370)
-// NOTE for some unfortunate reason the policy bounds are stored as signed
-// integer arrays (point_type which is Kokkos::Array<std::int64_t>) so we
-// specify the index type (actual policy index_type from the traits) and check
-// ahead of time that narrowing conversions will be safe.
+// Since Kokkos 5.3, point_type & tile_type are Kokkos::Array<index_type, ...>
+// where index_type is that of the execution policy. A conditional check with
+// respect to index_type ensures that the check always happens irrespective
+// of how point_type and tile_type will be defined in the future.
 template <class IndexType, class Array, class U, std::size_t M>
 constexpr Array to_array_potentially_narrowing(const U (&init)[M]) {
   using T = typename Array::value_type;
@@ -96,7 +96,9 @@ constexpr Array to_array_potentially_narrowing(const U (&init)[M]) {
   // except that std::transform is not constexpr.
   for (std::size_t i = 0; i < M; ++i) {
     *ptr++ = checked_narrow_cast<T>(init[i], i);
-    (void)checked_narrow_cast<IndexType>(init[i], i);  // see note above
+    if constexpr (!std::is_same_v<T, IndexType>) {  // see note above
+      (void)checked_narrow_cast<IndexType>(init[i], i);
+    }
   }
   return a;
 }
@@ -115,7 +117,9 @@ constexpr NVCC_WONT_LET_ME_CALL_YOU_Array to_array_potentially_narrowing(
   static_assert(M <= N);
   for (std::size_t i = 0; i < M; ++i) {
     a[i] = checked_narrow_cast<T>(other[i], i);
-    (void)checked_narrow_cast<IndexType>(other[i], i);  // see note above
+    if constexpr (!std::is_same_v<T, IndexType>) {  // see note above
+      (void)checked_narrow_cast<IndexType>(other[i], i);
+    }
   }
   return a;
 }
