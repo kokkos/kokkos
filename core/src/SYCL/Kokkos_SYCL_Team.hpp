@@ -541,11 +541,23 @@ std::enable_if_t<Kokkos::is_reducer<ReducerType>::value> parallel_reduce(
   value_type value;
   wrapped_reducer.init(&value);
 
+  using thread_handle_t = Impl::ThreadHandleType<Impl::SYCLTeamMember>;
+
   for (iType i = loop_boundaries.start +
                  loop_boundaries.member.item().get_local_id(0);
        i < loop_boundaries.end;
        i += loop_boundaries.member.item().get_local_range(0)) {
-    closure(i, value);
+    if constexpr (std::is_invocable_v<Closure, iType, value_type&>) {
+      closure(i, value);
+    } else if constexpr (std::is_invocable_v<Closure, thread_handle_t const&,
+                                             iType, value_type&>) {
+      closure(thread_handle_t(loop_boundaries.member), i, value);
+    } else {
+      static_assert(Kokkos::Impl::always_false<Closure>::value,
+                    "Kokkos::parallel_reduce(TeamThreadRange) closure must be "
+                    "invocable with (iType, ValueType&) or "
+                    "(ThreadHandleType, iType, ValueType&)");
+    }
   }
 
   loop_boundaries.member.impl_team_reduce(wrapped_reducer, value);
@@ -572,6 +584,7 @@ std::enable_if_t<!Kokkos::is_reducer<ValueType>::value> parallel_reduce(
       ValueType>;
   using wrapped_reducer_type = typename functor_analysis_type::Reducer;
   using value_type           = typename wrapped_reducer_type::value_type;
+  using thread_handle_t      = Impl::ThreadHandleType<Impl::SYCLTeamMember>;
 
   wrapped_reducer_type wrapped_reducer(closure);
   value_type value;
@@ -581,7 +594,17 @@ std::enable_if_t<!Kokkos::is_reducer<ValueType>::value> parallel_reduce(
                  loop_boundaries.member.item().get_local_id(0);
        i < loop_boundaries.end;
        i += loop_boundaries.member.item().get_local_range(0)) {
-    closure(i, value);
+    if constexpr (std::is_invocable_v<Closure, iType, value_type&>) {
+      closure(i, value);
+    } else if constexpr (std::is_invocable_v<Closure, thread_handle_t const&,
+                                             iType, value_type&>) {
+      closure(thread_handle_t(loop_boundaries.member), i, value);
+    } else {
+      static_assert(Kokkos::Impl::always_false<Closure>::value,
+                    "Kokkos::parallel_reduce(TeamThreadRange) closure must be "
+                    "invocable with (iType, ValueType&) or "
+                    "(ThreadHandleType, iType, ValueType&)");
+    }
   }
 
   loop_boundaries.member.impl_team_reduce(wrapped_reducer, value);

@@ -159,6 +159,8 @@ namespace Kokkos {
 
 // Hierarchical Parallelism -> Team thread level implementation
 // FIXME_NEXTSILICON: single-thread implementation
+// If the closure accepts (thread_handle, iType, ValueType&), the thread
+// handle is passed so the body can use the vector lanes.
 template <typename iType, class Lambda, typename ReducerType>
   requires(Kokkos::is_reducer<ReducerType>::value)
 KOKKOS_INLINE_FUNCTION void parallel_reduce(
@@ -170,14 +172,26 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
       Kokkos::Impl::FunctorPatternInterface::REDUCE,
       TeamPolicy<typename Impl::NextSiliconTeamMember::execution_space>,
       ReducerType, value_type>::Reducer;
+  using thread_handle_t = Impl::ThreadHandleType<Impl::NextSiliconTeamMember>;
 
   // team size is 1
   WrappedReducer wrappedReducer(reducer);
   value_type val;
   wrappedReducer.init(&val);
 
-  for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++)
-    lambda(i, val);
+  for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) {
+    if constexpr (std::is_invocable_v<Lambda, iType, value_type&>) {
+      lambda(i, val);
+    } else if constexpr (std::is_invocable_v<Lambda, thread_handle_t const&,
+                                             iType, value_type&>) {
+      lambda(thread_handle_t(loop_boundaries.team), i, val);
+    } else {
+      static_assert(Kokkos::Impl::always_false<Lambda>::value,
+                    "Kokkos::parallel_reduce(TeamThreadRange) closure must be "
+                    "invocable with (iType, ValueType&) or "
+                    "(ThreadHandleType, iType, ValueType&)");
+    }
+  }
   wrappedReducer.final(&val);
   reducer.reference() = val;
 }
@@ -191,14 +205,26 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
       Kokkos::Impl::FunctorPatternInterface::REDUCE,
       TeamPolicy<typename Impl::NextSiliconTeamMember::execution_space>, Lambda,
       ValueType>::Reducer;
+  using thread_handle_t = Impl::ThreadHandleType<Impl::NextSiliconTeamMember>;
 
   // team size is 1
   ValueType val;
   WrappedReducer wrappedReducer(lambda);
   wrappedReducer.init(&val);
 
-  for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++)
-    lambda(i, val);
+  for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) {
+    if constexpr (std::is_invocable_v<Lambda, iType, ValueType&>) {
+      lambda(i, val);
+    } else if constexpr (std::is_invocable_v<Lambda, thread_handle_t const&,
+                                             iType, ValueType&>) {
+      lambda(thread_handle_t(loop_boundaries.team), i, val);
+    } else {
+      static_assert(Kokkos::Impl::always_false<Lambda>::value,
+                    "Kokkos::parallel_reduce(TeamThreadRange) closure must be "
+                    "invocable with (iType, ValueType&) or "
+                    "(ThreadHandleType, iType, ValueType&)");
+    }
+  }
   wrappedReducer.final(&val);
   result = val;
 }

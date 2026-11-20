@@ -157,6 +157,8 @@ parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
   using wrapped_reducer_type = typename functor_analysis_type::Reducer;
   using value_type           = typename wrapped_reducer_type::value_type;
 
+  using thread_handle_t = Impl::ThreadHandleType<Impl::OpenACCTeamMember>;
+
   wrapped_reducer_type wrapped_reducer(lambda);
   value_type tmp;
   wrapped_reducer.init(&tmp);
@@ -165,8 +167,20 @@ parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
                   loop_boundaries.member.vector_length();
   if (j_start == 0) {
 #pragma acc loop seq
-    for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++)
-      lambda(i, tmp);
+    for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) {
+      if constexpr (std::is_invocable_v<Lambda, iType, value_type&>) {
+        lambda(i, tmp);
+      } else if constexpr (std::is_invocable_v<Lambda, thread_handle_t const&,
+                                               iType, value_type&>) {
+        lambda(thread_handle_t(loop_boundaries.member), i, tmp);
+      } else {
+        static_assert(
+            Kokkos::Impl::always_false<Lambda>::value,
+            "Kokkos::parallel_reduce(TeamThreadRange) closure must be "
+            "invocable with (iType, ValueType&) or "
+            "(ThreadHandleType, iType, ValueType&)");
+      }
+    }
     wrapped_reducer.final(&tmp);
     result = tmp;
   }
@@ -184,6 +198,7 @@ parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
       TeamPolicy<typename Impl::OpenACCTeamMember::execution_space>,
       ReducerType, value_type>;
   using wrapped_reducer_type = typename functor_analysis_type::Reducer;
+  using thread_handle_t      = Impl::ThreadHandleType<Impl::OpenACCTeamMember>;
 
   wrapped_reducer_type wrapped_reducer(reducer);
   value_type tmp;
@@ -193,8 +208,20 @@ parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
                   loop_boundaries.member.vector_length();
   if (j_start == 0) {
 #pragma acc loop seq
-    for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++)
-      lambda(i, tmp);
+    for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) {
+      if constexpr (std::is_invocable_v<Lambda, iType, value_type&>) {
+        lambda(i, tmp);
+      } else if constexpr (std::is_invocable_v<Lambda, thread_handle_t const&,
+                                               iType, value_type&>) {
+        lambda(thread_handle_t(loop_boundaries.member), i, tmp);
+      } else {
+        static_assert(
+            Kokkos::Impl::always_false<Lambda>::value,
+            "Kokkos::parallel_reduce(TeamThreadRange) closure must be "
+            "invocable with (iType, ValueType&) or "
+            "(ThreadHandleType, iType, ValueType&)");
+      }
+    }
 
     wrapped_reducer.final(&tmp);
     reducer.reference() = tmp;
