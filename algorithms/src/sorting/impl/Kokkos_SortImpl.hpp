@@ -22,7 +22,7 @@ import kokkos.core;
 #include <type_traits>
 #include <utility>
 
-#if defined(KOKKOS_ENABLE_CUDA)
+#if defined(KOKKOS_IMPL_ENABLE_CUDATHRUST)
 
 // Workaround for `Instruction 'shfl' without '.sync' is not supported on
 // .target sm_70 and higher from PTX ISA version 6.4`.
@@ -177,7 +177,7 @@ void sort_via_binsort(const ExecutionSpace& exec,
   bin_sort.sort(exec, view);
 }
 
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_ROCTHRUST)
+#if defined(KOKKOS_IMPL_ENABLE_CUDATHRUST) || defined(KOKKOS_ENABLE_ROCTHRUST)
 // thrust::sort keeps arrays of the value type in its kernels, so it does not
 // compile for value types that are not default constructible (#9676).  For
 // those, sort an index permutation with thrust and then permute the values.
@@ -259,7 +259,7 @@ void thrust_sort([[maybe_unused]] const ExecutionSpace& space,
 }
 #endif
 
-#if defined(KOKKOS_ENABLE_CUDA)
+#if defined(KOKKOS_IMPL_ENABLE_CUDATHRUST)
 template <class DataType, class... Properties, class... MaybeComparator>
 void sort_cudathrust(const Cuda& space,
                      const Kokkos::View<DataType, Properties...>& view,
@@ -400,7 +400,7 @@ void copy_to_host_run_stdsort_copy_back(
 //
 // --------------------------------------------------
 
-#if defined(KOKKOS_ENABLE_CUDA)
+#if defined(KOKKOS_IMPL_ENABLE_CUDATHRUST)
 template <class ComparatorType, class DataType, class... Properties>
 void sort_device_view_with_comparator(
     const Cuda& exec, const Kokkos::View<DataType, Properties...>& view,
@@ -476,7 +476,7 @@ sort_device_view_with_comparator(
 //
 // --------------------------------------------------
 
-#if defined(KOKKOS_ENABLE_CUDA)
+#if defined(KOKKOS_IMPL_ENABLE_CUDATHRUST)
 template <class DataType, class... Properties>
 void sort_device_view_without_comparator(
     const Cuda& exec, const Kokkos::View<DataType, Properties...>& view) {

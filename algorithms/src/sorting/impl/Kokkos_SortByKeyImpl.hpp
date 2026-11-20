@@ -14,7 +14,7 @@ import kokkos.core;
 #include <cstdint>
 #include <tuple>
 
-#if defined(KOKKOS_ENABLE_CUDA)
+#if defined(KOKKOS_IMPL_ENABLE_CUDATHRUST)
 
 // Workaround for `Instruction 'shfl' without '.sync' is not supported on
 // .target sm_70 and higher from PTX ISA version 6.4`.
@@ -91,7 +91,7 @@ static_assert_is_admissible_to_kokkos_sort_by_key(const ViewType& /* view */) {
 template <class ExecutionSpace, class Layout>
 inline constexpr bool sort_on_device_v = false;
 
-#if defined(KOKKOS_ENABLE_CUDA)
+#if defined(KOKKOS_IMPL_ENABLE_CUDATHRUST)
 template <class Layout>
 inline constexpr bool sort_on_device_v<Kokkos::Cuda, Layout> = true;
 
@@ -372,7 +372,7 @@ void sort_by_key_via_sort(
 //
 // ------------------------------------------------------
 
-#if defined(KOKKOS_ENABLE_CUDA)
+#if defined(KOKKOS_IMPL_ENABLE_CUDATHRUST)
 template <class KeysDataType, class... KeysProperties, class ValuesDataType,
           class... ValuesProperties>
 void sort_by_key_device_view_without_comparator(
@@ -433,7 +433,7 @@ sort_by_key_device_view_without_comparator(
 //
 // ---------------------------------------------------
 
-#if defined(KOKKOS_ENABLE_CUDA)
+#if defined(KOKKOS_IMPL_ENABLE_CUDATHRUST)
 template <class ComparatorType, class KeysDataType, class... KeysProperties,
           class ValuesDataType, class... ValuesProperties>
 void sort_by_key_device_view_with_comparator(
