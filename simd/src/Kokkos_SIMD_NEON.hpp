@@ -2287,6 +2287,10 @@ class basic_simd<std::uint32_t, simd_abi::neon_fixed_size<2>> {
 #endif
   }
 
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd operator-() const noexcept {
+    return basic_simd(vsub_u32(vdup_n_u32(0), m_value));
+  }
+
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd operator~() const noexcept {
     return basic_simd(veor_u32(m_value, basic_simd(~value_type(0)).m_value));
   }
@@ -2646,6 +2650,10 @@ class basic_simd<std::uint32_t, simd_abi::neon_fixed_size<4>> {
     defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
     return value_type{};
 #endif
+  }
+
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd operator-() const noexcept {
+    return basic_simd(vsubq_u32(vdupq_n_u32(0), m_value));
   }
 
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd operator~() const noexcept {
@@ -3377,6 +3385,10 @@ class basic_simd<std::uint64_t, simd_abi::neon_fixed_size<2>> {
     defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
     return value_type{};
 #endif
+  }
+
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd operator-() const noexcept {
+    return basic_simd(vsubq_u64(vdupq_n_u64(0), m_value));
   }
 
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd operator~() const noexcept {
