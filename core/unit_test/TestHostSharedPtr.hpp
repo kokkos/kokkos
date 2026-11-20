@@ -5,6 +5,10 @@
 
 #include <gtest/gtest.h>
 
+#include <array>
+#include <latch>
+#include <thread>
+
 using Kokkos::Impl::HostSharedPtr;
 
 TEST(TEST_CATEGORY, host_shared_ptr_use_count) {
@@ -111,4 +115,40 @@ TEST(TEST_CATEGORY, host_shared_ptr_get) {
     EXPECT_EQ(p1.get(), nullptr);  // NOLINT(bugprone-use-after-move)
     EXPECT_EQ(p2.get(), &i);
   }
+}
+
+TEST(TEST_CATEGORY, host_shared_ptr_use_count_under_contention) {
+  const HostSharedPtr<int> hsp{new int(42)};
+
+  constexpr std::size_t num_threads = 2;
+
+  std::latch all_copied{num_threads};
+  std::latch release{1};
+
+// FIXME_APPLECC
+#if defined(__cpp_lib_jthread) && __cpp_lib_jthread >= 201911L
+  using thread_t = std::jthread;
+#else
+#define KOKKOS_TEST_WORKAROUND_JTHREAD_NOT_AVAILABLE
+  using thread_t = std::thread;
+#endif
+  std::array<thread_t, num_threads> threads;
+  for (auto& thread : threads)
+    thread = thread_t([&] {
+      // NOLINTNEXTLINE(performance-unnecessary-copy-initialization)
+      const auto l_c = hsp;
+      all_copied.count_down();
+      EXPECT_GE(l_c.use_count(), 2);
+      release.wait();
+    });
+  all_copied.wait();
+
+  EXPECT_EQ(hsp.use_count(), 1 + num_threads);
+
+  release.count_down();
+
+// FIXME_APPLECC
+#if defined(KOKKOS_TEST_WORKAROUND_JTHREAD_NOT_AVAILABLE)
+  for (auto& thread : threads) thread.join();
+#endif
 }
