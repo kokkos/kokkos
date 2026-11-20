@@ -327,6 +327,13 @@ class Kokkos::Impl::TeamPolicyInternal<Kokkos::SYCL, Properties...>
          2 * sizeof(double) - m_team_scratch_size[0]) /
         (sizeof(double) + m_thread_scratch_size[0]);
 
+#if defined(__ACPP__)
+    // FIXME_ACPP No kernel bundles, see sycl_device_kernel_limits
+    (void)f;
+    const int max_threads_kernel =
+        Impl::sycl_device_kernel_limits(m_space.sycl_queue().get_device())
+            .work_group_size;
+#else
     auto& instance          = *m_space.impl_internal_space_instance();
     auto& indirectKernelMem = instance.get_indirect_kernel_mem();
     auto functor_wrapper =
@@ -370,6 +377,7 @@ class Kokkos::Impl::TeamPolicyInternal<Kokkos::SYCL, Properties...>
           lambda);
     });
     functor_wrapper.register_event(event);
+#endif
 
     return std::min({max_threads_kernel, max_threads_for_memory}) /
            impl_vector_length();
@@ -396,6 +404,12 @@ class Kokkos::Impl::TeamPolicyInternal<Kokkos::SYCL, Properties...>
         (sizeof(double) + sizeof(value_type) * value_count +
          m_thread_scratch_size[0]);
 
+#if defined(__ACPP__)
+    // FIXME_ACPP No kernel bundles, see sycl_device_kernel_limits
+    const int max_threads_kernel =
+        Impl::sycl_device_kernel_limits(m_space.sycl_queue().get_device())
+            .work_group_size;
+#else
     auto& instance          = *m_space.impl_internal_space_instance();
     auto& indirectKernelMem = instance.get_indirect_kernel_mem();
     auto functor_wrapper =
@@ -445,6 +459,7 @@ class Kokkos::Impl::TeamPolicyInternal<Kokkos::SYCL, Properties...>
           lambda);
     });
     functor_wrapper.register_event(event);
+#endif
 
     return std::min({max_threads_kernel, max_threads_for_memory}) /
            impl_vector_length();
