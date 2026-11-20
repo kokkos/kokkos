@@ -288,9 +288,7 @@ std::ostream& SYCL::impl_sycl_info(std::ostream& os,
             << "\nVendor: " << device.get_info<device::vendor>()
             << "\nVersion: " << device.get_info<device::version>()
             << "\nPartition Max Sub Devices: "
-            << device.get_info<device::partition_max_sub_devices>()
-            << "\nReference Count: "
-            << device.get_info<device::reference_count>() << '\n';
+            << device.get_info<device::partition_max_sub_devices>() << '\n';
 }
 
 namespace Impl {
