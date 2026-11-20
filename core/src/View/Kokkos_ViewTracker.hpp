@@ -84,10 +84,6 @@ struct ViewTracker {
   KOKKOS_INLINE_FUNCTION ViewTracker& operator=(ViewTracker&& rhs) {
     return *this = static_cast<const ViewTracker&>(rhs);
   }
-
-  KOKKOS_INLINE_FUNCTION
-  explicit ViewTracker(const track_type& tt) noexcept
-      : m_tracker(tt, !view_traits::memory_traits::is_unmanaged) {}
 };
 
 }  // namespace Impl

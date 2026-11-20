@@ -474,15 +474,40 @@ class GraphNodeRef {
   //----------------------------------------------------------------------------
   // <editor-fold desc="then_parallel_reduce"> {{{2
 
-  // Equivalent to std::get<I>(std::tuple) but callable on the device.
-  template <bool B, class T1, class T2>
-  static KOKKOS_FUNCTION std::conditional_t<B, T1&&, T2&&>
-  impl_forwarding_switch(T1&& v1, T2&& v2) {
-    if constexpr (B)
-      return static_cast<T1&&>(v1);
-    else
-      return static_cast<T2&&>(v2);
-  }
+  template <typename FunctorType, typename ReturnType>
+  struct ReducerTypeForParallelReduce : public std::identity {
+    using helper_t =
+        Kokkos::Impl::ParallelReduceReturnValue<void, ReturnType, FunctorType>;
+
+    using return_type  = typename helper_t::return_type;
+    using reducer_type = typename helper_t::reducer_type;
+    using value_type   = typename helper_t::value_type;
+  };
+
+  template <typename FunctorType, typename ReturnType>
+    requires std::same_as<InvalidType,
+                          typename Kokkos::Impl::ParallelReduceReturnValue<
+                              void, ReturnType, FunctorType>::reducer_type>
+  struct ReducerTypeForParallelReduce<FunctorType, ReturnType> {
+    static_assert(Kokkos::is_view_v<ReturnType>);
+
+    // Wrap the view into a sum functor to ensure its lifetime is extended by
+    // the node.
+    using reducer_type = Kokkos::Sum<typename ReturnType::value_type,
+                                     typename ReturnType::memory_space>;
+
+    using helper_t =
+        Kokkos::Impl::ParallelReduceReturnValue<void, ReturnType, FunctorType>;
+    using return_type = typename helper_t::return_type;
+    using value_type  = typename helper_t::value_type;
+
+    template <typename T>
+    constexpr auto operator()(T&& value) const noexcept -> reducer_type {
+      static_assert(
+          std::same_as<std::remove_cvref_t<T>, std::remove_cv_t<ReturnType>>);
+      return {std::forward<T>(value)};
+    }
+  };
 
   template <typename Props, class Policy, class Functor, class ReturnType>
     requires(Kokkos::Impl::NodeProperties<std::remove_cvref_t<Props>> &&
@@ -544,11 +569,6 @@ class GraphNodeRef {
                            return_type_remove_cvref,
                            const return_type_remove_cvref>;
     using functor_type = std::remove_cvref_t<Functor>;
-    // see Kokkos_Parallel_Reduce.hpp for how these details are used there;
-    // we're just doing the same thing here
-    using return_value_adapter =
-        Kokkos::Impl::ParallelReduceReturnValue<void, return_type,
-                                                functor_type>;
     // End of Kokkos reducer disaster
     //----------------------------------------
 
@@ -563,23 +583,17 @@ class GraphNodeRef {
                           device_handle.m_exec),
         Kokkos::Impl::KernelInGraphProperty{});
 
-    using passed_reducer_type = typename return_value_adapter::reducer_type;
-
-    constexpr bool passed_reducer_type_is_invalid =
-        std::is_same_v<InvalidType, passed_reducer_type>;
-    using TheReducerType =
-        std::conditional_t<passed_reducer_type_is_invalid, functor_type,
-                           passed_reducer_type>;
+    using return_value_adapter =
+        ReducerTypeForParallelReduce<functor_type, return_type>;
 
     using analysis = Kokkos::Impl::FunctorAnalysis<
-        Kokkos::Impl::FunctorPatternInterface::REDUCE, Policy, TheReducerType,
+        Kokkos::Impl::FunctorPatternInterface::REDUCE, Policy,
+        typename return_value_adapter::reducer_type,
         typename return_value_adapter::value_type>;
-    typename analysis::Reducer final_reducer(
-        impl_forwarding_switch<passed_reducer_type_is_invalid>(functor,
-                                                               return_value));
     Kokkos::Impl::CombinedFunctorReducer<functor_type,
                                          typename analysis::Reducer>
-        functor_reducer(functor, final_reducer);
+        functor_reducer(functor, typename analysis::Reducer(
+                                     return_value_adapter{}(return_value)));
 
     using next_policy_t = decltype(policy);
     using next_kernel_t =
@@ -591,7 +605,7 @@ class GraphNodeRef {
         std::move(device_handle),
         next_kernel_t{std::move(label), std::move(functor_reducer),
                       std::move(policy),
-                      return_value_adapter::return_value(
+                      return_value_adapter::helper_t::return_value(
                           return_value, std::forward<Functor>(functor))});
   }
 

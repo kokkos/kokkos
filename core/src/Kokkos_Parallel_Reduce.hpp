@@ -313,9 +313,8 @@ inline void parallel_reduce_dispatch(
            Kokkos::is_reducer<ReturnType>::value ||
            std::is_pointer_v<ReturnType>)
 {
-  ReturnType return_value_impl = return_value;
   ParallelReduceAdaptor<PolicyType, FunctorType, ReturnType>::execute(
-      optional_label, policy, functor, return_value_impl);
+      optional_label, policy, functor, const_cast<ReturnType&>(return_value));
   ParallelReduceFence<typename PolicyType::execution_space, ReturnType>::fence(
       policy.space(),
       "Kokkos::parallel_reduce: fence" /*FIXME: describe correct reason*/,
