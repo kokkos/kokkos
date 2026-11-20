@@ -10,16 +10,19 @@ include(GNUInstallDirs)
 message(STATUS "The project name is: ${PROJECT_NAME}")
 
 if(Kokkos_ENABLE_TESTS OR Kokkos_INSTALL_TESTING)
-  find_package(GTest 1.14.0 CONFIG QUIET)
-  if(GTest_FOUND)
+  # Probe external GoogleTest for GMock in a subdirectory scope to avoid target conflicts
+  # if GMock is missing.
+  add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/check_gtest ${CMAKE_CURRENT_BINARY_DIR}/check_gtest)
+
+  if(KOKKOS_EXTERNAL_GTEST_USABLE)
+    find_package(GTest 1.14.0 CONFIG QUIET)
     message(STATUS "Found external GoogleTest: ${GTest_DIR} (version \"${GTest_VERSION}\")")
   else()
     message(STATUS "Using bundled GoogleTest version")
     include(FetchContent)
     list(APPEND CMAKE_MESSAGE_INDENT "[googletest] ")
     set(INSTALL_GTEST OFF)
-    # Kokkos only ever links against GTest::gtest
-    set(BUILD_GMOCK OFF)
+    set(BUILD_GMOCK ON)
     FetchContent_Declare(googletest SOURCE_DIR ${Kokkos_SOURCE_DIR}/tpls/googletest-1.14.0)
     # For Windows: Prevent overriding the parent project's compiler/linker settings
     set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
@@ -28,7 +31,7 @@ if(Kokkos_ENABLE_TESTS OR Kokkos_INSTALL_TESTING)
 
     # Suppress clang-tidy diagnostics on code that we do not have control over
     if(CMAKE_CXX_CLANG_TIDY)
-      set_target_properties(gtest PROPERTIES CXX_CLANG_TIDY "")
+      set_target_properties(gtest gmock PROPERTIES CXX_CLANG_TIDY "")
     endif()
 
     # Suppress compiler warnings. gtest's own CMake build sets its warning
@@ -38,13 +41,15 @@ if(Kokkos_ENABLE_TESTS OR Kokkos_INSTALL_TESTING)
     # hard configure/build error, then re-enable warnings suppression via
     # COMPILE_OPTIONS.
     # TODO use SYSTEM within the FetchContent_Declare call when CMake 3.25 is required
-    set_target_properties(gtest PROPERTIES COMPILE_FLAGS "" COMPILE_OPTIONS -w)
+    set_target_properties(gtest gmock PROPERTIES COMPILE_FLAGS "" COMPILE_OPTIONS -w)
 
-    # Kokkos only links GTest::gtest: keep gtest_main out of the default
-    # build so its (unmodified) strict warning flags never get compiled.
-    if(TARGET gtest_main)
-      set_target_properties(gtest_main PROPERTIES EXCLUDE_FROM_ALL ON)
-    endif()
+    # Kokkos only links GTest::{gtest,gmock}: keep {gtest,gmock}_main out of the default
+    # build so their (unmodified) strict warning flags never get compiled.
+    foreach(main_target gtest_main gmock_main)
+      if(TARGET ${main_target})
+        set_target_properties(${main_target} PROPERTIES EXCLUDE_FROM_ALL ON)
+      endif()
+    endforeach()
   endif()
 endif()
 
@@ -202,17 +207,27 @@ macro(KOKKOS_ADD_TEST_EXECUTABLE ROOT_NAME)
   cmake_parse_arguments(PARSE "" "" "SOURCES" ${ARGN})
   # Don't do anything if the user disabled the test
   if(NOT ${PACKAGE_NAME}_${ROOT_NAME}_DISABLE)
-    kokkos_add_executable(${ROOT_NAME} SOURCES ${PARSE_SOURCES} ${PARSE_UNPARSED_ARGUMENTS} TESTONLYLIBS GTest::gtest)
+    kokkos_add_executable(
+      ${ROOT_NAME}
+      SOURCES
+      ${PARSE_SOURCES}
+      ${PARSE_UNPARSED_ARGUMENTS}
+      TESTONLYLIBS
+      GTest::gtest
+      GTest::gmock
+    )
     set(EXE_NAME ${PACKAGE_NAME}_${ROOT_NAME})
 
     # Suppress compiler warnings when not using an external gtest version.
     # TODO use SYSTEM within the FetchContent_Declare call when CMake 3.25 is required
-    get_target_property(GTEST_INCLUDES GTest::gtest INCLUDE_DIRECTORIES)
-    if(GTEST_INCLUDES)
-      foreach(dir ${GTEST_INCLUDES})
-        target_include_directories(${EXE_NAME} SYSTEM PRIVATE "${dir}")
-      endforeach()
-    endif()
+    foreach(gtest_target GTest::gtest GTest::gmock)
+      get_target_property(GTEST_INCLUDES ${gtest_target} INCLUDE_DIRECTORIES)
+      if(GTEST_INCLUDES)
+        foreach(dir ${GTEST_INCLUDES})
+          target_include_directories(${EXE_NAME} SYSTEM PRIVATE "${dir}")
+        endforeach()
+      endif()
+    endforeach()
   endif()
 endmacro()
 
