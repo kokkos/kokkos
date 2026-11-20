@@ -5,31 +5,72 @@
 
 #include <gtest/gtest.h>
 
+#include <tools/include/ToolTestingUtilities.hpp>
+
 namespace {
 
-template <class ViewType>
-void test_moving_view_use_count_and_label(ViewType v) {
-  auto const ptr = v.data();
-  auto const cnt = v.use_count();
-  auto const lbl = v.label();
-
+template <class ViewType, typename... Args>
+void test_moving_view_use_count_and_label(const Args&... args) {
   // NOLINTBEGIN(bugprone-use-after-move)
 
-  ViewType w(std::move(v));  // move construction
-  EXPECT_EQ(w.use_count(), cnt);
-  EXPECT_EQ(w.data(), ptr);
-  EXPECT_EQ(w.label(), lbl);
-  EXPECT_EQ(v.use_count(), 0);
-  EXPECT_EQ(v.label(), std::string(""));
-  EXPECT_EQ(v.data(), ptr);
+  // Move construction.
+  {
+    ViewType src(args...);
 
-  v = std::move(w);  // move assignment
-  EXPECT_EQ(v.use_count(), cnt);
-  EXPECT_EQ(v.data(), ptr);
-  EXPECT_EQ(v.label(), lbl);
-  EXPECT_EQ(w.use_count(), 0);
-  EXPECT_EQ(w.data(), v.data());
-  EXPECT_EQ(v.label(), lbl);
+    auto const ptr = src.data();
+    auto const cnt = src.use_count();
+    auto const lbl = src.label();
+
+    ViewType dst(std::move(src));
+
+    EXPECT_EQ(dst.use_count(), cnt);
+    EXPECT_EQ(dst.data(), ptr);
+    EXPECT_EQ(dst.label(), lbl);
+
+    EXPECT_EQ(src.use_count(), 0);
+    EXPECT_EQ(src.label(), std::string());
+    EXPECT_EQ(src.data(), ptr);
+  }
+
+  // Move assignment into an empty view.
+  {
+    ViewType src(args...);
+    ViewType dst;
+
+    auto const ptr = src.data();
+    auto const cnt = src.use_count();
+    auto const lbl = src.label();
+
+    dst = std::move(src);
+
+    EXPECT_EQ(dst.use_count(), cnt);
+    EXPECT_EQ(dst.data(), ptr);
+    EXPECT_EQ(dst.label(), lbl);
+
+    EXPECT_EQ(src.use_count(), 0);
+    EXPECT_EQ(src.data(), ptr);
+    EXPECT_EQ(src.label(), std::string());
+  }
+
+  // Move assignment into a non-empty view.
+  {
+    ViewType src(args...);
+    ViewType dst(args...);
+
+    auto const ptr = src.data();
+    auto const cnt = src.use_count();
+    auto const lbl = src.label();
+
+    dst = std::move(src);
+
+    EXPECT_EQ(dst.use_count(), cnt);
+    EXPECT_EQ(dst.data(), ptr);
+    EXPECT_EQ(dst.label(), lbl);
+
+    EXPECT_EQ(src.use_count(), 0);
+    EXPECT_EQ(src.data(), ptr);
+    EXPECT_EQ(src.label(), std::string());
+  }
 
   // NOLINTEND(bugprone-use-after-move)
 }
@@ -37,18 +78,57 @@ void test_moving_view_use_count_and_label(ViewType v) {
 TEST(TEST_CATEGORY, view_move_use_count_and_label) {
   using ExecutionSpace = TEST_EXECSPACE;
 
-  test_moving_view_use_count_and_label(Kokkos::View<int, ExecutionSpace>("v0"));
+  test_moving_view_use_count_and_label<Kokkos::View<int, ExecutionSpace>>("v0");
 
-  test_moving_view_use_count_and_label(
-      Kokkos::View<float*, ExecutionSpace>("v1", 1));
+  test_moving_view_use_count_and_label<Kokkos::View<float*, ExecutionSpace>>(
+      "v1", 1);
 
   Kokkos::View<double**, ExecutionSpace> v2("v2", 1, 2);
-  test_moving_view_use_count_and_label(Kokkos::View<double**, ExecutionSpace>(
-      v2.data(), v2.extent(0), v2.extent(1)));
-  test_moving_view_use_count_and_label(
-      Kokkos::View<double**, ExecutionSpace,
-                   Kokkos::MemoryTraits<Kokkos::Unmanaged>>(
-          v2.data(), v2.extent(0), v2.extent(1)));
+  test_moving_view_use_count_and_label<Kokkos::View<double**, ExecutionSpace>>(
+      v2.data(), v2.extent(0), v2.extent(1));
+  test_moving_view_use_count_and_label<Kokkos::View<
+      double**, ExecutionSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>>(
+      v2.data(), v2.extent(0), v2.extent(1));
+}
+
+// A moved-from view whose use count falls to zero is freed directly.
+TEST(TEST_CATEGORY, move_assign_view_is_freed_within_scope) {
+  using view_t = Kokkos::View<int, TEST_EXECSPACE>;
+
+  using namespace Kokkos::Test::Tools;
+  listen_tool_events(Config::DisableAll(), Config::EnableAllocs(),
+                     Config::EnableProfileEvents());
+
+  view_t outer(Kokkos::view_alloc("outer scope view"));
+
+  const bool success = validate_event_set(
+      [&]() {
+        Kokkos::Tools::markEvent("entering scope");
+
+        view_t inner(Kokkos::view_alloc("inner scope view"));
+
+        inner = std::move(outer);
+
+        Kokkos::Tools::markEvent("exiting scope");
+      },
+      [](ProfileEvent pe) {
+        return MatchDiagnostic{pe.name == "entering scope"};
+      },
+      [](AllocateDataEvent ade) {
+        return MatchDiagnostic{ade.name == "inner scope view"};
+      },
+      [](DeallocateDataEvent dde) {
+        return MatchDiagnostic{dde.name == "inner scope view"};
+      },
+      [](ProfileEvent pe) {
+        return MatchDiagnostic{pe.name == "exiting scope"};
+      },
+      [](DeallocateDataEvent dde) {
+        return MatchDiagnostic{dde.name == "outer scope view"};
+      });
+  ASSERT_TRUE(success);
+
+  listen_tool_events(Config::DisableAll());
 }
 
 template <class ViewType>
