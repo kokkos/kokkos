@@ -191,7 +191,7 @@ INTEL-B70:
   image: intel/oneapi:2026.1.0-devel-ubuntu26.04
   script:
     - apt-get update && apt-get install -y git intel-ocloc
-    - wget -q https://github.com/Kitware/CMake/releases/download/v4.5.0-rc2/cmake-4.5.0-rc2-linux-x86_64.sh -O /tmp/cmake-install.sh
+    - wget -q https://github.com/Kitware/CMake/releases/download/v4.5.1/cmake-4.5.1-linux-x86_64.sh -O /tmp/cmake-install.sh
     - bash /tmp/cmake-install.sh \
       --skip-license \
       --include-subdir \
@@ -218,7 +218,7 @@ INTEL-B70:
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_COMPILER_WARNINGS=ON"
     - export CTEST_BUILD_NAME="INTEL-B70"
     - export GTEST_DEATH_TEST_STYLE=fast
-    - /tmp/cmake-4.5.0-rc2-linux-x86_64/bin/ctest -VV
+    - /tmp/cmake-4.5.1-linux-x86_64/bin/ctest -VV
         -D CDASH_MODEL=${CDASH_MODEL}
         -D GITHUB_PR_ID="${GITHUB_PR_ID}"
         -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}"
