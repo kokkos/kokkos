@@ -466,14 +466,14 @@ class MDRangePolicy<P, Properties...>
                                    std::numeric_limits<index_type>::max())) ||
           overflow_happened) {
         std::string msg =
-            "Kokkos::MDRangePolicy bounds error: The product of the ranges ";
+            "Kokkos::MDRangePolicy bounds error: The product of the ranges (";
 
         int j = inner_rank;
         for (; j != outer_bound - iter_step; j += iter_step) {
-          msg += "(" + std::to_string(this->m_lower[j]) + ", " +
-                 std::to_string(this->m_upper[j]) + "), ";
+          msg += std::to_string(this->m_lower[j]) + ", " +
+                 std::to_string(this->m_upper[j]) + "), (";
         }
-        msg += "(" + std::to_string(this->m_lower[j]) + ", " +
+        msg += std::to_string(this->m_lower[j]) + ", " +
                std::to_string(this->m_upper[j]) + ")";
 
         msg += " exceeds the largest value representable by ";
