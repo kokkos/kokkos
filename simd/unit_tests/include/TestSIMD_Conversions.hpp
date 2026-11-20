@@ -13,6 +13,8 @@ import kokkos.simd_impl;
 #endif
 #include <SIMDTesting_Utilities.hpp>
 
+#include <cstring>
+
 namespace {
 
 using Kokkos::Experimental::all_of;
@@ -43,6 +45,7 @@ inline void host_check_conversions() {
       EXPECT_EQ(from.size(), to.size());
       EXPECT_TRUE(all_of(to == decltype(to)(test_mask_val)));
       EXPECT_TRUE(all_of(to == expected));
+      EXPECT_EQ(std::memcmp(&to, &expected, sizeof(to)), 0);
     }
   }
 }
