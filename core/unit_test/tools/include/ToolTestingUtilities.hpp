@@ -230,10 +230,12 @@ struct invoke_helper {
  */
 inline MatchDiagnostic check_match(event_vector::size_type events_scanned,
                                    const event_vector& events) {
-  auto result =
-      ((events_scanned == events.size())
-           ? MatchDiagnostic{true}
-           : MatchDiagnostic{false, {"Wrong number of events encountered"}});
+  auto result = ((events_scanned == events.size())
+                     ? MatchDiagnostic{true}
+                     : MatchDiagnostic{false,
+                                       {"Wrong number of events encountered",
+                                        std::to_string(events_scanned),
+                                        std::to_string(events.size())}});
   return result;
 }
 
