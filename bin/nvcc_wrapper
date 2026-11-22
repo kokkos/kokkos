@@ -162,6 +162,15 @@ do
     cuda_args="$cuda_args $1 $2"
     shift
     ;;
+  # Split compilation options must be forwarded to nvcc, not the host compiler.
+  # Accept both --split-compile=N and --split-compile N forms.
+  --split-compile=*|-split-compile=*|--split-compile-extended=*|-split-compile-extended=*)
+    cuda_args="$cuda_args $1"
+    ;;
+  --split-compile|-split-compile|--split-compile-extended|-split-compile-extended)
+    cuda_args="$cuda_args $1 $2"
+    shift
+    ;;
   # Ensure we only have one optimization flag because NVCC doesn't allow multiple
   -O*)
     if [ -n "$optimization_flag" ]; then
