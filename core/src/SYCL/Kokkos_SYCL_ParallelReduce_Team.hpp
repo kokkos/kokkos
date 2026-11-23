@@ -317,22 +317,21 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
             shmem_begin, global_scratch_ptr, num_teams_done, scratch_flags,
             /*scratch_locks*/ nullptr, /*num_scratch_locks*/ 0);
 
-        static sycl::kernel kernel = [&] {
+        // Ensure the same kernel bundle is used both for launching and for
+        // querying TeamPolicy::team_size_max/recommended.
+        static auto kernel_bundle = [&] {
           sycl::kernel_id functor_kernel_id =
               sycl::get_kernel_id<decltype(dummy_reduction_lambda)>();
-          auto kernel_bundle =
-              sycl::get_kernel_bundle<sycl::bundle_state::executable>(
-                  q.get_context(), std::vector{functor_kernel_id});
-          return kernel_bundle.get_kernel(functor_kernel_id);
+          return sycl::get_kernel_bundle<sycl::bundle_state::executable>(
+              q.get_context(), std::vector{functor_kernel_id});
         }();
+        sycl::kernel kernel = kernel_bundle.get_kernel(
+            sycl::get_kernel_id<decltype(dummy_reduction_lambda)>());
         auto max_sg_size = kernel.get_info<
             sycl::info::kernel_device_specific::max_sub_group_size>(
             q.get_device());
         auto final_vector_size = std::min<int>(m_vector_size, max_sg_size);
-        // FIXME_SYCL For some reason, explicitly enforcing the kernel bundle to
-        // be used gives a runtime error.
-
-        //     cgh.use_kernel_bundle(kernel_bundle);
+        cgh.use_kernel_bundle(kernel_bundle);
 
         auto wgroup_size = m_team_size * final_vector_size;
         std::size_t size = std::size_t(m_league_size) * wgroup_size;

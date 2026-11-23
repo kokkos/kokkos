@@ -275,14 +275,17 @@ class ParallelScanSYCLBase {
       auto dummy_scan_lambda =
           scan_lambda_factory({1, cgh}, num_teams_done, nullptr, nullptr);
 
-      static sycl::kernel kernel = [&] {
+      // Ensure the same kernel bundle is used both for launching and for
+      // querying work-group size limits.
+      static auto kernel_bundle = [&] {
         sycl::kernel_id functor_kernel_id =
             sycl::get_kernel_id<decltype(dummy_scan_lambda)>();
-        auto kernel_bundle =
-            sycl::get_kernel_bundle<sycl::bundle_state::executable>(
-                q.get_context(), std::vector{functor_kernel_id});
-        return kernel_bundle.get_kernel(functor_kernel_id);
+        return sycl::get_kernel_bundle<sycl::bundle_state::executable>(
+            q.get_context(), std::vector{functor_kernel_id});
       }();
+      sycl::kernel kernel = kernel_bundle.get_kernel(
+          sycl::get_kernel_id<decltype(dummy_scan_lambda)>());
+      cgh.use_kernel_bundle(kernel_bundle);
       auto multiple = kernel.get_info<sycl::info::kernel_device_specific::
                                           preferred_work_group_size_multiple>(
           q.get_device());
