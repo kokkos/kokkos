@@ -43,6 +43,11 @@ if(Kokkos_ENABLE_TESTS OR Kokkos_INSTALL_TESTING)
     # TODO use SYSTEM within the FetchContent_Declare call when CMake 3.25 is required
     set_target_properties(gtest gmock PROPERTIES COMPILE_FLAGS "" COMPILE_OPTIONS -w)
 
+    # icpx before 2025 crashes in the optimizer compiling gmock with UBSan. Disable it there.
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "IntelLLVM" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 2025.0.0)
+      target_compile_options(gmock PRIVATE -fno-sanitize=undefined)
+    endif()
+
     # Kokkos only links GTest::{gtest,gmock}: keep {gtest,gmock}_main out of the default
     # build so their (unmodified) strict warning flags never get compiled.
     foreach(main_target gtest_main gmock_main)
