@@ -163,10 +163,10 @@ do
     shift
     ;;
   # Split compilation options limit concurrent optimization threads.
-  --split-compile=*|-split-compile=*|--split-compile-extended=*|-split-compile-extended=*|--extended-split-compile=*|-extended-split-compile=*)
+  --split-compile=*|-split-compile=*|--split-compile-extended=*|-split-compile-extended=*)
     cuda_args="$cuda_args $1"
     ;;
-  --split-compile|-split-compile|--split-compile-extended|-split-compile-extended|--extended-split-compile|-extended-split-compile)
+  --split-compile|-split-compile|--split-compile-extended|-split-compile-extended)
     cuda_args="$cuda_args $1 $2"
     shift
     ;;
