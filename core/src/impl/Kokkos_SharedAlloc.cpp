@@ -12,7 +12,6 @@
 
 #include <iomanip>
 #include <iostream>
-#include <sstream>
 
 namespace Kokkos {
 namespace Impl {
@@ -198,17 +197,21 @@ void SharedAllocationRecord<void, void>::increment(
   }
 }
 
-SharedAllocationRecord<void, void>* SharedAllocationRecord<
-    void, void>::decrement(SharedAllocationRecord<void, void>* arg_record) {
+SharedAllocationRecord<void, void>*
+SharedAllocationRecord<void, void>::decrement(
+    SharedAllocationRecord<void, void>* arg_record) noexcept {
   const int old_count = Kokkos::atomic_fetch_sub(&arg_record->m_count, 1);
 
   if (old_count == 1) {
     if (is_finalized()) {
-      std::stringstream ss;
-      ss << "Kokkos allocation \"";
-      ss << arg_record->get_label();
-      ss << "\" is being deallocated after Kokkos::finalize was called\n";
-      Kokkos::abort(ss.str().c_str());
+      fprintf(stderr,
+              "Kokkos allocation \"%s\" is being deallocated after "
+              "Kokkos::finalize was called\n",
+              arg_record->m_label.c_str());
+      fflush(stderr);
+      Kokkos::abort(
+          "Kokkos allocation is being deallocated after Kokkos::finalize was "
+          "called");
     }
 
 #ifdef KOKKOS_ENABLE_DEBUG

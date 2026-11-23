@@ -187,7 +187,7 @@ class SharedAllocationRecord<void, void> {
 
   /* Decrement use count. If 1->0 then remove from the tracking list and invoke
    * m_dealloc */
-  static SharedAllocationRecord* decrement(SharedAllocationRecord*);
+  static SharedAllocationRecord* decrement(SharedAllocationRecord*) noexcept;
 
   /* Given a root record and data pointer find the record */
   static SharedAllocationRecord* find(SharedAllocationRecord* const,
@@ -628,7 +628,6 @@ union SharedAllocationTracker {
 
   // Copy:
   KOKKOS_FORCEINLINE_FUNCTION
-  // NOLINTNEXTLINE(bugprone-exception-escape)
   ~SharedAllocationTracker(){KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT}
 
   KOKKOS_FORCEINLINE_FUNCTION
