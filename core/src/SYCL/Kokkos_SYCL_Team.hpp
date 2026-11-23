@@ -1038,11 +1038,15 @@ inline size_t sycl_get_scratch_index(sycl::nd_item<2> item,
     threadid = item.get_group_linear_id() % wraparound_len;
     while (true) {
       int expected = 0;
-      sycl::atomic_ref<int32_t, sycl::memory_order::relaxed,
+      sycl::atomic_ref<int32_t, sycl::memory_order::acq_rel,
                        sycl::memory_scope::device,
                        sycl::access::address_space::global_space>
           ref(scratch_locks[threadid]);
-      if (ref.compare_exchange_strong(expected, /*desired*/ 1)) break;
+      // acquire on success, relaxed on failure (we just retry)
+      if (ref.compare_exchange_strong(expected, /*desired*/ 1,
+                                      sycl::memory_order::acquire,
+                                      sycl::memory_order::relaxed))
+        break;
       threadid = (threadid + 1) % wraparound_len;
     }
   }
@@ -1054,11 +1058,11 @@ inline void sycl_release_scratch_index(sycl::nd_item<2> item,
                                        size_t threadid) {
   sycl::group_barrier(item.get_group());
   if (item.get_local_linear_id() == 0) {
-    sycl::atomic_ref<int32_t, sycl::memory_order::relaxed,
+    sycl::atomic_ref<int32_t, sycl::memory_order::acq_rel,
                      sycl::memory_scope::device,
                      sycl::access::address_space::global_space>
         ref(scratch_locks[threadid]);
-    ref = 0;
+    ref.store(0, sycl::memory_order::release);
   }
 }
 
