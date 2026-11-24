@@ -283,7 +283,7 @@ class ParallelScanSYCLBase {
         return sycl::get_kernel_bundle<sycl::bundle_state::executable>(
             q.get_context(), std::vector{functor_kernel_id});
       }();
-      sycl::kernel kernel = kernel_bundle.get_kernel(
+      static sycl::kernel kernel = kernel_bundle.get_kernel(
           sycl::get_kernel_id<decltype(dummy_scan_lambda)>());
       cgh.use_kernel_bundle(kernel_bundle);
       auto multiple = kernel.get_info<sycl::info::kernel_device_specific::

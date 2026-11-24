@@ -109,7 +109,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
         return sycl::get_kernel_bundle<sycl::bundle_state::executable>(
             q.get_context(), std::vector{functor_kernel_id});
       }();
-      sycl::kernel kernel =
+      static sycl::kernel kernel =
           kernel_bundle.get_kernel(sycl::get_kernel_id<decltype(lambda)>());
       auto max_sg_size =
           kernel
