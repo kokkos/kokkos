@@ -1045,7 +1045,7 @@ static inline void set_tool_events_impl(
         [](const uint64_t k) {
           found_events.push_back(std::make_shared<EndParallelScanEvent>(k));
         });
-    Kokkos::Tools::Experimental::set_end_single_callback([](uint64_t k) {
+    Kokkos::Tools::Experimental::set_end_single_callback([](const uint64_t k) {
       found_events.push_back(std::make_shared<EndSingleEvent>(k));
     });
   }  // if profiling.kernels
