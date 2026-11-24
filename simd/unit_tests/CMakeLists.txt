@@ -61,4 +61,8 @@ if(NOT (Kokkos_ENABLE_CUDA AND WIN32) AND NOT (Kokkos_ENABLE_OPENACC AND KOKKOS_
   endforeach()
 
   kokkos_add_executable_and_test(UnitTest_SIMD SOURCES ${SIMD_TEST_SOURCES})
+
+  if(KOKKOS_ARCH_AVX2)
+    kokkos_add_executable_and_test(UnitTest_SIMD_AVX2_Generator SOURCES TestSIMD_AVX2_Generator.cpp)
+  endif()
 endif()

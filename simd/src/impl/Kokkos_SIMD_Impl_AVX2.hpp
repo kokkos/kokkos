@@ -1261,12 +1261,13 @@ struct simd_native_ops<double, simd_abi::avx2_fixed_size<4>, simd_host_tag> {
   KOKKOS_SIMD_IMPL_DEFINE_GEN_FN_HOST(vector_type, set1,
                                       _mm256_set1_pd(value_type(v)))
 
+  // Qualify dependent intrinsic calls for Clang 19 module instantiations.
   KOKKOS_SIMD_IMPL_DEFINE_GEN_FN_HOST(
       vector_type, gen,
-      _mm256_setr_pd(v(std::integral_constant<simd_size_t, 0>()),
-                     v(std::integral_constant<simd_size_t, 1>()),
-                     v(std::integral_constant<simd_size_t, 2>()),
-                     v(std::integral_constant<simd_size_t, 3>())))
+      ::_mm256_setr_pd(v(std::integral_constant<simd_size_t, 0>()),
+                       v(std::integral_constant<simd_size_t, 1>()),
+                       v(std::integral_constant<simd_size_t, 2>()),
+                       v(std::integral_constant<simd_size_t, 3>())))
 
   KOKKOS_SIMD_IMPL_DEFINE_LOAD_HOST(
       vector_type, load, const value_type*,
@@ -1392,10 +1393,10 @@ struct simd_native_ops<float, simd_abi::avx2_fixed_size<4>, simd_host_tag> {
 
   KOKKOS_SIMD_IMPL_DEFINE_GEN_FN_HOST(
       vector_type, gen,
-      _mm_setr_ps(v(std::integral_constant<simd_size_t, 0>()),
-                  v(std::integral_constant<simd_size_t, 1>()),
-                  v(std::integral_constant<simd_size_t, 2>()),
-                  v(std::integral_constant<simd_size_t, 3>())))
+      ::_mm_setr_ps(v(std::integral_constant<simd_size_t, 0>()),
+                    v(std::integral_constant<simd_size_t, 1>()),
+                    v(std::integral_constant<simd_size_t, 2>()),
+                    v(std::integral_constant<simd_size_t, 3>())))
 
   KOKKOS_SIMD_IMPL_DEFINE_LOAD_HOST(
       vector_type, load, const value_type*,
@@ -1520,14 +1521,14 @@ struct simd_native_ops<float, simd_abi::avx2_fixed_size<8>, simd_host_tag> {
 
   KOKKOS_SIMD_IMPL_DEFINE_GEN_FN_HOST(
       vector_type, gen,
-      _mm256_setr_ps(v(std::integral_constant<simd_size_t, 0>()),
-                     v(std::integral_constant<simd_size_t, 1>()),
-                     v(std::integral_constant<simd_size_t, 2>()),
-                     v(std::integral_constant<simd_size_t, 3>()),
-                     v(std::integral_constant<simd_size_t, 4>()),
-                     v(std::integral_constant<simd_size_t, 5>()),
-                     v(std::integral_constant<simd_size_t, 6>()),
-                     v(std::integral_constant<simd_size_t, 7>())))
+      ::_mm256_setr_ps(v(std::integral_constant<simd_size_t, 0>()),
+                       v(std::integral_constant<simd_size_t, 1>()),
+                       v(std::integral_constant<simd_size_t, 2>()),
+                       v(std::integral_constant<simd_size_t, 3>()),
+                       v(std::integral_constant<simd_size_t, 4>()),
+                       v(std::integral_constant<simd_size_t, 5>()),
+                       v(std::integral_constant<simd_size_t, 6>()),
+                       v(std::integral_constant<simd_size_t, 7>())))
 
   KOKKOS_SIMD_IMPL_DEFINE_LOAD_HOST(
       vector_type, load, const value_type*,
@@ -1652,10 +1653,10 @@ struct simd_native_ops<std::int32_t, simd_abi::avx2_fixed_size<4>,
 
   KOKKOS_SIMD_IMPL_DEFINE_GEN_FN_HOST(
       vector_type, gen,
-      _mm_setr_epi32(v(std::integral_constant<simd_size_t, 0>()),
-                     v(std::integral_constant<simd_size_t, 1>()),
-                     v(std::integral_constant<simd_size_t, 2>()),
-                     v(std::integral_constant<simd_size_t, 3>())))
+      ::_mm_setr_epi32(v(std::integral_constant<simd_size_t, 0>()),
+                       v(std::integral_constant<simd_size_t, 1>()),
+                       v(std::integral_constant<simd_size_t, 2>()),
+                       v(std::integral_constant<simd_size_t, 3>())))
 
   KOKKOS_SIMD_IMPL_DEFINE_LOAD_HOST(
       vector_type, load, const value_type*,
@@ -1799,14 +1800,14 @@ struct simd_native_ops<std::int32_t, simd_abi::avx2_fixed_size<8>,
 
   KOKKOS_SIMD_IMPL_DEFINE_GEN_FN_HOST(
       vector_type, gen,
-      _mm256_setr_epi32(v(std::integral_constant<simd_size_t, 0>()),
-                        v(std::integral_constant<simd_size_t, 1>()),
-                        v(std::integral_constant<simd_size_t, 2>()),
-                        v(std::integral_constant<simd_size_t, 3>()),
-                        v(std::integral_constant<simd_size_t, 4>()),
-                        v(std::integral_constant<simd_size_t, 5>()),
-                        v(std::integral_constant<simd_size_t, 6>()),
-                        v(std::integral_constant<simd_size_t, 7>())))
+      ::_mm256_setr_epi32(v(std::integral_constant<simd_size_t, 0>()),
+                          v(std::integral_constant<simd_size_t, 1>()),
+                          v(std::integral_constant<simd_size_t, 2>()),
+                          v(std::integral_constant<simd_size_t, 3>()),
+                          v(std::integral_constant<simd_size_t, 4>()),
+                          v(std::integral_constant<simd_size_t, 5>()),
+                          v(std::integral_constant<simd_size_t, 6>()),
+                          v(std::integral_constant<simd_size_t, 7>())))
 
   KOKKOS_SIMD_IMPL_DEFINE_LOAD_HOST(
       vector_type, load, const value_type*,
@@ -1948,10 +1949,10 @@ struct simd_native_ops<std::int64_t, simd_abi::avx2_fixed_size<4>,
 
   KOKKOS_SIMD_IMPL_DEFINE_GEN_FN_HOST(
       vector_type, gen,
-      _mm256_setr_epi64x(v(std::integral_constant<simd_size_t, 0>()),
-                         v(std::integral_constant<simd_size_t, 1>()),
-                         v(std::integral_constant<simd_size_t, 2>()),
-                         v(std::integral_constant<simd_size_t, 3>())))
+      ::_mm256_setr_epi64x(v(std::integral_constant<simd_size_t, 0>()),
+                           v(std::integral_constant<simd_size_t, 1>()),
+                           v(std::integral_constant<simd_size_t, 2>()),
+                           v(std::integral_constant<simd_size_t, 3>())))
 
   KOKKOS_SIMD_IMPL_DEFINE_LOAD_HOST(
       vector_type, load, const value_type*,
@@ -2138,10 +2139,10 @@ struct simd_native_ops<std::uint64_t, simd_abi::avx2_fixed_size<4>,
 
   KOKKOS_SIMD_IMPL_DEFINE_GEN_FN_HOST(
       vector_type, gen,
-      _mm256_setr_epi64x(v(std::integral_constant<simd_size_t, 0>()),
-                         v(std::integral_constant<simd_size_t, 1>()),
-                         v(std::integral_constant<simd_size_t, 2>()),
-                         v(std::integral_constant<simd_size_t, 3>())))
+      ::_mm256_setr_epi64x(v(std::integral_constant<simd_size_t, 0>()),
+                           v(std::integral_constant<simd_size_t, 1>()),
+                           v(std::integral_constant<simd_size_t, 2>()),
+                           v(std::integral_constant<simd_size_t, 3>())))
 
   KOKKOS_SIMD_IMPL_DEFINE_LOAD_HOST(
       vector_type, load, const value_type*,
