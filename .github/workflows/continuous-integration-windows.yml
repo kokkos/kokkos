@@ -33,7 +33,8 @@ jobs:
   windows-serial:
     # Serial build on Windows
     name: Serial VS-2022
-    runs-on: windows-2025
+    # FIXME the windows-2025 image would ICE with 14.52
+    runs-on: windows-2022
 
     steps:
     - uses: actions/checkout@v7.0.1
