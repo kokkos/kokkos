@@ -16,9 +16,11 @@
 #include <cstddef>
 #include <mutex>
 
+// 64B alignment: clone_driver -> nextapi_memory_copy accelerated by BMT
 template <class Functor, class... Traits>
-class Kokkos::Impl::ParallelFor<Functor, Kokkos::RangePolicy<Traits...>,
-                                Kokkos::Experimental::NextSilicon> {
+class alignas(
+    64) Kokkos::Impl::ParallelFor<Functor, Kokkos::RangePolicy<Traits...>,
+                                  Kokkos::Experimental::NextSilicon> {
   using Policy    = Kokkos::RangePolicy<Traits...>;
   using WorkTag   = typename Policy::work_tag;
   using WorkRange = typename Policy::WorkRange;
