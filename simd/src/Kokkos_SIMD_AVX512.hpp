@@ -4694,7 +4694,7 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION float reduce(
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION float reduce(
     basic_simd<float, simd_abi::avx512_fixed_size<16>> const& v,
-    std::plus<>) noexcept {
+    std::plus<> = {}) noexcept {
   return _mm512_reduce_add_ps(static_cast<__m512>(v));
 }
 
