@@ -90,6 +90,9 @@ struct TestScanFunctor {
   using value_type = int;
   KOKKOS_FUNCTION void operator()(const index_type, value_type&, bool) const {}
 };
+struct TestSingleFunctor {
+  KOKKOS_FUNCTION void operator()() const {}
+};
 
 template <typename Lambda>
 void test_wrapper(const Lambda& lambda) {
@@ -437,6 +440,26 @@ TEST(kokkosp, parallel_scan_no_fence_view) {
   ASSERT_TRUE(success);
 }
 #endif
+
+TEST(kokkosp, single) {
+  using namespace Kokkos::Test::Tools;
+  listen_tool_events(Config::DisableAll(), Config::EnableKernels());
+  auto success = validate_event_set(
+      [=]() {
+        TestSingleFunctor tf;
+        Kokkos::single("dogs", Kokkos::SinglePolicy<>(), tf);
+      },
+      [=](BeginSingleEvent begin_event, EndSingleEvent end_event) {
+        if (begin_event.name != "dogs") {
+          return MatchDiagnostic{false, {"No match on BeginSingle name"}};
+        }
+        if (end_event.kID != ((begin_event.kID))) {
+          return MatchDiagnostic{false, {"No match on kID's"}};
+        }
+        return MatchDiagnostic{true};
+      });
+  ASSERT_TRUE(success);
+}
 
 TEST(kokkosp, regions) {
   using namespace Kokkos::Test::Tools;
