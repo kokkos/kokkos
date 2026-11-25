@@ -18,7 +18,7 @@ import kokkos.dynamic_view;
 #endif
 #include <Kokkos_Timer.hpp>
 
-namespace Test {
+namespace {
 
 template <typename Scalar, class Space>
 struct TestDynamicView {
@@ -280,7 +280,6 @@ TEST(TEST_CATEGORY, dynamic_view) {
   }
 }
 
-namespace {
 void dynamic_view_deep_copy_mismatch() {
   Kokkos::Experimental::DynamicView<int*, TEST_EXECSPACE> dview("dview", 20,
                                                                 80);
@@ -293,7 +292,6 @@ void dynamic_view_deep_copy_mismatch() {
     FAIL() << "It should have thrown.";
   } catch (std::runtime_error const& error) {
     std::string msg = error.what();
-    // FIXME: label returned by DynamicView is empty
     std::string expected =
         "Error: Kokkos::deep_copy extents of views don't match: " +
         dview.label() + "(11) view(10) ";
@@ -308,7 +306,6 @@ void dynamic_view_deep_copy_mismatch() {
     FAIL() << "It should have thrown.";
   } catch (std::runtime_error const& error) {
     std::string msg = error.what();
-    // FIXME: label returned by DynamicView is empty
     std::string expected =
         "Error: Kokkos::deep_copy extents of views don't match: view(10) " +
         dview.label() + "(11) ";
@@ -326,7 +323,6 @@ void dynamic_view_deep_copy_mismatch() {
     FAIL() << "It should have thrown.";
   } catch (std::runtime_error const& error) {
     std::string msg = error.what();
-    // FIXME: label returned by DynamicView is empty
     std::string expected =
         "Error: Kokkos::deep_copy extents of views don't match: " +
         dview2.label() + "(10) " + dview.label() + "(11) ";
@@ -341,7 +337,6 @@ void dynamic_view_deep_copy_mismatch() {
     FAIL() << "It should have thrown.";
   } catch (std::runtime_error const& error) {
     std::string msg = error.what();
-    // FIXME: label returned by DynamicView is empty
     std::string expected =
         "Error: Kokkos::deep_copy extents of views don't match: " +
         dview2.label() + "(10) " + dview.label() + "(11) ";
@@ -350,11 +345,11 @@ void dynamic_view_deep_copy_mismatch() {
   }
   ASSERT_TRUE(caught_error);
 }
-}  // namespace
+
 TEST(TEST_CATEGORY, dynamic_view_deep_copy_mismatch) {
   dynamic_view_deep_copy_mismatch();
 }
 
-}  // namespace Test
+}  // namespace
 
 #endif /* #ifndef KOKKOS_TEST_DYNAMICVIEW_HPP */
