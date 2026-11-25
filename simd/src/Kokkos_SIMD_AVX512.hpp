@@ -4642,53 +4642,53 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION float reduce_min(
 // reduce add
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::int32_t reduce(
     basic_simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& v,
-    std::plus<>) noexcept {
+    std::plus<> = {}) noexcept {
   return _mm512_reduce_add_epi32(
       _mm512_zextsi256_si512(static_cast<__m256i>(v)));
 }
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::int32_t reduce(
     basic_simd<std::int32_t, simd_abi::avx512_fixed_size<16>> const& v,
-    std::plus<>) noexcept {
+    std::plus<> = {}) noexcept {
   return _mm512_reduce_add_epi32(static_cast<__m512i>(v));
 }
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::uint32_t reduce(
     basic_simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> const& v,
-    std::plus<>) noexcept {
+    std::plus<> = {}) noexcept {
   return static_cast<std::uint32_t>(
       _mm512_reduce_add_epi32(_mm512_zextsi256_si512(static_cast<__m256i>(v))));
 }
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::uint32_t reduce(
     basic_simd<std::uint32_t, simd_abi::avx512_fixed_size<16>> const& v,
-    std::plus<>) noexcept {
+    std::plus<> = {}) noexcept {
   return static_cast<std::uint32_t>(
       _mm512_reduce_add_epi32(static_cast<__m512i>(v)));
 }
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::int64_t reduce(
     basic_simd<std::int64_t, simd_abi::avx512_fixed_size<8>> const& v,
-    std::plus<>) noexcept {
+    std::plus<> = {}) noexcept {
   return _mm512_reduce_add_epi64(static_cast<__m512i>(v));
 }
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::uint64_t reduce(
     basic_simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> const& v,
-    std::plus<>) noexcept {
+    std::plus<> = {}) noexcept {
   return static_cast<std::uint64_t>(
       _mm512_reduce_add_epi64(static_cast<__m512i>(v)));
 }
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION double reduce(
     basic_simd<double, simd_abi::avx512_fixed_size<8>> const& v,
-    std::plus<>) noexcept {
+    std::plus<> = {}) noexcept {
   return _mm512_reduce_add_pd(static_cast<__m512d>(v));
 }
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION float reduce(
     basic_simd<float, simd_abi::avx512_fixed_size<8>> const& v,
-    std::plus<>) noexcept {
+    std::plus<> = {}) noexcept {
   return _mm512_reduce_add_ps(_mm512_zextps256_ps512(static_cast<__m256>(v)));
 }
 
