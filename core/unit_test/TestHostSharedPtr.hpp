@@ -6,7 +6,10 @@
 #include <gtest/gtest.h>
 
 #include <array>
+// FIXME gcc-10 doesn't have latch
+#if __has_include(<latch>)
 #include <latch>
+#endif
 #include <thread>
 
 using Kokkos::Impl::HostSharedPtr;
@@ -117,6 +120,8 @@ TEST(TEST_CATEGORY, host_shared_ptr_get) {
   }
 }
 
+// FIXME gcc-10 doesn't have latch
+#if __has_include(<latch>)
 TEST(TEST_CATEGORY, host_shared_ptr_use_count_under_contention) {
   const HostSharedPtr<int> hsp{new int(42)};
 
@@ -152,3 +157,4 @@ TEST(TEST_CATEGORY, host_shared_ptr_use_count_under_contention) {
   for (auto& thread : threads) thread.join();
 #endif
 }
+#endif
