@@ -87,21 +87,37 @@ MDSPAN_INLINE_FUNCTION constexpr auto construct_sub_strides(
         static_cast<index_type>(get<InvMapIdxs>(slices_stride_factor)))...}};
 }
 
+template <class StrideType, class IndexType, class = void>
+struct is_unit_stride : std::false_type {};
+
+template <class StrideType, class IndexType>
+struct is_unit_stride<
+    StrideType, IndexType,
+    std::void_t<decltype(StrideType::value)>>
+    : std::bool_constant<(StrideType::value == IndexType(1))> {};
+
 template <class SliceSpecifier, class IndexType>
-constexpr bool is_range_like_slice_v = false;
+struct is_range_like_slice : std::false_type {};
 
 template <class IndexType>
-constexpr bool is_range_like_slice_v<full_extent_t, IndexType> = true;
+struct is_range_like_slice<full_extent_t, IndexType>
+    : std::true_type {};
 
-template <class OffsetType, class ExtentType, auto Stride, class IndexType>
-constexpr bool is_range_like_slice_v<
-    extent_slice<OffsetType, ExtentType, constant_wrapper<Stride>>, IndexType> =
-    (constant_wrapper<Stride>::value == IndexType(1));
+template <class OffsetType, class ExtentType, class StrideType,
+          class IndexType>
+struct is_range_like_slice<
+    extent_slice<OffsetType, ExtentType, StrideType>, IndexType>
+    : is_unit_stride<StrideType, IndexType> {};
 
-template <class FirstType, class LastType, auto Stride, class IndexType>
-constexpr bool is_range_like_slice_v<
-    range_slice<FirstType, LastType, constant_wrapper<Stride>>, IndexType> =
-    (constant_wrapper<Stride>::value == IndexType(1));
+template <class FirstType, class LastType, class StrideType,
+          class IndexType>
+struct is_range_like_slice<
+    range_slice<FirstType, LastType, StrideType>, IndexType>
+    : is_unit_stride<StrideType, IndexType> {};
+
+template <class SliceSpecifier, class IndexType>
+inline constexpr bool is_range_like_slice_v =
+    is_range_like_slice<SliceSpecifier, IndexType>::value;
 
 template <class SliceSpecifier, class IndexType>
 struct is_index_slice {
