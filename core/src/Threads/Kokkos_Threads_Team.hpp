@@ -896,6 +896,10 @@ namespace Kokkos {
  * The range i=0..N-1 is mapped to all threads of the the calling thread team.
  */
 template <typename iType, class Lambda>
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
+  requires Impl::is_invocable_functor<iType, Lambda,
+                                      Impl::ThreadsExecTeamMember>
+#endif
 KOKKOS_INLINE_FUNCTION void parallel_for(
     const Impl::TeamThreadRangeBoundariesStruct<
         iType, Impl::ThreadsExecTeamMember>& loop_boundaries,
@@ -916,6 +920,33 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
     }
   }
 }
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
+template <typename iType, class Lambda>
+  requires(
+      !Impl::is_invocable_functor<iType, Lambda, Impl::ThreadsExecTeamMember>)
+KOKKOS_DEPRECATED_WITH_COMMENT("Do not take indices by non-const reference")
+    KOKKOS_INLINE_FUNCTION
+    void parallel_for(const Impl::TeamThreadRangeBoundariesStruct<
+                          iType, Impl::ThreadsExecTeamMember>& loop_boundaries,
+                      const Lambda& lambda) {
+  using thread_handle_t = Impl::ThreadHandleType<Impl::ThreadsExecTeamMember>;
+
+  for (iType i = loop_boundaries.start; i < loop_boundaries.end;
+       i += loop_boundaries.increment) {
+    if constexpr (std::is_invocable_v<Lambda, iType&>) {
+      lambda(i);
+    } else if constexpr (std::is_invocable_v<Lambda, thread_handle_t const&,
+                                             iType&>) {
+      lambda(thread_handle_t(loop_boundaries.member), i);
+    } else {
+      static_assert(Kokkos::Impl::always_false<Lambda>::value,
+                    "Kokkos::parallel_for(TeamThreadRange) closure must be "
+                    "invocable with (iType) or (ThreadHandleType, iType)");
+    }
+  }
+}
+#endif
 
 /** \brief  Inter-thread vector parallel_reduce. Executes lambda(iType i,
  * ValueType & val) for each i=0..N-1.
