@@ -63,18 +63,22 @@ void finalize_lock_arrays_sycl(sycl::queue q);
  * instance will be initialized by initialize_host_sycl_lock_arrays and need not be
  * modified afterwards.
  *
- * When relocatable device code is disabled, an instance of this variable will be
- * created in every translation unit that sees this header file (we make this clear by
- * marking it static, meaning no other translation unit can link to it). Since the
- * Kokkos_SYCL_Locks.cpp translation unit cannot initialize the instances in other
- * translation units, we must update this SYCL global variable based on the Host global
- * variable prior to running any kernels that will use it. That is the purpose of the
- * ensure_sycl_lock_arrays_on_device function.
+ * When relocatable device code is disabled, every translation unit's device image
+ * contains its own copy of this variable. It must NOT be static: identical kernels
+ * (same kernel name, e.g. from an inline template instantiated in several translation
+ * units or shared libraries) are deduplicated by the SYCL runtime, so the image that
+ * actually runs may come from a different translation unit than the host code that
+ * called ensure_sycl_lock_arrays_on_device. A static (internal linkage) variable would
+ * then be a distinct, never-initialized device_global in that image. Declaring it
+ * inline gives it external linkage, so the SYCL runtime identifies all copies by the
+ * same unique id and backs them with one shared allocation; a single copy from the
+ * Host global variable (done by ensure_sycl_lock_arrays_on_device prior to running
+ * any kernels that use it) then initializes it for every device image.
  */
 #ifdef DESUL_ATOMICS_ENABLE_SYCL_SEPARABLE_COMPILATION
 SYCL_EXTERNAL extern
 #else
-static
+inline
 #endif
     sycl_device_global<int32_t*>
         SYCL_SPACE_ATOMIC_LOCKS_DEVICE;
@@ -82,7 +86,7 @@ static
 #ifdef DESUL_ATOMICS_ENABLE_SYCL_SEPARABLE_COMPILATION
 SYCL_EXTERNAL extern
 #else
-static
+inline
 #endif
     sycl_device_global<int32_t*>
         SYCL_SPACE_ATOMIC_LOCKS_NODE;
@@ -157,6 +161,13 @@ inline static
     void
     copy_sycl_lock_arrays_to_device(sycl::queue q) {
   static bool once = [&q]() {
+    // Wait for the copies to complete. If no device image using the device_global
+    // has been built yet, the SYCL runtime may implement the copy as a host task.
+    // Without waiting, kernels submitted afterwards to the (in-order) queue would be
+    // enqueued (and their device images built) from the runtime's host-task worker
+    // thread, concurrently with the submitting thread. That has been observed to
+    // race inside the SYCL runtime, e.g. on the shared device image decompression
+    // context ("Data corruption detected") and "Enqueue process failed" errors.
 #ifdef SYCL_EXT_ONEAPI_DEVICE_GLOBAL
     q.memcpy(SYCL_SPACE_ATOMIC_LOCKS_DEVICE,
              &SYCL_SPACE_ATOMIC_LOCKS_DEVICE_h,
@@ -164,6 +175,7 @@ inline static
     q.memcpy(SYCL_SPACE_ATOMIC_LOCKS_NODE,
              &SYCL_SPACE_ATOMIC_LOCKS_NODE_h,
              sizeof(int32_t*));
+    q.wait();
 #else
     auto device_ptr = SYCL_SPACE_ATOMIC_LOCKS_DEVICE_h;
     auto node_ptr = SYCL_SPACE_ATOMIC_LOCKS_NODE_h;
@@ -171,6 +183,7 @@ inline static
       SYCL_SPACE_ATOMIC_LOCKS_DEVICE.get() = device_ptr;
       SYCL_SPACE_ATOMIC_LOCKS_NODE.get() = node_ptr;
     });
+    q.wait();
 #endif
     return true;
   }();
