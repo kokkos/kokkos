@@ -361,8 +361,7 @@ class sve_mask<Derived, 32, true> {
   vls_bool_t m_value;
 
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION static svbool_t half_pred() noexcept {
-    return svwhilelt_b32(static_cast<std::int32_t>(0),
-                         static_cast<std::int32_t>(SVE_DOUBLES_IN_VECTOR));
+    return svptrue_pat_b32(SV_VL8);  // SVE_DOUBLES_IN_VECTOR == 8
   }
 
  protected:
@@ -396,7 +395,8 @@ class sve_mask<Derived, 32, true> {
         static_cast<bool>(gen(std::integral_constant<simd_size_t, 5>())),
         static_cast<bool>(gen(std::integral_constant<simd_size_t, 7>())));
     // lanes 8..15 end up as copies of lanes 0..7 and are cleared here
-    m_value = svand_z(svptrue_b32(), svzip1_b32(b0246, b1357), half_pred());
+    vls_bool_t bzipped = svzip1_b32(b0246, b1357);
+    m_value            = svand_z(half_pred(), bzipped, bzipped);
   }
   template <class U>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION sve_mask(
@@ -474,7 +474,7 @@ convert_mask_pred(vls_bool_t p) noexcept {
     return svcmpne_n_s32(svptrue_b32(), v, 0);
   } else if constexpr (sizeof(From) == 4 && sizeof(To) == 8) {
     // widen: the 32-bit mask only has its 8 low lanes set
-    return svcmpne_n_s64(svptrue_b64(), svunpklo_s64(svdup_n_s32_z(p, 1)), 0);
+    return svunpklo_b(p);
   } else {
     return p;
   }
@@ -3348,8 +3348,7 @@ class basic_simd<std::int32_t,
   vls_int32_t m_value;
 
   static svbool_t valid_lanes() noexcept {
-    return svwhilelt_b32(static_cast<std::int32_t>(0),
-                         static_cast<std::int32_t>(SVE_DOUBLES_IN_VECTOR));
+    return svptrue_pat_b32(SV_VL8);  // SVE_DOUBLES_IN_VECTOR == 8
   }
 
  public:
@@ -3426,6 +3425,9 @@ class basic_simd<std::int32_t,
             svqxtnb_s64(svreinterpret_s64(
                 (to_sve_vla<std::uint64_t>)static_cast<vls_uint64_t>(other)))
 #else
+            // [SVE1] FIXME: Implement proper clamp here (same as SVE2
+            // svqxtnb_s64()), instead of savagely truncating and packing
+            // 32-bit elements with unzip1.
             svreinterpret_s32(
                 (to_sve_vla<std::uint64_t>)static_cast<vls_uint64_t>(other))
 #endif
@@ -3761,8 +3763,7 @@ using sve_index_mask_type =
 #if SVE_DOUBLES_IN_VECTOR == 8
 // Predicate covering the low half (8 lanes) of a 32-bit-lane register.
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION svbool_t half_pred32() noexcept {
-  return svwhilelt_b32(static_cast<std::int32_t>(0),
-                       static_cast<std::int32_t>(SVE_DOUBLES_IN_VECTOR));
+  return svptrue_pat_b32(SV_VL8);  // SVE_DOUBLES_IN_VECTOR == 8
 }
 
 // Predicate of a half-size mask clipped to the 8 low lanes, for memory
@@ -3795,9 +3796,7 @@ template <class M>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION vls_bool_t
 to_pred64(M const& mask) noexcept {
   if constexpr (is_half_int32_mask_v<M>) {
-    return svcmpne_n_s64(
-        svptrue_b64(),
-        svunpklo_s64(svdup_n_s32_z(static_cast<vls_bool_t>(mask), 1)), 0);
+    return svunpklo_b(static_cast<vls_bool_t>(mask));
   } else {
     return static_cast<vls_bool_t>(mask);
   }
