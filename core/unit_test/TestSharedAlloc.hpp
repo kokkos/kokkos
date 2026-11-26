@@ -39,6 +39,8 @@ void test_shared_alloc() {
   static_assert(sizeof(Tracker) == sizeof(int*),
                 "SharedAllocationTracker has wrong size!");
 
+  static_assert(noexcept(RecordBase::decrement(nullptr)));
+
   MemorySpace s;
 
   const size_t N    = 1200;
