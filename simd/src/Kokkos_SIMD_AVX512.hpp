@@ -4438,6 +4438,122 @@ KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_SCATTER_TO_WITH_MASK(
     std::uint64_t, simd_abi::avx512_fixed_size<8>,
     { unchecked_scatter_to<V>(v, out, mask, indices, flag); })
 
+// reduce min/max
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::int32_t reduce_max(
+    basic_simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const&
+        v) noexcept {
+  return _mm512_mask_reduce_max_epi32(
+      _cvtu32_mask16((1u << 8) - 1),
+      _mm512_castsi256_si512(static_cast<__m256i>(v)));
+}
+
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::int32_t reduce_min(
+    basic_simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const&
+        v) noexcept {
+  return _mm512_mask_reduce_min_epi32(
+      _cvtu32_mask16((1u << 8) - 1),
+      _mm512_castsi256_si512(static_cast<__m256i>(v)));
+}
+
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::int32_t reduce_max(
+    basic_simd<std::int32_t, simd_abi::avx512_fixed_size<16>> const&
+        v) noexcept {
+  return _mm512_reduce_max_epi32(static_cast<__m512i>(v));
+}
+
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::int32_t reduce_min(
+    basic_simd<std::int32_t, simd_abi::avx512_fixed_size<16>> const&
+        v) noexcept {
+  return _mm512_reduce_min_epi32(static_cast<__m512i>(v));
+}
+
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::uint32_t reduce_max(
+    basic_simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> const&
+        v) noexcept {
+  return _mm512_mask_reduce_max_epu32(
+      _cvtu32_mask16((1u << 8) - 1),
+      _mm512_castsi256_si512(static_cast<__m256i>(v)));
+}
+
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::uint32_t reduce_min(
+    basic_simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> const&
+        v) noexcept {
+  return _mm512_mask_reduce_min_epu32(
+      _cvtu32_mask16((1u << 8) - 1),
+      _mm512_castsi256_si512(static_cast<__m256i>(v)));
+}
+
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::uint32_t reduce_max(
+    basic_simd<std::uint32_t, simd_abi::avx512_fixed_size<16>> const&
+        v) noexcept {
+  return _mm512_reduce_max_epu32(static_cast<__m512i>(v));
+}
+
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::uint32_t reduce_min(
+    basic_simd<std::uint32_t, simd_abi::avx512_fixed_size<16>> const&
+        v) noexcept {
+  return _mm512_reduce_min_epu32(static_cast<__m512i>(v));
+}
+
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::int64_t reduce_max(
+    basic_simd<std::int64_t, simd_abi::avx512_fixed_size<8>> const&
+        v) noexcept {
+  return _mm512_reduce_max_epi64(static_cast<__m512i>(v));
+}
+
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::int64_t reduce_min(
+    basic_simd<std::int64_t, simd_abi::avx512_fixed_size<8>> const&
+        v) noexcept {
+  return _mm512_reduce_min_epi64(static_cast<__m512i>(v));
+}
+
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::uint64_t reduce_max(
+    basic_simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> const&
+        v) noexcept {
+  return _mm512_reduce_max_epu64(static_cast<__m512i>(v));
+}
+
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::uint64_t reduce_min(
+    basic_simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> const&
+        v) noexcept {
+  return _mm512_reduce_min_epu64(static_cast<__m512i>(v));
+}
+
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION double reduce_max(
+    basic_simd<double, simd_abi::avx512_fixed_size<8>> const& v) noexcept {
+  return _mm512_reduce_max_pd(static_cast<__m512d>(v));
+}
+
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION double reduce_min(
+    basic_simd<double, simd_abi::avx512_fixed_size<8>> const& v) noexcept {
+  return _mm512_reduce_min_pd(static_cast<__m512d>(v));
+}
+
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION float reduce_max(
+    basic_simd<float, simd_abi::avx512_fixed_size<8>> const& v) noexcept {
+  return _mm512_mask_reduce_max_ps(
+      _cvtu32_mask16((1u << 8) - 1),
+      _mm512_castps256_ps512(static_cast<__m256>(v)));
+}
+
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION float reduce_min(
+    basic_simd<float, simd_abi::avx512_fixed_size<8>> const& v) noexcept {
+  return _mm512_mask_reduce_min_ps(
+      _cvtu32_mask16((1u << 8) - 1),
+      _mm512_castps256_ps512(static_cast<__m256>(v)));
+}
+
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION float reduce_max(
+    basic_simd<float, simd_abi::avx512_fixed_size<16>> const& v) noexcept {
+  return _mm512_reduce_max_ps(static_cast<__m512>(v));
+}
+
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION float reduce_min(
+    basic_simd<float, simd_abi::avx512_fixed_size<16>> const& v) noexcept {
+  return _mm512_reduce_min_ps(static_cast<__m512>(v));
+}
+
+// masked reduce min/max
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::int32_t reduce_max(
     basic_simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& v,
     basic_simd_mask<std::int32_t, simd_abi::avx512_fixed_size<8>> const&
@@ -4622,6 +4738,66 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION float reduce_min(
                                    static_cast<__m512>(v));
 }
 
+// reduce add
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::int32_t reduce(
+    basic_simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& v,
+    std::plus<> = {}) noexcept {
+  return _mm512_reduce_add_epi32(
+      _mm512_zextsi256_si512(static_cast<__m256i>(v)));
+}
+
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::int32_t reduce(
+    basic_simd<std::int32_t, simd_abi::avx512_fixed_size<16>> const& v,
+    std::plus<> = {}) noexcept {
+  return _mm512_reduce_add_epi32(static_cast<__m512i>(v));
+}
+
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::uint32_t reduce(
+    basic_simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> const& v,
+    std::plus<> = {}) noexcept {
+  return static_cast<std::uint32_t>(
+      _mm512_reduce_add_epi32(_mm512_zextsi256_si512(static_cast<__m256i>(v))));
+}
+
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::uint32_t reduce(
+    basic_simd<std::uint32_t, simd_abi::avx512_fixed_size<16>> const& v,
+    std::plus<> = {}) noexcept {
+  return static_cast<std::uint32_t>(
+      _mm512_reduce_add_epi32(static_cast<__m512i>(v)));
+}
+
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::int64_t reduce(
+    basic_simd<std::int64_t, simd_abi::avx512_fixed_size<8>> const& v,
+    std::plus<> = {}) noexcept {
+  return _mm512_reduce_add_epi64(static_cast<__m512i>(v));
+}
+
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::uint64_t reduce(
+    basic_simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> const& v,
+    std::plus<> = {}) noexcept {
+  return static_cast<std::uint64_t>(
+      _mm512_reduce_add_epi64(static_cast<__m512i>(v)));
+}
+
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION double reduce(
+    basic_simd<double, simd_abi::avx512_fixed_size<8>> const& v,
+    std::plus<> = {}) noexcept {
+  return _mm512_reduce_add_pd(static_cast<__m512d>(v));
+}
+
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION float reduce(
+    basic_simd<float, simd_abi::avx512_fixed_size<8>> const& v,
+    std::plus<> = {}) noexcept {
+  return _mm512_reduce_add_ps(_mm512_zextps256_ps512(static_cast<__m256>(v)));
+}
+
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION float reduce(
+    basic_simd<float, simd_abi::avx512_fixed_size<16>> const& v,
+    std::plus<> = {}) noexcept {
+  return _mm512_reduce_add_ps(static_cast<__m512>(v));
+}
+
+// masked reduce add
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::int32_t reduce(
     basic_simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& v,
     basic_simd_mask<std::int32_t, simd_abi::avx512_fixed_size<8>> const& m,
