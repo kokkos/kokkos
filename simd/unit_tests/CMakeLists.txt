@@ -38,6 +38,7 @@ if(NOT (Kokkos_ENABLE_CUDA AND WIN32) AND NOT (Kokkos_ENABLE_OPENACC AND KOKKOS_
       MemoryPermute
       Reductions
       ShiftOps
+      SVEIndex
   )
 
   set(SIMD_TEST_SOURCES UnitTestMain.cpp)
