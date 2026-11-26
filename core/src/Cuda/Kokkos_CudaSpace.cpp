@@ -474,25 +474,6 @@ void cuda_prefetch_pointer(cudaStream_t stream, const void *ptr, size_t bytes,
 }  // namespace Impl
 }  // namespace Kokkos
 
-//==============================================================================
-// <editor-fold desc="Explicit instantiations of CRTP Base classes"> {{{1
-
-#include <impl/Kokkos_SharedAlloc_timpl.hpp>
-
-#if !defined(KOKKOS_ENABLE_IMPL_CUDA_UNIFIED_MEMORY)
-KOKKOS_IMPL_HOST_INACCESSIBLE_SHARED_ALLOCATION_RECORD_EXPLICIT_INSTANTIATION(
-    Kokkos::CudaSpace);
-#else
-KOKKOS_IMPL_SHARED_ALLOCATION_RECORD_EXPLICIT_INSTANTIATION(Kokkos::CudaSpace);
-#endif
-KOKKOS_IMPL_SHARED_ALLOCATION_RECORD_EXPLICIT_INSTANTIATION(
-    Kokkos::CudaUVMSpace);
-KOKKOS_IMPL_SHARED_ALLOCATION_RECORD_EXPLICIT_INSTANTIATION(
-    Kokkos::CudaHostPinnedSpace);
-
-// </editor-fold> end Explicit instantiations of CRTP Base classes }}}1
-//==============================================================================
-
 #else
 void KOKKOS_CORE_SRC_CUDA_CUDASPACE_PREVENT_LINK_ERROR() {}
 #endif  // KOKKOS_ENABLE_CUDA
