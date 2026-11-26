@@ -18,7 +18,7 @@ import kokkos.dynamic_view;
 #endif
 #include <Kokkos_Timer.hpp>
 
-namespace Test {
+namespace {
 
 template <typename Scalar, class Space>
 struct TestDynamicView {
@@ -246,13 +246,15 @@ struct TestDynamicView {
       // Use an on-device View as intermediate to deep_copy the
       // device_dynamic_view to host, zero out the device_dynamic_view,
       // deep_copy from host back to the device_dynamic_view and verify
-      Kokkos::deep_copy(device_view, device_dynamic_view);
+      auto device_view_sub = Kokkos::subview(
+          device_view, Kokkos::pair(0lu, device_dynamic_view.extent(0)));
+      Kokkos::deep_copy(device_view_sub, device_dynamic_view);
       Kokkos::deep_copy(host_view, device_view);
       Kokkos::deep_copy(device_view, host_view);
       Kokkos::parallel_for(
           Kokkos::RangePolicy<execution_space>(0, da_size),
           KOKKOS_LAMBDA(const int i) { device_dynamic_view(i) = Scalar(0); });
-      Kokkos::deep_copy(device_dynamic_view, device_view);
+      Kokkos::deep_copy(device_dynamic_view, device_view_sub);
 
       value_type new_result_sum = 0.0;
       Kokkos::parallel_reduce(
@@ -278,6 +280,76 @@ TEST(TEST_CATEGORY, dynamic_view) {
   }
 }
 
-}  // namespace Test
+void dynamic_view_deep_copy_mismatch() {
+  Kokkos::Experimental::DynamicView<int*, TEST_EXECSPACE> dview("dview", 20,
+                                                                80);
+  dview.resize_serial(11);
+  Kokkos::View<int*, TEST_EXECSPACE> view("view", 10);
+
+  bool caught_error = false;
+  try {
+    Kokkos::deep_copy(dview, view);
+    FAIL() << "It should have thrown.";
+  } catch (std::runtime_error const& error) {
+    std::string msg = error.what();
+    std::string expected =
+        "Error: Kokkos::deep_copy extents of views don't match: " +
+        dview.label() + "(11) view(10) ";
+    EXPECT_EQ(expected, msg);
+    caught_error = true;
+  }
+  ASSERT_TRUE(caught_error);
+
+  caught_error = false;
+  try {
+    Kokkos::deep_copy(view, dview);
+    FAIL() << "It should have thrown.";
+  } catch (std::runtime_error const& error) {
+    std::string msg = error.what();
+    std::string expected =
+        "Error: Kokkos::deep_copy extents of views don't match: view(10) " +
+        dview.label() + "(11) ";
+    EXPECT_EQ(expected, msg);
+    caught_error = true;
+  }
+  ASSERT_TRUE(caught_error);
+
+  Kokkos::Experimental::DynamicView<int*, TEST_EXECSPACE> dview2("dview", 20,
+                                                                 80);
+  dview2.resize_serial(10);
+  caught_error = false;
+  try {
+    Kokkos::deep_copy(dview2, dview);
+    FAIL() << "It should have thrown.";
+  } catch (std::runtime_error const& error) {
+    std::string msg = error.what();
+    std::string expected =
+        "Error: Kokkos::deep_copy extents of views don't match: " +
+        dview2.label() + "(10) " + dview.label() + "(11) ";
+    EXPECT_EQ(expected, msg);
+    caught_error = true;
+  }
+  ASSERT_TRUE(caught_error);
+
+  caught_error = false;
+  try {
+    Kokkos::deep_copy(TEST_EXECSPACE(), dview2, dview);
+    FAIL() << "It should have thrown.";
+  } catch (std::runtime_error const& error) {
+    std::string msg = error.what();
+    std::string expected =
+        "Error: Kokkos::deep_copy extents of views don't match: " +
+        dview2.label() + "(10) " + dview.label() + "(11) ";
+    EXPECT_EQ(expected, msg);
+    caught_error = true;
+  }
+  ASSERT_TRUE(caught_error);
+}
+
+TEST(TEST_CATEGORY, dynamic_view_deep_copy_mismatch) {
+  dynamic_view_deep_copy_mismatch();
+}
+
+}  // namespace
 
 #endif /* #ifndef KOKKOS_TEST_DYNAMICVIEW_HPP */

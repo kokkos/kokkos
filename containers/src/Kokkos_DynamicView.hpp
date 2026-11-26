@@ -728,11 +728,36 @@ inline auto create_mirror_view(
   return Impl::create_mirror_view(src, arg_prop);
 }
 
+namespace Impl {
+
+template <class DstViewType, class SrcViewType>
+inline void check_dynamic_view_deep_copy_extents(const DstViewType& dst,
+                                                 const SrcViewType& src) {
+  if (dst.extent(0) != src.extent(0)) {
+    std::string message(
+        "Error: Kokkos::deep_copy extents of views don't match: ");
+    message += dst.label();
+    message += "(";
+    message += std::to_string(dst.extent(0));
+    message += ") ";
+    message += src.label();
+    message += "(";
+    message += std::to_string(src.extent(0));
+    message += ") ";
+
+    Kokkos::Impl::throw_runtime_exception(message);
+  }
+}
+
+}  // namespace Impl
+
 template <class T, class... DP, class... SP>
 inline void deep_copy(const Kokkos::Experimental::DynamicView<T, DP...>& dst,
                       const Kokkos::Experimental::DynamicView<T, SP...>& src) {
   using dst_type = Kokkos::Experimental::DynamicView<T, DP...>;
   using src_type = Kokkos::Experimental::DynamicView<T, SP...>;
+
+  Impl::check_dynamic_view_deep_copy_extents(dst, src);
 
   using dst_execution_space = typename ViewTraits<T, DP...>::execution_space;
   using src_execution_space = typename ViewTraits<T, SP...>::execution_space;
@@ -761,6 +786,8 @@ inline void deep_copy(const ExecutionSpace& exec,
   using dst_type = Kokkos::Experimental::DynamicView<T, DP...>;
   using src_type = Kokkos::Experimental::DynamicView<T, SP...>;
 
+  Impl::check_dynamic_view_deep_copy_extents(dst, src);
+
   using dst_execution_space = typename ViewTraits<T, DP...>::execution_space;
   using src_execution_space = typename ViewTraits<T, SP...>::execution_space;
   using dst_memory_space    = typename ViewTraits<T, DP...>::memory_space;
@@ -786,6 +813,11 @@ inline void deep_copy(const View<T, DP...>& dst,
   using dst_type = View<T, DP...>;
   using src_type = Kokkos::Experimental::DynamicView<T, SP...>;
 
+  static_assert(dst_type::rank() == 1,
+                "Copying between DynamicView and View requires rank==1");
+
+  Impl::check_dynamic_view_deep_copy_extents(dst, src);
+
   using dst_execution_space = typename ViewTraits<T, DP...>::execution_space;
   using src_memory_space    = typename ViewTraits<T, SP...>::memory_space;
 
@@ -807,6 +839,11 @@ inline void deep_copy(const Kokkos::Experimental::DynamicView<T, DP...>& dst,
                       const View<T, SP...>& src) {
   using dst_type = Kokkos::Experimental::DynamicView<T, DP...>;
   using src_type = View<T, SP...>;
+
+  static_assert(src_type::rank() == 1,
+                "Copying between DynamicView and View requires rank==1");
+
+  Impl::check_dynamic_view_deep_copy_extents(dst, src);
 
   using dst_execution_space = typename ViewTraits<T, DP...>::execution_space;
   using src_memory_space    = typename ViewTraits<T, SP...>::memory_space;
