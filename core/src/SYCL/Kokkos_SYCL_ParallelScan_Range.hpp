@@ -277,15 +277,11 @@ class ParallelScanSYCLBase {
 
       // Ensure the same kernel bundle is used both for launching and for
       // querying work-group size limits.
-      static auto kernel_bundle = [&] {
-        sycl::kernel_id functor_kernel_id =
-            sycl::get_kernel_id<decltype(dummy_scan_lambda)>();
-        return sycl::get_kernel_bundle<sycl::bundle_state::executable>(
-            q.get_context(), std::vector{functor_kernel_id});
-      }();
-      static sycl::kernel kernel = kernel_bundle.get_kernel(
-          sycl::get_kernel_id<decltype(dummy_scan_lambda)>());
-      cgh.use_kernel_bundle(kernel_bundle);
+      const Impl::SYCLKernelBundleAndKernel bundle_and_kernel =
+          Impl::sycl_get_kernel_bundle_and_kernel<decltype(dummy_scan_lambda)>(
+              q);
+      const sycl::kernel& kernel = bundle_and_kernel.kernel;
+      cgh.use_kernel_bundle(bundle_and_kernel.bundle);
       auto multiple = kernel.get_info<sycl::info::kernel_device_specific::
                                           preferred_work_group_size_multiple>(
           q.get_device());

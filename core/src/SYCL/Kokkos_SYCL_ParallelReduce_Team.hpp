@@ -319,19 +319,15 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
 
         // Ensure the same kernel bundle is used both for launching and for
         // querying TeamPolicy::team_size_max/recommended.
-        static auto kernel_bundle = [&] {
-          sycl::kernel_id functor_kernel_id =
-              sycl::get_kernel_id<decltype(dummy_reduction_lambda)>();
-          return sycl::get_kernel_bundle<sycl::bundle_state::executable>(
-              q.get_context(), std::vector{functor_kernel_id});
-        }();
-        static sycl::kernel kernel = kernel_bundle.get_kernel(
-            sycl::get_kernel_id<decltype(dummy_reduction_lambda)>());
-        auto max_sg_size = kernel.get_info<
+        const Impl::SYCLKernelBundleAndKernel bundle_and_kernel =
+            Impl::sycl_get_kernel_bundle_and_kernel<
+                decltype(dummy_reduction_lambda)>(q);
+        const sycl::kernel& kernel = bundle_and_kernel.kernel;
+        auto max_sg_size           = kernel.get_info<
             sycl::info::kernel_device_specific::max_sub_group_size>(
             q.get_device());
         auto final_vector_size = std::min<int>(m_vector_size, max_sg_size);
-        cgh.use_kernel_bundle(kernel_bundle);
+        cgh.use_kernel_bundle(bundle_and_kernel.bundle);
 
         auto wgroup_size = m_team_size * final_vector_size;
         std::size_t size = std::size_t(m_league_size) * wgroup_size;

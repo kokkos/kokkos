@@ -5,7 +5,10 @@
 #define KOKKOS_SYCL_INSTANCE_HPP_
 
 #include <atomic>
+#include <mutex>
 #include <optional>
+#include <unordered_map>
+#include <vector>
 #include <sycl/sycl.hpp>
 
 #include <impl/Kokkos_Error.hpp>
@@ -314,6 +317,43 @@ class SYCLFunctionWrapper<Functor, Storage, true> {
 template <typename Functor, typename Storage>
 auto make_sycl_function_wrapper(const Functor& functor, Storage& storage) {
   return SYCLFunctionWrapper<Functor, Storage>(functor, storage);
+}
+
+// Returns the executable kernel bundle containing the kernel named KernelName,
+// together with that kernel, for the context of the given queue.
+//
+// The kernel should be launched with cgh.use_kernel_bundle(bundle) so that
+// queries on the returned kernel (e.g. work_group_size) are guaranteed to match
+// the launched kernel. Without that, the runtime may pick a different device
+// image for the launch when the same kernel is present in several images (for
+// example, instantiated in multiple translation units compiled with
+// -fno-sycl-rdc), and those images can have different limits.
+//
+// sycl::get_kernel_bundle is comparatively expensive (~1.5us), so the result is
+// cached per context and per kernel.
+struct SYCLKernelBundleAndKernel {
+  sycl::kernel_bundle<sycl::bundle_state::executable> bundle;
+  sycl::kernel kernel;
+};
+
+template <typename KernelName>
+SYCLKernelBundleAndKernel sycl_get_kernel_bundle_and_kernel(
+    const sycl::queue& q) {
+  static std::unordered_map<sycl::context, SYCLKernelBundleAndKernel> cache;
+  static std::mutex cache_mutex;
+
+  sycl::context context = q.get_context();
+  std::scoped_lock lock(cache_mutex);
+  auto it = cache.find(context);
+  if (it == cache.end()) {
+    sycl::kernel_id kernel_id = sycl::get_kernel_id<KernelName>();
+    auto bundle = sycl::get_kernel_bundle<sycl::bundle_state::executable>(
+        context, std::vector{kernel_id});
+    sycl::kernel kernel = bundle.get_kernel(kernel_id);
+    it =
+        cache.emplace(context, SYCLKernelBundleAndKernel{bundle, kernel}).first;
+  }
+  return it->second;
 }
 }  // namespace Impl
 }  // namespace Kokkos
