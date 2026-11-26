@@ -5,7 +5,10 @@
 #define KOKKOS_STRING_MANIPULATION_HPP
 
 #include <Kokkos_Macros.hpp>
+#include <impl/Kokkos_Half_FloatingPointWrapper.hpp>
+#include <concepts>
 #include <cstddef>
+#include <ostream>
 #include <type_traits>
 
 namespace Kokkos {
@@ -107,18 +110,34 @@ KOKKOS_INLINE_FUNCTION constexpr char *strncat(char *dest, const char *src,
 //</editor-fold>
 
 //<editor-fold desc="Character conversions">
-template <class Unsigned>
+template <std::unsigned_integral Unsigned>
 KOKKOS_FUNCTION constexpr unsigned int to_chars_len(Unsigned val) {
   unsigned int const base = 10;
-  static_assert(std::is_integral_v<Unsigned>, "implementation bug");
-  static_assert(std::is_unsigned_v<Unsigned>, "implementation bug");
-  unsigned int n = 1;
+  unsigned int n          = 1;
   while (val >= base) {
     val /= base;
     ++n;
   }
   return n;
 }
+
+template <std::signed_integral Signed>
+KOKKOS_FUNCTION constexpr unsigned int to_chars_len(Signed val) {
+  using Unsigned = std::conditional_t<sizeof(Signed) <= sizeof(unsigned int),
+                                      unsigned int, unsigned long long>;
+  Unsigned unsigned_val;
+  int n = 0;
+
+  if (val < 0) {
+    unsigned_val = Unsigned(~val) + Unsigned(1);
+    ++n;
+  } else {
+    unsigned_val = val;  // NOLINT(bugprone-signed-char-misuse)
+  }
+
+  return n + to_chars_len(unsigned_val);
+}
+
 template <class Unsigned>
 KOKKOS_FUNCTION constexpr void to_chars_impl(char *first, unsigned int len,
                                              Unsigned val) {
@@ -136,7 +155,7 @@ KOKKOS_FUNCTION constexpr void to_chars_impl(char *first, unsigned int len,
 
 // define values of portable error conditions that correspond to the POSIX error
 // codes
-enum class errc {
+enum class errc : int {
   value_too_large = 75  // equivalent POSIX error is EOVERFLOW
 };
 struct to_chars_result {
@@ -161,6 +180,7 @@ KOKKOS_FUNCTION constexpr to_chars_result to_chars_i(char *first, char *last,
       unsigned_val = Unsigned(~value) + Unsigned(1);
     }
   }
+
   std::ptrdiff_t const len = to_chars_len(unsigned_val);
   if (last - first < len) {
     return {last, errc::value_too_large};
@@ -169,8 +189,8 @@ KOKKOS_FUNCTION constexpr to_chars_result to_chars_i(char *first, char *last,
   return {first + len, {}};
   // NOLINTEND(bugprone-invalid-enum-default-initialization)
 }
-//</editor-fold>
 
+//</editor-fold>
 }  // namespace Impl
 }  // namespace Kokkos
 

@@ -102,6 +102,18 @@ class ErrorReporter {
     }
   }
 
+  KOKKOS_INLINE_FUNCTION
+  report_type *emplace_report(int reporter_id = 0) const {
+    int idx = Kokkos::atomic_fetch_inc(&m_numReportsAttempted());
+
+    if (idx >= 0 && (idx < m_reports.extent_int(0))) {
+      m_reporters(idx) = reporter_id;
+      return &m_reports(idx);
+    } else {
+      return nullptr;
+    }
+  }
+
  private:
   Kokkos::View<int, device_type> m_numReportsAttempted;
   Kokkos::View<report_type *, device_type> m_reports;
