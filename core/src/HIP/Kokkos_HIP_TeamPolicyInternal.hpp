@@ -5,6 +5,7 @@
 #define KOKKOS_HIP_TEAM_POLICY_INTERNAL_HPP
 
 #include <Kokkos_BitManipulation.hpp>
+#include <Kokkos_Atomic.hpp>
 #include <Kokkos_MinMax.hpp>
 
 namespace Kokkos {
@@ -399,7 +400,11 @@ __device__ inline int64_t hip_get_scratch_index(HIP::size_type league_size,
     threadid *= static_cast<int64_t>(blockDim.x * blockDim.y);
     int done = 0;
     while (!done) {
-      done = (0 == atomicCAS(&scratch_locks[threadid], 0, 1));
+      // acquire: scratch accesses must not be reordered before taking the lock
+      done =
+          (0 == desul::atomic_compare_exchange(
+                    &scratch_locks[threadid], int32_t(0), int32_t(1),
+                    desul::MemoryOrderAcquire(), desul::MemoryScopeDevice()));
       if (!done) {
         threadid += static_cast<int64_t>(blockDim.x * blockDim.y);
         if (int64_t(threadid + static_cast<int64_t>(blockDim.x * blockDim.y)) >=
@@ -418,7 +423,10 @@ __device__ inline void hip_release_scratch_index(int32_t* scratch_locks,
                                                  int64_t threadid) {
   __syncthreads();
   if (threadIdx.x == 0 && threadIdx.y == 0) {
-    scratch_locks[threadid] = 0;
+    // release: publish this block's scratch writes before freeing the lock
+    desul::atomic_store(&scratch_locks[threadid], int32_t(0),
+                        desul::MemoryOrderRelease(),
+                        desul::MemoryScopeDevice());
   }
 }
 

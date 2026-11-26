@@ -243,6 +243,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;NextSilicon)
         TeamReductionScan
         TeamScan
         TeamScratch
+        TeamScratchLock
         TeamTeamSize
         Timer
         UniqueToken
