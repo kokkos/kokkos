@@ -677,7 +677,7 @@ KOKKOS_INLINE_FUNCTION Kokkos::complex<RealType> log10(
 template <class RealType>
 KOKKOS_INLINE_FUNCTION Kokkos::complex<RealType> sin(
     const complex<RealType>& x) {
-  const RealType s = sin(x.real());
+  const RealType s = x.real() == RealType(0) ? x.real() : sin(x.real());
   const RealType c = cos(x.real());
   const RealType h = cosh(x.imag());
   if (isinf(h) && isfinite(x.imag())) {
@@ -698,7 +698,7 @@ template <class RealType>
 KOKKOS_INLINE_FUNCTION Kokkos::complex<RealType> cos(
     const complex<RealType>& x) {
   const RealType c = cos(x.real());
-  const RealType s = -sin(x.real());
+  const RealType s = -(x.real() == RealType(0) ? x.real() : sin(x.real()));
   const RealType h = cosh(x.imag());
   if (isinf(h) && isfinite(x.imag())) {
     const RealType e = exp(fabs(x.imag()) / RealType(4));

@@ -24,7 +24,9 @@ import kokkos.core;
 #else
 #include <Kokkos_Core.hpp>
 #endif
+#include <algorithm>
 #include <complex>
+#include <limits>
 #include <sstream>
 
 namespace {
@@ -425,9 +427,19 @@ void testComplexTanLargeArguments() {
     SCOPED_TRACE(::testing::Message()
                  << "input " << std::complex<RealType>(r, im)
                  << ", sizeof(RealType) " << sizeof(RealType));
-    const std::complex<RealType> expected[] = {
-        std::tanh(std::complex<RealType>(r, im)),
-        std::tan(std::complex<RealType>(im, r))};
+    // Calculate the limiting values without relying on std::complex, whose
+    // implementation can overflow before a finite component is produced.
+    const long double e =
+        std::abs(static_cast<long double>(r)) > 10000
+            ? 0
+            : std::exp(-2 * std::abs(static_cast<long double>(r)));
+    const long double angle = static_cast<long double>(im);
+    const long double d     = 1 + 2 * e * std::cos(2 * angle) + e * e;
+    const RealType re =
+        static_cast<RealType>(std::copysign((1 - e * e) / d, r));
+    const RealType small =
+        static_cast<RealType>(2 * e * std::sin(2 * angle) / d);
+    const std::complex<RealType> expected[] = {{re, small}, {small, re}};
     for (int j = 0; j < 2; ++j) {
       const RealType tol = 8 * Kokkos::epsilon_v<RealType>;
       EXPECT_NEAR(h_results(i, j).real(), expected[j].real(),
@@ -478,11 +490,27 @@ void testComplexSinCosLargeArguments() {
     SCOPED_TRACE(::testing::Message()
                  << "magnitude " << a << ", angle " << b
                  << ", sizeof(RealType) " << sizeof(RealType));
+    // At these magnitudes sinh and cosh differ from exp(abs(a))/2 by
+    // less than roundoff. Work in the log domain to avoid intermediate
+    // overflow in the reference, even for subnormal trigonometric factors.
+    auto component = [a](long double factor) {
+      if (factor == 0) return static_cast<RealType>(factor);
+      const long double log_value = std::abs(static_cast<long double>(a)) +
+                                    std::log(std::abs(factor)) - std::log(2.0L);
+      if (log_value >
+          std::log(static_cast<long double>(Kokkos::finite_max_v<RealType>)))
+        return std::copysign(std::numeric_limits<RealType>::infinity(),
+                             static_cast<RealType>(factor));
+      return static_cast<RealType>(std::copysign(std::exp(log_value), factor));
+    };
+    const long double s    = std::sin(static_cast<long double>(b));
+    const long double c    = std::cos(static_cast<long double>(b));
+    const long double sign = std::signbit(a) ? -1 : 1;
     const std::complex<RealType> expected[] = {
-        std::sin(std::complex<RealType>(b, a)),
-        std::cos(std::complex<RealType>(b, a)),
-        std::sinh(std::complex<RealType>(a, b)),
-        std::cosh(std::complex<RealType>(a, b))};
+        {component(s), component(sign * c)},
+        {component(c), component(-sign * s)},
+        {component(sign * c), component(s)},
+        {component(c), component(sign * s)}};
     for (int j = 0; j < 4; ++j) {
       for (int k = 0; k < 2; ++k) {
         SCOPED_TRACE(::testing::Message()
@@ -494,9 +522,17 @@ void testComplexSinCosLargeArguments() {
           EXPECT_EQ(got, ref);
         } else {
           EXPECT_TRUE(std::isfinite(got));
-          EXPECT_NEAR(got, ref,
-                      8 * Kokkos::epsilon_v<RealType> * std::abs(ref));
-          if (ref == 0) EXPECT_EQ(std::signbit(got), std::signbit(ref));
+          const auto log_roundoff =
+              4 * std::numeric_limits<long double>::epsilon() *
+              std::min(2000.0L, std::abs(static_cast<long double>(a)));
+          const auto tolerance =
+              16 * Kokkos::epsilon_v<RealType> + log_roundoff;
+          EXPECT_NEAR(
+              got, ref,
+              tolerance * std::abs(ref) + 2 * Kokkos::denorm_min_v<RealType>);
+          if (ref == 0) {
+            EXPECT_EQ(std::signbit(got), std::signbit(ref));
+          }
         }
       }
     }
