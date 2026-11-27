@@ -16,7 +16,7 @@ import kokkos.core;
 #include <std_algorithms/Kokkos_TransformInclusiveScan.hpp>
 #include <string>
 
-#if defined(KOKKOS_ENABLE_CUDA)
+#if defined(KOKKOS_IMPL_ENABLE_CUDATHRUST)
 
 // Workaround for `Instruction 'shfl' without '.sync' is not supported on
 // .target sm_70 and higher from PTX ISA version 6.4`.
@@ -124,7 +124,7 @@ struct InclusiveScanDefaultFunctor {
 // inclusive_scan_default_op_exespace_impl
 // -------------------------------------------------------------
 
-#if defined(KOKKOS_ENABLE_CUDA)
+#if defined(KOKKOS_IMPL_ENABLE_CUDATHRUST)
 template <class InputIteratorType, class OutputIteratorType>
 OutputIteratorType inclusive_scan_default_op_exespace_impl(
     const std::string& label, const Cuda& ex, InputIteratorType first_from,
@@ -216,7 +216,7 @@ OutputIteratorType inclusive_scan_default_op_exespace_impl(
 // inclusive_scan_custom_binary_op_impl
 // -------------------------------------------------------------
 
-#if defined(KOKKOS_ENABLE_CUDA)
+#if defined(KOKKOS_IMPL_ENABLE_CUDATHRUST)
 template <class InputIteratorType, class OutputIteratorType, class BinaryOpType>
 OutputIteratorType inclusive_scan_custom_binary_op_exespace_impl(
     const std::string& label, const Cuda& ex, InputIteratorType first_from,
