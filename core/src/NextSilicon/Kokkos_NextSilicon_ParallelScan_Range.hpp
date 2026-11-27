@@ -15,8 +15,9 @@
 
 namespace Kokkos::Impl {
 
+// 64B alignment: clone_driver -> nextapi_memory_copy accelerated by BMT
 template <class Functor, class GivenValueType, class... Traits>
-class ParallelScanNextSilicon {
+class alignas(64) ParallelScanNextSilicon {
  protected:
   using ExecSpace   = Kokkos::Experimental::NextSilicon;
   using MemorySpace = typename ExecSpace::memory_space;

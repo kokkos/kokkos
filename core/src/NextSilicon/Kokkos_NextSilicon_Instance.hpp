@@ -11,7 +11,8 @@
 #include <iosfwd>
 #include <mutex>
 #include <string>
-#include <memory>
+
+#include <nextapi/memory.h>
 
 #include <NextSilicon/Kokkos_NextSilicon_HeapBuffer.hpp>
 #include <NextSilicon/Kokkos_NextSilicon_PageAlignedData.hpp>
@@ -38,16 +39,21 @@ class NextSiliconInternal {
   ~NextSiliconInternal();
 
   template <class Driver>
-  auto clone_driver(const Driver& driver) {
+  Driver* clone_driver(const Driver& driver) {
     // Helper to clone the driver before going into the handoff function. This
     // prevents the stack from getting migrated into device.
+    // Kokkos does not require:
+    // - functor copy-ctor run when functor moves to device
+    // - functor dtor runs at some point on the device
+    // nor does CUDA do either of those things.
+    // Just memcpy the functor bytes before execution is okay.
+    static_assert(alignof(Driver) >= 64,
+                  "Driver must be at least 64B aligned for BMT-enabled "
+                  "nextapi_memory_copy");
     size_t functor_size = sizeof(Driver);
     std::byte* buffer   = resize_functor_buffer(functor_size);
-    auto deleter        = [](Driver* const p) {
-      if (p) p->~Driver();
-    };
-    return std::unique_ptr<Driver, decltype(deleter)>(
-        new (buffer) Driver(driver), deleter);
+    nextapi_memory_copy(buffer, &driver, functor_size);
+    return reinterpret_cast<Driver*>(buffer);
   }
 
   std::byte* resize_league_scratch_buffer(size_t requested);

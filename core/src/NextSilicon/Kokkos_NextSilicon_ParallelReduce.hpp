@@ -18,8 +18,9 @@
 
 namespace Kokkos::Impl {
 
+// 64B alignment: clone_driver -> nextapi_memory_copy accelerated by BMT
 template <class CombinedFunctorReducerType, class... Traits>
-struct NextSiliconParallelReduceImpl {
+struct alignas(64) NextSiliconParallelReduceImpl {
   using ExecSpace   = Kokkos::Experimental::NextSilicon;
   using MemorySpace = typename ExecSpace::memory_space;
   using Policy      = RangePolicy<Traits...>;
