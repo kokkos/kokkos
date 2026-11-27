@@ -13,6 +13,13 @@
 
 #include <Kokkos_Macros.hpp>
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
+#define KOKKOS_SIMD_MODULES_SYMBOL_DEPRECATED_CONDITION \
+  using ::Kokkos::Experimental::condition;
+#else
+#define KOKKOS_SIMD_MODULES_SYMBOL_DEPRECATED_CONDITION
+#endif
+
 #define KOKKOS_SIMD_MODULES_SYMBOLS_COMMON                  \
   namespace Kokkos {                                        \
   using ::Kokkos::abs;                                      \
@@ -58,7 +65,7 @@
   using ::Kokkos::Experimental::any_of;                     \
   using ::Kokkos::Experimental::basic_simd;                 \
   using ::Kokkos::Experimental::basic_simd_mask;            \
-  using ::Kokkos::Experimental::condition;                  \
+  KOKKOS_SIMD_MODULES_SYMBOL_DEPRECATED_CONDITION           \
   using ::Kokkos::Experimental::none_of;                    \
   using ::Kokkos::Experimental::partial_gather_from;        \
   using ::Kokkos::Experimental::partial_scatter_to;         \
@@ -66,6 +73,7 @@
   using ::Kokkos::Experimental::reduce_max;                 \
   using ::Kokkos::Experimental::reduce_min;                 \
   using ::Kokkos::Experimental::round_half_to_nearest_even; \
+  using ::Kokkos::Experimental::select;                     \
   using ::Kokkos::Experimental::simd;                       \
   using ::Kokkos::Experimental::simd_flag_aligned;          \
   using ::Kokkos::Experimental::simd_flag_default;          \

@@ -27,7 +27,6 @@ if(NOT (Kokkos_ENABLE_CUDA AND WIN32) AND NOT (Kokkos_ENABLE_OPENACC AND KOKKOS_
       ArithmeticOps
       BitwiseOps
       ComparisonOps
-      Condition
       Construction
       Conversions
       GeneratorCtors
@@ -37,6 +36,7 @@ if(NOT (Kokkos_ENABLE_CUDA AND WIN32) AND NOT (Kokkos_ENABLE_OPENACC AND KOKKOS_
       MathOps
       MemoryPermute
       Reductions
+      Select
       ShiftOps
   )
 
